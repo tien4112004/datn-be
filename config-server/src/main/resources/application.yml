@@ -1,0 +1,20 @@
+server:
+  port: 8888
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/Tondeptrai23/datn-config.git
+          searchPaths: '{profile}'
+          username: ${GIT_USERNAME}
+          password: ${GIT_TOKEN}
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "===== Running commitlint to validate commit message format…"
+
+npx --no-install commitlint -e $HUSKY_GIT_PARAMS
