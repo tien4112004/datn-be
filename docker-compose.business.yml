@@ -1,0 +1,30 @@
+services:
+  auth:
+    image: datn/auth
+    container_name: auth
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    ports:
+      - 8081:8081
+
+  presentation:
+    image: datn/presentation
+    container_name: presentation
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    ports:
+      - 8082:8082
+
+  api-gateway:
+    image: datn/api-gateway
+    container_name: api-gateway
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    ports:
+      - 8080:8080
