@@ -64,7 +64,21 @@ This script will:
 
 #### a. Without Docker Compose
 
-Ensure your local database URLs are correctly set in `.env` (see [Databases](#databases) section), then start the Spring Boot apps via Maven:
+1. Ensure your local database URLs are correctly set in `.env` (see [Databases](#databases) section).
+
+2. Create `config-server/src/main/resources/application-dev.yml` with the following content:
+
+```yaml
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          username: ${GIT_USERNAME:your_username}
+          password: ${GIT_TOKEN:your_token}
+```
+
+3. Start the Spring Boot apps via Maven:
 
 ```bash
 mvn spring-boot:run -pl <module-name>
