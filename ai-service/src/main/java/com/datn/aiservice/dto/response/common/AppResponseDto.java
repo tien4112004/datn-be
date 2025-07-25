@@ -1,7 +1,6 @@
 package com.datn.aiservice.dto.response.common;
 import com.datn.aiservice.exceptions.AppException;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.tkpm.sms.domain.exception.DomainException;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;

@@ -18,8 +18,8 @@ import reactor.core.publisher.Flux;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 public class SlideGenerationServiceImpl implements SlideGenerationService {
-    private final Resource outlinePromptResource;
-    private final Resource slidePromptResource;
+    Resource outlinePromptResource;
+    Resource slidePromptResource;
     ModelSelectionService modelSelectionService;
     ChatClientFactory chatClientFactory;
 

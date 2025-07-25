@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class ModelConfigurationController {
-    private final ModelSelectionService modelSelectionService;
+     ModelSelectionService modelSelectionService;
 
     /**
      * Endpoint to get the list of all models.

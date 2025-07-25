@@ -1,15 +1,9 @@
 package com.datn.aiservice.config;
 
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.model.chat.client.autoconfigure.ChatClientBuilderConfigurer;
 import org.springframework.ai.openai.OpenAiChatModel;
-import org.springframework.ai.openai.OpenAiChatOptions;
-import org.springframework.ai.openai.api.OpenAiApi;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -17,8 +11,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
 @Configuration
-@FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
-@RequiredArgsConstructor
 public class ChatClientConfig {
 
     @NonFinal
@@ -49,7 +41,7 @@ public class ChatClientConfig {
                 .build();
     }
 
-    @Bean("deepseekModel")
+    @Bean("deepseekChatClient")
     public ChatClient deepseekClient(@Qualifier("deepseekModel") OpenAiChatModel m) {
         return ChatClient
                 .builder(m)

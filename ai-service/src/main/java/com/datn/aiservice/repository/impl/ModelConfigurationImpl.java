@@ -1,12 +1,13 @@
 package com.datn.aiservice.repository.impl;
 
-import com.datn.aiservice.repository.interfaces.ModelConfigurationRepo;
 import com.datn.aiservice.repository.impl.jpa.SpringDataJPAModelConfigurationRepo;
+import com.datn.aiservice.repository.interfaces.ModelConfigurationRepo;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.stereotype.Component;
 
+@Component
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ModelConfigurationImpl implements ModelConfigurationRepo {

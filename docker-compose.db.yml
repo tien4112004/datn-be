@@ -3,9 +3,6 @@ version: "3.8"
 x-postgres-common: &postgres-common
   image: postgres:15
   restart: unless-stopped
-  environment:
-    POSTGRES_USER: postgres
-    POSTGRES_PASSWORD: postgres
 
 services:
   auth-db:
@@ -13,6 +10,8 @@ services:
     container_name: auth-db
     environment:
       POSTGRES_DB: auth_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
     volumes:
@@ -23,6 +22,8 @@ services:
     container_name: model-configuration-db
     environment:
       POSTGRES_DB: model_configuration_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
       - "5433:5432"
     volumes:

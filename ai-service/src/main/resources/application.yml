@@ -28,17 +28,16 @@ spring:
       base-url: ${OPENAI_API_URL}
       chat:
         options:
-          model:
-            - ${OPENAI_MODEL_NAME}
-            - gpt-3.5-turbo
+          model: ${OPENAI_MODEL_NAME}
 
   datasource:
-    url: ${MODEL_CONFIG_DB_URL:jdbc:postgresql://localhost:5433/model-configuration-db}
-    username: ${MODEL_CONFIG_DB_USERNAME:auth_user}
-    password: ${MODEL_CONFIG_DB_PASSWORD:auth_password}
+    url: ${MODEL_CONFIG_DB_URL}
+    username: ${MODEL_CONFIG_DB_USERNAME}
+    password: ${MODEL_CONFIG_DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
         format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
