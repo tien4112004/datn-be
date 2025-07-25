@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: ai-service
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: docker
+    import: configserver:${CONFIG_SERVER_URL:http://config-server:8888/}
+
+---
+
+server:
+  port: 8083
+spring:
+  ai:
+    chat:
+      client:
+        enabled: false
+    openai:
+      api-key: ${OPENAI_KEY}
+      base-url: ${OPENAI_API_URL}
+      chat:
+        options:
+          model:
+            - ${OPENAI_MODEL_NAME}
+            - gpt-3.5-turbo
+
+  datasource:
+    url: ${MODEL_CONFIG_DB_URL:jdbc:postgresql://localhost:5433/model-configuration-db}
+    username: ${MODEL_CONFIG_DB_USERNAME:auth_user}
+    password: ${MODEL_CONFIG_DB_PASSWORD:auth_password}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true

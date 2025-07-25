@@ -1,20 +1,35 @@
+version: "3.8"
+
+x-postgres-common: &postgres-common
+  image: postgres:15
+  restart: unless-stopped
+  environment:
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+
 services:
-  postgres:
-    image: postgres:15
-    container_name: postgres
-    restart: unless-stopped
+  auth-db:
+    <<: *postgres-common
+    container_name: auth-db
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: auth_db
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata-auth:/var/lib/postgresql/data
+
+  model-configuration-db:
+    <<: *postgres-common
+    container_name: model-configuration-db
+    environment:
+      POSTGRES_DB: model_configuration_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata-model-config:/var/lib/postgresql/data
 
   mongo:
     image: mongo:6
-    container_name: mongo
     restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: mongouser
@@ -26,7 +41,6 @@ services:
       - mongodata:/data/db
 
 volumes:
-  pgdata:
-    driver: local
+  pgdata-auth:
+  pgdata-model-config:
   mongodata:
-    driver: local
