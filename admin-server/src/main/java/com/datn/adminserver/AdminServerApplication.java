@@ -1,4 +1,4 @@
-package com.datn.admin;
+package com.datn.adminserver;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

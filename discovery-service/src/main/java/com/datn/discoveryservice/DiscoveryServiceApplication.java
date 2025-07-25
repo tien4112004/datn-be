@@ -1,4 +1,4 @@
-package com.datn.discovery;
+package com.datn.discoveryservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

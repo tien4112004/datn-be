@@ -1,4 +1,4 @@
-package com.datn.discovery_service;
+package com.datn.discoveryservice;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

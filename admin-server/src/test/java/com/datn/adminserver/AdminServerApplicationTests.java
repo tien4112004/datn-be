@@ -1,10 +1,10 @@
-package com.datn.config_server;
+package com.datn.adminserver;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class ConfigServerApplicationTests {
+class AdminServerApplicationTests {
 
 	@Test
 	void contextLoads() {
