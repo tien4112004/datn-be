@@ -13,7 +13,7 @@
 		<module>discovery-service</module>
 		<module>admin-server</module>
 		<module>api-gateway</module>
-		<module>presentation</module>
+		<module>document</module>
 		<module>auth</module>
 	</modules>
 	<dependencyManagement>
