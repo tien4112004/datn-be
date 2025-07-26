@@ -1,4 +1,4 @@
-package com.datn.aiservice.config;
+package com.datn.aiservice.config.ChatModelConfiguration;
 
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
@@ -19,7 +19,7 @@ public class ModelConfig {
     public OpenAiChatModel basedModel(
             OpenAiApi openAiApi
     ) {
-        // you can even just return baseChatModel here, since its default is gpt-4o
+
         return OpenAiChatModel.builder()
                 .openAiApi(openAiApi)
                 .defaultOptions(
@@ -33,6 +33,7 @@ public class ModelConfig {
     public OpenAiChatModel geminiFlashModel(
             OpenAiChatModel basedModel,
             OpenAiApi openAiApi) {
+
         return basedModel.mutate()
                 .openAiApi(openAiApi)
                 .defaultOptions(
@@ -46,6 +47,7 @@ public class ModelConfig {
     public OpenAiChatModel deepseekModel(
             OpenAiChatModel basedModel,
             OpenAiApi openAiApi) {
+
         return basedModel.mutate()
                 .openAiApi(openAiApi)
                 .defaultOptions(
