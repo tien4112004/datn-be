@@ -2,7 +2,7 @@ package com.datn.aiservice.service.interfaces;
 
 import java.util.List;
 
-import com.datn.aiservice.config.ChatModelConfiguration.ModelProperties;
+import com.datn.aiservice.config.chatmodelconfiguration.ModelProperties;
 import com.datn.aiservice.dto.response.ModelMinimalResponseDto;
 import com.datn.aiservice.dto.response.ModelResponseDto;
 

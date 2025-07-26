@@ -1,4 +1,4 @@
-package com.datn.aiservice.config.ChatModelConfiguration;
+package com.datn.aiservice.config.chatmodelconfiguration;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;

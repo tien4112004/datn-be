@@ -1,6 +1,6 @@
 package com.datn.aiservice;
 
-import com.datn.aiservice.config.ChatModelConfiguration.ModelProperties;
+import com.datn.aiservice.config.chatmodelconfiguration.ModelProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

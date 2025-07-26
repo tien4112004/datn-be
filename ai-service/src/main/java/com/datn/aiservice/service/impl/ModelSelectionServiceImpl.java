@@ -1,9 +1,8 @@
 package com.datn.aiservice.service.impl;
 
-import com.datn.aiservice.config.ChatModelConfiguration.ModelProperties.ModelInfo;
+import com.datn.aiservice.config.chatmodelconfiguration.ModelProperties.ModelInfo;
 import com.datn.aiservice.dto.response.ModelMinimalResponseDto;
 import com.datn.aiservice.dto.response.ModelResponseDto;
-import com.datn.aiservice.factory.ChatClientFactory;
 import com.datn.aiservice.repository.interfaces.ModelConfigurationRepo;
 import com.datn.aiservice.service.interfaces.ModelSelectionService;
 import lombok.RequiredArgsConstructor;

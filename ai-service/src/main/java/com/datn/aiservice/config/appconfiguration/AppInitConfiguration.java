@@ -1,4 +1,4 @@
-package com.datn.aiservice.config.AppConfiguration;
+package com.datn.aiservice.config.appconfiguration;
 
 import java.util.Objects;
 
@@ -6,7 +6,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.datn.aiservice.config.ChatModelConfiguration.ModelProperties;
+import com.datn.aiservice.config.chatmodelconfiguration.ModelProperties;
 import com.datn.aiservice.service.interfaces.ModelSelectionService;
 
 import lombok.AccessLevel;

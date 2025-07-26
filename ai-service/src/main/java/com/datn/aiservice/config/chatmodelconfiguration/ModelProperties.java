@@ -1,11 +1,9 @@
-package com.datn.aiservice.config.ChatModelConfiguration;
+package com.datn.aiservice.config.chatmodelconfiguration;
 
 import lombok.Data;
-import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
