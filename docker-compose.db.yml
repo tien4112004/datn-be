@@ -1,7 +1,7 @@
 version: "3.8"
 
 x-postgres-common: &postgres-common
-  image: postgres:15
+  image: postgres:17
   restart: unless-stopped
 
 services:
