@@ -25,13 +25,6 @@ public interface ModelSelectionService {
     ModelResponseDto getFullModelConfiguration(String modelName);
 
     /**
-     * Disables a model by its ID.
-     *
-     * @param modelName the ID of the model to disable
-     */
-    void disableModel(String modelName);
-
-    /**
      * Enables a model by its ID.
      *
      * @param modelName the ID of the model to enable

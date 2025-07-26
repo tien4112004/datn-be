@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
@@ -53,9 +54,10 @@ public class ModelConfig {
 
     @Bean
     Map<String, OpenAiChatModel> allChatModels(OpenAiApi openAiApi) {
+        log.info("Configuring all chat models with base URL: {} and API Key: {}", openAiBaseUrl, openAiApiKey);
         Map<String, OpenAiChatModel> models = new HashMap<>();
 
-        modelProperties.getModels().forEach((key, config) -> {
+        modelProperties.getConfigurations().forEach((key, config) -> {
             log.info("Configuring model: {} with config {}", key, config);
             OpenAiChatModel model = OpenAiChatModel.builder()
                     .openAiApi(openAiApi)
@@ -73,7 +75,7 @@ public class ModelConfig {
     }
 
     private ModelProperties.ModelInfo getDefaultModelConfig() {
-        return modelProperties.getModels().values().stream().findFirst()
+        return modelProperties.getConfigurations().values().stream().findFirst()
                 .orElseThrow(() -> new IllegalStateException("No default model configured"));
     }
 }

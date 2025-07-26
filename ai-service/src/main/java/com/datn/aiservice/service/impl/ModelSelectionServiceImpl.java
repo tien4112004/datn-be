@@ -30,11 +30,6 @@ public class ModelSelectionServiceImpl implements ModelSelectionService {
     }
 
     @Override
-    public void disableModel(String modelId) {
-        throw new UnsupportedOperationException("Disable model is not supported");
-    }
-
-    @Override
     public void setModelEnabled(String modelId, boolean isEnabled) {
         throw new UnsupportedOperationException("Update model state is not supported");
     }
@@ -42,6 +37,11 @@ public class ModelSelectionServiceImpl implements ModelSelectionService {
     @Override
     public void setDefaultModel(String modelId) {
         throw new UnsupportedOperationException("Set default model is not supported");
+    }
+
+    @Override
+    public boolean isModelEnabled(String modelName) {
+        return false;
     }
 
     @Override

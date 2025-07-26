@@ -1,6 +1,8 @@
 package com.datn.aiservice.config.ChatModelConfiguration;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.ai.chat.client.ChatClient;
@@ -24,20 +26,27 @@ public class ChatClientConfig {
             Map<String, OpenAiChatModel> allChatModels,
             @Qualifier("defaultSystemPrompt") Resource defaultSystemPrompt) {
 
+        List<String> errorModels = new ArrayList<>();
         Map<String, ChatClient> chatClients = new HashMap<>();
 
-        modelProperties.getModels().forEach((key, config) -> {
-            if (config.isEnabled()) {
-                OpenAiChatModel model = allChatModels.get(config.getModelName());
-                if (model != null) {
-                    ChatClient chatClient = ChatClient.builder(model)
-                            .defaultSystem(defaultSystemPrompt)
-                            .build();
+        modelProperties.getConfigurations().forEach((key, config) -> {
+            OpenAiChatModel model = allChatModels.get(config.getModelName());
+            if (model != null) {
+                ChatClient chatClient = ChatClient.builder(model)
+                        .defaultSystem(defaultSystemPrompt)
+                        .build();
 
-                    chatClients.put(config.getModelName(), chatClient);
-                }
+                chatClients.put(config.getModelName(), chatClient);
+            } else {
+                errorModels.add(config.getModelName());
             }
         });
+
+        if (!errorModels.isEmpty()) {
+            log.error("Failed to create chat clients for models: {}", errorModels);
+        } else {
+            log.info("Chat clients created successfully for all models.");
+        }
 
         return chatClients;
     }
