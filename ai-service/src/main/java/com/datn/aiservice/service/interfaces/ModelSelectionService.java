@@ -1,5 +1,8 @@
 package com.datn.aiservice.service.interfaces;
 
+import java.util.List;
+
+import com.datn.aiservice.config.ChatModelConfiguration.ModelProperties;
 import com.datn.aiservice.dto.response.ModelMinimalResponseDto;
 import com.datn.aiservice.dto.response.ModelResponseDto;
 
@@ -8,9 +11,10 @@ public interface ModelSelectionService {
     /**
      * Retrieves the minimal configuration of a model by its ID.
      *
-     * @return a list of ModelMinimalResponseDto containing the minimal configuration of the model
+     * @return a list of ModelMinimalResponseDto containing the minimal
+     *         configuration of the model
      */
-    ModelMinimalResponseDto getModelsConfiguration();
+    List<ModelMinimalResponseDto> getModelsConfiguration();
 
     /**
      * Retrieves the full configuration of a model by its ID.
@@ -48,4 +52,6 @@ public interface ModelSelectionService {
      * @return true if the model is enabled, false otherwise
      */
     boolean isModelEnabled(String modelName);
+
+    void saveModelData(ModelProperties.ModelInfo modelInfo);
 }

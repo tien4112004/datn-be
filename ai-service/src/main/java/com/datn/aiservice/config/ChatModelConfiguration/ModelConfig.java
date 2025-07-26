@@ -1,5 +1,12 @@
 package com.datn.aiservice.config.ChatModelConfiguration;
 
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
@@ -7,61 +14,66 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+@Slf4j
 @Configuration
+@FieldDefaults(level = lombok.AccessLevel.PRIVATE)
+@RequiredArgsConstructor
 public class ModelConfig {
+    final ModelProperties modelProperties;
+
     @Value("${spring.ai.openai.base-url}")
-    private String openAiBaseUrl;
+    String openAiBaseUrl;
 
     @Value("${spring.ai.openai.api-key}")
-    private String openAiApiKey;
+    String openAiApiKey;
 
     @Bean
-    public OpenAiChatModel basedModel(
-            OpenAiApi openAiApi
-    ) {
+    OpenAiApi openAiApi() {
+        return OpenAiApi.builder()
+                .apiKey(openAiApiKey)
+                .baseUrl(openAiBaseUrl)
+                .build();
+    }
+
+    @Bean
+    OpenAiChatModel basedModel(
+            OpenAiApi openAiApi) {
+
+        var defaultModelConfig = getDefaultModelConfig();
 
         return OpenAiChatModel.builder()
                 .openAiApi(openAiApi)
                 .defaultOptions(
                         OpenAiChatOptions.builder()
-                                .model("gpt-4o")
+                                .maxTokens(defaultModelConfig.getMaxTokens())
+                                .model(defaultModelConfig.getModelName())
                                 .build())
                 .build();
     }
 
     @Bean
-    public OpenAiChatModel geminiFlashModel(
-            OpenAiChatModel basedModel,
-            OpenAiApi openAiApi) {
+    Map<String, OpenAiChatModel> allChatModels(OpenAiApi openAiApi) {
+        Map<String, OpenAiChatModel> models = new HashMap<>();
 
-        return basedModel.mutate()
-                .openAiApi(openAiApi)
-                .defaultOptions(
-                        OpenAiChatOptions.builder()
-                                .model("gemini-2.0-flash")
-                                .build())
-                .build();
+        modelProperties.getModels().forEach((key, config) -> {
+            log.info("Configuring model: {} with config {}", key, config);
+            OpenAiChatModel model = OpenAiChatModel.builder()
+                    .openAiApi(openAiApi)
+                    .defaultOptions(
+                            OpenAiChatOptions.builder()
+                                    .model(config.getModelName())
+                                    .maxTokens(config.getMaxTokens())
+                                    .build())
+                    .build();
+
+            models.put(config.getModelName(), model);
+        });
+
+        return models;
     }
 
-    @Bean
-    public OpenAiChatModel deepseekModel(
-            OpenAiChatModel basedModel,
-            OpenAiApi openAiApi) {
-
-        return basedModel.mutate()
-                .openAiApi(openAiApi)
-                .defaultOptions(
-                        OpenAiChatOptions.builder()
-                                .model("deepseek-v1")
-                                .build())
-                .build();
-    }
-
-    @Bean
-    public OpenAiApi openAiApi() {
-        return OpenAiApi.builder()
-                .apiKey(openAiApiKey)
-                .baseUrl(openAiBaseUrl)
-                .build();
+    private ModelProperties.ModelInfo getDefaultModelConfig() {
+        return modelProperties.getModels().values().stream().findFirst()
+                .orElseThrow(() -> new IllegalStateException("No default model configured"));
     }
 }

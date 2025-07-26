@@ -41,3 +41,28 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+app:
+  models:
+    configurations:
+      gpt4o:
+        model-name: "openai/gpt-4o-mini"
+        display-name: "GPT-4 Optimized"
+        enabled: true
+        is-default: true
+        max-tokens: 4096
+        provider: "OpenAI"
+      gemini2_0flash:
+        model-name: "gemini-2.0-flash"
+        display-name: "Gemini 2.0 Flash"
+        enabled: true
+        is-default: false
+        max-tokens: 8192
+        provider: "Google"
+      deepseekchatv3:
+        model-name: "deepseek/deepseek-chat-v3-0324:free"
+        display-name: "Deepseek Chat V3"
+        enabled: true
+        is-default: false
+        max-tokens: 4096
+        provider: "Deepseek"

@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @Entity(name = "model_configuration")
@@ -24,4 +23,6 @@ public class ModelConfigurationEntity {
     boolean isEnabled;
     @Column(name = "is_default", nullable = false)
     boolean isDefault;
+    @Column(name = "max_tokens", nullable = false)
+    Long maxTokens;
 }

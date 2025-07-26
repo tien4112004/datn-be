@@ -23,7 +23,6 @@ public class SlideGenerationServiceImpl implements SlideGenerationService {
     ModelSelectionService modelSelectionService;
     ChatClientFactory chatClientFactory;
 
-
     @Override
     public Flux<String> generateOutline(OutlinePromptRequest request) {
         if (!modelSelectionService.isModelEnabled(request.getModel())) {
@@ -32,6 +31,7 @@ public class SlideGenerationServiceImpl implements SlideGenerationService {
 
         // Use the chat client factory to get the appropriate chat client
         // and generate the outline based on the request.
+        var chatClient = chatClientFactory.getChatClient(request.getModel());
 
         throw new UnsupportedOperationException("Outline generation is not supported yet.");
     }

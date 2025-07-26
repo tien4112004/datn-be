@@ -5,5 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface SpringDataJPAModelConfigurationRepo extends JpaRepository<ModelConfigurationEntity, Integer> {
+public interface ModelConfigurationJPARepo extends JpaRepository<ModelConfigurationEntity, Integer> {
 }
