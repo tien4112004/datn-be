@@ -2,7 +2,7 @@ package com.datn.document.entity;
 
 import java.util.List;
 
-import com.datn.document.entity.valueObject.Slide;
+import com.datn.document.entity.valueobject.Slide;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

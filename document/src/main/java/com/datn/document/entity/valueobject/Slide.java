@@ -1,4 +1,4 @@
-package com.datn.document.entity.valueObject;
+package com.datn.document.entity.valueobject;
 
 import java.util.List;
 

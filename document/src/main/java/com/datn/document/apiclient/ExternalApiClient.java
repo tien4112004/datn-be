@@ -1,4 +1,4 @@
-package com.datn.document.apiClient;
+package com.datn.document.apiclient;
 
 import org.springframework.stereotype.Component;
 

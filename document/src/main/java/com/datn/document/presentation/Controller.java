@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/presentations")
-public class PresentationController {
+public class Controller {
     
     // Mock controller methods will be implemented here
     

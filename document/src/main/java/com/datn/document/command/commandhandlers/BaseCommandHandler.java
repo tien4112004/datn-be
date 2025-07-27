@@ -1,4 +1,4 @@
-package com.datn.document.command.commandHandlers;
+package com.datn.document.command.commandhandlers;
 
 /**
  * Base command handler interface

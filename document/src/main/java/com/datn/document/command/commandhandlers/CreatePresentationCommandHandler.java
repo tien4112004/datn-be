@@ -1,4 +1,4 @@
-package com.datn.document.command.commandHandlers;
+package com.datn.document.command.commandhandlers;
 
 import com.datn.document.command.commands.CreatePresentationCommand;
 import org.springframework.stereotype.Component;
