@@ -15,6 +15,7 @@
 		<module>api-gateway</module>
 		<module>presentation</module>
 		<module>auth</module>
+		<module>ai-service</module>
 	</modules>
 	<dependencyManagement>
 		<dependencies>
@@ -47,7 +48,7 @@
 				<plugin>
 					<groupId>org.springframework.boot</groupId>
 					<artifactId>spring-boot-maven-plugin</artifactId>
-					<version>3.11.0</version>
+					<version>3.5.4</version>
 					<configuration>
 						<source>${maven.compiler.source}</source>
 						<target>${maven.compiler.target}</target>
