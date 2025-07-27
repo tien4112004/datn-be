@@ -6,7 +6,7 @@
         <setting id="org.eclipse.jdt.core.formatter.indentation.size" value="4"/>
         <setting id="org.eclipse.jdt.core.formatter.continuation_indentation" value="2"/>
         <setting id="org.eclipse.jdt.core.formatter.continuation_indentation_for_array_initializer" value="2"/>
-        <setting id="org.eclipse.jdt.core.formatter.lineSplit" value="100"/>
+        <setting id="org.eclipse.jdt.core.formatter.lineSplit" value="120"/>
 
         <!-- Comment settings -->
         <setting id="org.eclipse.jdt.core.formatter.comment.format_line_comments" value="false"/>
