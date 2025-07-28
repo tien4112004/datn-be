@@ -7,9 +7,9 @@
 		<artifactId>datn-microservices</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>presentation</artifactId>
+	<artifactId>document</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>presentation</name>
+	<name>document</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
 	<licenses>
