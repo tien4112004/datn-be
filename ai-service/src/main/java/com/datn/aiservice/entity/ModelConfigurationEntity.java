@@ -3,7 +3,6 @@ package com.datn.aiservice.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.validator.constraints.UniqueElements;
 
 @Entity(name = "model_configuration")
 @Getter

@@ -2,6 +2,8 @@ package com.datn.aiservice.service.impl;
 
 import com.datn.aiservice.dto.request.OutlinePromptRequest;
 import com.datn.aiservice.dto.request.SlidePromptRequest;
+import com.datn.aiservice.exceptions.AppException;
+import com.datn.aiservice.exceptions.ErrorCode;
 import com.datn.aiservice.factory.ChatClientFactory;
 import com.datn.aiservice.service.interfaces.ModelSelectionService;
 import com.datn.aiservice.service.interfaces.SlideGenerationService;
@@ -12,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
+
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -26,14 +30,22 @@ public class SlideGenerationServiceImpl implements SlideGenerationService {
     @Override
     public Flux<String> generateOutline(OutlinePromptRequest request) {
         if (!modelSelectionService.isModelEnabled(request.getModel())) {
-            // Log the error and throw an exception
+            log.error("Model {} is not enabled for outline generation", request.getModel());
+            throw new AppException(ErrorCode.MODEL_NOT_ENABLED);
         }
 
-        // Use the chat client factory to get the appropriate chat client
-        // and generate the outline based on the request.
         var chatClient = chatClientFactory.getChatClient(request.getModel());
+        log.info("Using chat client: {}", chatClient.getClass().getSimpleName());
 
-        throw new UnsupportedOperationException("Outline generation is not supported yet.");
+        return chatClient.prompt()
+                .user(promptUserSpec -> promptUserSpec.text(outlinePromptResource)
+                        .params(Map.of(
+                                "language", request.getLanguage(),
+                                "topic", request.getTopic(),
+                                "slide_count", request.getSlideCount(),
+                                "learning_objective", request.getLearningObjective(),
+                                "target_age", request.getTargetAge())))
+                .stream().content();
     }
 
     @Override
