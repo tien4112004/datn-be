@@ -3,6 +3,8 @@ package com.datn.aiservice.config.appconfiguration;
 import java.util.Objects;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperties;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -18,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@ConditionalOnProperty(prefix="app.init", name="enabled", havingValue="true", matchIfMissing=true)
 public class AppInitConfiguration {
     ModelProperties modelProperties;
     ModelSelectionService modelSelectionService;
@@ -25,14 +28,14 @@ public class AppInitConfiguration {
     @Bean
     CommandLineRunner InitializeModelConfiguration() {
         return args -> {
-            var models = modelSelectionService.getModelsConfiguration();
+            var models = modelSelectionService.getModelConfigurations();
             var definedModels = modelProperties.getConfigurations();
 
             if (models.isEmpty() || models.size() != definedModels.size()) {
                 modelProperties.getConfigurations().forEach((key, modelData) -> {
-                    var existedModel = modelSelectionService.getFullModelConfiguration(modelData.getModelName());
+                    var existedModel = modelSelectionService.getModelConfiguration(modelData.getModelName());
                     if (Objects.isNull(existedModel))
-                        modelSelectionService.saveModelData(modelData);
+                        modelSelectionService.saveModelInfo(modelData);
                 });
             } else {
                 log.info("All models are ready");
