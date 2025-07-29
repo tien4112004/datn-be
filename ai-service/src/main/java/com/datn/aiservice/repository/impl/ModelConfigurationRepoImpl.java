@@ -21,10 +21,9 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
 
     ModelConfigurationJPARepo modelConfigurationJPARepo;
 
-    // Example method implementation
     @Override
-    public String getModelName() {
-        return "Default Model Name"; // Replace with actual logic
+    public boolean existsByModelName(String modelName) {
+        return modelConfigurationJPARepo.existsByModelName(modelName);
     }
 
     @Override
@@ -37,12 +36,11 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
         return modelConfigurationJPARepo.findByModelName(modelName);
     }
 
-
     @Override
-    public boolean isModelEnabled(String modelName) {
-        // Here you would typically check the model configuration in the database
-        // For demonstration purposes, let's assume all models are enabled
-        return true;
+    public boolean isModelEnabled(Integer modelId) {
+        return modelConfigurationJPARepo.findById(modelId)
+                .map(ModelConfigurationEntity::isEnabled)
+                .orElse(false); // Default to false if model not found
     }
 
     @Override

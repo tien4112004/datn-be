@@ -6,7 +6,7 @@ import com.datn.aiservice.exceptions.AppException;
 import com.datn.aiservice.exceptions.ErrorCode;
 import com.datn.aiservice.factory.ChatClientFactory;
 import com.datn.aiservice.service.interfaces.ModelSelectionService;
-import com.datn.aiservice.service.interfaces.SlideGenerationService;
+import com.datn.aiservice.service.interfaces.ContentGenerationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -21,7 +21,7 @@ import java.util.Map;
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
-public class SlideGenerationServiceImpl implements SlideGenerationService {
+public class ContentGenerationServiceImpl implements ContentGenerationService {
     Resource outlinePromptResource;
     Resource slidePromptResource;
     ModelSelectionService modelSelectionService;

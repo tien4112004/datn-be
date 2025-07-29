@@ -3,6 +3,8 @@ package com.datn.aiservice.service.impl;
 import com.datn.aiservice.config.chatmodelconfiguration.ModelProperties.ModelInfo;
 import com.datn.aiservice.dto.response.ModelMinimalResponseDto;
 import com.datn.aiservice.dto.response.ModelResponseDto;
+import com.datn.aiservice.exceptions.AppException;
+import com.datn.aiservice.exceptions.ErrorCode;
 import com.datn.aiservice.mapper.ModelDataMapper;
 import com.datn.aiservice.repository.interfaces.ModelConfigurationRepo;
 import com.datn.aiservice.service.interfaces.ModelSelectionService;
@@ -32,24 +34,41 @@ public class ModelSelectionServiceImpl implements ModelSelectionService {
 
     @Override
     public ModelResponseDto getModelConfiguration(String modelName) {
+        if (!modelConfigurationRepo.existsByModelName(modelName)) {
+            throw new AppException(ErrorCode.MODEL_NOT_FOUND);
+        }
+
         var modelEntity = modelConfigurationRepo.getModelByName(modelName);
         return modelDataMapper.toModelResponseDto(modelEntity);
     }
 
     @Override
     public void setModelEnabled(String modelName, boolean isEnabled) {
+        if (!modelConfigurationRepo.existsByModelName(modelName)) {
+            throw new AppException(ErrorCode.MODEL_NOT_FOUND);
+        }
+
         modelConfigurationRepo.setEnabled(modelName, isEnabled);
     }
 
     @Override
     @Transactional
     public void setDefault(String modelName, boolean isDefault) {
+        if (!modelConfigurationRepo.existsByModelName(modelName)) {
+            throw new AppException(ErrorCode.MODEL_NOT_FOUND);
+        }
+
         modelConfigurationRepo.setDefault(modelName, isDefault);
     }
 
     @Override
     public boolean isModelEnabled(String modelName) {
-        return modelConfigurationRepo.isModelEnabled(modelName);
+        if (!modelConfigurationRepo.existsByModelName(modelName)) {
+            throw new AppException(ErrorCode.MODEL_NOT_FOUND);
+        }
+
+        var modelEntity = modelConfigurationRepo.getModelByName(modelName);
+        return modelConfigurationRepo.isModelEnabled(modelEntity.getModelId());
     }
 
     @Override

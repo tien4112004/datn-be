@@ -7,13 +7,13 @@ import java.util.Optional;
 
 public interface ModelConfigurationRepo {
 
-    String getModelName();
+    boolean existsByModelName(String modelName);
 
     Optional<ModelConfigurationEntity> getModelById(Integer modelId);
 
     ModelConfigurationEntity getModelByName(String modelName);
 
-    boolean isModelEnabled(String modelName);
+    boolean isModelEnabled(Integer modelId);
 
     List<ModelConfigurationEntity> getModels();
 
