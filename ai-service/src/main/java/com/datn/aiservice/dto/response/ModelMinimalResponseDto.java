@@ -11,4 +11,5 @@ public class ModelMinimalResponseDto {
     String modelId;
     String displayName;
     boolean isEnabled;
+    Long maxTokens;
 }

@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ModelConfigurationJPARepo extends JpaRepository<ModelConfigurationEntity, Integer> {
+    ModelConfigurationEntity findByModelName(String modelName);
 }

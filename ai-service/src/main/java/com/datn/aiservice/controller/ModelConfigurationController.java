@@ -25,7 +25,7 @@ public class ModelConfigurationController {
     public ResponseEntity<AppResponseDto<?>> getAllModels() {
         log.info("Fetching all models");
         // Assuming a service method exists to fetch all models
-        var models = modelSelectionService.getModelsConfiguration();
+        var models = modelSelectionService.getModelConfigurations();
         return ResponseEntity.ok(AppResponseDto.success(models, "Fetched all models successfully"));
     }
 
@@ -39,7 +39,7 @@ public class ModelConfigurationController {
     public ResponseEntity<AppResponseDto<?>> getModelById(@PathVariable String id) {
         log.info("Fetching model with ID: {}", id);
         // Assuming a service method exists to fetch the model by ID
-        var model = modelSelectionService.getFullModelConfiguration(id);
+        var model = modelSelectionService.getModelConfiguration(id);
         return ResponseEntity.ok(AppResponseDto.success(model, "Fetched model successfully"));
     }
 

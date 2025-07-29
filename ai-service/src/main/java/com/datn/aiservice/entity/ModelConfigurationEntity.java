@@ -1,12 +1,13 @@
 package com.datn.aiservice.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.UniqueElements;
 
 @Entity(name = "model_configuration")
+@Getter
+@Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,9 +20,9 @@ public class ModelConfigurationEntity {
     String modelName;
     @Column(name = "display_name", nullable = false)
     String displayName;
-    @Column(name = "is_enabled", nullable = false)
+    @Column(name = "is_enabled", nullable = false, columnDefinition = "boolean default true")
     boolean isEnabled;
-    @Column(name = "is_default", nullable = false)
+    @Column(name = "is_default", nullable = false, columnDefinition = "boolean default false")
     boolean isDefault;
     @Column(name = "max_tokens", nullable = false)
     Long maxTokens;

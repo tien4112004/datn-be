@@ -8,11 +8,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
-import org.springframework.ai.chat.client.ChatClient;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -27,6 +28,17 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
     }
 
     @Override
+    public Optional<ModelConfigurationEntity> getModelById(Integer modelId) {
+        return modelConfigurationJPARepo.findById(modelId);
+    }
+
+    @Override
+    public ModelConfigurationEntity getModelByName(String modelName) {
+        return modelConfigurationJPARepo.findByModelName(modelName);
+    }
+
+
+    @Override
     public boolean isModelEnabled(String modelName) {
         // Here you would typically check the model configuration in the database
         // For demonstration purposes, let's assume all models are enabled
@@ -35,19 +47,27 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
 
     @Override
     public List<ModelConfigurationEntity> getModels() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getNumberModels'");
+        return modelConfigurationJPARepo.findAll();
     }
 
     @Override
-    public void addModel(String modelName, ChatClient chatClient) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'addModel'");
+    public void save(ModelConfigurationEntity modelEntity) {
+        // Add validation or transformation logic if needed
+        log.info("Saving model {}", modelEntity);
+        modelConfigurationJPARepo.save(modelEntity);
     }
 
     @Override
-    public void addModels(Map<String, ChatClient> chatClients) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'addModels'");
+    public void setEnabled(String modelName, boolean isEnabled) {
+        var existingModel = getModelByName(modelName);
+        existingModel.setEnabled(isEnabled);
+        modelConfigurationJPARepo.save(existingModel);
+    }
+
+    @Override
+    public void setDefault(String modelName, boolean isDefault) {
+        var existingModel = getModelByName(modelName);
+        existingModel.setDefault(isDefault);
+        modelConfigurationJPARepo.save(existingModel);
     }
 }
