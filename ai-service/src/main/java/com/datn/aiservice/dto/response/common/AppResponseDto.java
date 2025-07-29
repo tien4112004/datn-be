@@ -1,4 +1,5 @@
 package com.datn.aiservice.dto.response.common;
+
 import com.datn.aiservice.exceptions.AppException;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AccessLevel;
@@ -36,7 +37,7 @@ public class AppResponseDto<T> {
     }
 
     public static <T> AppResponseDto<T> failure(AppException exception) {
-        return AppResponseDto.<T>builder().code(500).message(exception.getMessage())
+        return AppResponseDto.<T>builder().code(exception.getStatusCode()).message(exception.getMessage())
                 .errorCode(exception.getErrorCode().getErrorCodeName()).build();
     }
 

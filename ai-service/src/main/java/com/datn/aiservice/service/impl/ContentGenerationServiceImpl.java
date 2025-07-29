@@ -31,7 +31,7 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
     public Flux<String> generateOutline(OutlinePromptRequest request) {
         if (!modelSelectionService.isModelEnabled(request.getModel())) {
             log.error("Model {} is not enabled for outline generation", request.getModel());
-            throw new AppException(ErrorCode.MODEL_NOT_ENABLED);
+            return Flux.error(new AppException(ErrorCode.MODEL_NOT_ENABLED));
         }
 
         var chatClient = chatClientFactory.getChatClient(request.getModel());
