@@ -1,6 +1,7 @@
 package com.datn.aiservice.controller;
 
 import com.datn.aiservice.dto.request.OutlinePromptRequest;
+import com.datn.aiservice.dto.request.SlidePromptRequest;
 import com.datn.aiservice.service.interfaces.ContentGenerationService;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -30,5 +31,20 @@ public class ContentGenerationController {
                 )
                 .doOnNext(response -> log.info("Generated outline: {}", response))
                 .doOnError(error -> log.error("Error generating outline", error));
+    }
+
+    @PostMapping(value = "/presentations/slide-generate", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<String> generateSlides(@RequestBody SlidePromptRequest request) {
+        log.info("Received slide generation request: {}", request);
+        return contentGenerationServiceImpl.generateSlides(request)
+                .bufferUntil(token -> token.contains("\n"))
+                .map(bufferedToken -> {
+                            String combined = String.join("", bufferedToken);
+                            combined = combined.replace("\n", "");
+                            return combined;
+                        }
+                )
+                .doOnNext(response -> log.info("Generated slides: {}", response))
+                .doOnError(error -> log.error("Error generating slides", error));
     }
 }
