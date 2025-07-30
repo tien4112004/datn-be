@@ -103,10 +103,10 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
         var models = modelConfigurationJPARepo.findAll();
 
         models.stream()
-            .filter(model -> !model.getModelName().equals(modelName))
-            .forEach(model -> {
-                model.setDefault(false);
-                modelConfigurationJPARepo.save(model);
-            });
+                .filter(model -> !model.getModelName().equals(modelName))
+                .forEach(model -> {
+                    model.setDefault(false);
+                    modelConfigurationJPARepo.save(model);
+                });
     }
 }
