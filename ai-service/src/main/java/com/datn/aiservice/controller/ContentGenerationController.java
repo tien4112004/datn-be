@@ -11,13 +11,12 @@ import reactor.core.publisher.Flux;
 
 @Slf4j
 @RestController
-@RequestMapping("/api")
 @RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class ContentGenerationController {
     ContentGenerationService contentGenerationServiceImpl;
 
-    @PostMapping(value = "/presentations/outline/generate", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(value = "/presentations/outline-generate", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> generateOutline(@RequestBody OutlinePromptRequest request) {
         log.info("Received outline generation request: {}", request);
 
