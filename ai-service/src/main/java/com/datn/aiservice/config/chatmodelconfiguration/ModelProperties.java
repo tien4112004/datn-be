@@ -21,6 +21,6 @@ public class ModelProperties {
         String modelName;
         String displayName;
         String provider;
-        Integer maxTokens;
+        boolean defaultModel;
     }
 }

@@ -1,6 +1,8 @@
 package com.datn.aiservice.repository.impl;
 
 import com.datn.aiservice.entity.ModelConfigurationEntity;
+import com.datn.aiservice.exceptions.AppException;
+import com.datn.aiservice.exceptions.ErrorCode;
 import com.datn.aiservice.repository.impl.jpa.ModelConfigurationJPARepo;
 import com.datn.aiservice.repository.interfaces.ModelConfigurationRepo;
 import lombok.AccessLevel;
@@ -33,7 +35,8 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
 
     @Override
     public ModelConfigurationEntity getModelByName(String modelName) {
-        return modelConfigurationJPARepo.findByModelName(modelName);
+        return modelConfigurationJPARepo.findByModelName(modelName)
+                .orElse(null); // Return null if not found for backward compatibility
     }
 
     @Override
@@ -57,14 +60,16 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
 
     @Override
     public void setEnabled(String modelName, boolean isEnabled) {
-        var existingModel = getModelByName(modelName);
+        var existingModel = modelConfigurationJPARepo.findByModelName(modelName)
+                .orElseThrow(() -> AppException.builder().errorCode(ErrorCode.MODEL_NOT_FOUND).build());
         existingModel.setEnabled(isEnabled);
         modelConfigurationJPARepo.save(existingModel);
     }
 
     @Override
     public void setDefault(String modelName, boolean isDefault) {
-        var existingModel = getModelByName(modelName);
+        var existingModel = modelConfigurationJPARepo.findByModelName(modelName)
+                .orElseThrow(() -> AppException.builder().errorCode(ErrorCode.MODEL_NOT_FOUND).build());
         existingModel.setDefault(isDefault);
         modelConfigurationJPARepo.save(existingModel);
     }
@@ -74,10 +79,10 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
         var models = modelConfigurationJPARepo.findAll();
 
         models.stream()
-            .filter(model -> !model.getModelName().equals(modelName))
-            .forEach(model -> {
-                model.setDefault(false);
-                modelConfigurationJPARepo.save(model);
-            });
+                .filter(model -> !model.getModelName().equals(modelName))
+                .forEach(model -> {
+                    model.setDefault(false);
+                    modelConfigurationJPARepo.save(model);
+                });
     }
 }

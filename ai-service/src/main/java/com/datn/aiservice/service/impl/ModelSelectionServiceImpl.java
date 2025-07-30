@@ -35,7 +35,7 @@ public class ModelSelectionServiceImpl implements ModelSelectionService {
     @Override
     public ModelResponseDto getModelConfiguration(String modelName) {
         if (!modelConfigurationRepo.existsByModelName(modelName)) {
-            throw new AppException(ErrorCode.MODEL_NOT_FOUND);
+            throw AppException.builder().errorCode(ErrorCode.MODEL_NOT_FOUND).build();
         }
 
         var modelEntity = modelConfigurationRepo.getModelByName(modelName);
@@ -45,7 +45,7 @@ public class ModelSelectionServiceImpl implements ModelSelectionService {
     @Override
     public void setModelEnabled(String modelName, boolean isEnabled) {
         if (!modelConfigurationRepo.existsByModelName(modelName)) {
-            throw new AppException(ErrorCode.MODEL_NOT_FOUND);
+            throw AppException.builder().errorCode(ErrorCode.MODEL_NOT_FOUND).build();
         }
 
         modelConfigurationRepo.setEnabled(modelName, isEnabled);
@@ -55,7 +55,7 @@ public class ModelSelectionServiceImpl implements ModelSelectionService {
     @Transactional
     public void setDefault(String modelName, boolean isDefault) {
         if (!modelConfigurationRepo.existsByModelName(modelName)) {
-            throw new AppException(ErrorCode.MODEL_NOT_FOUND);
+            throw AppException.builder().errorCode(ErrorCode.MODEL_NOT_FOUND).build();
         }
 
         // Set others models to not default
@@ -69,7 +69,7 @@ public class ModelSelectionServiceImpl implements ModelSelectionService {
     @Override
     public boolean isModelEnabled(String modelName) {
         if (!modelConfigurationRepo.existsByModelName(modelName)) {
-            throw new AppException(ErrorCode.MODEL_NOT_FOUND);
+            throw AppException.builder().errorCode(ErrorCode.MODEL_NOT_FOUND).build();
         }
 
         var modelEntity = modelConfigurationRepo.getModelByName(modelName);
@@ -80,6 +80,8 @@ public class ModelSelectionServiceImpl implements ModelSelectionService {
     @Transactional
     public void saveModelInfo(ModelInfo modelInfo) {
         var modelEntity = modelDataMapper.toModelConfigurationEntity(modelInfo);
+        modelEntity.setEnabled(true);
+        modelEntity.setDefault(modelInfo.isDefaultModel());
 
         modelConfigurationRepo.save(modelEntity);
     }

@@ -23,6 +23,5 @@ public class ModelConfigurationEntity {
     boolean isEnabled;
     @Column(name = "is_default", nullable = false, columnDefinition = "boolean default false")
     boolean isDefault;
-    @Column(name = "max_tokens", nullable = false)
-    Long maxTokens;
+    String provider;
 }

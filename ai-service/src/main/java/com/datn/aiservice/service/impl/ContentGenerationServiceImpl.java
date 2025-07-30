@@ -5,19 +5,16 @@ import com.datn.aiservice.dto.request.SlidePromptRequest;
 import com.datn.aiservice.exceptions.AppException;
 import com.datn.aiservice.exceptions.ErrorCode;
 import com.datn.aiservice.factory.ChatClientFactory;
-import com.datn.aiservice.service.interfaces.ModelSelectionService;
 import com.datn.aiservice.service.interfaces.ContentGenerationService;
+import com.datn.aiservice.service.interfaces.ModelSelectionService;
 import com.datn.aiservice.utils.MappingParamsUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.mapstruct.Mapping;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
-
-import java.util.Map;
 
 @Service
 @Slf4j

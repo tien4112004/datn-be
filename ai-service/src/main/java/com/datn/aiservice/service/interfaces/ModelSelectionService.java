@@ -47,5 +47,10 @@ public interface ModelSelectionService {
      */
     boolean isModelEnabled(String modelName);
 
+    /**
+     * Saves the model information.
+     *
+     * @param modelInfo the ModelProperties.ModelInfo object containing the model information to save
+     */
     void saveModelInfo(ModelProperties.ModelInfo modelInfo);
 }

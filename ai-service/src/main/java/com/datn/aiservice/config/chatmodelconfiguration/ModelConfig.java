@@ -45,7 +45,6 @@ public class ModelConfig {
                 .openAiApi(openAiApi)
                 .defaultOptions(
                         OpenAiChatOptions.builder()
-                                .maxTokens(defaultModelConfig.getMaxTokens())
                                 .model(defaultModelConfig.getModelName())
                                 .build())
                 .build();
@@ -63,7 +62,6 @@ public class ModelConfig {
                     .defaultOptions(
                             OpenAiChatOptions.builder()
                                     .model(config.getModelName())
-                                    .maxTokens(config.getMaxTokens())
                                     .build())
                     .build();
 
