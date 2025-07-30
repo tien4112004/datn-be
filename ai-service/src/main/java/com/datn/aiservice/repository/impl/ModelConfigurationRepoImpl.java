@@ -68,4 +68,16 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
         existingModel.setDefault(isDefault);
         modelConfigurationJPARepo.save(existingModel);
     }
+
+    @Override
+    public void setAllModelsNotDefaultExcept(String modelName) {
+        var models = modelConfigurationJPARepo.findAll();
+
+        models.stream()
+            .filter(model -> !model.getModelName().equals(modelName))
+            .forEach(model -> {
+                model.setDefault(false);
+                modelConfigurationJPARepo.save(model);
+            });
+    }
 }

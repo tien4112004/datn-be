@@ -22,4 +22,6 @@ public interface ModelConfigurationRepo {
     void setEnabled(String modelName, boolean isEnabled);
 
     void setDefault(String modelName, boolean isDefault);
+
+    void setAllModelsNotDefaultExcept(String modelName);
 }
