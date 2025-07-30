@@ -7,10 +7,12 @@ import com.datn.aiservice.exceptions.ErrorCode;
 import com.datn.aiservice.factory.ChatClientFactory;
 import com.datn.aiservice.service.interfaces.ModelSelectionService;
 import com.datn.aiservice.service.interfaces.ContentGenerationService;
+import com.datn.aiservice.utils.MappingParamsUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.mapstruct.Mapping;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -29,6 +31,8 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
 
     @Override
     public Flux<String> generateOutline(OutlinePromptRequest request) {
+
+
         if (!modelSelectionService.isModelEnabled(request.getModel())) {
             log.error("Model {} is not enabled for outline generation", request.getModel());
             return Flux.error(new AppException(ErrorCode.MODEL_NOT_ENABLED));
@@ -38,13 +42,8 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
         log.info("Using chat client: {}", chatClient.getClass().getSimpleName());
 
         return chatClient.prompt()
-                .user(promptUserSpec -> promptUserSpec.text(outlinePromptResource)
-                        .params(Map.of(
-                                "language", request.getLanguage(),
-                                "topic", request.getTopic(),
-                                "slide_count", request.getSlideCount(),
-                                "learning_objective", request.getLearningObjective(),
-                                "target_age", request.getTargetAge())))
+                .system(promptSys -> promptSys.text(outlinePromptResource)
+                        .params(MappingParamsUtils.constructParams(request)))
                 .stream().content();
     }
 
