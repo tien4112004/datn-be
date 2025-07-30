@@ -1,16 +1,27 @@
 package com.datn.aiservice.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @Data
 @Builder
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
+@AllArgsConstructor
+@NoArgsConstructor
 public class SlidePromptRequest {
-    String prompt;
-    String language;
-    String style;
-    // Will handle later
+    
+    @NotBlank(message = "Outline cannot be blank")
+    @Size(min = 1, message = "Outline must have at least 1 character")
+    String outline;
+    
+    String model;
+    //will handle later
+    //String language;
+    //String style;
     // String model;
 }
