@@ -16,18 +16,20 @@ import reactor.core.publisher.Flux;
 public class ContentGenerationController {
     ContentGenerationService contentGenerationServiceImpl;
 
-    @PostMapping(value = "/presentations/outline-generate", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(value = "/presentations/outline-generate", produces = MediaType.TEXT_PLAIN_VALUE)
     public Flux<String> generateOutline(@RequestBody OutlinePromptRequest request) {
         log.info("Received outline generation request: {}", request);
 
         return contentGenerationServiceImpl.generateOutline(request)
                 .bufferUntil(token -> token.contains("\n"))
                 .map(bufferedToken -> {
-                            String combined = String.join("", bufferedToken);
-                            combined = combined.replace("\n", "");
-                            return combined;
-                        }
-                )
+                    if (bufferedToken.isEmpty() || bufferedToken.contains("```")) {
+                        return "";
+                    }
+                    String combined = String.join("", bufferedToken);
+
+                    return combined;
+                })
                 .doOnNext(response -> log.info("Generated outline: {}", response))
                 .doOnError(error -> log.error("Error generating outline", error));
     }

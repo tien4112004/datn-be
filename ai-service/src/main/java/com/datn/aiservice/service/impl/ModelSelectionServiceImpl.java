@@ -58,11 +58,6 @@ public class ModelSelectionServiceImpl implements ModelSelectionService {
             throw AppException.builder().errorCode(ErrorCode.MODEL_NOT_FOUND).build();
         }
 
-        // Set others models to not default
-        if (isDefault) {
-            modelConfigurationRepo.setAllModelsNotDefaultExcept(modelName);
-        }
-
         modelConfigurationRepo.setDefault(modelName, isDefault);
     }
 

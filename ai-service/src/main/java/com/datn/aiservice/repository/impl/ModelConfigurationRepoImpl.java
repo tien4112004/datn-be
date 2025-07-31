@@ -70,6 +70,12 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
     public void setDefault(String modelName, boolean isDefault) {
         var existingModel = modelConfigurationJPARepo.findByModelName(modelName)
                 .orElseThrow(() -> AppException.builder().errorCode(ErrorCode.MODEL_NOT_FOUND).build());
+
+        // Set others models to not default
+        if (isDefault) {
+            setAllModelsNotDefaultExcept(modelName);
+        }
+
         existingModel.setDefault(isDefault);
         modelConfigurationJPARepo.save(existingModel);
     }
