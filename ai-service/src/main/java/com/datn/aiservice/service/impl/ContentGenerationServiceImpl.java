@@ -7,6 +7,7 @@ import com.datn.aiservice.event.PresentationGeneratedEvent;
 import com.datn.aiservice.exceptions.AppException;
 import com.datn.aiservice.exceptions.ErrorCode;
 import com.datn.aiservice.factory.ChatClientFactory;
+import com.datn.aiservice.messaging.AIEventPublisher;
 import com.datn.aiservice.service.interfaces.ContentGenerationService;
 import com.datn.aiservice.service.interfaces.ModelSelectionService;
 import com.datn.aiservice.utils.MappingParamsUtils;
@@ -17,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -33,7 +33,7 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
     Resource slidePromptResource;
     ModelSelectionService modelSelectionService;
     ChatClientFactory chatClientFactory;
-    ApplicationEventPublisher applicationEventPublisher;
+    AIEventPublisher aiEventPublisher;
     ObjectMapper objectMapper;
 
     @Override
@@ -76,7 +76,6 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
                      try {
                         // Clean the response to extract JSON
                         String cleanedJson = extractJsonFromResponse(completeResponse.toString());
-                        log.debug("Cleaned JSON response: {}", cleanedJson);
                         
                         // Parse the complete JSON response
                         PresentationResponse slideResponse = objectMapper.readValue(
@@ -84,11 +83,10 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
 
                         // Publish event with actual slides
                         var event = new PresentationGeneratedEvent(slideResponse.getSlides());
-                        applicationEventPublisher.publishEvent(event);
+                        aiEventPublisher.publishEvent(event);
 
                     } catch (Exception e) {
                         log.error("Failed to parse slides from LLM response: {}", e.getMessage());
-                        log.error("Raw response: {}", completeResponse.toString());
                     }
                 })
                 .doOnError(error -> log.error("Error in streaming presentation generation: {}", error.getMessage()));

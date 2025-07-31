@@ -5,20 +5,24 @@ spring:
     import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
-  datasource:
-    url: ${MODEL_CONFIG_DB_URL:jdbc:postgresql://localhost:5432/model_configuration_db}
-    username: ${MODEL_CONFIG_DB_USERNAME:postgres}
-    password: ${MODEL_CONFIG_DB_PASSWORD:1234}
-    driver-class-name: org.postgresql.Driver
-  
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format-sql: true
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+
+  cloud:
+    stream:
+      default-binder: rabbit
+      bindings:
+        ai-events-out-0:  
+          destination: ai-events-exchange  
+          content-type: application/json
+          group: ai-events-group
+          producer:
+            required-groups: ai-events-group
+
 ---
 
 spring:
