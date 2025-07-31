@@ -17,73 +17,73 @@ Transform the approved outline into {slide_count} complete, interactive slides.
 Use for: Opening/title slide
 
 ```json
-{
+\{
   "type": "cover",
-  "data": {
+  "data": \{
     "title": "Main presentation title in {language}",
     "text": "Engaging subtitle or teaser text for {target_audience}"
-  }
-}
+  \}
+\}
 ```
 
 **Template 2: contents**
 Use for: Table of contents/agenda
 
 ```json
-{
+\{
   "type": "contents",
-  "data": {
+  "data": \{
     "items": [
       "First main section title",
       "Second main section title",
       "Third main section title"
     ]
-  }
-}
+  \}
+\}
 ```
 
 **Template 3: transition**
 Use for: Section dividers between main topics
 
 ```json
-{
+\{
   "type": "transition",
-  "data": {
+  "data": \{
     "title": "New section title in {language}",
     "text": "Brief description of what's coming next"
-  }
-}
+  \}
+\}
 ```
 
 **Template 4: content**
 Use for: Main educational content
 
 ```json
-{
+\{
   "type": "content",
-  "data": {
+  "data": \{
     "title": "Slide topic in {language}",
     "items": [
-      {
+      \{
         "title": "First key point",
         "text": "Detailed explanation with **markdown** for {target_audience}"
-      },
-      {
+      \},
+      \{
         "title": "Second key point",
         "text": "Another explanation appropriate for {target_audience}"
-      }
+      \}
     ]
-  }
-}
+  \}
+\}
 ```
 
 **Template 5: end**
 Use for: This is the signal to end the presentation.
 
 ```json
-{
+\{
   "type": "end"
-}
+\}
 ```
 
 **Content Guidelines:**

@@ -37,7 +37,7 @@ public class ContentGenerationController {
                         "Failed to generate outline: " + error.getMessage()));
     }
 
-    @PostMapping(value = "/presentations/slide-generate", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(value = "/presentations/generate", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> generateSlides(@RequestBody SlidePromptRequest request) {
         log.info("Received slide generation request: {}", request);
         return contentGenerationServiceImpl.generateSlides(request)
@@ -48,7 +48,7 @@ public class ContentGenerationController {
                             return combined;
                         }
                 )
-                .doOnNext(response -> log.info("Generated slides: {}", response))
+                .doOnNext(response -> log.info("{}", response))
                 .doOnError(error -> log.error("Error generating slides", error));
     }
 }
