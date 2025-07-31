@@ -37,7 +37,7 @@ public class AppResponseDto<T> {
     }
 
     public static <T> AppResponseDto<T> failure(AppException exception) {
-        return AppResponseDto.<T>builder().code(exception.getStatusCode()).message(exception.getMessage())
+        return AppResponseDto.<T>builder().code(exception.getStatusCode()).message(exception.getErrorMessage())
                 .errorCode(exception.getErrorCode().getErrorCodeName()).build();
     }
 
