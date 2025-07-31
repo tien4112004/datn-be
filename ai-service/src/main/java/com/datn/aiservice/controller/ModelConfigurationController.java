@@ -24,7 +24,6 @@ public class ModelConfigurationController {
     @GetMapping
     public ResponseEntity<AppResponseDto<?>> getAllModels() {
         log.info("Fetching all models");
-        // Assuming a service method exists to fetch all models
         var models = modelSelectionService.getModelConfigurations();
         return ResponseEntity.ok(AppResponseDto.success(models, "Fetched all models successfully"));
     }
@@ -32,13 +31,12 @@ public class ModelConfigurationController {
     /**
      * Endpoint to enable or disable a model by its ID.
      *
-     * @param id        The ID of the model to enable/disable.
+     * @param id The ID of the model to enable/disable.
      * @return ResponseEntity indicating the result of the operation.
      */
     @GetMapping(value = "/{id}")
-    public ResponseEntity<AppResponseDto<?>> getModelById(@PathVariable String id) {
+    public ResponseEntity<AppResponseDto<?>> getModelById(@PathVariable Integer id) {
         log.info("Fetching model with ID: {}", id);
-        // Assuming a service method exists to fetch the model by ID
         var model = modelSelectionService.getModelConfiguration(id);
         return ResponseEntity.ok(AppResponseDto.success(model, "Fetched model successfully"));
     }
@@ -51,12 +49,14 @@ public class ModelConfigurationController {
      */
     @PostMapping(value = "/{id}")
     public ResponseEntity<AppResponseDto<Void>> updateModelStatus(
-            @PathVariable String id,
-            @RequestParam(name = "enable", required = false, defaultValue = "true") boolean isEnable) {
-        // Logic to enable the model
+            @PathVariable Integer id,
+            @RequestParam(name = "enable", required = false, defaultValue = "true") boolean isEnable,
+            @RequestParam(name = "default", required = false, defaultValue = "false") boolean isDefault) {
         log.info("Enabling model with ID: {}", id);
-        // Assuming a service method exists to handle this
+
         modelSelectionService.setModelEnabled(id, isEnable);
+        modelSelectionService.setModelDefault(id, isDefault);
+
         return ResponseEntity.ok(AppResponseDto.success());
     }
 }

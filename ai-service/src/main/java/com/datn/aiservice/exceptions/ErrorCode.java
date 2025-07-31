@@ -12,6 +12,7 @@ public enum ErrorCode {
 
     MODEL_NOT_FOUND("Model not found", 404),
     MODEL_NOT_ENABLED("Model is not enabled for this operation", 403),
+    INVALID_MODEL_STATUS("Invalid model status", 403),
     ;
 
     private final String defaultMessage;

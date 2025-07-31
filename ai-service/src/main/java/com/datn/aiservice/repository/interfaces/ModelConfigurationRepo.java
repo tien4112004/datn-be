@@ -9,6 +9,8 @@ public interface ModelConfigurationRepo {
 
     boolean existsByModelName(String modelName);
 
+    boolean existsByModelId(Integer modelId);
+
     Optional<ModelConfigurationEntity> getModelById(Integer modelId);
 
     ModelConfigurationEntity getModelByName(String modelName);
@@ -19,9 +21,7 @@ public interface ModelConfigurationRepo {
 
     void save(ModelConfigurationEntity modelEntity);
 
-    void setEnabled(String modelName, boolean isEnabled);
+    void setEnabled(Integer modelId, boolean isEnabled);
 
-    void setDefault(String modelName, boolean isDefault);
-
-    void setAllModelsNotDefaultExcept(String modelName);
+    void setDefault(Integer modelId, boolean isDefault);
 }

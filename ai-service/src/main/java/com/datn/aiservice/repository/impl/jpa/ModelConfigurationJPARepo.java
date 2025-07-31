@@ -1,8 +1,12 @@
 package com.datn.aiservice.repository.impl.jpa;
 
 import com.datn.aiservice.entity.ModelConfigurationEntity;
+
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -11,4 +15,13 @@ public interface ModelConfigurationJPARepo extends JpaRepository<ModelConfigurat
     Optional<ModelConfigurationEntity> findByModelName(String modelName);
 
     boolean existsByModelName(String modelName);
+
+    @Modifying
+    @Transactional
+    @Query("""
+                    UPDATE ModelConfigurationEntity m
+                    SET m.isDefault = false
+                    WHERE m.isEnabled = true AND m.modelId != :modelId
+            """)
+    void disableDefaultModelsExcept(Integer modelId);
 }

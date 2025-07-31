@@ -33,38 +33,40 @@ public class ModelSelectionServiceImpl implements ModelSelectionService {
     }
 
     @Override
-    public ModelResponseDto getModelConfiguration(String modelName) {
-        if (!modelConfigurationRepo.existsByModelName(modelName)) {
-            throw AppException.builder().errorCode(ErrorCode.MODEL_NOT_FOUND).build();
-        }
+    public ModelResponseDto getModelConfiguration(Integer modelId) {
+        var modelEntity = modelConfigurationRepo.getModelById(modelId)
+                .orElseThrow(() -> new AppException(ErrorCode.MODEL_NOT_FOUND));
 
-        var modelEntity = modelConfigurationRepo.getModelByName(modelName);
         return modelDataMapper.toModelResponseDto(modelEntity);
     }
 
     @Override
-    public void setModelEnabled(String modelName, boolean isEnabled) {
-        if (!modelConfigurationRepo.existsByModelName(modelName)) {
-            throw AppException.builder().errorCode(ErrorCode.MODEL_NOT_FOUND).build();
+    public void setModelEnabled(Integer modelId, boolean isEnabled) {
+        var existingModel = modelConfigurationRepo.getModelById(modelId)
+                .orElseThrow(() -> new AppException(ErrorCode.MODEL_NOT_FOUND));
+
+        if (!isEnabled && existingModel.isDefault()) {
+            throw new AppException(ErrorCode.INVALID_MODEL_STATUS,
+                    "Cannot disable the default model. Please set another model as default first.");
         }
 
-        modelConfigurationRepo.setEnabled(modelName, isEnabled);
+        modelConfigurationRepo.setEnabled(modelId, isEnabled);
     }
 
     @Override
     @Transactional
-    public void setDefault(String modelName, boolean isDefault) {
-        if (!modelConfigurationRepo.existsByModelName(modelName)) {
-            throw AppException.builder().errorCode(ErrorCode.MODEL_NOT_FOUND).build();
+    public void setModelDefault(Integer modelId, boolean isDefault) {
+        if (!modelConfigurationRepo.existsByModelId(modelId)) {
+            throw new AppException(ErrorCode.MODEL_NOT_FOUND);
         }
 
-        modelConfigurationRepo.setDefault(modelName, isDefault);
+        modelConfigurationRepo.setDefault(modelId, isDefault);
     }
 
     @Override
     public boolean isModelEnabled(String modelName) {
         if (!modelConfigurationRepo.existsByModelName(modelName)) {
-            throw AppException.builder().errorCode(ErrorCode.MODEL_NOT_FOUND).build();
+            throw new AppException(ErrorCode.MODEL_NOT_FOUND);
         }
 
         var modelEntity = modelConfigurationRepo.getModelByName(modelName);

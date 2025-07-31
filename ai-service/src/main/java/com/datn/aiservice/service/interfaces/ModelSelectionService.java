@@ -19,25 +19,25 @@ public interface ModelSelectionService {
     /**
      * Retrieves the full configuration of a model by its ID.
      *
-     * @param modelName the ID of the model to retrieve
+     * @param modelId the ID of the model to retrieve
      * @return a ModelResponseDto containing the full configuration of the model
      */
-    ModelResponseDto getModelConfiguration(String modelName);
+    ModelResponseDto getModelConfiguration(Integer modelId);
 
     /**
      * Enables a model by its ID.
      *
-     * @param modelName the ID of the model to enable
+     * @param modelId the ID of the model to enable
      */
-    void setModelEnabled(String modelName, boolean isEnabled);
+    void setModelEnabled(Integer modelId, boolean isEnabled);
 
     /**
      * Sets a model as the default model by its ID.
      *
-     * @param modelName the ID of the model to set as default
+     * @param modelId the ID of the model to set as default
      * @param isDefault true if the model should be set as default, false otherwise
      */
-    void setDefault(String modelName, boolean isDefault);
+    void setModelDefault(Integer modelId, boolean isDefault);
 
     /**
      * Checks if a model is enabled by its ID.

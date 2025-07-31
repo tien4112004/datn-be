@@ -29,7 +29,6 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
     @Override
     public Flux<String> generateOutline(OutlinePromptRequest request) {
 
-
         if (!modelSelectionService.isModelEnabled(request.getModel())) {
             log.error("Model {} is not enabled for outline generation", request.getModel());
             return Flux.error(new AppException(ErrorCode.MODEL_NOT_ENABLED));

@@ -29,6 +29,11 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
     }
 
     @Override
+    public boolean existsByModelId(Integer modelId) {
+        return modelConfigurationJPARepo.existsById(modelId);
+    }
+
+    @Override
     public Optional<ModelConfigurationEntity> getModelById(Integer modelId) {
         return modelConfigurationJPARepo.findById(modelId);
     }
@@ -59,36 +64,30 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
     }
 
     @Override
-    public void setEnabled(String modelName, boolean isEnabled) {
-        var existingModel = modelConfigurationJPARepo.findByModelName(modelName)
+    public void setEnabled(Integer modelId, boolean isEnabled) {
+        var existingModel = modelConfigurationJPARepo.findById(modelId)
                 .orElseThrow(() -> AppException.builder().errorCode(ErrorCode.MODEL_NOT_FOUND).build());
         existingModel.setEnabled(isEnabled);
         modelConfigurationJPARepo.save(existingModel);
     }
 
     @Override
-    public void setDefault(String modelName, boolean isDefault) {
-        var existingModel = modelConfigurationJPARepo.findByModelName(modelName)
+    public void setDefault(Integer modelId, boolean isDefault) {
+        var existingModel = modelConfigurationJPARepo.findById(modelId)
                 .orElseThrow(() -> AppException.builder().errorCode(ErrorCode.MODEL_NOT_FOUND).build());
+
+        if (isDefault && !existingModel.isEnabled()) {
+            throw AppException.builder()
+                    .errorCode(ErrorCode.MODEL_NOT_ENABLED)
+                    .build();
+        }
 
         // Set others models to not default
         if (isDefault) {
-            setAllModelsNotDefaultExcept(modelName);
+            modelConfigurationJPARepo.disableDefaultModelsExcept(modelId);
         }
 
         existingModel.setDefault(isDefault);
         modelConfigurationJPARepo.save(existingModel);
-    }
-
-    @Override
-    public void setAllModelsNotDefaultExcept(String modelName) {
-        var models = modelConfigurationJPARepo.findAll();
-
-        models.stream()
-                .filter(model -> !model.getModelName().equals(modelName))
-                .forEach(model -> {
-                    model.setDefault(false);
-                    modelConfigurationJPARepo.save(model);
-                });
     }
 }
