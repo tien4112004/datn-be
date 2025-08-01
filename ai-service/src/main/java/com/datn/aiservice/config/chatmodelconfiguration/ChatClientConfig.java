@@ -1,46 +1,58 @@
 package com.datn.aiservice.config.chatmodelconfiguration;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.vertexai.gemini.VertexAiGeminiChatModel;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
+@FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class ChatClientConfig {
-    private final ModelProperties modelProperties;
+    final ModelProperties modelProperties;
+    final Map<String, OpenAiChatModel> allChatModels;
+    final Map<String, VertexAiGeminiChatModel> allGeminiChatModels;
 
     @Bean
-    public Map<String, ChatClient> chatClients(
-            Map<String, OpenAiChatModel> allChatModels,
-            @Qualifier("defaultSystemPrompt") Resource defaultSystemPrompt) {
+    public Map<String, ChatClient> chatClients(@Qualifier("defaultSystemPrompt") Resource defaultSystemPrompt) {
 
+        Map<String, ChatClient> clients = new HashMap<>();
         List<String> errorModels = new ArrayList<>();
-        Map<String, ChatClient> chatClients = new HashMap<>();
 
-        modelProperties.getConfigurations().forEach((key, config) -> {
-            OpenAiChatModel model = allChatModels.get(config.getModelName());
-            if (model != null) {
-                ChatClient chatClient = ChatClient.builder(model)
-                        .defaultSystem(defaultSystemPrompt)
-                        .build();
+        // modelProperties.configurations ⇒ Map<"openai" or "gemini", List<ModelInfo>>
+        modelProperties.getConfigurations()
+                .forEach((providerKey, infos) -> {
+                    infos.forEach(info -> {
+                        // pick the right ChatModel map based on providerKey
+                        ChatModel underlying = switch (providerKey) {
+                            case "openai" -> allChatModels.get(info.getModelName());
+                            case "gemini" -> allGeminiChatModels.get(info.getModelName());
+                            default -> null;
+                        };
 
-                chatClients.put(config.getModelName(), chatClient);
-            } else {
-                errorModels.add(config.getModelName());
-            }
-        });
+                        if (underlying != null) {
+                            ChatClient client = ChatClient.builder(underlying)
+                                    .defaultSystem(defaultSystemPrompt)
+                                    .build();
+                            clients.put(info.getModelName(), client);
+                        } else {
+                            errorModels.add(info.getModelName());
+                        }
+                    });
+                });
 
         if (!errorModels.isEmpty()) {
             log.error("Failed to create chat clients for models: {}", errorModels);
@@ -48,6 +60,6 @@ public class ChatClientConfig {
             log.info("Chat clients created successfully for all models.");
         }
 
-        return chatClients;
+        return clients;
     }
 }

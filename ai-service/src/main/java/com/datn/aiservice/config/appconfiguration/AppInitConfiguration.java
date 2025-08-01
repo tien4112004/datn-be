@@ -30,9 +30,7 @@ public class AppInitConfiguration {
             var definedModels = modelProperties.getConfigurations();
 
             if (models.isEmpty() || models.size() != definedModels.size()) {
-                modelProperties.getConfigurations().forEach((key, modelData) -> {
-                    modelSelectionService.saveModelInfo(modelData);
-                });
+                modelProperties.getModels().forEach(modelSelectionService::saveModelInfo);
             } else {
                 log.info("All models are ready");
             }

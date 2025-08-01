@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -14,7 +15,7 @@ import java.util.Map;
 @ConfigurationPropertiesScan
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class ModelProperties {
-    Map<String, ModelInfo> configurations;
+    Map<String, List<ModelInfo>> configurations;
 
     @Data
     public static class ModelInfo {
@@ -22,5 +23,11 @@ public class ModelProperties {
         String displayName;
         String provider;
         boolean defaultModel;
+    }
+
+    public List<ModelInfo> getModels() {
+        return configurations.values().stream()
+                .flatMap(List::stream)
+                .toList();
     }
 }
