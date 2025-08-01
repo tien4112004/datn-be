@@ -11,8 +11,11 @@ import org.mapstruct.Mapping;
 public interface ModelDataMapper {
     ModelMinimalResponseDto toModelMinimalResponseDto(ModelConfigurationEntity modelConfigurationEntity);
 
+    @Mapping(target = "isDefault", expression = "java(modelEntity.isDefault())")
+    @Mapping(target = "isEnabled", expression = "java(modelEntity.isDefault())")
     ModelResponseDto toModelResponseDto(ModelConfigurationEntity modelEntity);
 
+    @Mapping(target = "modelId", ignore = true)
     @Mapping(target = "enabled", ignore = true)
     @Mapping(target = "default", ignore = true)
     ModelConfigurationEntity toModelConfigurationEntity(ModelProperties.ModelInfo modelInfo);

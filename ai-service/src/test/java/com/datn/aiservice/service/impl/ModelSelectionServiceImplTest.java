@@ -121,7 +121,7 @@ class ModelSelectionServiceImplTest {
         // Given
         Integer modelId = 1;
 //        when(modelConfigurationRepo.existsByModelId(modelId)).thenReturn(true);
-        when(modelConfigurationRepo.getModelById(modelId)).thenReturn(Optional.ofNullable(modelEntity1));
+        when(modelConfigurationRepo.getModelById(modelId)).thenReturn(modelEntity1);
         when(modelDataMapper.toModelResponseDto(modelEntity1)).thenReturn(responseDto);
 
         // When
@@ -139,7 +139,7 @@ class ModelSelectionServiceImplTest {
     void getModelConfiguration_ModelNotFound() {
         // Given
         Integer nonExistentModelId = 999;
-        when(modelConfigurationRepo.getModelById(nonExistentModelId)).thenReturn(Optional.empty());
+        when(modelConfigurationRepo.getModelById(nonExistentModelId)).thenThrow(new AppException(ErrorCode.MODEL_NOT_FOUND));
 
         // When & Then
         AppException exception = assertThrows(AppException.class,
@@ -157,7 +157,7 @@ class ModelSelectionServiceImplTest {
         Integer modelId = 1;
         boolean isEnabled = true;
 
-        when(modelConfigurationRepo.getModelById(modelId)).thenReturn(Optional.ofNullable(modelEntity1));
+        when(modelConfigurationRepo.getModelById(modelId)).thenReturn(modelEntity1);
 
         // When
         assertDoesNotThrow(() -> modelSelectionService.setModelEnabled(modelId, isEnabled));
@@ -172,7 +172,7 @@ class ModelSelectionServiceImplTest {
         // Given
         Integer nonExistentModelId = 999;
         boolean isEnabled = true;
-        when(modelConfigurationRepo.getModelById(nonExistentModelId)).thenReturn(Optional.empty());
+        when(modelConfigurationRepo.getModelById(nonExistentModelId)).thenThrow(new AppException(ErrorCode.MODEL_NOT_FOUND));
 
         // When & Then
         AppException exception = assertThrows(AppException.class,
@@ -238,7 +238,6 @@ class ModelSelectionServiceImplTest {
     void isModelEnabled_ModelEnabled() {
         // Given
         String modelName = "gpt-4";
-        when(modelConfigurationRepo.existsByModelName(modelName)).thenReturn(true);
         when(modelConfigurationRepo.getModelByName(modelName)).thenReturn(modelEntity1);
         when(modelConfigurationRepo.isModelEnabled(modelEntity1.getModelId())).thenReturn(true);
 
@@ -247,7 +246,6 @@ class ModelSelectionServiceImplTest {
 
         // Then
         assertTrue(result);
-        verify(modelConfigurationRepo).existsByModelName(modelName);
         verify(modelConfigurationRepo).getModelByName(modelName);
         verify(modelConfigurationRepo).isModelEnabled(modelEntity1.getModelId());
     }
@@ -257,7 +255,6 @@ class ModelSelectionServiceImplTest {
     void isModelEnabled_ModelDisabled() {
         // Given
         String modelName = "claude-3";
-        when(modelConfigurationRepo.existsByModelName(modelName)).thenReturn(true);
         when(modelConfigurationRepo.getModelByName(modelName)).thenReturn(modelEntity2);
         when(modelConfigurationRepo.isModelEnabled(modelEntity2.getModelId())).thenReturn(false);
 
@@ -266,7 +263,6 @@ class ModelSelectionServiceImplTest {
 
         // Then
         assertFalse(result);
-        verify(modelConfigurationRepo).existsByModelName(modelName);
         verify(modelConfigurationRepo).getModelByName(modelName);
         verify(modelConfigurationRepo).isModelEnabled(modelEntity2.getModelId());
     }
@@ -276,15 +272,13 @@ class ModelSelectionServiceImplTest {
     void isModelEnabled_ModelNotFound() {
         // Given
         String modelName = "non-existent-model";
-        when(modelConfigurationRepo.existsByModelName(modelName)).thenReturn(false);
+        when(modelConfigurationRepo.getModelByName(modelName)).thenThrow(new AppException(ErrorCode.MODEL_NOT_FOUND));
 
         // When & Then
         AppException exception = assertThrows(AppException.class,
                 () -> modelSelectionService.isModelEnabled(modelName));
 
         assertEquals(ErrorCode.MODEL_NOT_FOUND, exception.getErrorCode());
-        verify(modelConfigurationRepo).existsByModelName(modelName);
-        verify(modelConfigurationRepo, never()).getModelByName(anyString());
         verify(modelConfigurationRepo, never()).isModelEnabled(anyInt());
     }
 

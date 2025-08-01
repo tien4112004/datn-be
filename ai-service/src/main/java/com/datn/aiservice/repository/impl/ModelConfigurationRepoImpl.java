@@ -34,14 +34,17 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
     }
 
     @Override
-    public Optional<ModelConfigurationEntity> getModelById(Integer modelId) {
-        return modelConfigurationJPARepo.findById(modelId);
+    public ModelConfigurationEntity getModelById(Integer modelId) {
+        return modelConfigurationJPARepo.findById(modelId).orElseThrow(
+                () -> new AppException(ErrorCode.MODEL_NOT_FOUND)
+        );
     }
 
     @Override
     public ModelConfigurationEntity getModelByName(String modelName) {
         return modelConfigurationJPARepo.findByModelName(modelName)
-                .orElse(null); // Return null if not found for backward compatibility
+                .orElseThrow(() -> new AppException(ErrorCode.MODEL_NOT_FOUND,
+                        "Model not found with name: " + modelName));
     }
 
     @Override
@@ -66,7 +69,13 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
     @Override
     public void setEnabled(Integer modelId, boolean isEnabled) {
         var existingModel = modelConfigurationJPARepo.findById(modelId)
-                .orElseThrow(() -> AppException.builder().errorCode(ErrorCode.MODEL_NOT_FOUND).build());
+                .orElseThrow(() -> new AppException(ErrorCode.MODEL_NOT_FOUND));
+
+        if (!isEnabled && existingModel.isDefault()) {
+            throw new AppException(ErrorCode.INVALID_MODEL_STATUS,
+                    "Cannot disable the default model. Please set another model as default first.");
+        }
+
         existingModel.setEnabled(isEnabled);
         modelConfigurationJPARepo.save(existingModel);
     }
@@ -74,12 +83,10 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
     @Override
     public void setDefault(Integer modelId, boolean isDefault) {
         var existingModel = modelConfigurationJPARepo.findById(modelId)
-                .orElseThrow(() -> AppException.builder().errorCode(ErrorCode.MODEL_NOT_FOUND).build());
+                .orElseThrow(() -> new AppException(ErrorCode.MODEL_NOT_FOUND));
 
         if (isDefault && !existingModel.isEnabled()) {
-            throw AppException.builder()
-                    .errorCode(ErrorCode.MODEL_NOT_ENABLED)
-                    .build();
+            throw new AppException(ErrorCode.MODEL_NOT_ENABLED);
         }
 
         // Set others models to not default

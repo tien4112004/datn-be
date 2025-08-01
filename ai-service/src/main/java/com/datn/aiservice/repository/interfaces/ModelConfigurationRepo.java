@@ -11,7 +11,7 @@ public interface ModelConfigurationRepo {
 
     boolean existsByModelId(Integer modelId);
 
-    Optional<ModelConfigurationEntity> getModelById(Integer modelId);
+    ModelConfigurationEntity getModelById(Integer modelId);
 
     ModelConfigurationEntity getModelByName(String modelName);
 

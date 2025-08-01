@@ -5,7 +5,6 @@ spring:
     username: sa
     password:
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: create-drop
     show-sql: true
@@ -16,6 +15,11 @@ spring:
     openai:
       api-key: "test-key"
       base-url: "http://test-url"
+    vertex:
+      ai:
+        gemini:
+          project-id: "test-project-id"
+          location: "us-central1"
 # Disable Eureka for tests
 eureka:
   client:
@@ -23,12 +27,17 @@ eureka:
 
 # Test model configurations
 app:
-  init:
-    enabled: false
   models:
     configurations:
-      test-model:
-        model-name: "test-model"
-        display-name: "Test Model"
-        provider: "OpenAI"
-        max-tokens: 1000
+      openai:
+        - model-name: "gpt-4o-mini"
+          display-name: "GPT-4 Optimized"
+          provider: "OpenAI"
+          default-model: false
+
+      # ——— GEMINI MODELS ———
+      gemini:
+        - model-name: "gemini-2.0-flash-001"
+          display-name: "Gemini 2.0 Flash"
+          provider: "Google"
+          default-model: true
