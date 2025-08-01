@@ -61,13 +61,12 @@
 					<configuration>
 						<java>
 							<eclipse>
-								<file>${project.basedir}/eclipse-formatter.xml</file>
+								<file>${maven.multiModuleProjectDirectory}/eclipse-formatter.xml</file>
 							</eclipse>
 							<removeUnusedImports/>
 						</java>
 					</configuration>
 				</plugin>
-
 			</plugins>
 		</pluginManagement>
 	</build>
