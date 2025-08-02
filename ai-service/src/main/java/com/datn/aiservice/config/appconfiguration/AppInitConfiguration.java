@@ -30,7 +30,13 @@ public class AppInitConfiguration {
             var definedModels = modelProperties.getConfigurations();
 
             if (models.isEmpty() || models.size() != definedModels.size()) {
-                modelProperties.getModels().forEach(modelSelectionService::saveModelInfo);
+                modelProperties.getModels().forEach((model)-> {
+                    if (!modelSelectionService.existByName(model.getModelName())) {
+                        modelSelectionService.saveModelInfo(model);
+                    } else {
+                        log.info("Model {} already exists, skipping initialization", model.getModelName());
+                    }
+                });
             } else {
                 log.info("All models are ready");
             }

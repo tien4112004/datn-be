@@ -32,11 +32,10 @@ public class ChatClientConfig {
         Map<String, ChatClient> clients = new HashMap<>();
         List<String> errorModels = new ArrayList<>();
 
-        // modelProperties.configurations ⇒ Map<"openai" or "gemini", List<ModelInfo>>
         modelProperties.getConfigurations()
                 .forEach((providerKey, infos) -> {
                     infos.forEach(info -> {
-                        // pick the right ChatModel map based on providerKey
+                        log.info("Build Chat Client for model: {} from provider: {}", info.getModelName(), providerKey);
                         ChatModel underlying = switch (providerKey) {
                             case "openai" -> allChatModels.get(info.getModelName());
                             case "gemini" -> allGeminiChatModels.get(info.getModelName());
