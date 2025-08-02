@@ -1,7 +1,10 @@
 package com.datn.aiservice.controller;
 
 import com.datn.aiservice.dto.request.OutlinePromptRequest;
+import com.datn.aiservice.exceptions.AppException;
+import com.datn.aiservice.exceptions.ErrorCode;
 import com.datn.aiservice.service.interfaces.ContentGenerationService;
+import com.datn.aiservice.utils.StreamingResponseUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -14,23 +17,20 @@ import reactor.core.publisher.Flux;
 @RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class ContentGenerationController {
-    ContentGenerationService contentGenerationServiceImpl;
+    ContentGenerationService contentGenerationService;
 
     @PostMapping(value = "/presentations/outline-generate", produces = MediaType.TEXT_PLAIN_VALUE)
     public Flux<String> generateOutline(@RequestBody OutlinePromptRequest request) {
         log.info("Received outline generation request: {}", request);
 
-        return contentGenerationServiceImpl.generateOutline(request)
-                .bufferUntil(token -> token.contains("\n"))
-                .map(bufferedToken -> {
-                    if (bufferedToken.isEmpty() || bufferedToken.contains("```")) {
-                        return "";
-                    }
-                    String combined = String.join("", bufferedToken);
-
-                    return combined;
+        return StreamingResponseUtils.streamWordByWordWithSpaces(
+                        StreamingResponseUtils.MED_DELAY,
+                        contentGenerationService.generateOutline(request)
+                                .doOnSubscribe(subscription -> log.info("Starting outline generation stream"))
+                ).doOnError(error -> {
+                    log.error("Error generating outline", error);
+                    throw new AppException(ErrorCode.GENERATION_ERROR, "Failed to generate outline");
                 })
-                .doOnNext(response -> log.info("Generated outline: {}", response))
-                .doOnError(error -> log.error("Error generating outline", error));
+                .onErrorMap(error -> new AppException(ErrorCode.GENERATION_ERROR, "Failed to generate outline: " + error.getMessage()));
     }
 }

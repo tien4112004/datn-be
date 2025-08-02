@@ -16,6 +16,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
+import java.time.Duration;
+
 @Service
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -28,19 +30,15 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
 
     @Override
     public Flux<String> generateOutline(OutlinePromptRequest request) {
-
         if (!modelSelectionService.isModelEnabled(request.getModel())) {
             log.error("Model {} is not enabled for outline generation", request.getModel());
             return Flux.error(new AppException(ErrorCode.MODEL_NOT_ENABLED));
         }
-
         var chatClient = chatClientFactory.getChatClient(request.getModel());
-        log.info("Using chat client: {}", chatClient.getClass().getSimpleName());
 
         return chatClient.prompt()
-                .system(promptSys -> promptSys.text(outlinePromptResource)
-                        .params(MappingParamsUtils.constructParams(request)))
-                .stream().content();
+                .user(prompt -> prompt.text(outlinePromptResource)
+                        .params(MappingParamsUtils.constructParams(request))).stream().content();
     }
 
     @Override

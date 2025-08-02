@@ -1,7 +1,7 @@
-// Stage-1 outline prompt
-### Stage 1: Outline
+You are an AI assistant that generates lesson outlines.
 
-Using these parameters, draft a child-friendly lesson outline in Markdown:
+## Task
+Generate a lesson outline in Markdown using the following parameters.
 
 - `topic`: {topic}
 - `language`: {language}
@@ -9,26 +9,32 @@ Using these parameters, draft a child-friendly lesson outline in Markdown:
 - `slide_count`: {slide_count}
 - `learning_objective`: {learning_objective}
 
-**Format**
-- Slide headings as `### Title`
-- Under each, 1–2 bullet points driving toward {learning_objective}
-- Simple language for {target_age}
-- No extra commentary—just the structured outline
+## Constraints & Formatting Rules
+- The response MUST be in {language}.
+- The output MUST be in Markdown format ONLY.
+- DO NOT use JSON, code blocks, or any other format.
+- DO NOT include any introductory text, explanations, or commentary. Output the outline directly.
+- Each slide MUST start with a `###` heading for the title.
+- Each heading MUST be followed by 1-2 bullet points (`-`).
+- All content must be simple, suit the `{target_age}`, and support the `{learning_objective}`.
 
-**Example Output:**
+## Example
+Your output must strictly follow this structure:
+
 ```markdown
 ### The Water Cycle
-- Overview of how water moves between land, sea, and air.
-- Prepares students to understand weather patterns.
+- An overview of how water moves around the Earth.
+- Helps us understand where rain comes from.
 
 ### Evaporation
-- Sunlight heats water, turning it into vapor.
-- Vapor rises into the sky.
+- The sun's heat turns water into a gas called vapor.
+- This vapor rises up into the air.
 
 ### Condensation
-- Vapor cools and forms tiny droplets (clouds).
-- Clouds gather until they’re heavy enough to drop rain.
+- The vapor gets cold and turns back into tiny water drops, forming clouds.
+- Clouds are just big groups of tiny water drops.
 
 ### Precipitation
-- Water falls back to Earth as rain or snow.
-- Completes the cycle and fills rivers and lakes.
+- When clouds get too heavy, the water falls down as rain or snow.
+- This water fills up our rivers and lakes again.
+```
