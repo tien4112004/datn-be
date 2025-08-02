@@ -53,4 +53,12 @@ public interface ModelSelectionService {
      * @param modelInfo the ModelProperties.ModelInfo object containing the model information to save
      */
     void saveModelInfo(ModelProperties.ModelInfo modelInfo);
+
+    /**
+     * Checks if a model exists by its name.
+     *
+     * @param modelName the name of the model to check
+     * @return true if the model exists, false otherwise
+     */
+    boolean existByName(String modelName);
 }

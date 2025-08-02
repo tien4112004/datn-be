@@ -66,4 +66,9 @@ public class ModelSelectionServiceImpl implements ModelSelectionService {
 
         modelConfigurationRepo.save(modelEntity);
     }
+
+    @Override
+    public boolean existByName(String modelName) {
+        return modelConfigurationRepo.existsByModelName(modelName);
+    }
 }
