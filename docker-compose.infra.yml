@@ -7,8 +7,10 @@ services:
         limits:
           memory: 512M
     environment:
-      - GIT_USERNAME
-      - GIT_TOKEN
+      - GIT_USERNAME=${GIT_USERNAME}
+      - GIT_TOKEN=${GIT_TOKEN}
+      - CONFIG_REPO_URL=${CONFIG_REPO_URL}
+      - EUREKA_URI=${EUREKA_URI}
     healthcheck:
       test: ["CMD", "curl", "-I", "http://config-server:8888"]
       interval: 5s
@@ -24,6 +26,8 @@ services:
       resources:
         limits:
           memory: 512M
+    environment:
+      - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
     healthcheck:
       test: ["CMD", "curl", "-f", "http://discovery-service:8761"]
       interval: 5s
@@ -42,6 +46,9 @@ services:
       resources:
         limits:
           memory: 512M
+    environment:
+      - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
+      - EUREKA_URI=${EUREKA_URI}
     depends_on:
       config-server:
         condition: service_healthy
