@@ -151,20 +151,28 @@ Note: This doesn't include databases; run `docker-compose -f docker-compose.db.y
 #### c. Setting Up AI-Service Container
 
 After successfully run the ai-service container, you need few more steps for setting up the Vertex AI:
+1. **Exec into AI-Service Container**
 
-1. **gcloud auth**: First authenticate with Google Cloud:
+```bash
+docker exec -it <ai-service-container-name> /bin/bash
+
+# Verify if there is key.json which is the service account key file
+ls /root/
+```
+
+2. **gcloud auth**: First authenticate with Google Cloud:
 ```bash
 gcloud auth activate-service-account --key-file=/root/key.json
 ```
 
-2. **Set Project**: Set your Google Cloud project:
+3. **Set Project**: Set your Google Cloud project:
 ```bash
 gcloud config set project $VERTEX_PROJECT_ID
 ```
 
-3. **Verify Configuration**: Ensure the configuration is correct:
+4. **Verify Configuration**: Ensure the configuration is correct:
 ```bash
-  gcloud config list
+gcloud config list
 ```
 
 The output should look like this:
