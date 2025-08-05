@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @Slf4j
 public class StreamingResponseUtils {
 
+    public static final int X_DELAY = 50;
     public static final int LOW_DELAY = 100;
     public static final int MED_DELAY = 150;
     public static final int HIGH_DELAY = 200;
@@ -23,8 +24,8 @@ public class StreamingResponseUtils {
                         Flux.defer(() -> {
                             String remaining = buffer.get().trim();
                             return remaining.isEmpty() ? Flux.empty() : Flux.just(remaining);
-                        })
-                ).delayElements(Duration.ofMillis(delayMillis));
+                        }))
+                .delayElements(Duration.ofMillis(delayMillis));
     }
 
     public static Flux<String> formatChunkWordByWord(String chunk, AtomicReference<String> buffer) {

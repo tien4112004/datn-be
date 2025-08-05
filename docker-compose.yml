@@ -108,7 +108,7 @@ services:
     ports:
       - 8080:8080
     environment:
-      - ORIGIN_URIS=${ORIGIN_URIS}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
       - EUREKA_URI=${EUREKA_URI}
 

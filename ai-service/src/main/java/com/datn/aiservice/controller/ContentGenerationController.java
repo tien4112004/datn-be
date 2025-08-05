@@ -24,13 +24,14 @@ public class ContentGenerationController {
         log.info("Received outline generation request: {}", request);
 
         return StreamingResponseUtils.streamWordByWordWithSpaces(
-                        StreamingResponseUtils.MED_DELAY,
-                        contentGenerationService.generateOutline(request)
-                                .doOnSubscribe(subscription -> log.info("Starting outline generation stream"))
-                ).doOnError(error -> {
+                StreamingResponseUtils.X_DELAY,
+                contentGenerationService.generateOutline(request)
+                        .doOnSubscribe(subscription -> log.info("Starting outline generation stream")))
+                .doOnError(error -> {
                     log.error("Error generating outline", error);
                     throw new AppException(ErrorCode.GENERATION_ERROR, "Failed to generate outline");
                 })
-                .onErrorMap(error -> new AppException(ErrorCode.GENERATION_ERROR, "Failed to generate outline: " + error.getMessage()));
+                .onErrorMap(error -> new AppException(ErrorCode.GENERATION_ERROR,
+                        "Failed to generate outline: " + error.getMessage()));
     }
 }
