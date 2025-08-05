@@ -2,9 +2,12 @@ package com.datn.aiservice.service.impl;
 
 import com.datn.aiservice.dto.request.OutlinePromptRequest;
 import com.datn.aiservice.dto.request.SlidePromptRequest;
+import com.datn.aiservice.exceptions.AppException;
+import com.datn.aiservice.exceptions.ErrorCode;
 import com.datn.aiservice.factory.ChatClientFactory;
+import com.datn.aiservice.service.interfaces.ContentGenerationService;
 import com.datn.aiservice.service.interfaces.ModelSelectionService;
-import com.datn.aiservice.service.interfaces.SlideGenerationService;
+import com.datn.aiservice.utils.MappingParamsUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -13,11 +16,13 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
+import java.time.Duration;
+
 @Service
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
-public class SlideGenerationServiceImpl implements SlideGenerationService {
+public class ContentGenerationServiceImpl implements ContentGenerationService {
     Resource outlinePromptResource;
     Resource slidePromptResource;
     ModelSelectionService modelSelectionService;
@@ -26,14 +31,14 @@ public class SlideGenerationServiceImpl implements SlideGenerationService {
     @Override
     public Flux<String> generateOutline(OutlinePromptRequest request) {
         if (!modelSelectionService.isModelEnabled(request.getModel())) {
-            // Log the error and throw an exception
+            log.error("Model {} is not enabled for outline generation", request.getModel());
+            return Flux.error(new AppException(ErrorCode.MODEL_NOT_ENABLED));
         }
-
-        // Use the chat client factory to get the appropriate chat client
-        // and generate the outline based on the request.
         var chatClient = chatClientFactory.getChatClient(request.getModel());
 
-        throw new UnsupportedOperationException("Outline generation is not supported yet.");
+        return chatClient.prompt()
+                .user(prompt -> prompt.text(outlinePromptResource)
+                        .params(MappingParamsUtils.constructParams(request))).stream().content();
     }
 
     @Override

@@ -8,11 +8,17 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ErrorCode {
-    UNCATEGORIZED_ERROR("An unexpected error occurred"),
+    UNCATEGORIZED_ERROR("An unexpected error occurred", 500),
 
-    MODEL_NOT_FOUND("Model not found");
+    MODEL_NOT_FOUND("Model not found", 404),
+    MODEL_NOT_ENABLED("Model is not enabled for this operation", 403),
+    INVALID_MODEL_STATUS("Invalid model status", 403),
+
+    GENERATION_ERROR("Generation Failed", 500),
+    ;
 
     private final String defaultMessage;
+    private final Integer statusCode;
 
     public String getErrorCodeName() {
         return this.name();

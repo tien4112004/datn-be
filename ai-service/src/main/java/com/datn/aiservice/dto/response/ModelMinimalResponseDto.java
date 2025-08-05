@@ -11,4 +11,6 @@ public class ModelMinimalResponseDto {
     String modelId;
     String displayName;
     boolean isEnabled;
+    String provider;
+
 }

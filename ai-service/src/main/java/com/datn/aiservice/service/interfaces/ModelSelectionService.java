@@ -12,31 +12,32 @@ public interface ModelSelectionService {
      * Retrieves the minimal configuration of a model by its ID.
      *
      * @return a list of ModelMinimalResponseDto containing the minimal
-     *         configuration of the model
+     * configuration of the model
      */
-    List<ModelMinimalResponseDto> getModelsConfiguration();
+    List<ModelMinimalResponseDto> getModelConfigurations();
 
     /**
      * Retrieves the full configuration of a model by its ID.
      *
-     * @param modelName the ID of the model to retrieve
+     * @param modelId the ID of the model to retrieve
      * @return a ModelResponseDto containing the full configuration of the model
      */
-    ModelResponseDto getFullModelConfiguration(String modelName);
+    ModelResponseDto getModelConfiguration(Integer modelId);
 
     /**
      * Enables a model by its ID.
      *
-     * @param modelName the ID of the model to enable
+     * @param modelId the ID of the model to enable
      */
-    void setModelEnabled(String modelName, boolean isEnabled);
+    void setModelEnabled(Integer modelId, boolean isEnabled);
 
     /**
      * Sets a model as the default model by its ID.
      *
-     * @param v the ID of the model to set as default
+     * @param modelId the ID of the model to set as default
+     * @param isDefault true if the model should be set as default, false otherwise
      */
-    void setDefaultModel(String modelName);
+    void setModelDefault(Integer modelId, boolean isDefault);
 
     /**
      * Checks if a model is enabled by its ID.
@@ -46,5 +47,18 @@ public interface ModelSelectionService {
      */
     boolean isModelEnabled(String modelName);
 
-    void saveModelData(ModelProperties.ModelInfo modelInfo);
+    /**
+     * Saves the model information.
+     *
+     * @param modelInfo the ModelProperties.ModelInfo object containing the model information to save
+     */
+    void saveModelInfo(ModelProperties.ModelInfo modelInfo);
+
+    /**
+     * Checks if a model exists by its name.
+     *
+     * @param modelName the name of the model to check
+     * @return true if the model exists, false otherwise
+     */
+    boolean existByName(String modelName);
 }

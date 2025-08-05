@@ -34,3 +34,6 @@ build/
 .env
 application-dev.yml
 node_modules
+
+### GCLOUD ###
+service-account.json
