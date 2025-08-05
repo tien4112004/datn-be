@@ -1,4 +1,4 @@
-package com.datn.document.repository.interfaces;
+package com.datn.document.repository;
 
 import com.datn.document.entity.Presentation;
 import org.springframework.data.mongodb.repository.MongoRepository;

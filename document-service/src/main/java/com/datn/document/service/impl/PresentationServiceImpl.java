@@ -4,7 +4,7 @@ import com.datn.document.dto.request.PresentationCreateRequest;
 import com.datn.document.dto.response.PresentationCreateResponseDto;
 import com.datn.document.entity.Presentation;
 import com.datn.document.mapper.PresentationEntityMapper;
-import com.datn.document.repository.interfaces.PresentationRepository;
+import com.datn.document.repository.PresentationRepository;
 import com.datn.document.service.interfaces.PresentationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

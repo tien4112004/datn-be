@@ -1,8 +1,8 @@
 package com.datn.document.integration;
 
-import com.datn.document.dto.SlideBackgroundDto;
 import com.datn.document.dto.SlideDto;
-import com.datn.document.dto.SlideElementDto;
+import com.datn.document.dto.SlideDto.SlideElementDto;
+import com.datn.document.dto.SlideDto.SlideBackgroundDto;
 import com.datn.document.dto.request.PresentationCreateRequest;
 import com.datn.document.enums.SlideElementType;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,7 +47,7 @@ public class PresentationApiIntegrationTest {
                                 .build();
 
                 SlideElementDto textElement = SlideElementDto.builder()
-                                .type(SlideElementType.CONTENT)
+                                .type(SlideElementType.TEXT)
                                 .id("text-element-1")
                                 .left(100.0f)
                                 .top(200.0f)
@@ -85,7 +85,7 @@ public class PresentationApiIntegrationTest {
                                 .andExpect(jsonPath("$.data.presentation").isArray())
                                 .andExpect(jsonPath("$.data.presentation.length()").value(1))
                                 .andExpect(jsonPath("$.data.presentation[0].id").value("slide-1"))
-                                .andExpect(jsonPath("$.data.presentation[0].elements[0].type").value("content"))
+                                .andExpect(jsonPath("$.data.presentation[0].elements[0].type").value("text"))
                                 .andExpect(jsonPath("$.data.presentation[0].elements[0].content")
                                                 .value("Welcome to our presentation"))
                                 .andExpect(jsonPath("$.data.presentation[0].background.type").value("color"))
@@ -95,7 +95,7 @@ public class PresentationApiIntegrationTest {
         @Test
         void createPresentation_WithMultipleSlideTypes_ShouldHandleAllTypes() throws Exception {
                 SlideElementDto shapeElement = SlideElementDto.builder()
-                                .type(SlideElementType.CONTENT)
+                                .type(SlideElementType.TEXT)
                                 .id("shape-element-1")
                                 .left(50.0f)
                                 .top(100.0f)
@@ -111,7 +111,7 @@ public class PresentationApiIntegrationTest {
                                 .build();
 
                 SlideElementDto imageElement = SlideElementDto.builder()
-                                .type(SlideElementType.CONTENT)
+                                .type(SlideElementType.TEXT)
                                 .id("image-element-1")
                                 .left(300.0f)
                                 .top(200.0f)
@@ -142,14 +142,14 @@ public class PresentationApiIntegrationTest {
                                 .content(objectMapper.writeValueAsString(request)))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.data.presentation[0].elements.length()").value(3))
-                                .andExpect(jsonPath("$.data.presentation[0].elements[0].type").value("content"))
-                                .andExpect(jsonPath("$.data.presentation[0].elements[1].type").value("content"))
+                                .andExpect(jsonPath("$.data.presentation[0].elements[0].type").value("text"))
+                                .andExpect(jsonPath("$.data.presentation[0].elements[1].type").value("text"))
                                 .andExpect(
                                                 jsonPath("$.data.presentation[0].elements[1].path")
                                                                 .value("M50,50 L150,50 L150,100 L50,100 Z"))
                                 .andExpect(jsonPath("$.data.presentation[0].elements[1].fill").value("#ff6b6b"))
                                 .andExpect(jsonPath("$.data.presentation[0].elements[1].fixedRatio").value(true))
-                                .andExpect(jsonPath("$.data.presentation[0].elements[2].type").value("content"))
+                                .andExpect(jsonPath("$.data.presentation[0].elements[2].type").value("text"))
                                 .andExpect(jsonPath("$.data.presentation[0].background.type").value("gradient"))
                                 .andExpect(jsonPath("$.data.presentation[0].background.color")
                                                 .value("linear-gradient(45deg, #ff6b6b, #4ecdc4)"));
@@ -161,7 +161,7 @@ public class PresentationApiIntegrationTest {
 
                 for (int i = 0; i < 5; i++) {
                         SlideElementDto element = SlideElementDto.builder()
-                                        .type(SlideElementType.CONTENT)
+                                        .type(SlideElementType.TEXT)
                                         .id("element-" + (i + 1))
                                         .left(100.0f)
                                         .top(200.0f + (i * 100.0f))
@@ -200,7 +200,7 @@ public class PresentationApiIntegrationTest {
         @Test
         void createPresentation_WithNullValues_ShouldHandleGracefully() throws Exception {
                 SlideElementDto elementWithNulls = SlideElementDto.builder()
-                                .type(SlideElementType.CONTENT)
+                                .type(SlideElementType.TEXT)
                                 .id("element-with-nulls")
                                 .content("Content with null properties")
                                 .build();

@@ -3,11 +3,15 @@ package com.datn.document.enums;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum SlideElementType {
-    COVER("cover"),
-    TRANSITION("transition"),
-    CONTENT("content"),
-    CONTENTS("contents"),
-    END("end");
+    TEXT("text"),
+    IMAGE("image"),
+    SHAPE("shape"),
+    LINE("line"),
+    CHART("chart"),
+    TABLE("table"),
+    LATEX("latex"),
+    VIDEO("video"),
+    AUDIO("audio");
 
     private final String value;
 

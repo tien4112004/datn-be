@@ -1,9 +1,11 @@
 package com.datn.document.entity.valueobject;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.util.List;
@@ -12,73 +14,74 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class SlideElement {
     @Field("type")
-    private String type;
+    String type;
 
     @Field("id")
-    private String id;
+    String id;
 
     @Field("left")
-    private Float left;
+    Float left;
 
     @Field("top")
-    private Float top;
+    Float top;
 
     @Field("width")
-    private Float width;
+    Float width;
 
     @Field("height")
-    private Float height;
+    Float height;
 
     @Field("viewBox")
-    private List<Float> viewBox;
+    List<Float> viewBox;
 
     @Field("path")
-    private String path;
+    String path;
 
     @Field("fill")
-    private String fill;
+    String fill;
 
     @Field("fixedRatio")
-    private Boolean fixedRatio;
+    Boolean fixedRatio;
 
     @Field("opacity")
-    private Float opacity;
+    Float opacity;
 
     @Field("rotate")
-    private Float rotate;
+    Float rotate;
 
     @Field("flipV")
-    private Boolean flipV;
+    Boolean flipV;
 
     @Field("lineHeight")
-    private Float lineHeight;
+    Float lineHeight;
 
     @Field("content")
-    private String content;
+    String content;
 
     @Field("defaultFontName")
-    private String defaultFontName;
+    String defaultFontName;
 
     @Field("defaultColor")
-    private String defaultColor;
+    String defaultColor;
 
     @Field("start")
-    private List<Float> start;
+    List<Float> start;
 
     @Field("end")
-    private List<Float> end;
+    List<Float> end;
 
     @Field("points")
-    private List<String> points;
+    List<String> points;
 
     @Field("color")
-    private String color;
+    String color;
 
     @Field("style")
-    private String style;
+    String style;
 
     @Field("wordSpace")
-    private Float wordSpace;
+    Float wordSpace;
 }

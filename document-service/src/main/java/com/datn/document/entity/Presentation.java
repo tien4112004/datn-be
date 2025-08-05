@@ -1,10 +1,12 @@
 package com.datn.document.entity;
 
 import com.datn.document.entity.valueobject.Slide;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -16,21 +18,22 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Document(collection = "presentations")
 public class Presentation {
     
     @Id
-    private String id;
+    String id;
     
     @Field("title")
-    private String title;
+    String title;
     
     @Field("slides")
-    private List<Slide> slides;
+    List<Slide> slides;
     
     @Field("createdAt")
-    private LocalDateTime createdAt;
+    LocalDateTime createdAt;
     
     @Field("updatedAt")
-    private LocalDateTime updatedAt;
+    LocalDateTime updatedAt;
 }

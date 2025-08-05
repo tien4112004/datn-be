@@ -1,9 +1,9 @@
 package com.datn.document.controller;
 
 import com.datn.document.controller.PresentationController;
-import com.datn.document.dto.SlideBackgroundDto;
 import com.datn.document.dto.SlideDto;
-import com.datn.document.dto.SlideElementDto;
+import com.datn.document.dto.SlideDto.SlideElementDto;
+import com.datn.document.dto.SlideDto.SlideBackgroundDto;
 import com.datn.document.dto.request.PresentationCreateRequest;
 import com.datn.document.dto.response.PresentationCreateResponseDto;
 import com.datn.document.enums.SlideElementType;
@@ -48,7 +48,7 @@ class ControllerTest {
                                 .build();
 
                 SlideElementDto element = SlideElementDto.builder()
-                                .type(SlideElementType.CONTENT)
+                                .type(SlideElementType.TEXT)
                                 .id("element-1")
                                 .left(100.0f)
                                 .top(200.0f)
@@ -92,7 +92,7 @@ class ControllerTest {
                                 .andExpect(jsonPath("$.data.presentation").isArray())
                                 .andExpect(jsonPath("$.data.presentation[0].id").value("slide-1"))
                                 .andExpect(jsonPath("$.data.presentation[0].elements").isArray())
-                                .andExpect(jsonPath("$.data.presentation[0].elements[0].type").value("content"))
+                                .andExpect(jsonPath("$.data.presentation[0].elements[0].type").value("text"))
                                 .andExpect(jsonPath("$.data.presentation[0].elements[0].id").value("element-1"))
                                 .andExpect(jsonPath("$.data.presentation[0].elements[0].content").value("Sample text"))
                                 .andExpect(jsonPath("$.data.presentation[0].background.type").value("color"))
@@ -131,7 +131,7 @@ class ControllerTest {
         @Test
         void createPresentation_WithComplexElements_ShouldPreserveAllProperties() throws Exception {
                 SlideElementDto complexElement = SlideElementDto.builder()
-                                .type(SlideElementType.CONTENT)
+                                .type(SlideElementType.TEXT)
                                 .id("complex-element")
                                 .left(50.0f)
                                 .top(75.0f)
@@ -177,7 +177,7 @@ class ControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.data.presentation[0].elements[0].type").value("content"))
+                                .andExpect(jsonPath("$.data.presentation[0].elements[0].type").value("text"))
                                 .andExpect(jsonPath("$.data.presentation[0].elements[0].id").value("complex-element"))
                                 .andExpect(jsonPath("$.data.presentation[0].elements[0].viewBox[0]").value(0.0))
                                 .andExpect(jsonPath("$.data.presentation[0].elements[0].viewBox[1]").value(0.0))

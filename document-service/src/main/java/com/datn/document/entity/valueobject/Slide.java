@@ -1,9 +1,11 @@
 package com.datn.document.entity.valueobject;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.util.List;
@@ -12,13 +14,14 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Slide {
     @Field("id")
-    private String id;
+    String id;
     
     @Field("elements")
-    private List<SlideElement> elements;
+    List<SlideElement> elements;
     
     @Field("background")
-    private SlideBackground background;
+    SlideBackground background;
 }
