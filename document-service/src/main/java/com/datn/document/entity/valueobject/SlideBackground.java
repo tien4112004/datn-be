@@ -6,19 +6,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Field;
 
-import java.util.List;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Slide {
-    @Field("id")
-    private String id;
+public class SlideBackground {
+    @Field("type")
+    private String type;
     
-    @Field("elements")
-    private List<SlideElement> elements;
-    
-    @Field("background")
-    private SlideBackground background;
+    @Field("color")
+    private String color;
 }

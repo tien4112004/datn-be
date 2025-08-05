@@ -1,4 +1,9 @@
 package com.datn.document.repository.interfaces;
 
-public interface PresentationRepository {
+import com.datn.document.entity.Presentation;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface PresentationRepository extends MongoRepository<Presentation, String> {
 }

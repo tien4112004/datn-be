@@ -1,28 +1,36 @@
 package com.datn.document.entity;
 
+import com.datn.document.entity.valueobject.Slide;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
-import com.datn.document.entity.valueobject.Slide;
-
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-@Getter
-@Setter
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-/**
- * Entity for Presentation
- */
+@Document(collection = "presentations")
 public class Presentation {
     
-    // maybe remove cause MongoDB will handle this
+    @Id
     private String id;
+    
+    @Field("title")
     private String title;
     
-    // Will be replaced with actual slides
+    @Field("slides")
     private List<Slide> slides;
-
+    
+    @Field("createdAt")
+    private LocalDateTime createdAt;
+    
+    @Field("updatedAt")
+    private LocalDateTime updatedAt;
 }

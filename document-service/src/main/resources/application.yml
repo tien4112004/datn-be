@@ -5,6 +5,31 @@ spring:
     import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
+  cloud:
+    discovery:
+      enabled: false
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+  data:
+    mongodb:
+      host: ${MONGODB_HOST:localhost}
+      port: ${MONGODB_PORT:27017}
+      database: ${MONGODB_DATABASE:presentationdb}
+      username: ${MONGODB_USERNAME:presentation_user}
+      password: ${MONGODB_PASSWORD:presentation_password}
+      authentication-database: ${MONGODB_AUTH_DATABASE:presentationdb}
+
+server:
+  port: ${SERVER_PORT:8082}
+
+logging:
+  level:
+    com.datn.document: INFO
+    org.springframework.data.mongodb: DEBUG
   
 ---
 
@@ -13,3 +38,26 @@ spring:
     activate:
       on-profile: docker
     import: configserver:${CONFIG_SERVER_URL:http://config-server:8888/}
+  data:
+    mongodb:
+      host: mongo
+      port: 27017
+      database: presentationdb
+      username: presentation_user
+      password: presentation_password
+      authentication-database: presentationdb
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: test
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: presentationdb
+      username: presentation_user
+      password: presentation_password
+      authentication-database: presentationdb

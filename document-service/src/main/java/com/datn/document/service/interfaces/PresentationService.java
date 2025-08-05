@@ -1,10 +1,8 @@
 package com.datn.document.service.interfaces;
 
-/**
- * Service interface for document operations
- */
+import com.datn.document.dto.request.PresentationCreateRequest;
+import com.datn.document.dto.response.PresentationCreateResponseDto;
+
 public interface PresentationService {
-    
-    // Service method signatures will be defined here
-    
+    PresentationCreateResponseDto createPresentation(PresentationCreateRequest request);
 }
