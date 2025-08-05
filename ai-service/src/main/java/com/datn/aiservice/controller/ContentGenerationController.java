@@ -15,6 +15,7 @@ import reactor.core.publisher.Flux;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
+@CrossOrigin(value = "*", maxAge = 3600)
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class ContentGenerationController {
     ContentGenerationService contentGenerationService;
