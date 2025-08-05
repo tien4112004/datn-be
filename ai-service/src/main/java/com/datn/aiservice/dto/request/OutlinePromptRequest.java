@@ -8,7 +8,10 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class OutlinePromptRequest {
-    String prompt;
+    String topic;
     String language;
-     String model;
+    String model;
+    int slideCount;
+    String learningObjective;
+    String targetAge;
 }
