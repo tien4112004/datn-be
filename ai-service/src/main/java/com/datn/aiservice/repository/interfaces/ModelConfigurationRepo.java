@@ -1,21 +1,27 @@
 package com.datn.aiservice.repository.interfaces;
 
-import org.springframework.ai.chat.client.ChatClient;
-
 import com.datn.aiservice.entity.ModelConfigurationEntity;
 
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 public interface ModelConfigurationRepo {
 
-    String getModelName();
+    boolean existsByModelName(String modelName);
 
-    boolean isModelEnabled(String modelName);
+    boolean existsByModelId(Integer modelId);
+
+    ModelConfigurationEntity getModelById(Integer modelId);
+
+    ModelConfigurationEntity getModelByName(String modelName);
+
+    boolean isModelEnabled(Integer modelId);
 
     List<ModelConfigurationEntity> getModels();
 
-    void addModel(String modelName, ChatClient chatClient);
+    void save(ModelConfigurationEntity modelEntity);
 
-    void addModels(Map<String, ChatClient> chatClients);
+    void setEnabled(Integer modelId, boolean isEnabled);
+
+    void setDefault(Integer modelId, boolean isDefault);
 }
