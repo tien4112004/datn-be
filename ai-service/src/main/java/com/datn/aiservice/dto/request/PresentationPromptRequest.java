@@ -13,7 +13,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 @AllArgsConstructor
 @NoArgsConstructor
-public class SlidePromptRequest {
+public class PresentationPromptRequest {
     
     @NotBlank(message = "Outline cannot be blank")
     @Size(min = 1, message = "Outline must have at least 1 character")

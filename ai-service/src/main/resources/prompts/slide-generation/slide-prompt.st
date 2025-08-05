@@ -2,7 +2,26 @@
 
 Transform the approved outline into {slide_count} complete, interactive slides.
 
-**Output Format:** Single JSON object with key `"slides"` containing an array of slide objects. Each slide must follow the structure of the selected template, always respecting the **Lesson Parameters** and **Core Guiding Principles**. You can extend the contents if needed.
+**Output Format:** Return each slide as a separate JSON object, with slides separated by "---" delimiter. Each slide must follow the structure of the selected template, always respecting the **Lesson Parameters** and **Core Guiding Principles**. You can extend the contents if needed.
+
+Example format:
+\{
+  "type": "cover",
+  "title": "Title here",
+  "text": "Text here"
+\}
+---
+\{
+  "type": "content", 
+  "title": "Title here",
+  "items": [...]
+\}
+---
+\{
+  "type": "transition",
+  "title": "Title here", 
+  "text": "Text here"
+\}
 
 #### Constraints
 
@@ -16,7 +35,7 @@ Transform the approved outline into {slide_count} complete, interactive slides.
 **Template 1: cover**
 Use for: Opening/title slide
 
-```json
+
 \{
   "type": "cover",
   "data": \{
@@ -24,12 +43,12 @@ Use for: Opening/title slide
     "text": "Engaging subtitle or teaser text for {target_audience}"
   \}
 \}
-```
+
 
 **Template 2: contents**
 Use for: Table of contents/agenda
 
-```json
+
 \{
   "type": "contents",
   "data": \{
@@ -40,12 +59,12 @@ Use for: Table of contents/agenda
     ]
   \}
 \}
-```
+
 
 **Template 3: transition**
 Use for: Section dividers between main topics
 
-```json
+
 \{
   "type": "transition",
   "data": \{
@@ -53,12 +72,12 @@ Use for: Section dividers between main topics
     "text": "Brief description of what's coming next"
   \}
 \}
-```
+
 
 **Template 4: content**
 Use for: Main educational content
 
-```json
+
 \{
   "type": "content",
   "data": \{
@@ -75,16 +94,16 @@ Use for: Main educational content
     ]
   \}
 \}
-```
+
 
 **Template 5: end**
 Use for: This is the signal to end the presentation.
 
-```json
+
 \{
   "type": "end"
 \}
-```
+
 
 **Content Guidelines:**
 

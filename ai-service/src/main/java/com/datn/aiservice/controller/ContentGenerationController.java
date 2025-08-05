@@ -4,15 +4,17 @@ import com.datn.aiservice.dto.request.OutlinePromptRequest;
 import com.datn.aiservice.exceptions.AppException;
 import com.datn.aiservice.exceptions.ErrorCode;
 import com.datn.aiservice.dto.request.SlidePromptRequest;
+import com.datn.aiservice.dto.request.PresentationPromptRequest;
 import com.datn.aiservice.service.interfaces.ContentGenerationService;
 import com.datn.aiservice.utils.StreamingResponseUtils;
+
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
-
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -38,13 +40,13 @@ public class ContentGenerationController {
     }
 
     @PostMapping(value = "/presentations/generate", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> generateSlides(@RequestBody SlidePromptRequest request) {
-        log.info("Received slide generation request: {}", request);
+    public Flux<String> generateSlides(@RequestBody PresentationPromptRequest request) {
+        
         return contentGenerationServiceImpl.generateSlides(request)
-                .bufferUntil(token -> token.contains("\n"))
+                .bufferUntil(token -> token.contains("---"))
                 .map(bufferedToken -> {
                             String combined = String.join("", bufferedToken);
-                            combined = combined.replace("\n", "");
+                            combined = combined.replace("---", "");
                             return combined;
                         }
                 )

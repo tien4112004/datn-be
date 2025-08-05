@@ -23,6 +23,10 @@ spring:
           producer:
             required-groups: ai-events-group
 
+app:
+  messaging:
+    binding-name: ai-events-out-0
+
 ---
 
 spring:

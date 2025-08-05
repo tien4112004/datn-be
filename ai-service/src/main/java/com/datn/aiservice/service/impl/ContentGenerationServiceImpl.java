@@ -1,7 +1,7 @@
 package com.datn.aiservice.service.impl;
 
 import com.datn.aiservice.dto.request.OutlinePromptRequest;
-import com.datn.aiservice.dto.request.SlidePromptRequest;
+import com.datn.aiservice.dto.request.PresentationPromptRequest;
 import com.datn.aiservice.dto.response.PresentationResponse;
 import com.datn.aiservice.event.PresentationGeneratedEvent;
 import com.datn.aiservice.exceptions.AppException;
@@ -11,6 +11,7 @@ import com.datn.aiservice.messaging.AIEventPublisher;
 import com.datn.aiservice.service.interfaces.ContentGenerationService;
 import com.datn.aiservice.service.interfaces.ModelSelectionService;
 import com.datn.aiservice.utils.MappingParamsUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.AccessLevel;
@@ -52,7 +53,7 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
     }
 
     @Override
-    public Flux<String> generateSlides(SlidePromptRequest request) {
+    public Flux<String> generateSlides(PresentationPromptRequest request) {
         log.info("Starting streaming presentation generation for slides");
 
         if (!modelSelectionService.isModelEnabled(request.getModel())) {
@@ -73,40 +74,34 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
                 .doOnNext(chunk -> completeResponse.append(chunk))
                 .doOnComplete(() -> {
                     log.info("Streaming presentation generation completed");
-                     try {
-                        // Clean the response to extract JSON
-                        String cleanedJson = extractJsonFromResponse(completeResponse.toString());
-                        
+                    String cleanedJson = extractJsonFromResponse(completeResponse.toString());
+                    try{
                         // Parse the complete JSON response
                         PresentationResponse slideResponse = objectMapper.readValue(
-                            cleanedJson, PresentationResponse.class);
+                        cleanedJson, PresentationResponse.class);
 
                         // Publish event with actual slides
                         var event = new PresentationGeneratedEvent(slideResponse.getSlides());
                         aiEventPublisher.publishEvent(event);
-
-                    } catch (Exception e) {
-                        log.error("Failed to parse slides from LLM response: {}", e.getMessage());
+                    } catch (JsonProcessingException e) {
+                        log.error("Error parsing JSON response: {}", e.getMessage());
+                        throw new AppException(ErrorCode.JSON_PARSING_ERROR);
                     }
                 })
                 .doOnError(error -> log.error("Error in streaming presentation generation: {}", error.getMessage()));
     }
 
     private String extractJsonFromResponse(String response) {
-    // Remove markdown code blocks
-    String cleaned = response.trim();
+        // Remove markdown code blocks
+        String cleaned = response.trim();
+        
+        //TODO: Adjust regex to match your specific response format
+        cleaned = cleaned.replaceAll("\n---", ",");
+        cleaned = cleaned.replaceAll("```json", "");
+        cleaned = cleaned.replaceAll("```", "");
+        cleaned = cleaned.replaceAll(",\\s*$", "");
     
-    // Remove ```json and ``` if present
-    if (cleaned.startsWith("```json")) {
-        cleaned = cleaned.substring(7);
-    } else if (cleaned.startsWith("```")) {
-        cleaned = cleaned.substring(3);
+        cleaned = "{\"slides\":[" + cleaned + "]}";
+        return cleaned.trim();
     }
-    
-    if (cleaned.endsWith("```")) {
-        cleaned = cleaned.substring(0, cleaned.length() - 3);
-    }
-    
-    return cleaned.trim();
-}
 }

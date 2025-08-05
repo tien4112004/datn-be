@@ -1,7 +1,7 @@
 package com.datn.aiservice.utils;
 
 import com.datn.aiservice.dto.request.OutlinePromptRequest;
-import com.datn.aiservice.dto.request.SlidePromptRequest;
+import com.datn.aiservice.dto.request.PresentationPromptRequest;
 
 import java.util.Map;
 
@@ -15,7 +15,7 @@ public class MappingParamsUtils {
                 "target_age", request.getTargetAge());
     }
 
-    public static Map<String, Object> constructParams(SlidePromptRequest request) {
+    public static Map<String, Object> constructParams(PresentationPromptRequest request) {
         return Map.of(
                 "outline", request.getOutline(),
                 "language", "vietnamese", // Default language

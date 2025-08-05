@@ -1,5 +1,6 @@
 package com.datn.aiservice.messaging;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.stereotype.Service;
 
@@ -20,8 +21,11 @@ import lombok.extern.slf4j.Slf4j;
 public class AIEventPublisher {
     StreamBridge streamBridge;
 
+    @Value("${app.messaging.binding-name}")
+    String bindingName;
+
     public void publishEvent(PresentationGeneratedEvent event) {
-        String routingKey = "presentation.generated." + event.getClass().getSimpleName().toLowerCase();
+        String routingKey = "ai.service.presentation.generated";
         try {
             Message<PresentationGeneratedEvent> message = MessageBuilder
                     .withPayload(event)
@@ -31,9 +35,9 @@ public class AIEventPublisher {
                     .setHeader("eventTimestamp", event.getTimestamp().toString())
                     .setHeader("source", "ai-service")
                     .build();
-            
-            boolean sent = streamBridge.send("ai-events-out-0", message);
-            
+
+            boolean sent = streamBridge.send(bindingName, message);
+
             if (sent) {
                 log.info("Successfully published {} with routing key: {}", 
                            event.getClass(), routingKey);
