@@ -18,7 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 public class PresentationCreateRequest {
     @Size(max = 255, message = "Title must not exceed 255 characters")
-    private String title = null;
+    private String title;
 
     @NotNull(message = "Slides cannot be null")
     @NotEmpty(message = "Presentation must contain at least one slide")

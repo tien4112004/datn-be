@@ -174,7 +174,7 @@ public class PresentationEntityMapper {
                 .color(background.getColor())
                 .build();
     }
-    
+
     private SlideElementType convertStringToSlideElementType(String type) {
         if (type == null) {
             return null;
@@ -182,7 +182,6 @@ public class PresentationEntityMapper {
         try {
             return SlideElementType.valueOf(type.toUpperCase());
         } catch (IllegalArgumentException e) {
-            // Return null or default value for invalid types
             return null;
         }
     }
