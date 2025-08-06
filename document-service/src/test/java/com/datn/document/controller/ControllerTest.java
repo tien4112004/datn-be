@@ -222,6 +222,6 @@ class ControllerTest {
                 mockMvc.perform(post("/api/presentations")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{invalid json}"))
-                                .andExpect(status().is5xxServerError());
+                                .andExpect(status().is4xxClientError());
         }
 }
