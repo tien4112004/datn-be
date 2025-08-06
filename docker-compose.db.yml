@@ -40,6 +40,7 @@ services:
       - "27018:27017"
     volumes:
       - mongodata:/data/db
+      - ./document-service/docker/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
 
 volumes:
   pgdata-auth:
