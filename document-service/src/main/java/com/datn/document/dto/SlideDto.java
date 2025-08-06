@@ -21,13 +21,13 @@ import java.util.List;
 public class SlideDto {
     @NotBlank(message = "Slide ID cannot be blank")
     String id;
-    
+
     @Valid
     List<SlideElementDto> elements;
-    
+
     @Valid
     SlideBackgroundDto background;
-    
+
     @Data
     @Builder
     @NoArgsConstructor
@@ -59,7 +59,7 @@ public class SlideDto {
         String style;
         Float wordSpace;
     }
-    
+
     @Data
     @Builder
     @NoArgsConstructor

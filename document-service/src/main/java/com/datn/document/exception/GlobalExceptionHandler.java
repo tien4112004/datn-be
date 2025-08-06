@@ -1,8 +1,10 @@
 package com.datn.document.exception;
 
 import com.datn.document.dto.common.AppResponseDto;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -21,6 +23,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity<AppResponseDto<Object>> handleAppException(AppException ex) {
         AppResponseDto<Object> response = AppResponseDto.failure(ex);
         return ResponseEntity.status(ex.getStatusCode()).body(response);
+    }
+    
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<AppResponseDto<Object>> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+        AppException appException = new AppException(ErrorCode.VALIDATION_ERROR);
+        AppResponseDto<Object> response = AppResponseDto.failure(appException);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+    
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<AppResponseDto<Object>> handleValidationException(ValidationException ex) {
+        AppResponseDto<Object> response = AppResponseDto.failure(ex);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
     
     @ExceptionHandler(MethodArgumentNotValidException.class)
