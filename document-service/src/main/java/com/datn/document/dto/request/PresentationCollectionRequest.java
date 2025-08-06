@@ -5,6 +5,7 @@ import lombok.*;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
 public class PresentationCollectionRequest extends BaseCollectionRequest {
     
     private String filter;

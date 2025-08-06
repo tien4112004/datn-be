@@ -311,16 +311,16 @@ class ControllerTest {
                                 .andExpect(jsonPath("$.status").value("success"))
                                 .andExpect(jsonPath("$.code").value(200))
                                 .andExpect(jsonPath("$.data").exists())
-                                .andExpect(jsonPath("$.data.data").isArray())
-                                .andExpect(jsonPath("$.data.data.length()").value(1))
-                                .andExpect(jsonPath("$.data.data[0].id").value("test-id-1"))
-                                .andExpect(jsonPath("$.data.data[0].title").value("Test Presentation"))
-                                .andExpect(jsonPath("$.data.pagination.page").value(1))
-                                .andExpect(jsonPath("$.data.pagination.pageSize").value(10))
-                                .andExpect(jsonPath("$.data.pagination.totalElements").value(1))
-                                .andExpect(jsonPath("$.data.pagination.totalPages").value(1))
-                                .andExpect(jsonPath("$.data.pagination.hasNext").value(false))
-                                .andExpect(jsonPath("$.data.pagination.hasPrevious").value(false));
+                                .andExpect(jsonPath("$.data").isArray())
+                                .andExpect(jsonPath("$.data.length()").value(1))
+                                .andExpect(jsonPath("$.data[0].id").value("test-id-1"))
+                                .andExpect(jsonPath("$.data[0].title").value("Test Presentation"))
+                                .andExpect(jsonPath("$.pagination.currentPage").value(1))
+                                .andExpect(jsonPath("$.pagination.pageSize").value(10))
+                                .andExpect(jsonPath("$.pagination.totalItems").value(1))
+                                .andExpect(jsonPath("$.pagination.totalPages").value(1))
+                                .andExpect(jsonPath("$.pagination.hasNextPage").value(false))
+                                .andExpect(jsonPath("$.pagination.hasPreviousPage").value(false));
         }
 
         @Test
@@ -349,7 +349,7 @@ class ControllerTest {
                                 .param("filter", "Filtered")
                                 .contentType(MediaType.APPLICATION_JSON))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.data.data[0].title").value("Filtered Presentation"));
+                                .andExpect(jsonPath("$.data[0].title").value("Filtered Presentation"));
         }
 
         @Test
@@ -374,8 +374,8 @@ class ControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.status").value("success"))
-                                .andExpect(jsonPath("$.data.data").isArray())
-                                .andExpect(jsonPath("$.data.data.length()").value(1));
+                                .andExpect(jsonPath("$.data").isArray())
+                                .andExpect(jsonPath("$.data.length()").value(1));
         }
 
         @Test
@@ -394,9 +394,9 @@ class ControllerTest {
                                 .param("filter", "NonExistent")
                                 .contentType(MediaType.APPLICATION_JSON))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.data.data").isArray())
-                                .andExpect(jsonPath("$.data.data.length()").value(0))
-                                .andExpect(jsonPath("$.data.pagination.totalElements").value(0))
-                                .andExpect(jsonPath("$.data.pagination.totalPages").value(0));
+                                .andExpect(jsonPath("$.data").isArray())
+                                .andExpect(jsonPath("$.data.length()").value(0))
+                                .andExpect(jsonPath("$.pagination.totalItems").value(0))
+                                .andExpect(jsonPath("$.pagination.totalPages").value(0));
         }
 }

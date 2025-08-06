@@ -35,11 +35,15 @@ public class PresentationController {
     }
 
     @GetMapping("/collection")
-    public ResponseEntity<AppResponseDto<PaginatedResponseDto<PresentationListResponseDto>>> getAllPresentationsCollection(
+    public ResponseEntity<AppResponseDto<List<PresentationListResponseDto>>> getAllPresentationsCollection(
             @ModelAttribute PresentationCollectionRequest request) {
         
-        PaginatedResponseDto<PresentationListResponseDto> response =
+        PaginatedResponseDto<PresentationListResponseDto> paginatedResponse =
             presentationService.getAllPresentations(request);
-        return ResponseEntity.ok(AppResponseDto.success(response));
+        
+        return ResponseEntity.ok(AppResponseDto.successWithPagination(
+            paginatedResponse.getData(), 
+            paginatedResponse.getPagination()
+        ));
     }
 }

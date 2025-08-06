@@ -22,6 +22,7 @@ import org.springframework.web.context.WebApplicationContext;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Collections;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -235,12 +236,14 @@ public class PresentationApiIntegrationTest {
         LocalDateTime now = LocalDateTime.now();
         Presentation presentation1 = Presentation.builder()
                 .title("Integration Test Presentation 1")
+                .slides(Collections.emptyList())
                 .createdAt(now.minusHours(2))
                 .updatedAt(now.minusHours(2))
                 .build();
 
         Presentation presentation2 = Presentation.builder()
                 .title("Integration Test Presentation 2")
+                .slides(Collections.emptyList())
                 .createdAt(now.minusHours(1))
                 .updatedAt(now.minusHours(1))
                 .build();
@@ -283,6 +286,7 @@ public class PresentationApiIntegrationTest {
         for (int i = 1; i <= 5; i++) {
             Presentation presentation = Presentation.builder()
                     .title("Test Presentation " + i)
+                    .slides(Collections.emptyList())
                     .createdAt(now.minusHours(5 - i))
                     .updatedAt(now.minusHours(5 - i))
                     .build();
@@ -296,15 +300,15 @@ public class PresentationApiIntegrationTest {
                 .andExpect(jsonPath("$.status").value("success"))
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data").exists())
-                .andExpect(jsonPath("$.data.data").isArray())
-                .andExpect(jsonPath("$.data.data", hasSize(5)))
-                .andExpect(jsonPath("$.data.pagination").exists())
-                .andExpect(jsonPath("$.data.pagination.page").value(1))
-                .andExpect(jsonPath("$.data.pagination.pageSize").value(20))
-                .andExpect(jsonPath("$.data.pagination.totalElements").value(5))
-                .andExpect(jsonPath("$.data.pagination.totalPages").value(1))
-                .andExpect(jsonPath("$.data.pagination.hasNext").value(false))
-                .andExpect(jsonPath("$.data.pagination.hasPrevious").value(false));
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data", hasSize(5)))
+                .andExpect(jsonPath("$.pagination").exists())
+                .andExpect(jsonPath("$.pagination.currentPage").value(1))
+                .andExpect(jsonPath("$.pagination.pageSize").value(10))
+                .andExpect(jsonPath("$.pagination.totalItems").value(5))
+                .andExpect(jsonPath("$.pagination.totalPages").value(1))
+                .andExpect(jsonPath("$.pagination.hasNextPage").value(false))
+                .andExpect(jsonPath("$.pagination.hasPreviousPage").value(false));
     }
 
     @Test
@@ -314,6 +318,7 @@ public class PresentationApiIntegrationTest {
         for (int i = 1; i <= 15; i++) {
             Presentation presentation = Presentation.builder()
                     .title("Paginated Presentation " + i)
+                    .slides(Collections.emptyList())
                     .createdAt(now.minusHours(15 - i))
                     .updatedAt(now.minusHours(15 - i))
                     .build();
@@ -327,14 +332,14 @@ public class PresentationApiIntegrationTest {
                         .param("sort", "desc")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.data", hasSize(5)))
-                .andExpect(jsonPath("$.data.pagination.page").value(1))
-                .andExpect(jsonPath("$.data.pagination.pageSize").value(5))
-                .andExpect(jsonPath("$.data.pagination.totalElements").value(15))
-                .andExpect(jsonPath("$.data.pagination.totalPages").value(3))
-                .andExpect(jsonPath("$.data.pagination.hasNext").value(true))
-                .andExpect(jsonPath("$.data.pagination.hasPrevious").value(false))
-                .andExpect(jsonPath("$.data.data[0].title").value("Paginated Presentation 15"));
+                .andExpect(jsonPath("$.data", hasSize(5)))
+                .andExpect(jsonPath("$.pagination.currentPage").value(1))
+                .andExpect(jsonPath("$.pagination.pageSize").value(5))
+                .andExpect(jsonPath("$.pagination.totalItems").value(15))
+                .andExpect(jsonPath("$.pagination.totalPages").value(3))
+                .andExpect(jsonPath("$.pagination.hasNextPage").value(true))
+                .andExpect(jsonPath("$.pagination.hasPreviousPage").value(false))
+                .andExpect(jsonPath("$.data[0].title").value("Paginated Presentation 15"));
 
         // Test second page
         mockMvc.perform(get("/api/presentations/collection")
@@ -343,10 +348,10 @@ public class PresentationApiIntegrationTest {
                         .param("sort", "desc")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.data", hasSize(5)))
-                .andExpect(jsonPath("$.data.pagination.page").value(2))
-                .andExpect(jsonPath("$.data.pagination.hasNext").value(true))
-                .andExpect(jsonPath("$.data.pagination.hasPrevious").value(true));
+                .andExpect(jsonPath("$.data", hasSize(5)))
+                .andExpect(jsonPath("$.pagination.currentPage").value(2))
+                .andExpect(jsonPath("$.pagination.hasNextPage").value(true))
+                .andExpect(jsonPath("$.pagination.hasPreviousPage").value(true));
     }
 
     @Test
@@ -355,18 +360,21 @@ public class PresentationApiIntegrationTest {
         LocalDateTime now = LocalDateTime.now();
         Presentation matchingPresentation1 = Presentation.builder()
                 .title("Important Business Presentation")
+                .slides(Collections.emptyList())
                 .createdAt(now.minusHours(2))
                 .updatedAt(now.minusHours(2))
                 .build();
 
         Presentation matchingPresentation2 = Presentation.builder()
                 .title("Business Report Analysis")
+                .slides(Collections.emptyList())
                 .createdAt(now.minusHours(1))
                 .updatedAt(now.minusHours(1))
                 .build();
 
         Presentation nonMatchingPresentation = Presentation.builder()
                 .title("Technical Documentation")
+                .slides(Collections.emptyList())
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
@@ -379,11 +387,11 @@ public class PresentationApiIntegrationTest {
                         .param("sort", "asc")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.data", hasSize(2)))
-                .andExpect(jsonPath("$.data.data[*].title", containsInAnyOrder(
+                .andExpect(jsonPath("$.data", hasSize(2)))
+                .andExpect(jsonPath("$.data[*].title", containsInAnyOrder(
                         "Important Business Presentation",
                         "Business Report Analysis")))
-                .andExpect(jsonPath("$.data.pagination.totalElements").value(2));
+                .andExpect(jsonPath("$.pagination.totalItems").value(2));
     }
 
     @Test
@@ -392,6 +400,7 @@ public class PresentationApiIntegrationTest {
         LocalDateTime now = LocalDateTime.now();
         Presentation presentation = Presentation.builder()
                 .title("TEST Presentation for filtering")
+                .slides(Collections.emptyList())
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
@@ -403,20 +412,20 @@ public class PresentationApiIntegrationTest {
                         .param("filter", "test")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.data", hasSize(1)))
-                .andExpect(jsonPath("$.data.data[0].title").value("TEST Presentation for filtering"));
+                .andExpect(jsonPath("$.data", hasSize(1)))
+                .andExpect(jsonPath("$.data[0].title").value("TEST Presentation for filtering"));
 
         mockMvc.perform(get("/api/presentations/collection")
                         .param("filter", "TEST")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.data", hasSize(1)));
+                .andExpect(jsonPath("$.data", hasSize(1)));
 
         mockMvc.perform(get("/api/presentations/collection")
                         .param("filter", "Test")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.data", hasSize(1)));
+                .andExpect(jsonPath("$.data", hasSize(1)));
     }
 
     @Test
@@ -425,18 +434,21 @@ public class PresentationApiIntegrationTest {
         LocalDateTime now = LocalDateTime.now();
         Presentation oldestPresentation = Presentation.builder()
                 .title("Oldest Presentation")
+                .slides(Collections.emptyList())
                 .createdAt(now.minusDays(3))
                 .updatedAt(now.minusDays(3))
                 .build();
 
         Presentation middlePresentation = Presentation.builder()
                 .title("Middle Presentation")
+                .slides(Collections.emptyList())
                 .createdAt(now.minusDays(2))
                 .updatedAt(now.minusDays(2))
                 .build();
 
         Presentation newestPresentation = Presentation.builder()
                 .title("Newest Presentation")
+                .slides(Collections.emptyList())
                 .createdAt(now.minusDays(1))
                 .updatedAt(now.minusDays(1))
                 .build();
@@ -448,17 +460,17 @@ public class PresentationApiIntegrationTest {
                         .param("sort", "asc")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.data", hasSize(3)))
-                .andExpect(jsonPath("$.data.data[0].title").value("Oldest Presentation"))
-                .andExpect(jsonPath("$.data.data[2].title").value("Newest Presentation"));
+                .andExpect(jsonPath("$.data", hasSize(3)))
+                .andExpect(jsonPath("$.data[0].title").value("Oldest Presentation"))
+                .andExpect(jsonPath("$.data[2].title").value("Newest Presentation"));
 
         // Test descending sort
         mockMvc.perform(get("/api/presentations/collection")
                         .param("sort", "desc")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.data[0].title").value("Newest Presentation"))
-                .andExpect(jsonPath("$.data.data[2].title").value("Oldest Presentation"));
+                .andExpect(jsonPath("$.data[0].title").value("Newest Presentation"))
+                .andExpect(jsonPath("$.data[2].title").value("Oldest Presentation"));
     }
 
     @Test
@@ -467,6 +479,7 @@ public class PresentationApiIntegrationTest {
         LocalDateTime now = LocalDateTime.now();
         Presentation presentation = Presentation.builder()
                 .title("Sample Presentation")
+                .slides(Collections.emptyList())
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
@@ -478,9 +491,9 @@ public class PresentationApiIntegrationTest {
                         .param("filter", "nonexistentfilter")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.data", hasSize(0)))
-                .andExpect(jsonPath("$.data.pagination.totalElements").value(0))
-                .andExpect(jsonPath("$.data.pagination.totalPages").value(0));
+                .andExpect(jsonPath("$.data", hasSize(0)))
+                .andExpect(jsonPath("$.pagination.totalItems").value(0))
+                .andExpect(jsonPath("$.pagination.totalPages").value(0));
     }
 
     @Test
@@ -495,6 +508,7 @@ public class PresentationApiIntegrationTest {
         LocalDateTime now = LocalDateTime.now();
         Presentation directPresentation = Presentation.builder()
                 .title("Direct DB Presentation")
+                .slides(Collections.emptyList())
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
@@ -513,8 +527,8 @@ public class PresentationApiIntegrationTest {
                         .param("filter", "Direct")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.data", hasSize(1)))
-                .andExpect(jsonPath("$.data.data[0].title").value("Direct DB Presentation"));
+                .andExpect(jsonPath("$.data", hasSize(1)))
+                .andExpect(jsonPath("$.data[0].title").value("Direct DB Presentation"));
     }
 
 }
