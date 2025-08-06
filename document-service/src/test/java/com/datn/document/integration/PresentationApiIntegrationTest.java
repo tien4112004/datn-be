@@ -251,7 +251,7 @@ public class PresentationApiIntegrationTest {
         presentationRepository.saveAll(List.of(presentation1, presentation2));
 
         // When & Then
-        mockMvc.perform(get("/api/presentations")
+        mockMvc.perform(get("/api/presentations/all")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -270,7 +270,7 @@ public class PresentationApiIntegrationTest {
     @Test
     void getAllPresentations_WithEmptyDatabase_ShouldReturnEmptyArray() throws Exception {
         // When & Then
-        mockMvc.perform(get("/api/presentations")
+        mockMvc.perform(get("/api/presentations/all")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("success"))
@@ -280,7 +280,7 @@ public class PresentationApiIntegrationTest {
     }
 
     @Test
-    void getAllPresentationsCollection_WithDefaultParameters_ShouldReturnPaginatedResults() throws Exception {
+    void getPresentationsCollection_WithDefaultParameters_ShouldReturnPaginatedResults() throws Exception {
         // Given - Create multiple presentations
         LocalDateTime now = LocalDateTime.now();
         for (int i = 1; i <= 5; i++) {
@@ -294,7 +294,7 @@ public class PresentationApiIntegrationTest {
         }
 
         // When & Then
-        mockMvc.perform(get("/api/presentations/collection")
+        mockMvc.perform(get("/api/presentations")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("success"))
@@ -312,7 +312,7 @@ public class PresentationApiIntegrationTest {
     }
 
     @Test
-    void getAllPresentationsCollection_WithPaginationParameters_ShouldReturnCorrectPage() throws Exception {
+    void getPresentationsCollection_WithPaginationParameters_ShouldReturnCorrectPage() throws Exception {
         // Given - Create test data
         LocalDateTime now = LocalDateTime.now();
         for (int i = 1; i <= 15; i++) {
@@ -326,7 +326,7 @@ public class PresentationApiIntegrationTest {
         }
 
         // When & Then - Test first page
-        mockMvc.perform(get("/api/presentations/collection")
+        mockMvc.perform(get("/api/presentations")
                         .param("page", "1")
                         .param("pageSize", "5")
                         .param("sort", "desc")
@@ -342,7 +342,7 @@ public class PresentationApiIntegrationTest {
                 .andExpect(jsonPath("$.data[0].title").value("Paginated Presentation 15"));
 
         // Test second page
-        mockMvc.perform(get("/api/presentations/collection")
+        mockMvc.perform(get("/api/presentations")
                         .param("page", "2")
                         .param("pageSize", "5")
                         .param("sort", "desc")
@@ -355,7 +355,7 @@ public class PresentationApiIntegrationTest {
     }
 
     @Test
-    void getAllPresentationsCollection_WithFilterParameter_ShouldReturnFilteredResults() throws Exception {
+    void getPresentationsCollection_WithFilterParameter_ShouldReturnFilteredResults() throws Exception {
         // Given - Create test data with different titles
         LocalDateTime now = LocalDateTime.now();
         Presentation matchingPresentation1 = Presentation.builder()
@@ -382,7 +382,7 @@ public class PresentationApiIntegrationTest {
         presentationRepository.saveAll(List.of(matchingPresentation1, matchingPresentation2, nonMatchingPresentation));
 
         // When & Then
-        mockMvc.perform(get("/api/presentations/collection")
+        mockMvc.perform(get("/api/presentations")
                         .param("filter", "business")
                         .param("sort", "asc")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -395,7 +395,7 @@ public class PresentationApiIntegrationTest {
     }
 
     @Test
-    void getAllPresentationsCollection_WithCaseInsensitiveFilter_ShouldReturnResults() throws Exception {
+    void getPresentationsCollection_WithCaseInsensitiveFilter_ShouldReturnResults() throws Exception {
         // Given
         LocalDateTime now = LocalDateTime.now();
         Presentation presentation = Presentation.builder()
@@ -408,20 +408,20 @@ public class PresentationApiIntegrationTest {
         presentationRepository.save(presentation);
 
         // When & Then - Test different case variations
-        mockMvc.perform(get("/api/presentations/collection")
+        mockMvc.perform(get("/api/presentations")
                         .param("filter", "test")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data", hasSize(1)))
                 .andExpect(jsonPath("$.data[0].title").value("TEST Presentation for filtering"));
 
-        mockMvc.perform(get("/api/presentations/collection")
+        mockMvc.perform(get("/api/presentations")
                         .param("filter", "TEST")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data", hasSize(1)));
 
-        mockMvc.perform(get("/api/presentations/collection")
+        mockMvc.perform(get("/api/presentations")
                         .param("filter", "Test")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -429,7 +429,7 @@ public class PresentationApiIntegrationTest {
     }
 
     @Test
-    void getAllPresentationsCollection_WithSortingParameter_ShouldReturnSortedResults() throws Exception {
+    void getPresentationsCollection_WithSortingParameter_ShouldReturnSortedResults() throws Exception {
         // Given - Create presentations with different creation times
         LocalDateTime now = LocalDateTime.now();
         Presentation oldestPresentation = Presentation.builder()
@@ -456,7 +456,7 @@ public class PresentationApiIntegrationTest {
         presentationRepository.saveAll(List.of(oldestPresentation, middlePresentation, newestPresentation));
 
         // Test ascending sort
-        mockMvc.perform(get("/api/presentations/collection")
+        mockMvc.perform(get("/api/presentations")
                         .param("sort", "asc")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -465,7 +465,7 @@ public class PresentationApiIntegrationTest {
                 .andExpect(jsonPath("$.data[2].title").value("Newest Presentation"));
 
         // Test descending sort
-        mockMvc.perform(get("/api/presentations/collection")
+        mockMvc.perform(get("/api/presentations")
                         .param("sort", "desc")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -474,7 +474,7 @@ public class PresentationApiIntegrationTest {
     }
 
     @Test
-    void getAllPresentationsCollection_WithNoMatchingFilter_ShouldReturnEmptyResults() throws Exception {
+    void getPresentationsCollection_WithNoMatchingFilter_ShouldReturnEmptyResults() throws Exception {
         // Given - Create presentations that won't match the filter
         LocalDateTime now = LocalDateTime.now();
         Presentation presentation = Presentation.builder()
@@ -487,7 +487,7 @@ public class PresentationApiIntegrationTest {
         presentationRepository.save(presentation);
 
         // When & Then
-        mockMvc.perform(get("/api/presentations/collection")
+        mockMvc.perform(get("/api/presentations")
                         .param("filter", "nonexistentfilter")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -497,7 +497,7 @@ public class PresentationApiIntegrationTest {
     }
 
     @Test
-    void getAllPresentationsCollection_EndToEndWithRealData_ShouldWorkCorrectly() throws Exception {
+    void getPresentationsCollection_EndToEndWithRealData_ShouldWorkCorrectly() throws Exception {
         // Given - Create a presentation using the POST endpoint first
         mockMvc.perform(post("/api/presentations")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -523,7 +523,7 @@ public class PresentationApiIntegrationTest {
                 .andExpect(jsonPath("$.data[*].title", hasItems("Untitled Presentation", "Direct DB Presentation")));
 
         // Test collection endpoint with filter
-        mockMvc.perform(get("/api/presentations/collection")
+        mockMvc.perform(get("/api/presentations")
                         .param("filter", "Direct")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())

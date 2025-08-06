@@ -253,7 +253,7 @@ class ControllerTest {
                 when(presentationService.getAllPresentations()).thenReturn(presentations);
 
                 // When & Then
-                mockMvc.perform(get("/api/presentations")
+                mockMvc.perform(get("/api/presentations/all")
                                 .contentType(MediaType.APPLICATION_JSON))
                                 .andExpect(status().isOk())
                                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -273,7 +273,7 @@ class ControllerTest {
                 when(presentationService.getAllPresentations()).thenReturn(List.of());
 
                 // When & Then
-                mockMvc.perform(get("/api/presentations")
+                mockMvc.perform(get("/api/presentations/all")
                                 .contentType(MediaType.APPLICATION_JSON))
                                 .andExpect(status().isOk())
                                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -284,7 +284,7 @@ class ControllerTest {
         }
 
         @Test
-        void getAllPresentationsCollection_WithValidRequest_ShouldReturnPaginatedResponse() throws Exception {
+        void getPresentationsCollection_WithValidRequest_ShouldReturnPaginatedResponse() throws Exception {
                 // Given
                 LocalDateTime createdAt = LocalDateTime.now();
                 PresentationListResponseDto presentation = PresentationListResponseDto.builder()
@@ -301,7 +301,7 @@ class ControllerTest {
                 when(presentationService.getAllPresentations(any())).thenReturn(paginatedResponse);
 
                 // When & Then
-                mockMvc.perform(get("/api/presentations/collection")
+                mockMvc.perform(get("/api/presentations")
                                 .param("page", "1")
                                 .param("pageSize", "10")
                                 .param("sort", "asc")
@@ -324,7 +324,7 @@ class ControllerTest {
         }
 
         @Test
-        void getAllPresentationsCollection_WithFilter_ShouldReturnFilteredResults() throws Exception {
+        void getPresentationsCollection_WithFilter_ShouldReturnFilteredResults() throws Exception {
                 // Given
                 LocalDateTime createdAt = LocalDateTime.now();
 
@@ -342,7 +342,7 @@ class ControllerTest {
                 when(presentationService.getAllPresentations(any())).thenReturn(paginatedResponse);
 
                 // When & Then
-                mockMvc.perform(get("/api/presentations/collection")
+                mockMvc.perform(get("/api/presentations")
                                 .param("page", "1")
                                 .param("pageSize", "10")
                                 .param("sort", "desc")
@@ -353,7 +353,7 @@ class ControllerTest {
         }
 
         @Test
-        void getAllPresentationsCollection_WithDefaultParameters_ShouldReturnResults() throws Exception {
+        void getPresentationsCollection_WithDefaultParameters_ShouldReturnResults() throws Exception {
                 // Given
                 LocalDateTime createdAt = LocalDateTime.now();
                 PresentationListResponseDto presentation = PresentationListResponseDto.builder()
@@ -370,7 +370,7 @@ class ControllerTest {
                 when(presentationService.getAllPresentations(any())).thenReturn(paginatedResponse);
 
                 // When & Then
-                mockMvc.perform(get("/api/presentations/collection")
+                mockMvc.perform(get("/api/presentations")
                                 .contentType(MediaType.APPLICATION_JSON))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.status").value("success"))
@@ -379,7 +379,7 @@ class ControllerTest {
         }
 
         @Test
-        void getAllPresentationsCollection_WithEmptyResults_ShouldReturnEmptyPaginatedResponse() throws Exception {
+        void getPresentationsCollection_WithEmptyResults_ShouldReturnEmptyPaginatedResponse() throws Exception {
                 // Given
                 PaginationDto pagination = new PaginationDto(1, 10, 0L, 0, false, false);
                 PaginatedResponseDto<PresentationListResponseDto> paginatedResponse =
@@ -388,7 +388,7 @@ class ControllerTest {
                 when(presentationService.getAllPresentations(any())).thenReturn(paginatedResponse);
 
                 // When & Then
-                mockMvc.perform(get("/api/presentations/collection")
+                mockMvc.perform(get("/api/presentations")
                                 .param("page", "1")
                                 .param("pageSize", "10")
                                 .param("filter", "NonExistent")

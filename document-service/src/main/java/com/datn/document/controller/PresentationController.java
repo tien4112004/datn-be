@@ -28,13 +28,13 @@ public class PresentationController {
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<AppResponseDto<List<PresentationListResponseDto>>> getAllPresentations() {
         List<PresentationListResponseDto> presentations = presentationService.getAllPresentations();
         return ResponseEntity.ok(AppResponseDto.success(presentations));
     }
 
-    @GetMapping("/collection")
+    @GetMapping({"", "/"})
     public ResponseEntity<AppResponseDto<List<PresentationListResponseDto>>> getAllPresentationsCollection(
             @ModelAttribute PresentationCollectionRequest request) {
         
