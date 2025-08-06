@@ -4,7 +4,9 @@ import com.datn.document.dto.SlideDto;
 import com.datn.document.dto.SlideDto.SlideElementDto;
 import com.datn.document.dto.SlideDto.SlideBackgroundDto;
 import com.datn.document.dto.request.PresentationCreateRequest;
+import com.datn.document.entity.Presentation;
 import com.datn.document.enums.SlideElementType;
+import com.datn.document.repository.PresentationRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,11 +19,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.hamcrest.Matchers.*;
 
 @SpringBootTest
 @AutoConfigureWebMvc
@@ -33,13 +38,15 @@ public class PresentationApiIntegrationTest {
 
         @Autowired
         private ObjectMapper objectMapper;
-
+        @Autowired
+        private PresentationRepository presentationRepository;
         private MockMvc mockMvc;
         private PresentationCreateRequest request;
 
         @BeforeEach
         void setUp() {
                 mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+                presentationRepository.deleteAll();
 
                 SlideBackgroundDto background = SlideBackgroundDto.builder()
                                 .type("color")
@@ -221,4 +228,293 @@ public class PresentationApiIntegrationTest {
                                                 jsonPath("$.data.presentation[0].elements[0].content")
                                                                 .value("Content with null properties"));
         }
+
+    @Test
+    void getAllPresentations_WithExistingPresentations_ShouldReturnAllPresentations() throws Exception {
+        // Given - Create test data
+        LocalDateTime now = LocalDateTime.now();
+        Presentation presentation1 = Presentation.builder()
+                .title("Integration Test Presentation 1")
+                .createdAt(now.minusHours(2))
+                .updatedAt(now.minusHours(2))
+                .build();
+
+        Presentation presentation2 = Presentation.builder()
+                .title("Integration Test Presentation 2")
+                .createdAt(now.minusHours(1))
+                .updatedAt(now.minusHours(1))
+                .build();
+
+        presentationRepository.saveAll(List.of(presentation1, presentation2));
+
+        // When & Then
+        mockMvc.perform(get("/api/presentations")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data", hasSize(2)))
+                .andExpect(jsonPath("$.data[*].title", containsInAnyOrder(
+                        "Integration Test Presentation 1",
+                        "Integration Test Presentation 2")))
+                .andExpect(jsonPath("$.data[0].id").exists())
+                .andExpect(jsonPath("$.data[0].createdAt").exists())
+                .andExpect(jsonPath("$.data[0].updatedAt").exists());
+    }
+
+    @Test
+    void getAllPresentations_WithEmptyDatabase_ShouldReturnEmptyArray() throws Exception {
+        // When & Then
+        mockMvc.perform(get("/api/presentations")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data", hasSize(0)));
+    }
+
+    @Test
+    void getAllPresentationsCollection_WithDefaultParameters_ShouldReturnPaginatedResults() throws Exception {
+        // Given - Create multiple presentations
+        LocalDateTime now = LocalDateTime.now();
+        for (int i = 1; i <= 5; i++) {
+            Presentation presentation = Presentation.builder()
+                    .title("Test Presentation " + i)
+                    .createdAt(now.minusHours(5 - i))
+                    .updatedAt(now.minusHours(5 - i))
+                    .build();
+            presentationRepository.save(presentation);
+        }
+
+        // When & Then
+        mockMvc.perform(get("/api/presentations/collection")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data").exists())
+                .andExpect(jsonPath("$.data.data").isArray())
+                .andExpect(jsonPath("$.data.data", hasSize(5)))
+                .andExpect(jsonPath("$.data.pagination").exists())
+                .andExpect(jsonPath("$.data.pagination.page").value(1))
+                .andExpect(jsonPath("$.data.pagination.pageSize").value(20))
+                .andExpect(jsonPath("$.data.pagination.totalElements").value(5))
+                .andExpect(jsonPath("$.data.pagination.totalPages").value(1))
+                .andExpect(jsonPath("$.data.pagination.hasNext").value(false))
+                .andExpect(jsonPath("$.data.pagination.hasPrevious").value(false));
+    }
+
+    @Test
+    void getAllPresentationsCollection_WithPaginationParameters_ShouldReturnCorrectPage() throws Exception {
+        // Given - Create test data
+        LocalDateTime now = LocalDateTime.now();
+        for (int i = 1; i <= 15; i++) {
+            Presentation presentation = Presentation.builder()
+                    .title("Paginated Presentation " + i)
+                    .createdAt(now.minusHours(15 - i))
+                    .updatedAt(now.minusHours(15 - i))
+                    .build();
+            presentationRepository.save(presentation);
+        }
+
+        // When & Then - Test first page
+        mockMvc.perform(get("/api/presentations/collection")
+                        .param("page", "1")
+                        .param("pageSize", "5")
+                        .param("sort", "desc")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.data", hasSize(5)))
+                .andExpect(jsonPath("$.data.pagination.page").value(1))
+                .andExpect(jsonPath("$.data.pagination.pageSize").value(5))
+                .andExpect(jsonPath("$.data.pagination.totalElements").value(15))
+                .andExpect(jsonPath("$.data.pagination.totalPages").value(3))
+                .andExpect(jsonPath("$.data.pagination.hasNext").value(true))
+                .andExpect(jsonPath("$.data.pagination.hasPrevious").value(false))
+                .andExpect(jsonPath("$.data.data[0].title").value("Paginated Presentation 15"));
+
+        // Test second page
+        mockMvc.perform(get("/api/presentations/collection")
+                        .param("page", "2")
+                        .param("pageSize", "5")
+                        .param("sort", "desc")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.data", hasSize(5)))
+                .andExpect(jsonPath("$.data.pagination.page").value(2))
+                .andExpect(jsonPath("$.data.pagination.hasNext").value(true))
+                .andExpect(jsonPath("$.data.pagination.hasPrevious").value(true));
+    }
+
+    @Test
+    void getAllPresentationsCollection_WithFilterParameter_ShouldReturnFilteredResults() throws Exception {
+        // Given - Create test data with different titles
+        LocalDateTime now = LocalDateTime.now();
+        Presentation matchingPresentation1 = Presentation.builder()
+                .title("Important Business Presentation")
+                .createdAt(now.minusHours(2))
+                .updatedAt(now.minusHours(2))
+                .build();
+
+        Presentation matchingPresentation2 = Presentation.builder()
+                .title("Business Report Analysis")
+                .createdAt(now.minusHours(1))
+                .updatedAt(now.minusHours(1))
+                .build();
+
+        Presentation nonMatchingPresentation = Presentation.builder()
+                .title("Technical Documentation")
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+
+        presentationRepository.saveAll(List.of(matchingPresentation1, matchingPresentation2, nonMatchingPresentation));
+
+        // When & Then
+        mockMvc.perform(get("/api/presentations/collection")
+                        .param("filter", "business")
+                        .param("sort", "asc")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.data", hasSize(2)))
+                .andExpect(jsonPath("$.data.data[*].title", containsInAnyOrder(
+                        "Important Business Presentation",
+                        "Business Report Analysis")))
+                .andExpect(jsonPath("$.data.pagination.totalElements").value(2));
+    }
+
+    @Test
+    void getAllPresentationsCollection_WithCaseInsensitiveFilter_ShouldReturnResults() throws Exception {
+        // Given
+        LocalDateTime now = LocalDateTime.now();
+        Presentation presentation = Presentation.builder()
+                .title("TEST Presentation for filtering")
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+
+        presentationRepository.save(presentation);
+
+        // When & Then - Test different case variations
+        mockMvc.perform(get("/api/presentations/collection")
+                        .param("filter", "test")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.data", hasSize(1)))
+                .andExpect(jsonPath("$.data.data[0].title").value("TEST Presentation for filtering"));
+
+        mockMvc.perform(get("/api/presentations/collection")
+                        .param("filter", "TEST")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.data", hasSize(1)));
+
+        mockMvc.perform(get("/api/presentations/collection")
+                        .param("filter", "Test")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.data", hasSize(1)));
+    }
+
+    @Test
+    void getAllPresentationsCollection_WithSortingParameter_ShouldReturnSortedResults() throws Exception {
+        // Given - Create presentations with different creation times
+        LocalDateTime now = LocalDateTime.now();
+        Presentation oldestPresentation = Presentation.builder()
+                .title("Oldest Presentation")
+                .createdAt(now.minusDays(3))
+                .updatedAt(now.minusDays(3))
+                .build();
+
+        Presentation middlePresentation = Presentation.builder()
+                .title("Middle Presentation")
+                .createdAt(now.minusDays(2))
+                .updatedAt(now.minusDays(2))
+                .build();
+
+        Presentation newestPresentation = Presentation.builder()
+                .title("Newest Presentation")
+                .createdAt(now.minusDays(1))
+                .updatedAt(now.minusDays(1))
+                .build();
+
+        presentationRepository.saveAll(List.of(oldestPresentation, middlePresentation, newestPresentation));
+
+        // Test ascending sort
+        mockMvc.perform(get("/api/presentations/collection")
+                        .param("sort", "asc")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.data", hasSize(3)))
+                .andExpect(jsonPath("$.data.data[0].title").value("Oldest Presentation"))
+                .andExpect(jsonPath("$.data.data[2].title").value("Newest Presentation"));
+
+        // Test descending sort
+        mockMvc.perform(get("/api/presentations/collection")
+                        .param("sort", "desc")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.data[0].title").value("Newest Presentation"))
+                .andExpect(jsonPath("$.data.data[2].title").value("Oldest Presentation"));
+    }
+
+    @Test
+    void getAllPresentationsCollection_WithNoMatchingFilter_ShouldReturnEmptyResults() throws Exception {
+        // Given - Create presentations that won't match the filter
+        LocalDateTime now = LocalDateTime.now();
+        Presentation presentation = Presentation.builder()
+                .title("Sample Presentation")
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+
+        presentationRepository.save(presentation);
+
+        // When & Then
+        mockMvc.perform(get("/api/presentations/collection")
+                        .param("filter", "nonexistentfilter")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.data", hasSize(0)))
+                .andExpect(jsonPath("$.data.pagination.totalElements").value(0))
+                .andExpect(jsonPath("$.data.pagination.totalPages").value(0));
+    }
+
+    @Test
+    void getAllPresentationsCollection_EndToEndWithRealData_ShouldWorkCorrectly() throws Exception {
+        // Given - Create a presentation using the POST endpoint first
+        mockMvc.perform(post("/api/presentations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        // Create additional presentations directly in DB
+        LocalDateTime now = LocalDateTime.now();
+        Presentation directPresentation = Presentation.builder()
+                .title("Direct DB Presentation")
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+
+        presentationRepository.save(directPresentation);
+
+        // When & Then - Verify both presentations are returned
+        mockMvc.perform(get("/api/presentations")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", hasSize(2)))
+                .andExpect(jsonPath("$.data[*].title", hasItems("Untitled Presentation", "Direct DB Presentation")));
+
+        // Test collection endpoint with filter
+        mockMvc.perform(get("/api/presentations/collection")
+                        .param("filter", "Direct")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.data", hasSize(1)))
+                .andExpect(jsonPath("$.data.data[0].title").value("Direct DB Presentation"));
+    }
+
 }

@@ -4,8 +4,11 @@ import com.datn.document.controller.PresentationController;
 import com.datn.document.dto.SlideDto;
 import com.datn.document.dto.SlideDto.SlideElementDto;
 import com.datn.document.dto.SlideDto.SlideBackgroundDto;
+import com.datn.document.dto.common.PaginatedResponseDto;
+import com.datn.document.dto.common.PaginationDto;
 import com.datn.document.dto.request.PresentationCreateRequest;
 import com.datn.document.dto.response.PresentationCreateResponseDto;
+import com.datn.document.dto.response.PresentationListResponseDto;
 import com.datn.document.enums.SlideElementType;
 import com.datn.document.service.interfaces.PresentationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,11 +20,13 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -223,5 +228,175 @@ class ControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{invalid json}"))
                                 .andExpect(status().is4xxClientError());
+        }
+
+        @Test
+        void getAllPresentations_ShouldReturnListOfPresentations() throws Exception {
+                // Given
+                LocalDateTime createdAt = LocalDateTime.now();
+                PresentationListResponseDto presentation1 = PresentationListResponseDto.builder()
+                        .id("test-id-1")
+                        .title("First Presentation")
+                        .createdAt(createdAt)
+                        .updatedAt(createdAt)
+                        .build();
+
+                PresentationListResponseDto presentation2 = PresentationListResponseDto.builder()
+                        .id("test-id-2")
+                        .title("Second Presentation")
+                        .createdAt(createdAt.plusHours(1))
+                        .updatedAt(createdAt.plusHours(1))
+                        .build();
+
+                List<PresentationListResponseDto> presentations = Arrays.asList(presentation1, presentation2);
+
+                when(presentationService.getAllPresentations()).thenReturn(presentations);
+
+                // When & Then
+                mockMvc.perform(get("/api/presentations")
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isOk())
+                                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(jsonPath("$.status").value("success"))
+                                .andExpect(jsonPath("$.code").value(200))
+                                .andExpect(jsonPath("$.data").isArray())
+                                .andExpect(jsonPath("$.data.length()").value(2))
+                                .andExpect(jsonPath("$.data[0].id").value("test-id-1"))
+                                .andExpect(jsonPath("$.data[0].title").value("First Presentation"))
+                                .andExpect(jsonPath("$.data[1].id").value("test-id-2"))
+                                .andExpect(jsonPath("$.data[1].title").value("Second Presentation"));
+        }
+
+        @Test
+        void getAllPresentations_WithEmptyList_ShouldReturnEmptyArray() throws Exception {
+                // Given
+                when(presentationService.getAllPresentations()).thenReturn(List.of());
+
+                // When & Then
+                mockMvc.perform(get("/api/presentations")
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isOk())
+                                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(jsonPath("$.status").value("success"))
+                                .andExpect(jsonPath("$.code").value(200))
+                                .andExpect(jsonPath("$.data").isArray())
+                                .andExpect(jsonPath("$.data.length()").value(0));
+        }
+
+        @Test
+        void getAllPresentationsCollection_WithValidRequest_ShouldReturnPaginatedResponse() throws Exception {
+                // Given
+                LocalDateTime createdAt = LocalDateTime.now();
+                PresentationListResponseDto presentation = PresentationListResponseDto.builder()
+                        .id("test-id-1")
+                        .title("Test Presentation")
+                        .createdAt(createdAt)
+                        .updatedAt(createdAt)
+                        .build();
+
+                PaginationDto pagination = new PaginationDto(1, 10, 1L, 1, false, false);
+                PaginatedResponseDto<PresentationListResponseDto> paginatedResponse =
+                        new PaginatedResponseDto<>(List.of(presentation), pagination);
+
+                when(presentationService.getAllPresentations(any())).thenReturn(paginatedResponse);
+
+                // When & Then
+                mockMvc.perform(get("/api/presentations/collection")
+                                .param("page", "1")
+                                .param("pageSize", "10")
+                                .param("sort", "asc")
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isOk())
+                                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(jsonPath("$.status").value("success"))
+                                .andExpect(jsonPath("$.code").value(200))
+                                .andExpect(jsonPath("$.data").exists())
+                                .andExpect(jsonPath("$.data.data").isArray())
+                                .andExpect(jsonPath("$.data.data.length()").value(1))
+                                .andExpect(jsonPath("$.data.data[0].id").value("test-id-1"))
+                                .andExpect(jsonPath("$.data.data[0].title").value("Test Presentation"))
+                                .andExpect(jsonPath("$.data.pagination.page").value(1))
+                                .andExpect(jsonPath("$.data.pagination.pageSize").value(10))
+                                .andExpect(jsonPath("$.data.pagination.totalElements").value(1))
+                                .andExpect(jsonPath("$.data.pagination.totalPages").value(1))
+                                .andExpect(jsonPath("$.data.pagination.hasNext").value(false))
+                                .andExpect(jsonPath("$.data.pagination.hasPrevious").value(false));
+        }
+
+        @Test
+        void getAllPresentationsCollection_WithFilter_ShouldReturnFilteredResults() throws Exception {
+                // Given
+                LocalDateTime createdAt = LocalDateTime.now();
+
+                PresentationListResponseDto presentation = PresentationListResponseDto.builder()
+                        .id("test-id-1")
+                        .title("Filtered Presentation")
+                        .createdAt(createdAt)
+                        .updatedAt(createdAt)
+                        .build();
+
+                PaginationDto pagination = new PaginationDto(1, 10, 1L, 1, false, false);
+                PaginatedResponseDto<PresentationListResponseDto> paginatedResponse =
+                        new PaginatedResponseDto<>(List.of(presentation), pagination);
+
+                when(presentationService.getAllPresentations(any())).thenReturn(paginatedResponse);
+
+                // When & Then
+                mockMvc.perform(get("/api/presentations/collection")
+                                .param("page", "1")
+                                .param("pageSize", "10")
+                                .param("sort", "desc")
+                                .param("filter", "Filtered")
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.data.data[0].title").value("Filtered Presentation"));
+        }
+
+        @Test
+        void getAllPresentationsCollection_WithDefaultParameters_ShouldReturnResults() throws Exception {
+                // Given
+                LocalDateTime createdAt = LocalDateTime.now();
+                PresentationListResponseDto presentation = PresentationListResponseDto.builder()
+                        .id("test-id-1")
+                        .title("Default Presentation")
+                        .createdAt(createdAt)
+                        .updatedAt(createdAt)
+                        .build();
+
+                PaginationDto pagination = new PaginationDto(1, 20, 1L, 1, false, false);
+                PaginatedResponseDto<PresentationListResponseDto> paginatedResponse =
+                        new PaginatedResponseDto<>(List.of(presentation), pagination);
+
+                when(presentationService.getAllPresentations(any())).thenReturn(paginatedResponse);
+
+                // When & Then
+                mockMvc.perform(get("/api/presentations/collection")
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.status").value("success"))
+                                .andExpect(jsonPath("$.data.data").isArray())
+                                .andExpect(jsonPath("$.data.data.length()").value(1));
+        }
+
+        @Test
+        void getAllPresentationsCollection_WithEmptyResults_ShouldReturnEmptyPaginatedResponse() throws Exception {
+                // Given
+                PaginationDto pagination = new PaginationDto(1, 10, 0L, 0, false, false);
+                PaginatedResponseDto<PresentationListResponseDto> paginatedResponse =
+                        new PaginatedResponseDto<>(List.of(), pagination);
+
+                when(presentationService.getAllPresentations(any())).thenReturn(paginatedResponse);
+
+                // When & Then
+                mockMvc.perform(get("/api/presentations/collection")
+                                .param("page", "1")
+                                .param("pageSize", "10")
+                                .param("filter", "NonExistent")
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.data.data").isArray())
+                                .andExpect(jsonPath("$.data.data.length()").value(0))
+                                .andExpect(jsonPath("$.data.pagination.totalElements").value(0))
+                                .andExpect(jsonPath("$.data.pagination.totalPages").value(0));
         }
 }

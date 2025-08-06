@@ -3,8 +3,11 @@ package com.datn.document.service.impl;
 import com.datn.document.dto.SlideDto;
 import com.datn.document.dto.SlideDto.SlideElementDto;
 import com.datn.document.dto.SlideDto.SlideBackgroundDto;
+import com.datn.document.dto.common.PaginatedResponseDto;
 import com.datn.document.dto.request.PresentationCreateRequest;
+import com.datn.document.dto.request.PresentationCollectionRequest;
 import com.datn.document.dto.response.PresentationCreateResponseDto;
+import com.datn.document.dto.response.PresentationListResponseDto;
 import com.datn.document.entity.Presentation;
 import com.datn.document.enums.SlideElementType;
 import com.datn.document.mapper.PresentationEntityMapper;
@@ -18,11 +21,19 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -257,4 +268,253 @@ class PresentationServiceImplTest {
                 assertThat(returnedComplexElement.getStyle()).isEqualTo("solid");
                 assertThat(returnedComplexElement.getWordSpace()).isEqualTo(2.0f);
         }
+
+
+    @Test
+    void getAllPresentations_WithExistingPresentations_ShouldReturnAllPresentations() {
+        // Given
+        LocalDateTime createdAt = LocalDateTime.now();
+        Presentation presentation1 = Presentation.builder()
+                .id("test-id-1")
+                .title("First Presentation")
+                .createdAt(createdAt)
+                .updatedAt(createdAt)
+                .build();
+
+        Presentation presentation2 = Presentation.builder()
+                .id("test-id-2")
+                .title("Second Presentation")
+                .createdAt(createdAt.plusHours(1))
+                .updatedAt(createdAt.plusHours(1))
+                .build();
+
+        List<Presentation> presentations = Arrays.asList(presentation1, presentation2);
+
+        PresentationListResponseDto responseDto1 = PresentationListResponseDto.builder()
+                .id("test-id-1")
+                .title("First Presentation")
+                .createdAt(createdAt)
+                .updatedAt(createdAt)
+                .build();
+
+        PresentationListResponseDto responseDto2 = PresentationListResponseDto.builder()
+                .id("test-id-2")
+                .title("Second Presentation")
+                .createdAt(createdAt.plusHours(1))
+                .updatedAt(createdAt.plusHours(1))
+                .build();
+
+        when(presentationRepository.findAll()).thenReturn(presentations);
+        when(mapper.toListResponseDto(presentation1)).thenReturn(responseDto1);
+        when(mapper.toListResponseDto(presentation2)).thenReturn(responseDto2);
+
+        // When
+        List<PresentationListResponseDto> result = presentationService.getAllPresentations();
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getId()).isEqualTo("test-id-1");
+        assertThat(result.get(0).getTitle()).isEqualTo("First Presentation");
+        assertThat(result.get(1).getId()).isEqualTo("test-id-2");
+        assertThat(result.get(1).getTitle()).isEqualTo("Second Presentation");
+    }
+
+    @Test
+    void getAllPresentations_WithNoPresentations_ShouldReturnEmptyList() {
+        // Given
+        when(presentationRepository.findAll()).thenReturn(List.of());
+
+        // When
+        List<PresentationListResponseDto> result = presentationService.getAllPresentations();
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void getAllPresentations_WithCollectionRequest_ShouldReturnPaginatedResponse() {
+        // Given
+        PresentationCollectionRequest request = PresentationCollectionRequest.builder()
+                .page(1)
+                .pageSize(10)
+                .sort("asc")
+                .build();
+
+        LocalDateTime createdAt = LocalDateTime.now();
+        Presentation presentation1 = Presentation.builder()
+                .id("test-id-1")
+                .title("First Presentation")
+                .createdAt(createdAt)
+                .build();
+
+        List<Presentation> presentations = List.of(presentation1);
+        Page<Presentation> presentationPage = new PageImpl<>(presentations, PageRequest.of(0, 10), 1);
+
+        PresentationListResponseDto responseDto = PresentationListResponseDto.builder()
+                .id("test-id-1")
+                .title("First Presentation")
+                .createdAt(createdAt)
+                .build();
+
+        when(presentationRepository.findAll(any(Pageable.class))).thenReturn(presentationPage);
+        when(mapper.toListResponseDto(presentation1)).thenReturn(responseDto);
+
+        // When
+        PaginatedResponseDto<PresentationListResponseDto> result = presentationService.getAllPresentations(request);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getData()).hasSize(1);
+        assertThat(result.getData().get(0).getId()).isEqualTo("test-id-1");
+        assertThat(result.getPagination().getCurrentPage()).isEqualTo(1);
+        assertThat(result.getPagination().getPageSize()).isEqualTo(10);
+        assertThat(result.getPagination().getTotalItems()).isEqualTo(1);
+        assertThat(result.getPagination().getTotalPages()).isEqualTo(1);
+        assertThat(result.getPagination().isHasNextPage()).isFalse();
+        assertThat(result.getPagination().isHasPreviousPage()).isFalse();
+    }
+
+    @Test
+    void getAllPresentations_WithFilter_ShouldReturnFilteredResults() {
+        // Given
+        PresentationCollectionRequest request = PresentationCollectionRequest.builder()
+                .page(1)
+                .pageSize(10)
+                .sort("desc")
+                .filter("Test")
+                .build();
+
+        LocalDateTime createdAt = LocalDateTime.now();
+        Presentation presentation1 = Presentation.builder()
+                .id("test-id-1")
+                .title("Test Presentation")
+                .createdAt(createdAt)
+                .build();
+
+        List<Presentation> presentations = List.of(presentation1);
+        Page<Presentation> presentationPage = new PageImpl<>(presentations,
+                PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt")), 1);
+
+        PresentationListResponseDto responseDto = PresentationListResponseDto.builder()
+                .id("test-id-1")
+                .title("Test Presentation")
+                .createdAt(createdAt)
+                .build();
+
+        when(presentationRepository.findByTitleContainingIgnoreCase(eq("Test"), any(Pageable.class)))
+                .thenReturn(presentationPage);
+        when(mapper.toListResponseDto(presentation1)).thenReturn(responseDto);
+
+        // When
+        PaginatedResponseDto<PresentationListResponseDto> result = presentationService.getAllPresentations(request);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getData()).hasSize(1);
+        assertThat(result.getData().get(0).getTitle()).isEqualTo("Test Presentation");
+    }
+
+    @Test
+    void getAllPresentations_WithEmptyFilter_ShouldReturnAllResults() {
+        // Given
+        PresentationCollectionRequest request = PresentationCollectionRequest.builder()
+                .page(1)
+                .pageSize(5)
+                .sort("asc")
+                .filter("")
+                .build();
+
+        LocalDateTime createdAt = LocalDateTime.now();
+        Presentation presentation1 = Presentation.builder()
+                .id("test-id-1")
+                .title("First Presentation")
+                .createdAt(createdAt)
+                .build();
+
+        List<Presentation> presentations = List.of(presentation1);
+        Page<Presentation> presentationPage = new PageImpl<>(presentations,
+                PageRequest.of(0, 5, Sort.by(Sort.Direction.ASC, "createdAt")), 1);
+
+        PresentationListResponseDto responseDto = PresentationListResponseDto.builder()
+                .id("test-id-1")
+                .title("First Presentation")
+                .createdAt(createdAt)
+                .build();
+
+        when(presentationRepository.findAll(any(Pageable.class))).thenReturn(presentationPage);
+        when(mapper.toListResponseDto(presentation1)).thenReturn(responseDto);
+
+        // When
+        PaginatedResponseDto<PresentationListResponseDto> result = presentationService.getAllPresentations(request);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getData()).hasSize(1);
+        assertThat(result.getPagination().getPageSize()).isEqualTo(5);
+    }
+
+    @Test
+    void getAllPresentations_WithDescSort_ShouldApplyCorrectSorting() {
+        // Given
+        PresentationCollectionRequest request = PresentationCollectionRequest.builder()
+                .page(1)
+                .pageSize(10)
+                .sort("desc")
+                .build();
+
+        LocalDateTime createdAt = LocalDateTime.now();
+        Presentation presentation1 = Presentation.builder()
+                .id("test-id-1")
+                .title("Latest Presentation")
+                .createdAt(createdAt)
+                .build();
+
+        List<Presentation> presentations = List.of(presentation1);
+        Page<Presentation> presentationPage = new PageImpl<>(presentations,
+                PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt")), 1);
+
+        PresentationListResponseDto responseDto = PresentationListResponseDto.builder()
+                .id("test-id-1")
+                .title("Latest Presentation")
+                .createdAt(createdAt)
+                .build();
+
+        when(presentationRepository.findAll(any(Pageable.class))).thenReturn(presentationPage);
+        when(mapper.toListResponseDto(presentation1)).thenReturn(responseDto);
+
+        // When
+        PaginatedResponseDto<PresentationListResponseDto> result = presentationService.getAllPresentations(request);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getData()).hasSize(1);
+    }
+
+    @Test
+    void getAllPresentations_WithNoResultsFromFilter_ShouldReturnEmptyPaginatedResponse() {
+        // Given
+        PresentationCollectionRequest request = PresentationCollectionRequest.builder()
+                .page(1)
+                .pageSize(10)
+                .sort("asc")
+                .filter("NonExistentTitle")
+                .build();
+
+        Page<Presentation> emptyPage = new PageImpl<>(List.of(),
+                PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "createdAt")), 0);
+
+        when(presentationRepository.findByTitleContainingIgnoreCase(eq("NonExistentTitle"), any(Pageable.class)))
+                .thenReturn(emptyPage);
+
+        // When
+        PaginatedResponseDto<PresentationListResponseDto> result = presentationService.getAllPresentations(request);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getData()).isEmpty();
+        assertThat(result.getPagination().getTotalItems()).isEqualTo(0);
+        assertThat(result.getPagination().getTotalPages()).isEqualTo(0);
+    }
 }
