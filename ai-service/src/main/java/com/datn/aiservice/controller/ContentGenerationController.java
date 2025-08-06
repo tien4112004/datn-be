@@ -3,7 +3,6 @@ package com.datn.aiservice.controller;
 import com.datn.aiservice.dto.request.OutlinePromptRequest;
 import com.datn.aiservice.exceptions.AppException;
 import com.datn.aiservice.exceptions.ErrorCode;
-import com.datn.aiservice.dto.request.SlidePromptRequest;
 import com.datn.aiservice.dto.request.PresentationPromptRequest;
 import com.datn.aiservice.service.interfaces.ContentGenerationService;
 import com.datn.aiservice.utils.StreamingResponseUtils;
@@ -42,7 +41,7 @@ public class ContentGenerationController {
     @PostMapping(value = "/presentations/generate", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> generateSlides(@RequestBody PresentationPromptRequest request) {
         
-        return contentGenerationServiceImpl.generateSlides(request)
+        return contentGenerationService.generateSlides(request)
                 .bufferUntil(token -> token.contains("---"))
                 .map(bufferedToken -> {
                             String combined = String.join("", bufferedToken);

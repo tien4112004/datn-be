@@ -1,11 +1,5 @@
 package com.datn.aiservice.config.appconfiguration;
 
-import java.util.Objects;
-
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
 import com.datn.aiservice.config.chatmodelconfiguration.ModelProperties;
 import com.datn.aiservice.service.interfaces.ModelSelectionService;
 import lombok.AccessLevel;
@@ -13,10 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
