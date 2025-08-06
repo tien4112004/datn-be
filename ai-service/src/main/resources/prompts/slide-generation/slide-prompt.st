@@ -40,7 +40,7 @@ Use for: Opening/title slide
   "type": "cover",
   "data": \{
     "title": "Main presentation title in {language}",
-    "text": "Engaging subtitle or teaser text for {target_audience}"
+    "text": "Engaging subtitle or teaser text for primary students in {target_age} years old"
   \}
 \}
 
@@ -85,11 +85,11 @@ Use for: Main educational content
     "items": [
       \{
         "title": "First key point",
-        "text": "Detailed explanation with **markdown** for {target_audience}"
+        "text": "Detailed explanation with **markdown** for primary students in {target_age} years old"
       \},
       \{
         "title": "Second key point",
-        "text": "Another explanation appropriate for {target_audience}"
+        "text": "Another explanation appropriate for primary students in {target_age} years old"
       \}
     ]
   \}

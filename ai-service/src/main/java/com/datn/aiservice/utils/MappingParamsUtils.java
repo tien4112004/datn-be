@@ -18,10 +18,9 @@ public class MappingParamsUtils {
     public static Map<String, Object> constructParams(PresentationPromptRequest request) {
         return Map.of(
                 "outline", request.getOutline(),
-                "language", "vietnamese", // Default language
-                "slide_count", "10",
-                "target_audience", "general public", // Default target audience
-                "learning_objective", "understand basic concepts", // Default learning objective
-                "target_age", "7-10"); // Default target age
+                "language", request.getLanguage(),
+                "slide_count", request.getSlideCount(),
+                "learning_objective", request.getLearningObjective(),
+                "target_age", request.getTargetAge());
     }
 }

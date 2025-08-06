@@ -20,8 +20,8 @@ public class PresentationPromptRequest {
     String outline;
     
     String model;
-    //will handle later
-    //String language;
-    //String style;
-    // String model;
+    String language;
+    String slideCount;
+    String learningObjective;
+    String targetAge;
 }
