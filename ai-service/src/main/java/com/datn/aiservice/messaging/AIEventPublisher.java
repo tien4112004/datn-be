@@ -12,6 +12,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -22,6 +23,7 @@ public class AIEventPublisher {
     StreamBridge streamBridge;
 
     @Value("${app.messaging.binding-name}")
+    @NonFinal
     String bindingName;
 
     public void publishEvent(PresentationGeneratedEvent event) {

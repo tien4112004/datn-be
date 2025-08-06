@@ -68,7 +68,7 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
         StringBuilder completeResponse = new StringBuilder();
 
         return chatClient.prompt()
-                .system(promptSys -> promptSys.text(slidePromptResource)
+                .user(promptSys -> promptSys.text(slidePromptResource)
                         .params(MappingParamsUtils.constructParams(request)))
                 .stream().content()
                 .doOnNext(chunk -> completeResponse.append(chunk))
@@ -94,14 +94,12 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
     private String extractJsonFromResponse(String response) {
         // Remove markdown code blocks
         String cleaned = response.trim();
-        
-        //TODO: Adjust regex to match your specific response format
-        cleaned = cleaned.replaceAll("\n---", ",");
-        cleaned = cleaned.replaceAll("```json", "");
-        cleaned = cleaned.replaceAll("```", "");
-        cleaned = cleaned.replaceAll(",\\s*$", "");
+
+        cleaned = cleaned.replaceAll("(?m)^```json\\s*|^```\\s*", "")
+                         .replaceAll("\n---", ",")
+                         .replaceAll(",\\s*$", "");
     
         cleaned = "{\"slides\":[" + cleaned + "]}";
-        return cleaned.trim();
+        return cleaned;
     }
 }
