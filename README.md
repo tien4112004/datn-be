@@ -51,7 +51,10 @@ cd datn-be
 cp .env.sample .env
 ```
 
-2. Open `.env` and update any values as needed.
+2. Update `.env` based on your setup:
+
+   - **For fully Docker setup**: No database environment variables needed (uses Docker databases)
+   - **For local database setup**: Set database environment variables (see [Database Configuration](#database-configuration))
 
 > **Note:**
 >
@@ -80,7 +83,7 @@ This script will:
 
 #### a. Without Docker Compose
 
-1. Ensure your local database URLs are correctly set in `.env` (see [Databases](#databases) section).
+1. Ensure your local database URLs are correctly set in `.env` (see [Database Configuration](#database-configuration) section).
 
 2. Create `config-server/src/main/resources/application-dev.yml` with the following content:
 
@@ -145,32 +148,76 @@ docker-compose -f docker-compose.business.yml up -d
 docker-compose up -d
 ```
 
-Note: This doesn't include databases; run `docker-compose -f docker-compose.db.yml up -d` first.
+**Fully Docker Setup Options:**
+
+- **Option 1**: Run all services including databases:
+```bash
+docker-compose -f docker-compose.db.yml -f docker-compose.yml up -d
+```
+
+- **Option 2**: Start databases first, then other services:
+```bash
+docker-compose -f docker-compose.db.yml up -d
+docker-compose up -d
+```
 
 ---
 
-## Databases
+## Database Configuration
 
-By default, Docker Compose creates PostgreSQL and MongoDB containers. To use local databases instead:
+The application supports two database setup modes:
 
-1. Update your `.env` with local connection strings:
+### 1. Fully Docker Setup (Recommended)
 
+Uses containerized databases - **no database environment variables needed** in `.env`.
+
+- PostgreSQL containers for auth and model configuration databases
+- MongoDB container for document storage
+- All connection details are handled automatically via Docker networking
+
+To start with databases:
+```bash
+docker-compose -f docker-compose.db.yml -f docker-compose.yml up -d
+```
+
+### 2. Local Database Setup
+
+For connecting to local or external databases, configure these variables in `.env`:
+
+**PostgreSQL (Auth & Model Config):**
 ```bash
 AUTH_DB_URL=jdbc:postgresql://localhost:5432/auth_db
 AUTH_DB_USERNAME=postgres
 AUTH_DB_PASSWORD=postgres
-MONGODB_URI=mongodb://localhost:27017/presentation_db
+
+MODEL_CONFIG_DB_URL=jdbc:postgresql://localhost:5433/model_configuration_db
+MODEL_CONFIG_DB_USERNAME=postgres
+MODEL_CONFIG_DB_PASSWORD=postgres
 ```
 
-2. Reload environment variables:
+**MongoDB (Document Service):**
 
+Option A - Using connection URI:
+```bash
+MONGODB_URI=mongodb://localhost:27017/presentation_db?authSource=admin
+```
+
+Option B - Using individual variables:
+```bash
+MONGODB_USERNAME=mongouser
+MONGODB_PASSWORD=mongopassword
+MONGODB_HOST=localhost
+MONGODB_PORT=27017
+MONGODB_DATABASE=presentation_db
+MONGODB_AUTH_DATABASE=admin
+```
+
+After updating `.env`, reload environment variables:
 ```bash
 source .env
-# or
+# or run the installer again
 ./script/install.sh
 ```
-
-The application will now connect to your local databases.
 
 ---
 
