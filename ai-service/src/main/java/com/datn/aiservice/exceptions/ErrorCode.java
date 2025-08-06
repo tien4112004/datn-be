@@ -1,8 +1,6 @@
 package com.datn.aiservice.exceptions;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
 @Getter
@@ -15,6 +13,7 @@ public enum ErrorCode {
     INVALID_MODEL_STATUS("Invalid model status", 403),
 
     GENERATION_ERROR("Generation Failed", 500),
+    JSON_PARSING_ERROR("Error parsing JSON response", 400),
     ;
 
     private final String defaultMessage;

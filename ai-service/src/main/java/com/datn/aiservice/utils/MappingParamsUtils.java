@@ -1,6 +1,7 @@
 package com.datn.aiservice.utils;
 
 import com.datn.aiservice.dto.request.OutlinePromptRequest;
+import com.datn.aiservice.dto.request.PresentationPromptRequest;
 
 import java.util.Map;
 
@@ -9,6 +10,15 @@ public class MappingParamsUtils {
         return Map.of(
                 "language", request.getLanguage(),
                 "topic", request.getTopic(),
+                "slide_count", request.getSlideCount(),
+                "learning_objective", request.getLearningObjective(),
+                "target_age", request.getTargetAge());
+    }
+
+    public static Map<String, Object> constructParams(PresentationPromptRequest request) {
+        return Map.of(
+                "outline", request.getOutline(),
+                "language", request.getLanguage(),
                 "slide_count", request.getSlideCount(),
                 "learning_objective", request.getLearningObjective(),
                 "target_age", request.getTargetAge());
