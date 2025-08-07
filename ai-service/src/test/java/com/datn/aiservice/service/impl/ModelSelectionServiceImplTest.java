@@ -18,8 +18,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -120,7 +118,7 @@ class ModelSelectionServiceImplTest {
     void getModelConfiguration_ValidModelId() {
         // Given
         Integer modelId = 1;
-//        when(modelConfigurationRepo.existsByModelId(modelId)).thenReturn(true);
+        // when(modelConfigurationRepo.existsByModelId(modelId)).thenReturn(true);
         when(modelConfigurationRepo.getModelById(modelId)).thenReturn(modelEntity1);
         when(modelDataMapper.toModelResponseDto(modelEntity1)).thenReturn(responseDto);
 
@@ -139,7 +137,8 @@ class ModelSelectionServiceImplTest {
     void getModelConfiguration_ModelNotFound() {
         // Given
         Integer nonExistentModelId = 999;
-        when(modelConfigurationRepo.getModelById(nonExistentModelId)).thenThrow(new AppException(ErrorCode.MODEL_NOT_FOUND));
+        when(modelConfigurationRepo.getModelById(nonExistentModelId))
+                .thenThrow(new AppException(ErrorCode.MODEL_NOT_FOUND));
 
         // When & Then
         AppException exception = assertThrows(AppException.class,
@@ -172,7 +171,8 @@ class ModelSelectionServiceImplTest {
         // Given
         Integer nonExistentModelId = 999;
         boolean isEnabled = true;
-        when(modelConfigurationRepo.getModelById(nonExistentModelId)).thenThrow(new AppException(ErrorCode.MODEL_NOT_FOUND));
+        when(modelConfigurationRepo.getModelById(nonExistentModelId))
+                .thenThrow(new AppException(ErrorCode.MODEL_NOT_FOUND));
 
         // When & Then
         AppException exception = assertThrows(AppException.class,
