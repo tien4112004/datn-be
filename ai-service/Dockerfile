@@ -25,4 +25,8 @@ ARG EXPOSED_PORT
 EXPOSE ${EXPOSED_PORT}
 ENV SPRING_PROFILES_ACTIVE=docker
 
-ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["java", "org.springframework.boot.loader.launch.JarLauncher"]
