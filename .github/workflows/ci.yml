@@ -28,16 +28,16 @@ jobs:
           files: ${{ matrix.service }}/**
 
       - name: Skip if no changes
-        if: steps.get-changed-files.outputs.any_changed == ''
+        if: steps.get-changed-files.outputs.any_changed == 'true'
         run: echo "▶ No changes in ${{ matrix.service }}, skipping."
       
       - name: Set up Java
-        if: steps.get-changed-files.outputs.any_changed != ''
+        if: steps.get-changed-files.outputs.any_changed != 'true'
         uses: actions/setup-java@v3
         with:
           distribution: temurin
           java-version: '21'
 
       - name: Build & test ${{ matrix.service }}
-        if: steps.get-changed-files.outputs.any_changed != ''
+        if: steps.get-changed-files.outputs.any_changed != 'true'
         run: mvn clean verify -DskipTests=false
