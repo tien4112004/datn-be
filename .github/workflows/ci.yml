@@ -40,4 +40,4 @@ jobs:
 
       - name: Build & test ${{ matrix.service }}
         if: steps.get-changed-files.outputs.any_changed == 'true'
-        run: mvn clean verify -DskipTests=false
+        run: mvn clean verify
