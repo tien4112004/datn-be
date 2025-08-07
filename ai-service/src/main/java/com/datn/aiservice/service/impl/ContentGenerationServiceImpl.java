@@ -23,8 +23,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
-import java.time.Duration;
-
 @Service
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -40,7 +38,6 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
     @Override
     public Flux<String> generateOutline(OutlinePromptRequest request) {
 
-
         if (!modelSelectionService.isModelEnabled(request.getModel())) {
             log.error("Model {} is not enabled for outline generation", request.getModel());
             return Flux.error(new AppException(ErrorCode.MODEL_NOT_ENABLED));
@@ -49,7 +46,8 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
 
         return chatClient.prompt()
                 .user(prompt -> prompt.text(outlinePromptResource)
-                        .params(MappingParamsUtils.constructParams(request))).stream().content();
+                        .params(MappingParamsUtils.constructParams(request)))
+                .stream().content();
     }
 
     @Override
@@ -62,9 +60,9 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
         }
 
         var chatClient = chatClientFactory.getChatClient(request.getModel());
-        
+
         log.info("Calling AI to stream presentation slides");
-        
+
         StringBuilder completeResponse = new StringBuilder();
 
         return chatClient.prompt()
@@ -75,10 +73,10 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
                 .doOnComplete(() -> {
                     log.info("Streaming presentation generation completed");
                     String cleanedJson = extractJsonFromResponse(completeResponse.toString());
-                    try{
+                    try {
                         // Parse the complete JSON response
                         PresentationResponse slideResponse = objectMapper.readValue(
-                        cleanedJson, PresentationResponse.class);
+                                cleanedJson, PresentationResponse.class);
 
                         // Publish event with actual slides
                         var event = new PresentationGeneratedEvent(slideResponse.getSlides());
@@ -96,9 +94,9 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
         String cleaned = response.trim();
 
         cleaned = cleaned.replaceAll("(?m)^```json\\s*|^```\\s*", "")
-                         .replaceAll("\n---", ",")
-                         .replaceAll(",\\s*$", "");
-    
+                .replaceAll("\n---", ",")
+                .replaceAll(",\\s*$", "");
+
         cleaned = "{\"slides\":[" + cleaned + "]}";
         return cleaned;
     }
