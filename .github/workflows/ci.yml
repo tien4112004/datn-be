@@ -26,7 +26,8 @@ jobs:
         run: |
           # list changed files between this commit and main
           CHANGED=$(git diff --name-only origin/main...HEAD -- "${{ matrix.service }}/")
-          echo "name=changed::${CHANGED}" >> $GITHUB_OUTPUT
+          echo "changed=${CHANGED}" >> $GITHUB_OUTPUT
+
       - name: Skip if no changes
         if: steps.check.outputs.changed == ''
         run: echo "▶ No changes in ${{ matrix.service }}, skipping."
