@@ -20,25 +20,24 @@ jobs:
         uses: actions/checkout@v3
         with:
             fetch-depth: 0
-
-      - name: Determine if ${{ matrix.service }} changed
-        id: check
-        run: |
-          # list changed files between this commit and main
-          CHANGED=$(git diff --name-only origin/main...HEAD -- "${{ matrix.service }}/")
-          echo "changed=${CHANGED}" >> $GITHUB_OUTPUT
+      
+      - name: Get changed files
+        id: get-changed-files
+        uses: tj-actions.changed-files@v44
+        with:
+          files: ${{ matrix.service }}/**
 
       - name: Skip if no changes
-        if: steps.check.outputs.changed == ''
+        if: steps.get-changed-files.outputs.any_changed == ''
         run: echo "▶ No changes in ${{ matrix.service }}, skipping."
       
       - name: Set up Java
-        if: steps.check.outputs.changed != ''
+        if: steps.get-changed-files.outputs.any_changed != ''
         uses: actions/setup-java@v3
         with:
           distribution: temurin
           java-version: '21'
 
       - name: Build & test ${{ matrix.service }}
-        if: steps.check.outputs.changed != ''
+        if: steps.get-changed-files.outputs.any_changed != ''
         run: mvn clean verify -DskipTests=false
