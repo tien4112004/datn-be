@@ -14,7 +14,6 @@ A Spring Boot microservices backend for the DATN project, with support for authe
   - [4. Running the Application](#4-running-the-application)
     - [a. Without Docker Compose](#a-without-docker-compose)
     - [b. With Docker Compose](#b-with-docker-compose)
-    - [c. Setting Up AI-Service Container](#c-setting-up-ai-service-container)
 - [Databases](#databases)
 - [Git Hooks](#git-hooks)
   - [Available Hooks](#available-hooks)
@@ -148,51 +147,6 @@ docker-compose up -d
 
 Note: This doesn't include databases; run `docker-compose -f docker-compose.db.yml up -d` first.
 
-#### c. Setting Up AI-Service Container
-
-After successfully run the ai-service container, you need few more steps for setting up the Vertex AI:
-1. **Exec into AI-Service Container**
-
-```bash
-docker exec -it <ai-service-container-name> /bin/bash
-
-# Verify if there is key.json which is the service account key file
-ls /root/
-```
-
-2. **gcloud auth**: First authenticate with Google Cloud:
-```bash
-gcloud auth activate-service-account --key-file=/root/key.json
-```
-
-3. **Set Project**: Set your Google Cloud project:
-```bash
-gcloud config set project $VERTEX_PROJECT_ID
-```
-
-4. **Verify Configuration**: Ensure the configuration is correct:
-```bash
-gcloud config list
-```
-
-The output should look like this:
-
-```bash
-[core]
-account = <SA_NAME>@<PROJECT_ID>.iam.gserviceaccount.com
-disable_usage_reporting = True
-project = <PROJECT_ID>
-
-Your active configuration is: [default]
-```
-
-**Note**:
-1. The `key.json` is actually the service account key file you downloaded from Google Cloud which is placed at the root of your project.
-2. `service-account.json` can be downloaded from Google Cloud Console under IAM & Admin > Service Accounts. Make sure to give it the necessary permissions for Vertex AI. 
-
-**For more information:**
-- [Google Cloud Activate Service Account](https://cloud.google.com/sdk/gcloud/reference/auth/activate-service-account)
-- [How to download service account key](https://stackoverflow.com/questions/46287267/how-can-i-get-the-file-service-account-json-for-google-translate-api)
 ---
 
 ## Databases
