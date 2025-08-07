@@ -23,7 +23,7 @@ jobs:
       
       - name: Get changed files
         id: get-changed-files
-        uses: tj-actions.changed-files@v44
+        uses: tj-actions/changed-files@v44
         with:
           files: ${{ matrix.service }}/**
 
