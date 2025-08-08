@@ -8,10 +8,10 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class CreatePresentationCommandHandler implements BaseCommandHandler<CreatePresentationCommand> {
-    
+
     @Override
     public void handle(CreatePresentationCommand command) {
         // Command handling logic will be implemented here
     }
-    
+
 }

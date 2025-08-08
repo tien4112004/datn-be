@@ -45,15 +45,17 @@ public class PresentationServiceImpl implements PresentationService {
     public List<PresentationListResponseDto> getAllPresentations() {
         List<Presentation> presentations = presentationRepository.findAll();
 
-        return presentations.stream()
-                .map(mapper::toListResponseDto)
-                .collect(Collectors.toList());
+        return presentations.stream().map(mapper::toListResponseDto).collect(Collectors.toList());
     }
 
     @Override
-    public PaginatedResponseDto<PresentationListResponseDto> getAllPresentations(PresentationCollectionRequest request) {
+    public PaginatedResponseDto<PresentationListResponseDto> getAllPresentations(
+            PresentationCollectionRequest request) {
         log.info("Fetching presentations with collection request - page: {}, pageSize: {}, filter: {}, sort: {}",
-                request.getPage(), request.getPageSize(), request.getFilter(), request.getSort());
+                request.getPage(),
+                request.getPageSize(),
+                request.getFilter(),
+                request.getSort());
 
         // Create sort object
         Sort sortOrder = "desc".equalsIgnoreCase(request.getSort())
@@ -78,16 +80,13 @@ public class PresentationServiceImpl implements PresentationService {
                 .collect(Collectors.toList());
 
         // Create pagination metadata
-        PaginationDto pagination = new PaginationDto(
-                request.getPage(),
-                request.getPageSize(),
-                presentationPage.getTotalElements(),
-                presentationPage.getTotalPages(),
-                presentationPage.hasNext(),
-                presentationPage.hasPrevious()
-        );
+        PaginationDto pagination = new PaginationDto(request.getPage(), request.getPageSize(),
+                presentationPage.getTotalElements(), presentationPage.getTotalPages(), presentationPage.hasNext(),
+                presentationPage.hasPrevious());
 
-        log.info("Retrieved {} presentations out of {} total", presentations.size(), presentationPage.getTotalElements());
+        log.info("Retrieved {} presentations out of {} total",
+                presentations.size(),
+                presentationPage.getTotalElements());
 
         return new PaginatedResponseDto<>(presentations, pagination);
     }

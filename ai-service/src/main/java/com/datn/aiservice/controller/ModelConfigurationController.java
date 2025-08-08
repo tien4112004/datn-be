@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class ModelConfigurationController {
-     ModelSelectionService modelSelectionService;
+    ModelSelectionService modelSelectionService;
 
     /**
      * Endpoint to get the list of all models.
@@ -48,8 +48,7 @@ public class ModelConfigurationController {
      * @return ResponseEntity indicating the result of the operation.
      */
     @PostMapping(value = "/{id}")
-    public ResponseEntity<AppResponseDto<Void>> updateModelStatus(
-            @PathVariable Integer id,
+    public ResponseEntity<AppResponseDto<Void>> updateModelStatus(@PathVariable Integer id,
             @RequestParam(name = "enable", required = false, defaultValue = "true") boolean isEnable,
             @RequestParam(name = "default", required = false, defaultValue = "false") boolean isDefault) {
         log.info("Enabling model with ID: {}", id);

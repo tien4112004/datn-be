@@ -20,35 +20,29 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 @RequiredArgsConstructor
 public class GeminiModelConfig {
-        final ModelProperties modelProperties;
-        private static final String GEMINI = "gemini";
+    final ModelProperties modelProperties;
+    private static final String GEMINI = "gemini";
 
-        @Value("${spring.ai.vertex.ai.gemini.project-id}")
-        String vertexProjectId;
+    @Value("${spring.ai.vertex.ai.gemini.project-id}")
+    String vertexProjectId;
 
-        @Value("${spring.ai.vertex.ai.gemini.location}")
-        String vertexProjectLocation;
+    @Value("${spring.ai.vertex.ai.gemini.location}")
+    String vertexProjectLocation;
 
-        @Bean
-        VertexAI vertexAI() {
-                return new VertexAI(vertexProjectId, vertexProjectLocation);
-        }
+    @Bean
+    VertexAI vertexAI() {
+        return new VertexAI(vertexProjectId, vertexProjectLocation);
+    }
 
-        @Bean
-        public Map<String, VertexAiGeminiChatModel> allGeminiChatModels(
-                        VertexAI vertexAI) {
-                return modelProperties
-                                .getConfigurations()
-                                .getOrDefault(GEMINI, List.of())
-                                .stream()
-                                .collect(Collectors.toMap(
-                                                ModelProperties.ModelInfo::getModelName,
-                                                info -> VertexAiGeminiChatModel.builder()
-                                                                .vertexAI(vertexAI)
-                                                                .defaultOptions(VertexAiGeminiChatOptions
-                                                                                .builder()
-                                                                                .model(info.getModelName())
-                                                                                .build())
-                                                                .build()));
-        }
+    @Bean
+    public Map<String, VertexAiGeminiChatModel> allGeminiChatModels(VertexAI vertexAI) {
+        return modelProperties.getConfigurations()
+                .getOrDefault(GEMINI, List.of())
+                .stream()
+                .collect(Collectors.toMap(ModelProperties.ModelInfo::getModelName,
+                        info -> VertexAiGeminiChatModel.builder()
+                                .vertexAI(vertexAI)
+                                .defaultOptions(VertexAiGeminiChatOptions.builder().model(info.getModelName()).build())
+                                .build()));
+    }
 }

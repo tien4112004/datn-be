@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -26,10 +27,10 @@ public class ContentGenerationController {
     public Flux<String> generateOutline(@RequestBody OutlinePromptRequest request) {
         log.info("Received outline generation request: {}", request);
 
-        return StreamingResponseUtils.streamWordByWordWithSpaces(
-                StreamingResponseUtils.X_DELAY,
-                contentGenerationService.generateOutline(request)
-                        .doOnSubscribe(subscription -> log.info("Starting outline generation stream")))
+        return StreamingResponseUtils
+                .streamWordByWordWithSpaces(StreamingResponseUtils.X_DELAY,
+                        contentGenerationService.generateOutline(request)
+                                .doOnSubscribe(subscription -> log.info("Starting outline generation stream")))
                 .doOnError(error -> {
                     log.error("Error generating outline", error);
                     throw new AppException(ErrorCode.GENERATION_ERROR, "Failed to generate outline");
@@ -40,15 +41,14 @@ public class ContentGenerationController {
 
     @PostMapping(value = "/presentations/generate", produces = MediaType.TEXT_PLAIN_VALUE)
     public Flux<String> generateSlides(@RequestBody PresentationPromptRequest request) {
-        
+
         return contentGenerationService.generateSlides(request)
                 .bufferUntil(token -> token.contains("---"))
                 .map(bufferedToken -> {
-                            String combined = String.join("", bufferedToken);
-                            combined = combined.replace("---", "");
-                            return combined;
-                        }
-                )
+                    String combined = String.join("", bufferedToken);
+                    combined = combined.replace("---", "");
+                    return combined;
+                })
                 .doOnNext(response -> log.info("{}", response))
                 .doOnError(error -> log.error("Error generating slides", error));
     }

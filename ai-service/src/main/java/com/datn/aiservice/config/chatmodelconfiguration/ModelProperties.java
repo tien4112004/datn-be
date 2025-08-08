@@ -26,8 +26,6 @@ public class ModelProperties {
     }
 
     public List<ModelInfo> getModels() {
-        return configurations.values().stream()
-                .flatMap(List::stream)
-                .toList();
+        return configurations.values().stream().flatMap(List::stream).toList();
     }
 }

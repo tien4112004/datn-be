@@ -15,7 +15,7 @@ import org.springframework.http.HttpStatus;
 public class AppResponseDto<T> {
     @Builder.Default
     String status = "success";
-    
+
     @Builder.Default
     int code = HttpStatus.OK.value();
 
@@ -33,10 +33,7 @@ public class AppResponseDto<T> {
     }
 
     public static <T> AppResponseDto<T> successWithPagination(T data, PaginationDto pagination) {
-        return AppResponseDto.<T>builder()
-                .data(data)
-                .pagination(pagination)
-                .build();
+        return AppResponseDto.<T>builder().data(data).pagination(pagination).build();
     }
 
     public static <T> AppResponseDto<T> failure(AppException exception) {

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class ExternalApiClient {
-    
+
     // API client methods will be implemented here
-    
+
 }

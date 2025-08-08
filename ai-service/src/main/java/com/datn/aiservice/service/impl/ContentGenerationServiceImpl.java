@@ -45,9 +45,9 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
         var chatClient = chatClientFactory.getChatClient(request.getModel());
 
         return chatClient.prompt()
-                .user(prompt -> prompt.text(outlinePromptResource)
-                        .params(MappingParamsUtils.constructParams(request)))
-                .stream().content();
+                .user(prompt -> prompt.text(outlinePromptResource).params(MappingParamsUtils.constructParams(request)))
+                .stream()
+                .content();
     }
 
     @Override
@@ -68,15 +68,16 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
         return chatClient.prompt()
                 .user(promptSys -> promptSys.text(slidePromptResource)
                         .params(MappingParamsUtils.constructParams(request)))
-                .stream().content()
+                .stream()
+                .content()
                 .doOnNext(chunk -> completeResponse.append(chunk))
                 .doOnComplete(() -> {
                     log.info("Streaming presentation generation completed");
                     String cleanedJson = extractJsonFromResponse(completeResponse.toString());
                     try {
                         // Parse the complete JSON response
-                        PresentationResponse slideResponse = objectMapper.readValue(
-                                cleanedJson, PresentationResponse.class);
+                        PresentationResponse slideResponse = objectMapper.readValue(cleanedJson,
+                                PresentationResponse.class);
 
                         // Publish event with actual slides
                         var event = new PresentationGeneratedEvent(slideResponse.getSlides());
@@ -93,9 +94,7 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
         // Remove markdown code blocks
         String cleaned = response.trim();
 
-        cleaned = cleaned.replaceAll("(?m)^```json\\s*|^```\\s*", "")
-                .replaceAll("\n---", ",")
-                .replaceAll(",\\s*$", "");
+        cleaned = cleaned.replaceAll("(?m)^```json\\s*|^```\\s*", "").replaceAll("\n---", ",").replaceAll(",\\s*$", "");
 
         cleaned = "{\"slides\":[" + cleaned + "]}";
         return cleaned;

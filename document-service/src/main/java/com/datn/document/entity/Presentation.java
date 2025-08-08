@@ -21,19 +21,19 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Document(collection = "presentations")
 public class Presentation {
-    
+
     @Id
     String id;
-    
+
     @Field("title")
     String title;
-    
+
     @Field("slides")
     List<Slide> slides;
-    
+
     @Field("createdAt")
     LocalDateTime createdAt;
-    
+
     @Field("updatedAt")
     LocalDateTime updatedAt;
 }

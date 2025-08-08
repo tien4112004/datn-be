@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PresentationRepository extends MongoRepository<Presentation, String> {
-    
+
     @Query("{ 'title': { $regex: ?0, $options: 'i' } }")
     Page<Presentation> findByTitleContainingIgnoreCase(String title, Pageable pageable);
 

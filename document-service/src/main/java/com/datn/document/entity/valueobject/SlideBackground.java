@@ -16,7 +16,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 public class SlideBackground {
     @Field("type")
     String type;
-    
+
     @Field("color")
     String color;
 }
