@@ -5,7 +5,6 @@ spring:
     import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
-  
 
 ---
 spring:
@@ -13,3 +12,23 @@ spring:
     activate:
       on-profile: docker
     import: configserver:${CONFIG_SERVER_URL:http://config-server:8888/}
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: presentation
+              uri: lb://presentations
+              predicates:
+                - Path=/presentations/**
+            - id: auth
+              uri: lb://auth
+              predicates:
+                - Path=/auth/**
+            - id: ai-service
+              uri: lb://ai-service
+              predicates:
+                - Path=/api/ai/**
+              filters:
+                - RewritePath=/api/ai(?<segment>.*), /$\{segment}
