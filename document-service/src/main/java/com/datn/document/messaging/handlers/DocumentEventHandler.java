@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class DocumentEventHandler {
-    
+
     // Event handling methods will be implemented here
-    
+
 }

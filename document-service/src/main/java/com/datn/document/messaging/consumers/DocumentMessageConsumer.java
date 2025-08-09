@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class DocumentMessageConsumer {
-    
+
     // Message consuming methods will be implemented here
-    
+
 }

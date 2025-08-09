@@ -14,11 +14,11 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PresentationPromptRequest {
-    
+
     @NotBlank(message = "Outline cannot be blank")
     @Size(min = 1, message = "Outline must have at least 1 character")
     String outline;
-    
+
     String model;
     String language;
     String slideCount;

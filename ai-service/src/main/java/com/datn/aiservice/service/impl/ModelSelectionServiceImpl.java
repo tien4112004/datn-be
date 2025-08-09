@@ -25,9 +25,7 @@ public class ModelSelectionServiceImpl implements ModelSelectionService {
     public List<ModelMinimalResponseDto> getModelConfigurations() {
         var models = modelConfigurationRepo.getModels();
 
-        return models.stream()
-                .map(modelDataMapper::toModelMinimalResponseDto)
-                .toList();
+        return models.stream().map(modelDataMapper::toModelMinimalResponseDto).toList();
     }
 
     @Override

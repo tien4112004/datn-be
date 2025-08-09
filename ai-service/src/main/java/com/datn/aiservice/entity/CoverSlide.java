@@ -7,11 +7,11 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class CoverSlide extends BaseSlide {
     private CoverData data;
-    
+
     public CoverSlide() {
         super(SlideType.COVER);
     }
-    
+
     @Data
     public static class CoverData {
         private String title;

@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import java.util.List;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -33,22 +34,20 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
 
     @Override
     public ModelConfigurationEntity getModelById(Integer modelId) {
-        return modelConfigurationJPARepo.findById(modelId).orElseThrow(
-                () -> new AppException(ErrorCode.MODEL_NOT_FOUND));
+        return modelConfigurationJPARepo.findById(modelId)
+                .orElseThrow(() -> new AppException(ErrorCode.MODEL_NOT_FOUND));
     }
 
     @Override
     public ModelConfigurationEntity getModelByName(String modelName) {
         return modelConfigurationJPARepo.findByModelName(modelName)
-                .orElseThrow(() -> new AppException(ErrorCode.MODEL_NOT_FOUND,
-                        "Model not found with name: " + modelName));
+                .orElseThrow(
+                        () -> new AppException(ErrorCode.MODEL_NOT_FOUND, "Model not found with name: " + modelName));
     }
 
     @Override
     public boolean isModelEnabled(Integer modelId) {
-        return modelConfigurationJPARepo.findById(modelId)
-                .map(ModelConfigurationEntity::isEnabled)
-                .orElse(false); // Default to false if model not found
+        return modelConfigurationJPARepo.findById(modelId).map(ModelConfigurationEntity::isEnabled).orElse(false); // Default to false if model not found
     }
 
     @Override

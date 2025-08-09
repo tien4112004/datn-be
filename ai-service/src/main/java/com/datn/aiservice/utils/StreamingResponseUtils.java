@@ -18,14 +18,10 @@ public class StreamingResponseUtils {
     public static Flux<String> streamWordByWordWithSpaces(int delayMillis, Flux<String> source) {
         AtomicReference<String> buffer = new AtomicReference<>("");
 
-        return source
-                .flatMap(chunk -> formatChunkWordByWord(chunk, buffer))
-                .concatWith(
-                        Flux.defer(() -> {
-                            String remaining = buffer.get().trim();
-                            return remaining.isEmpty() ? Flux.empty() : Flux.just(remaining);
-                        }))
-                .delayElements(Duration.ofMillis(delayMillis));
+        return source.flatMap(chunk -> formatChunkWordByWord(chunk, buffer)).concatWith(Flux.defer(() -> {
+            String remaining = buffer.get().trim();
+            return remaining.isEmpty() ? Flux.empty() : Flux.just(remaining);
+        })).delayElements(Duration.ofMillis(delayMillis));
     }
 
     public static Flux<String> formatChunkWordByWord(String chunk, AtomicReference<String> buffer) {

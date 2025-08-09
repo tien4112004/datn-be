@@ -15,13 +15,14 @@ import org.springframework.http.HttpStatus;
 public class AppResponseDto<T> {
     @Builder.Default
     String status = "success";
-    
+
     @Builder.Default
     int code = HttpStatus.OK.value();
 
     T data;
     String message;
     String errorCode;
+    PaginationDto pagination;
 
     public static <T> AppResponseDto<T> success(T data) {
         return AppResponseDto.<T>builder().data(data).build();
@@ -29,6 +30,10 @@ public class AppResponseDto<T> {
 
     public static <T> AppResponseDto<T> success() {
         return AppResponseDto.<T>builder().build();
+    }
+
+    public static <T> AppResponseDto<T> successWithPagination(T data, PaginationDto pagination) {
+        return AppResponseDto.<T>builder().data(data).pagination(pagination).build();
     }
 
     public static <T> AppResponseDto<T> failure(AppException exception) {

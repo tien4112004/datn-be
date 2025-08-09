@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class DocumentEventPublisher {
-    
+
     // Event publishing methods will be implemented here
-    
+
 }
