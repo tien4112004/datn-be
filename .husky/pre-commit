@@ -11,3 +11,9 @@ git diff --cached --name-only > /tmp/staged_changes.txt
 mvn spotless:apply
 
 echo "File formatter applied to all Java files."
+
+# Restage the files that were staged before formatting
+if [ -s /tmp/staged_changes.txt ]; then
+    echo "Restaging previously staged files..."
+    xargs git add < /tmp/staged_changes.txt
+fi
