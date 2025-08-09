@@ -1,17 +1,20 @@
 package com.datn.aiservice.config.chatmodelconfiguration;
 
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Component;
 
 @Configuration
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Component
+@Getter
 public class SystemPromptConfig {
-
     @NonFinal
     @Value("classpath:prompts/default-system-prompt.st")
     Resource defaultSystemPrompt;

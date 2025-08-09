@@ -1,5 +1,6 @@
 package com.datn.aiservice.service.impl;
 
+import com.datn.aiservice.config.chatmodelconfiguration.SystemPromptConfig;
 import com.datn.aiservice.dto.request.OutlinePromptRequest;
 import com.datn.aiservice.dto.request.PresentationPromptRequest;
 import com.datn.aiservice.dto.response.PresentationResponse;
@@ -19,7 +20,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
@@ -28,8 +28,7 @@ import reactor.core.publisher.Flux;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 public class ContentGenerationServiceImpl implements ContentGenerationService {
-    Resource outlinePromptResource;
-    Resource slidePromptResource;
+    SystemPromptConfig systemPromptConfig;
     ModelSelectionService modelSelectionService;
     ChatClientFactory chatClientFactory;
     AIEventPublisher aiEventPublisher;
@@ -45,7 +44,8 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
         var chatClient = chatClientFactory.getChatClient(request.getModel());
 
         return chatClient.prompt()
-                .user(prompt -> prompt.text(outlinePromptResource).params(MappingParamsUtils.constructParams(request)))
+                .user(prompt -> prompt.text(systemPromptConfig.getOutlinePrompt())
+                        .params(MappingParamsUtils.constructParams(request)))
                 .stream()
                 .content();
     }
@@ -66,7 +66,7 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
         StringBuilder completeResponse = new StringBuilder();
 
         return chatClient.prompt()
-                .user(promptSys -> promptSys.text(slidePromptResource)
+                .user(promptSys -> promptSys.text(systemPromptConfig.getSlidePrompt())
                         .params(MappingParamsUtils.constructParams(request)))
                 .stream()
                 .content()

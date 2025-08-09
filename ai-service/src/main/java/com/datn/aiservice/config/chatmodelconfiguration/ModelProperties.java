@@ -3,14 +3,12 @@ package com.datn.aiservice.config.chatmodelconfiguration;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 import java.util.List;
 import java.util.Map;
 
 @Data
 @ConfigurationProperties(prefix = "app.models")
-@ConfigurationPropertiesScan
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class ModelProperties {
     Map<String, List<ModelInfo>> configurations;
