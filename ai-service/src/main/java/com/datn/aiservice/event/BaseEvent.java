@@ -12,7 +12,7 @@ import lombok.Setter;
  * Base event class with common metadata
  */
 public abstract class BaseEvent {
-    
+
     private String eventId;
     private LocalDateTime timestamp;
 

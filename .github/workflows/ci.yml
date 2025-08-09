@@ -1,6 +1,9 @@
 # .github/workflows/ci.yml
 on:
+  # push to main branch and all prs
   push:
+    branches:
+      - main
   pull_request:
 
 jobs:
@@ -9,7 +12,7 @@ jobs:
 
     strategy:
       matrix:
-        service: [admin-server, ai-service, api-gateway, config-server, discovery-service, document-service]  # ← list all your services
+        service: [admin-server, ai-service, api-gateway, config-server, discovery-service]  # ← list all your services
 
     defaults:
       run:

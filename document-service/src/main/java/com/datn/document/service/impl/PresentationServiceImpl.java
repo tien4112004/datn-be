@@ -1,14 +1,26 @@
 package com.datn.document.service.impl;
 
+import com.datn.document.dto.common.PaginatedResponseDto;
+import com.datn.document.dto.common.PaginationDto;
 import com.datn.document.dto.request.PresentationCreateRequest;
+import com.datn.document.dto.request.PresentationCollectionRequest;
 import com.datn.document.dto.response.PresentationCreateResponseDto;
+import com.datn.document.dto.response.PresentationListResponseDto;
 import com.datn.document.entity.Presentation;
 import com.datn.document.mapper.PresentationEntityMapper;
 import com.datn.document.repository.PresentationRepository;
 import com.datn.document.service.interfaces.PresentationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,5 +39,55 @@ public class PresentationServiceImpl implements PresentationService {
 
         log.info("Presentation saved with ID: {}", savedPresentation.getId());
         return mapper.toResponseDto(savedPresentation);
+    }
+
+    @Override
+    public List<PresentationListResponseDto> getAllPresentations() {
+        List<Presentation> presentations = presentationRepository.findAll();
+
+        return presentations.stream().map(mapper::toListResponseDto).collect(Collectors.toList());
+    }
+
+    @Override
+    public PaginatedResponseDto<PresentationListResponseDto> getAllPresentations(
+            PresentationCollectionRequest request) {
+        log.info("Fetching presentations with collection request - page: {}, pageSize: {}, filter: {}, sort: {}",
+                request.getPage(),
+                request.getPageSize(),
+                request.getFilter(),
+                request.getSort());
+
+        // Create sort object
+        Sort sortOrder = "desc".equalsIgnoreCase(request.getSort())
+                ? Sort.by(Sort.Direction.DESC, "createdAt")
+                : Sort.by(Sort.Direction.ASC, "createdAt");
+
+        // Create pageable object
+        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sortOrder);
+
+        // Fetch data based on filter
+        Page<Presentation> presentationPage;
+        if (StringUtils.hasText(request.getFilter())) {
+            presentationPage = presentationRepository.findByTitleContainingIgnoreCase(request.getFilter(), pageable);
+        } else {
+            presentationPage = presentationRepository.findAll(pageable);
+        }
+
+        // Map to DTOs
+        List<PresentationListResponseDto> presentations = presentationPage.getContent()
+                .stream()
+                .map(mapper::toListResponseDto)
+                .collect(Collectors.toList());
+
+        // Create pagination metadata
+        PaginationDto pagination = new PaginationDto(request.getPage(), request.getPageSize(),
+                presentationPage.getTotalElements(), presentationPage.getTotalPages(), presentationPage.hasNext(),
+                presentationPage.hasPrevious());
+
+        log.info("Retrieved {} presentations out of {} total",
+                presentations.size(),
+                presentationPage.getTotalElements());
+
+        return new PaginatedResponseDto<>(presentations, pagination);
     }
 }

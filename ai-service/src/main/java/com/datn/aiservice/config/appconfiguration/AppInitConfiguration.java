@@ -28,7 +28,7 @@ public class AppInitConfiguration {
             var definedModels = modelProperties.getConfigurations();
 
             if (models.isEmpty() || models.size() != definedModels.size()) {
-                modelProperties.getModels().forEach((model)-> {
+                modelProperties.getModels().forEach((model) -> {
                     if (!modelSelectionService.existByName(model.getModelName())) {
                         modelSelectionService.saveModelInfo(model);
                     } else {

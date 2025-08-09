@@ -6,7 +6,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class EndSlide extends BaseSlide {
-    
+
     public EndSlide() {
         super(SlideType.END);
     }

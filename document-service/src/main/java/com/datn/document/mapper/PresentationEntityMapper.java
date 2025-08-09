@@ -5,6 +5,7 @@ import com.datn.document.dto.SlideDto.SlideElementDto;
 import com.datn.document.dto.SlideDto.SlideBackgroundDto;
 import com.datn.document.dto.request.PresentationCreateRequest;
 import com.datn.document.dto.response.PresentationCreateResponseDto;
+import com.datn.document.dto.response.PresentationListResponseDto;
 import com.datn.document.entity.Presentation;
 import com.datn.document.entity.valueobject.Slide;
 import com.datn.document.entity.valueobject.SlideBackground;
@@ -13,8 +14,6 @@ import com.datn.document.enums.SlideElementType;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
-
-import java.time.LocalDateTime;
 
 @Mapper(componentModel = "spring")
 public interface PresentationEntityMapper {
@@ -27,6 +26,13 @@ public interface PresentationEntityMapper {
 
     @Mapping(target = "presentation", source = "slides")
     PresentationCreateResponseDto toResponseDto(Presentation entity);
+
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "title", source = "title")
+    @Mapping(target = "createdAt", source = "createdAt")
+    @Mapping(target = "updatedAt", source = "updatedAt")
+    @Mapping(target = "thumbnail", expression = "java(entity.getSlides() != null && !entity.getSlides().isEmpty() ? mapSlideToDto(entity.getSlides().get(0)) : null)")
+    PresentationListResponseDto toListResponseDto(Presentation entity);
 
     Slide mapSlideToEntity(SlideDto slideDto);
 

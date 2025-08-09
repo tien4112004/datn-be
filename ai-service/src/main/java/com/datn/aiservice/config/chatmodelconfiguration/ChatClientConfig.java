@@ -32,26 +32,23 @@ public class ChatClientConfig {
         Map<String, ChatClient> clients = new HashMap<>();
         List<String> errorModels = new ArrayList<>();
 
-        modelProperties.getConfigurations()
-                .forEach((providerKey, infos) -> {
-                    infos.forEach(info -> {
-                        log.info("Build Chat Client for model: {} from provider: {}", info.getModelName(), providerKey);
-                        ChatModel underlying = switch (providerKey) {
-                            case "openai" -> allChatModels.get(info.getModelName());
-                            case "gemini" -> allGeminiChatModels.get(info.getModelName());
-                            default -> null;
-                        };
+        modelProperties.getConfigurations().forEach((providerKey, infos) -> {
+            infos.forEach(info -> {
+                log.info("Build Chat Client for model: {} from provider: {}", info.getModelName(), providerKey);
+                ChatModel underlying = switch (providerKey) {
+                    case "openai" -> allChatModels.get(info.getModelName());
+                    case "gemini" -> allGeminiChatModels.get(info.getModelName());
+                    default -> null;
+                };
 
-                        if (underlying != null) {
-                            ChatClient client = ChatClient.builder(underlying)
-                                    .defaultSystem(defaultSystemPrompt)
-                                    .build();
-                            clients.put(info.getModelName(), client);
-                        } else {
-                            errorModels.add(info.getModelName());
-                        }
-                    });
-                });
+                if (underlying != null) {
+                    ChatClient client = ChatClient.builder(underlying).defaultSystem(defaultSystemPrompt).build();
+                    clients.put(info.getModelName(), client);
+                } else {
+                    errorModels.add(info.getModelName());
+                }
+            });
+        });
 
         if (!errorModels.isEmpty()) {
             log.error("Failed to create chat clients for models: {}", errorModels);

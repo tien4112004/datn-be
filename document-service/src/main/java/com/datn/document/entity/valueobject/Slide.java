@@ -18,10 +18,10 @@ import java.util.List;
 public class Slide {
     @Field("id")
     String id;
-    
+
     @Field("elements")
     List<SlideElement> elements;
-    
+
     @Field("background")
     SlideBackground background;
 }
