@@ -37,12 +37,18 @@ public class AppResponseDto<T> {
     }
 
     public static <T> AppResponseDto<T> failure(AppException exception) {
-        return AppResponseDto.<T>builder().code(exception.getStatusCode()).message(exception.getErrorMessage())
-                .errorCode(exception.getErrorCode().getErrorCodeName()).build();
+        return AppResponseDto.<T>builder()
+                .code(exception.getStatusCode())
+                .message(exception.getErrorMessage())
+                .errorCode(exception.getErrorCode().getErrorCodeName())
+                .build();
     }
 
     public static <T> AppResponseDto<T> failure(AppException exception, int status) {
-        return AppResponseDto.<T>builder().code(status).message(exception.getMessage())
-                .errorCode(exception.getErrorCode().getErrorCodeName()).build();
+        return AppResponseDto.<T>builder()
+                .code(status)
+                .message(exception.getMessage())
+                .errorCode(exception.getErrorCode().getErrorCodeName())
+                .build();
     }
 }

@@ -1,5 +1,6 @@
 package com.datn.aiservice.service.impl;
 
+import com.datn.aiservice.config.chatmodelconfiguration.SystemPromptConfig;
 import com.datn.aiservice.dto.request.OutlinePromptRequest;
 import com.datn.aiservice.dto.request.PresentationPromptRequest;
 import com.datn.aiservice.dto.response.PresentationResponse;
@@ -19,7 +20,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
@@ -28,8 +28,7 @@ import reactor.core.publisher.Flux;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 public class ContentGenerationServiceImpl implements ContentGenerationService {
-    Resource outlinePromptResource;
-    Resource slidePromptResource;
+    SystemPromptConfig systemPromptConfig;
     ModelSelectionService modelSelectionService;
     ChatClientFactory chatClientFactory;
     AIEventPublisher aiEventPublisher;
@@ -45,9 +44,10 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
         var chatClient = chatClientFactory.getChatClient(request.getModel());
 
         return chatClient.prompt()
-                .user(prompt -> prompt.text(outlinePromptResource)
+                .user(prompt -> prompt.text(systemPromptConfig.getOutlinePrompt())
                         .params(MappingParamsUtils.constructParams(request)))
-                .stream().content();
+                .stream()
+                .content();
     }
 
     @Override
@@ -66,17 +66,18 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
         StringBuilder completeResponse = new StringBuilder();
 
         return chatClient.prompt()
-                .user(promptSys -> promptSys.text(slidePromptResource)
+                .user(promptSys -> promptSys.text(systemPromptConfig.getSlidePrompt())
                         .params(MappingParamsUtils.constructParams(request)))
-                .stream().content()
+                .stream()
+                .content()
                 .doOnNext(chunk -> completeResponse.append(chunk))
                 .doOnComplete(() -> {
                     log.info("Streaming presentation generation completed");
                     String cleanedJson = extractJsonFromResponse(completeResponse.toString());
                     try {
                         // Parse the complete JSON response
-                        PresentationResponse slideResponse = objectMapper.readValue(
-                                cleanedJson, PresentationResponse.class);
+                        PresentationResponse slideResponse = objectMapper.readValue(cleanedJson,
+                                PresentationResponse.class);
 
                         // Publish event with actual slides
                         var event = new PresentationGeneratedEvent(slideResponse.getSlides());
@@ -93,9 +94,7 @@ public class ContentGenerationServiceImpl implements ContentGenerationService {
         // Remove markdown code blocks
         String cleaned = response.trim();
 
-        cleaned = cleaned.replaceAll("(?m)^```json\\s*|^```\\s*", "")
-                .replaceAll("\n---", ",")
-                .replaceAll(",\\s*$", "");
+        cleaned = cleaned.replaceAll("(?m)^```json\\s*|^```\\s*", "").replaceAll("\n---", ",").replaceAll(",\\s*$", "");
 
         cleaned = "{\"slides\":[" + cleaned + "]}";
         return cleaned;

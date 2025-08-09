@@ -48,7 +48,7 @@ services:
           memory: 512M
     environment:
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
-      - EUREKA_URI=${EUREKA_URI}
+      - EUREKA_URI
     depends_on:
       config-server:
         condition: service_healthy
@@ -66,10 +66,10 @@ services:
           memory: 512M
     environment:
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
-      - AUTH_DB_URL=${AUTH_DB_URL}
-      - AUTH_DB_USERNAME=${AUTH_DB_USERNAME}
-      - AUTH_DB_PASSWORD=${AUTH_DB_PASSWORD}
-      - EUREKA_URI=${EUREKA_URI}
+      - AUTH_DB_URL
+      - AUTH_DB_USERNAME
+      - AUTH_DB_PASSWORD
+      - EUREKA_URI
     depends_on:
       config-server:
         condition: service_healthy
@@ -78,9 +78,9 @@ services:
     ports:
       - 8081:8081
 
-  presentation:
-    image: datn/presentation
-    container_name: presentation
+  document-service:
+    image: datn/document-service
+    container_name: document-service
     deploy:
       resources:
         limits:
@@ -108,25 +108,29 @@ services:
     ports:
       - 8080:8080
     environment:
-      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - ALLOWED_ORIGINS
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
-      - EUREKA_URI=${EUREKA_URI}
+      - EUREKA_URI
 
   ai-service:
     image: datn/ai-service
     container_name: ai-service
     environment:
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
-      - EUREKA_URI=${EUREKA_URI}
-      - OPENAI_KEY=${OPENAI_KEY}
-      - MODEL_CONFIG_DB_URL=${MODEL_CONFIG_DB_URL}
-      - MODEL_CONFIG_DB_USERNAME=${MODEL_CONFIG_DB_USERNAME}
-      - MODEL_CONFIG_DB_PASSWORD=${MODEL_CONFIG_DB_PASSWORD}
+      - EUREKA_URI
+      - OPENAI_KEY
+      - MODEL_CONFIG_DB_URL
+      - MODEL_CONFIG_DB_USERNAME
+      - MODEL_CONFIG_DB_PASSWORD
       - GOOGLE_APPLICATION_CREDENTIALS=/root/key.json
-      - VERTEX_PROJECT_ID=${VERTEX_PROJECT_ID}
-      - VERTEX_LOCATION=${VERTEX_LOCATION}
+      - VERTEX_PROJECT_ID
+      - VERTEX_LOCATION
+      - RABBITMQ_HOST
+      - RABBITMQ_PORT
+      - RABBITMQ_USERNAME
+      - RABBITMQ_PASSWORD
     volumes:
-      - ${VERTEX_SERVICE_ACCOUNT_KEY_PATH}:/root/key.json:ro
+      - ${VERTEX_SERVICE_ACCOUNT_KEY_PATH:-/dev/null}:/root/key.json:ro
     depends_on:
       config-server:
         condition: service_healthy

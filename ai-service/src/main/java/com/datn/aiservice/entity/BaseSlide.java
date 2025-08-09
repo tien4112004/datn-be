@@ -7,16 +7,14 @@ import lombok.Data;
 
 @Data
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.PROPERTY)
-@JsonSubTypes({
-    @JsonSubTypes.Type(value = CoverSlide.class, name = "cover"),
-    @JsonSubTypes.Type(value = ContentsSlide.class, name = "contents"),
-    @JsonSubTypes.Type(value = TransitionSlide.class, name = "transition"),
-    @JsonSubTypes.Type(value = ContentSlide.class, name = "content"),
-    @JsonSubTypes.Type(value = EndSlide.class, name = "end")
-})
+@JsonSubTypes({@JsonSubTypes.Type(value = CoverSlide.class, name = "cover"),
+        @JsonSubTypes.Type(value = ContentsSlide.class, name = "contents"),
+        @JsonSubTypes.Type(value = TransitionSlide.class, name = "transition"),
+        @JsonSubTypes.Type(value = ContentSlide.class, name = "content"),
+        @JsonSubTypes.Type(value = EndSlide.class, name = "end")})
 public abstract class BaseSlide {
     private SlideType type;
-    
+
     protected BaseSlide(SlideType type) {
         this.type = type;
     }

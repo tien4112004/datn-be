@@ -29,8 +29,7 @@ public class AIEventPublisher {
     public void publishEvent(PresentationGeneratedEvent event) {
         String routingKey = "ai.service.presentation.generated";
         try {
-            Message<PresentationGeneratedEvent> message = MessageBuilder
-                    .withPayload(event)
+            Message<PresentationGeneratedEvent> message = MessageBuilder.withPayload(event)
                     .setHeader("routingKey", routingKey)
                     .setHeader("eventType", event.getClass().getSimpleName().toLowerCase())
                     .setHeader("eventId", event.getEventId())
@@ -41,15 +40,12 @@ public class AIEventPublisher {
             boolean sent = streamBridge.send(bindingName, message);
 
             if (sent) {
-                log.info("Successfully published {} with routing key: {}", 
-                           event.getClass(), routingKey);
+                log.info("Successfully published {} with routing key: {}", event.getClass(), routingKey);
             } else {
-                log.error("Failed to publish {} with routing key: {}", 
-                            event.getClass(), routingKey);
+                log.error("Failed to publish {} with routing key: {}", event.getClass(), routingKey);
             }
         } catch (Exception e) {
-            log.error("Error publishing event {} with routing key {}: ", 
-                        event.getClass(), routingKey);
+            log.error("Error publishing event {} with routing key {}: ", event.getClass(), routingKey);
             // Optional: Implement retry mechanism or dead letter queue
             throw new RuntimeException("Failed to publish AI event", e);
         }
