@@ -10,8 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import java.util.List;
-import java.util.Optional;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -36,8 +34,7 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
     @Override
     public ModelConfigurationEntity getModelById(Integer modelId) {
         return modelConfigurationJPARepo.findById(modelId).orElseThrow(
-                () -> new AppException(ErrorCode.MODEL_NOT_FOUND)
-        );
+                () -> new AppException(ErrorCode.MODEL_NOT_FOUND));
     }
 
     @Override

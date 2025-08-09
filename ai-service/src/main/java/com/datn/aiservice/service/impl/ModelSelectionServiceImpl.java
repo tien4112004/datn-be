@@ -3,8 +3,6 @@ package com.datn.aiservice.service.impl;
 import com.datn.aiservice.config.chatmodelconfiguration.ModelProperties.ModelInfo;
 import com.datn.aiservice.dto.response.ModelMinimalResponseDto;
 import com.datn.aiservice.dto.response.ModelResponseDto;
-import com.datn.aiservice.exceptions.AppException;
-import com.datn.aiservice.exceptions.ErrorCode;
 import com.datn.aiservice.mapper.ModelDataMapper;
 import com.datn.aiservice.repository.interfaces.ModelConfigurationRepo;
 import com.datn.aiservice.service.interfaces.ModelSelectionService;

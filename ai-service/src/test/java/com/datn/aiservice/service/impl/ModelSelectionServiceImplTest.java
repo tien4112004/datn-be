@@ -7,6 +7,7 @@ import com.datn.aiservice.entity.ModelConfigurationEntity;
 import com.datn.aiservice.exceptions.AppException;
 import com.datn.aiservice.exceptions.ErrorCode;
 import com.datn.aiservice.mapper.ModelDataMapper;
+import com.datn.aiservice.repository.impl.jpa.ModelConfigurationJPARepo;
 import com.datn.aiservice.repository.interfaces.ModelConfigurationRepo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,6 +30,9 @@ class ModelSelectionServiceImplTest {
 
     @Mock
     private ModelConfigurationRepo modelConfigurationRepo;
+
+    @Mock
+    private ModelConfigurationJPARepo modelConfigurationJPARepo;
 
     @Mock
     private ModelDataMapper modelDataMapper;
@@ -120,7 +124,7 @@ class ModelSelectionServiceImplTest {
     void getModelConfiguration_ValidModelId() {
         // Given
         Integer modelId = 1;
-//        when(modelConfigurationRepo.existsByModelId(modelId)).thenReturn(true);
+        // when(modelConfigurationRepo.existsByModelId(modelId)).thenReturn(true);
         when(modelConfigurationRepo.getModelById(modelId)).thenReturn(modelEntity1);
         when(modelDataMapper.toModelResponseDto(modelEntity1)).thenReturn(responseDto);
 
@@ -139,7 +143,8 @@ class ModelSelectionServiceImplTest {
     void getModelConfiguration_ModelNotFound() {
         // Given
         Integer nonExistentModelId = 999;
-        when(modelConfigurationRepo.getModelById(nonExistentModelId)).thenThrow(new AppException(ErrorCode.MODEL_NOT_FOUND));
+        when(modelConfigurationRepo.getModelById(nonExistentModelId))
+                .thenThrow(new AppException(ErrorCode.MODEL_NOT_FOUND));
 
         // When & Then
         AppException exception = assertThrows(AppException.class,
@@ -157,7 +162,19 @@ class ModelSelectionServiceImplTest {
         Integer modelId = 1;
         boolean isEnabled = true;
 
-        when(modelConfigurationRepo.getModelById(modelId)).thenReturn(modelEntity1);
+        // When
+        assertDoesNotThrow(() -> modelSelectionService.setModelEnabled(modelId, isEnabled));
+
+        // Then
+        verify(modelConfigurationRepo).setEnabled(modelId, isEnabled);
+    }
+
+    @Test
+    @DisplayName("Should set model disabled for non-default model")
+    void setModelEnabled_DisableNonDefaultModel() {
+        // Given
+        Integer modelId = 1;
+        boolean isEnabled = false;
 
         // When
         assertDoesNotThrow(() -> modelSelectionService.setModelEnabled(modelId, isEnabled));
@@ -167,51 +184,85 @@ class ModelSelectionServiceImplTest {
     }
 
     @Test
+    @DisplayName("Should throw AppException when trying to disable default model")
+    void setModelEnabled_DisableDefaultModel() {
+        // Given
+        Integer modelId = 1;
+        boolean isEnabled = false;
+
+        doThrow(new AppException(ErrorCode.INVALID_MODEL_STATUS,
+                "Cannot disable the default model. Please set another model as default first."))
+                .when(modelConfigurationRepo).setEnabled(modelId, isEnabled);
+
+        // When & Then
+        AppException exception = assertThrows(AppException.class,
+                () -> modelSelectionService.setModelEnabled(modelId, isEnabled));
+
+        assertEquals(ErrorCode.INVALID_MODEL_STATUS, exception.getErrorCode());
+        verify(modelConfigurationRepo).setEnabled(modelId, isEnabled);
+    }
+
+    @Test
     @DisplayName("Should throw AppException when model not found for setModelEnabled")
     void setModelEnabled_ModelNotFound() {
         // Given
         Integer nonExistentModelId = 999;
         boolean isEnabled = true;
-        when(modelConfigurationRepo.getModelById(nonExistentModelId)).thenThrow(new AppException(ErrorCode.MODEL_NOT_FOUND));
+
+        doThrow(new AppException(ErrorCode.MODEL_NOT_FOUND))
+                .when(modelConfigurationRepo).setEnabled(nonExistentModelId, isEnabled);
 
         // When & Then
         AppException exception = assertThrows(AppException.class,
                 () -> modelSelectionService.setModelEnabled(nonExistentModelId, isEnabled));
 
         assertEquals(ErrorCode.MODEL_NOT_FOUND, exception.getErrorCode());
-        verify(modelConfigurationRepo).getModelById(nonExistentModelId);
-        verify(modelConfigurationRepo, never()).setEnabled(anyInt(), anyBoolean());
+        verify(modelConfigurationRepo).setEnabled(nonExistentModelId, isEnabled);
     }
 
     @Test
-    @DisplayName("Should set model as default and unset other defaults")
-    void setDefault_SetAsModelDefault() {
+    @DisplayName("Should set enabled model as default and unset other defaults")
+    void setDefault_SetEnabledModelAsDefault() {
         // Given
         Integer modelId = 1;
         boolean isDefault = true;
-        when(modelConfigurationRepo.existsByModelId(modelId)).thenReturn(true);
 
         // When
         assertDoesNotThrow(() -> modelSelectionService.setModelDefault(modelId, isDefault));
 
         // Then
-        verify(modelConfigurationRepo).existsByModelId(modelId);
         verify(modelConfigurationRepo).setDefault(modelId, isDefault);
     }
 
     @Test
     @DisplayName("Should unset model as default without affecting others")
-    void setDefault_UnsetAsModelDefault() {
+    void setDefault_UnsetModelAsDefault() {
         // Given
         Integer modelId = 1;
         boolean isDefault = false;
-        when(modelConfigurationRepo.existsByModelId(modelId)).thenReturn(true);
 
         // When
         assertDoesNotThrow(() -> modelSelectionService.setModelDefault(modelId, isDefault));
 
         // Then
-        verify(modelConfigurationRepo).existsByModelId(modelId);
+        verify(modelConfigurationRepo).setDefault(modelId, isDefault);
+    }
+
+    @Test
+    @DisplayName("Should throw AppException when trying to set disabled model as default")
+    void setModelDefault_SetDisabledModelAsDefault() {
+        // Given
+        Integer modelId = 2;
+        boolean isDefault = true;
+
+        doThrow(new AppException(ErrorCode.MODEL_NOT_ENABLED))
+                .when(modelConfigurationRepo).setDefault(modelId, isDefault);
+
+        // When & Then
+        AppException exception = assertThrows(AppException.class,
+                () -> modelSelectionService.setModelDefault(modelId, isDefault));
+
+        assertEquals(ErrorCode.MODEL_NOT_ENABLED, exception.getErrorCode());
         verify(modelConfigurationRepo).setDefault(modelId, isDefault);
     }
 
@@ -220,17 +271,17 @@ class ModelSelectionServiceImplTest {
     void setModelDefault_ModelNotFound() {
         // Given
         Integer nonExistentModelId = 999;
-
         boolean isDefault = true;
-        when(modelConfigurationRepo.existsByModelId(nonExistentModelId)).thenReturn(false);
+
+        doThrow(new AppException(ErrorCode.MODEL_NOT_FOUND))
+                .when(modelConfigurationRepo).setDefault(nonExistentModelId, isDefault);
 
         // When & Then
         AppException exception = assertThrows(AppException.class,
                 () -> modelSelectionService.setModelDefault(nonExistentModelId, isDefault));
 
         assertEquals(ErrorCode.MODEL_NOT_FOUND, exception.getErrorCode());
-        verify(modelConfigurationRepo).existsByModelId(nonExistentModelId);
-        verify(modelConfigurationRepo, never()).setDefault(anyInt(), anyBoolean());
+        verify(modelConfigurationRepo).setDefault(nonExistentModelId, isDefault);
     }
 
     @Test
