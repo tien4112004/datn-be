@@ -10,8 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
-import java.util.Optional;
-
 @Repository
 public interface ModelConfigurationJPARepo extends JpaRepository<ModelConfigurationEntity, Integer> {
     Optional<ModelConfigurationEntity> findByModelName(String modelName);

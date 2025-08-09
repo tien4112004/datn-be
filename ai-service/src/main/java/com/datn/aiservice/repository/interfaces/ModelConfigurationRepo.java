@@ -3,7 +3,6 @@ package com.datn.aiservice.repository.interfaces;
 import com.datn.aiservice.entity.ModelConfigurationEntity;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface ModelConfigurationRepo {
 

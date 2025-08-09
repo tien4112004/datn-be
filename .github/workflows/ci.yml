@@ -1,0 +1,43 @@
+# .github/workflows/ci.yml
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service: [admin-server, ai-service, api-gateway, config-server, discovery-service, document-service]  # ← list all your services
+
+    defaults:
+      run:
+        working-directory: ${{ matrix.service }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+            fetch-depth: 0
+      
+      - name: Get changed files
+        id: get-changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: ${{ matrix.service }}/**
+
+      - name: Skip if no changes
+        if: steps.get-changed-files.outputs.any_changed != 'true'
+        run: echo "▶ No changes in ${{ matrix.service }}, skipping."
+      
+      - name: Set up Java
+        if: steps.get-changed-files.outputs.any_changed == 'true'
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Build & test ${{ matrix.service }}
+        if: steps.get-changed-files.outputs.any_changed == 'true'
+        run: mvn clean verify
