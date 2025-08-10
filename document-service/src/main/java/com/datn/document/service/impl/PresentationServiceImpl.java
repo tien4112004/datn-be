@@ -3,10 +3,13 @@ package com.datn.document.service.impl;
 import com.datn.document.dto.common.PaginatedResponseDto;
 import com.datn.document.dto.common.PaginationDto;
 import com.datn.document.dto.request.PresentationCreateRequest;
+import com.datn.document.dto.request.PresentationUpdateRequest;
 import com.datn.document.dto.request.PresentationCollectionRequest;
 import com.datn.document.dto.response.PresentationCreateResponseDto;
 import com.datn.document.dto.response.PresentationListResponseDto;
 import com.datn.document.entity.Presentation;
+import com.datn.document.exception.AppException;
+import com.datn.document.exception.ErrorCode;
 import com.datn.document.mapper.PresentationEntityMapper;
 import com.datn.document.repository.PresentationRepository;
 import com.datn.document.service.interfaces.PresentationService;
@@ -19,6 +22,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,6 +42,35 @@ public class PresentationServiceImpl implements PresentationService {
         Presentation savedPresentation = presentationRepository.save(presentation);
 
         log.info("Presentation saved with ID: {}", savedPresentation.getId());
+        return mapper.toResponseDto(savedPresentation);
+    }
+
+    @Override
+    public PresentationCreateResponseDto updatePresentation(String id, PresentationUpdateRequest request) {
+        log.info("Updating presentation with ID: {} and title: {}", id, request.getTitle());
+
+        Presentation existingPresentation = presentationRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.error("Presentation not found with ID: {}", id);
+                    return new AppException(ErrorCode.PRESENTATION_NOT_FOUND);
+                });
+
+        // Update only provided fields
+        if (request.getTitle() != null) {
+            existingPresentation.setTitle(request.getTitle());
+        }
+        if (request.getSlides() != null) {
+            existingPresentation.setSlides(
+                request.getSlides().stream()
+                    .map(mapper::mapSlideToEntity)
+                    .collect(Collectors.toList())
+            );
+        }
+        existingPresentation.setUpdatedAt(LocalDateTime.now());
+
+        Presentation savedPresentation = presentationRepository.save(existingPresentation);
+
+        log.info("Presentation updated with ID: {}", savedPresentation.getId());
         return mapper.toResponseDto(savedPresentation);
     }
 

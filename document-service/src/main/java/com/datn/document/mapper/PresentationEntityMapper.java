@@ -4,6 +4,7 @@ import com.datn.document.dto.SlideDto;
 import com.datn.document.dto.SlideDto.SlideElementDto;
 import com.datn.document.dto.SlideDto.SlideBackgroundDto;
 import com.datn.document.dto.request.PresentationCreateRequest;
+import com.datn.document.dto.request.PresentationUpdateRequest;
 import com.datn.document.dto.response.PresentationCreateResponseDto;
 import com.datn.document.dto.response.PresentationListResponseDto;
 import com.datn.document.entity.Presentation;
@@ -13,6 +14,7 @@ import com.datn.document.entity.valueobject.SlideElement;
 import com.datn.document.enums.SlideElementType;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 
 @Mapper(componentModel = "spring")
@@ -23,6 +25,11 @@ public interface PresentationEntityMapper {
     @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "id", ignore = true)
     Presentation toEntity(PresentationCreateRequest request);
+
+    @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    void updateEntity(PresentationUpdateRequest request, @MappingTarget Presentation presentation);
 
     @Mapping(target = "presentation", source = "slides")
     PresentationCreateResponseDto toResponseDto(Presentation entity);

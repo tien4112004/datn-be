@@ -3,6 +3,7 @@ package com.datn.document.controller;
 import com.datn.document.dto.common.AppResponseDto;
 import com.datn.document.dto.common.PaginatedResponseDto;
 import com.datn.document.dto.request.PresentationCreateRequest;
+import com.datn.document.dto.request.PresentationUpdateRequest;
 import com.datn.document.dto.request.PresentationCollectionRequest;
 import com.datn.document.dto.response.PresentationCreateResponseDto;
 import com.datn.document.dto.response.PresentationListResponseDto;
@@ -25,6 +26,22 @@ public class PresentationController {
     public ResponseEntity<AppResponseDto<PresentationCreateResponseDto>> createPresentation(
             @Valid @RequestBody PresentationCreateRequest request) {
         PresentationCreateResponseDto response = presentationService.createPresentation(request);
+        return ResponseEntity.ok(AppResponseDto.success(response));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<AppResponseDto<PresentationCreateResponseDto>> updatePresentation(
+            @PathVariable String id,
+            @Valid @RequestBody PresentationUpdateRequest request) {
+        PresentationCreateResponseDto response = presentationService.updatePresentation(id, request);
+        return ResponseEntity.ok(AppResponseDto.success(response));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<AppResponseDto<PresentationCreateResponseDto>> patchPresentation(
+            @PathVariable String id,
+            @Valid @RequestBody PresentationUpdateRequest request) {
+        PresentationCreateResponseDto response = presentationService.updatePresentation(id, request);
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 

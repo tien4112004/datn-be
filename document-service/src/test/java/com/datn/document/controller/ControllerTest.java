@@ -6,6 +6,7 @@ import com.datn.document.dto.SlideDto.SlideBackgroundDto;
 import com.datn.document.dto.common.PaginatedResponseDto;
 import com.datn.document.dto.common.PaginationDto;
 import com.datn.document.dto.request.PresentationCreateRequest;
+import com.datn.document.dto.request.PresentationUpdateRequest;
 import com.datn.document.dto.response.PresentationCreateResponseDto;
 import com.datn.document.dto.response.PresentationListResponseDto;
 import com.datn.document.enums.SlideElementType;
@@ -24,9 +25,13 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(PresentationController.class)
@@ -374,5 +379,100 @@ class ControllerTest {
                 .andExpect(jsonPath("$.data.length()").value(0))
                 .andExpect(jsonPath("$.pagination.totalItems").value(0))
                 .andExpect(jsonPath("$.pagination.totalPages").value(0));
+    }
+
+    @Test
+    void updatePresentation_WithValidRequest_ShouldReturnUpdatedPresentation() throws Exception {
+        // Given
+        String presentationId = "test-id";
+        PresentationUpdateRequest updateRequest = PresentationUpdateRequest.builder()
+                .title("Updated Title")
+                .slides(List.of(request.getSlides().get(0)))
+                .build();
+
+        PresentationCreateResponseDto updateResponse = PresentationCreateResponseDto.builder()
+                .title("Updated Title")
+                .presentation(List.of(request.getSlides().get(0)))
+                .build();
+
+        when(presentationService.updatePresentation(eq(presentationId), any(PresentationUpdateRequest.class)))
+                .thenReturn(updateResponse);
+
+        // When & Then
+        mockMvc.perform(put("/api/presentations/" + presentationId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.title").value("Updated Title"))
+                .andExpect(jsonPath("$.data.presentation").isArray())
+                .andExpect(jsonPath("$.data.presentation", hasSize(1)));
+    }
+
+    @Test
+    void patchPresentation_WithValidRequest_ShouldReturnUpdatedPresentation() throws Exception {
+        // Given
+        String presentationId = "test-id";
+        PresentationUpdateRequest patchRequest = PresentationUpdateRequest.builder()
+                .title("Patched Title")
+                .build(); // Only updating title (partial update)
+
+        PresentationCreateResponseDto patchResponse = PresentationCreateResponseDto.builder()
+                .title("Patched Title")
+                .presentation(List.of(request.getSlides().get(0)))
+                .build();
+
+        when(presentationService.updatePresentation(eq(presentationId), any(PresentationUpdateRequest.class)))
+                .thenReturn(patchResponse);
+
+        // When & Then
+        mockMvc.perform(patch("/api/presentations/" + presentationId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(patchRequest)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.title").value("Patched Title"))
+                .andExpect(jsonPath("$.data.presentation").isArray())
+                .andExpect(jsonPath("$.data.presentation", hasSize(1)));
+    }
+
+    @Test
+    void patchPresentation_WithOnlySlides_ShouldUpdateOnlySlides() throws Exception {
+        // Given
+        String presentationId = "test-id";
+        SlideDto newSlide = SlideDto.builder()
+                .id("new-slide")
+                .elements(List.of())
+                .background(SlideBackgroundDto.builder().type("color").color("#000000").build())
+                .build();
+
+        PresentationUpdateRequest patchRequest = PresentationUpdateRequest.builder()
+                .slides(List.of(newSlide))
+                .build(); // Only updating slides
+
+        PresentationCreateResponseDto patchResponse = PresentationCreateResponseDto.builder()
+                .title("Original Title") // Title remains unchanged
+                .presentation(List.of(newSlide))
+                .build();
+
+        when(presentationService.updatePresentation(eq(presentationId), any(PresentationUpdateRequest.class)))
+                .thenReturn(patchResponse);
+
+        // When & Then
+        mockMvc.perform(patch("/api/presentations/" + presentationId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(patchRequest)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.title").value("Original Title"))
+                .andExpect(jsonPath("$.data.presentation").isArray())
+                .andExpect(jsonPath("$.data.presentation", hasSize(1)))
+                .andExpect(jsonPath("$.data.presentation[0].id").value("new-slide"));
     }
 }
