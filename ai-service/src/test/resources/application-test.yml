@@ -1,16 +1,41 @@
 spring:
+  application:
+    name: ai-service-test
   datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    # Testcontainers will override these with dynamic values
+    url: jdbc:postgresql://localhost:5432/testdb
+    username: test
+    password: test
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: create-drop
     show-sql: true
-  h2:
-    console:
-      enabled: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  sql:
+    init:
+      mode: never
+  # Disable cloud config for tests
+  cloud:
+    config:
+      enabled: false
+    discovery:
+      enabled: false
+    stream:
+      enabled: false
+  # Disable RabbitMQ for tests
+  rabbitmq:
+    enabled: false
+  autoconfigure:
+    exclude:
+      - org.springframework.cloud.stream.config.BindingServiceConfiguration
+      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+      - org.springframework.cloud.netflix.eureka.EurekaClientAutoConfiguration
+      - org.springframework.cloud.config.client.ConfigClientAutoConfiguration
+      - de.codecentric.boot.admin.client.config.SpringBootAdminClientAutoConfiguration
   ai:
     openai:
       api-key: "test-key"
@@ -20,10 +45,28 @@ spring:
         gemini:
           project-id: "test-project-id"
           location: "us-central1"
+  # Speed up shutdown for tests
+  lifecycle:
+    timeout-per-shutdown-phase: 10s
+  task:
+    execution:
+      shutdown:
+        await-termination: true
+        await-termination-period: 10s
 # Disable Eureka for tests
 eureka:
   client:
     enabled: false
+
+# Disable admin client for tests
+spring.boot.admin.client:
+  enabled: false
+
+logging:
+  level:
+    '[org.hibernate.SQL]': DEBUG
+    '[org.hibernate.type.descriptor.sql.BasicBinder]': TRACE
+    '[com.datn.aiservice]': DEBUG
 
 # Test model configurations
 app:

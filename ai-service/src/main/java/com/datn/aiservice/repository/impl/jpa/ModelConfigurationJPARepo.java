@@ -18,10 +18,10 @@ public interface ModelConfigurationJPARepo extends JpaRepository<ModelConfigurat
 
     @Modifying
     @Transactional
-    @Query(value = """
-                    UPDATE ModelConfigurationEntity m
+    @Query("""
+                    UPDATE model_configuration m
                     SET m.isDefault = false
                     WHERE m.isEnabled = true AND m.modelId != :modelId
-            """, nativeQuery = true)
+            """)
     void disableDefaultModelsExcept(Integer modelId);
 }
