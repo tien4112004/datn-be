@@ -11,6 +11,8 @@ import com.datn.document.dto.response.PresentationCreateResponseDto;
 import com.datn.document.dto.response.PresentationListResponseDto;
 import com.datn.document.dto.response.PresentationUpdateResponseDto;
 import com.datn.document.enums.SlideElementType;
+import com.datn.document.exception.AppException;
+import com.datn.document.exception.ErrorCode;
 import com.datn.document.service.interfaces.PresentationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,7 +34,6 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(PresentationController.class)
@@ -410,5 +411,182 @@ class ControllerTest {
                 .andExpect(jsonPath("$.data.title").value("Updated Title"))
                 .andExpect(jsonPath("$.data.presentation").isArray())
                 .andExpect(jsonPath("$.data.presentation", hasSize(1)));
+    }
+
+    @Test
+    void updatePresentation_WithMultipleSlides_ShouldReturnAllSlides() throws Exception {
+        // Given
+        String presentationId = "test-id";
+        SlideDto slide1 = SlideDto.builder()
+                .id("slide-1")
+                .elements(List.of(request.getSlides().get(0).getElements().get(0)))
+                .background(request.getSlides().get(0).getBackground())
+                .build();
+
+        SlideDto slide2 = SlideDto.builder()
+                .id("slide-2")
+                .elements(List.of(request.getSlides().get(0).getElements().get(0)))
+                .background(request.getSlides().get(0).getBackground())
+                .build();
+
+        PresentationUpdateRequest updateRequest = PresentationUpdateRequest.builder()
+                .title("Multi-slide Presentation")
+                .slides(List.of(slide1, slide2))
+                .build();
+
+        PresentationUpdateResponseDto updateResponse = PresentationUpdateResponseDto.builder()
+                .title("Multi-slide Presentation")
+                .presentation(List.of(slide1, slide2))
+                .build();
+
+        when(presentationService.updatePresentation(eq(presentationId), any(PresentationUpdateRequest.class)))
+                .thenReturn(updateResponse);
+
+        // When & Then
+        mockMvc.perform(put("/api/presentations/" + presentationId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.data.title").value("Multi-slide Presentation"))
+                .andExpect(jsonPath("$.data.presentation").isArray())
+                .andExpect(jsonPath("$.data.presentation", hasSize(2)))
+                .andExpect(jsonPath("$.data.presentation[0].id").value("slide-1"))
+                .andExpect(jsonPath("$.data.presentation[1].id").value("slide-2"));
+    }
+
+    @Test
+    void updatePresentation_WithComplexElements_ShouldPreserveAllProperties() throws Exception {
+        // Given
+        String presentationId = "test-id";
+        SlideElementDto complexElement = SlideElementDto.builder()
+                .type(SlideElementType.TEXT)
+                .id("complex-element")
+                .left(50.0f)
+                .top(75.0f)
+                .width(200.0f)
+                .height(150.0f)
+                .viewBox(Arrays.asList(0.0f, 0.0f, 100.0f, 100.0f))
+                .path("M10,10 L90,90")
+                .fill("#ff0000")
+                .fixedRatio(true)
+                .opacity(0.8f)
+                .rotate(45.0f)
+                .flipV(false)
+                .lineHeight(1.5f)
+                .content("Complex element")
+                .defaultFontName("Arial")
+                .defaultColor("#000000")
+                .start(Arrays.asList(10.0f, 20.0f))
+                .end(Arrays.asList(90.0f, 80.0f))
+                .points(Arrays.asList("10,10", "50,50", "90,90"))
+                .color("#00ff00")
+                .style("solid")
+                .wordSpace(2.0f)
+                .build();
+
+        SlideDto complexSlide = SlideDto.builder()
+                .id("complex-slide")
+                .elements(List.of(complexElement))
+                .background(request.getSlides().get(0).getBackground())
+                .build();
+
+        PresentationUpdateRequest updateRequest = PresentationUpdateRequest.builder()
+                .title("Complex Presentation")
+                .slides(List.of(complexSlide))
+                .build();
+
+        PresentationUpdateResponseDto updateResponse = PresentationUpdateResponseDto.builder()
+                .title("Complex Presentation")
+                .presentation(List.of(complexSlide))
+                .build();
+
+        when(presentationService.updatePresentation(eq(presentationId), any(PresentationUpdateRequest.class)))
+                .thenReturn(updateResponse);
+
+        // When & Then
+        mockMvc.perform(put("/api/presentations/" + presentationId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.data.title").value("Complex Presentation"))
+                .andExpect(jsonPath("$.data.presentation[0].elements[0].type").value("text"))
+                .andExpect(jsonPath("$.data.presentation[0].elements[0].id").value("complex-element"))
+                .andExpect(jsonPath("$.data.presentation[0].elements[0].viewBox[0]").value(0.0))
+                .andExpect(jsonPath("$.data.presentation[0].elements[0].viewBox[3]").value(100.0))
+                .andExpect(jsonPath("$.data.presentation[0].elements[0].path").value("M10,10 L90,90"))
+                .andExpect(jsonPath("$.data.presentation[0].elements[0].fill").value("#ff0000"))
+                .andExpect(jsonPath("$.data.presentation[0].elements[0].fixedRatio").value(true))
+                .andExpect(jsonPath("$.data.presentation[0].elements[0].opacity").value(0.8))
+                .andExpect(jsonPath("$.data.presentation[0].elements[0].rotate").value(45.0))
+                .andExpect(jsonPath("$.data.presentation[0].elements[0].flipV").value(false))
+                .andExpect(jsonPath("$.data.presentation[0].elements[0].lineHeight").value(1.5))
+                .andExpect(jsonPath("$.data.presentation[0].elements[0].start[0]").value(10.0))
+                .andExpect(jsonPath("$.data.presentation[0].elements[0].start[1]").value(20.0))
+                .andExpect(jsonPath("$.data.presentation[0].elements[0].end[0]").value(90.0))
+                .andExpect(jsonPath("$.data.presentation[0].elements[0].end[1]").value(80.0))
+                .andExpect(jsonPath("$.data.presentation[0].elements[0].points[0]").value("10,10"))
+                .andExpect(jsonPath("$.data.presentation[0].elements[0].points[2]").value("90,90"))
+                .andExpect(jsonPath("$.data.presentation[0].elements[0].color").value("#00ff00"))
+                .andExpect(jsonPath("$.data.presentation[0].elements[0].style").value("solid"))
+                .andExpect(jsonPath("$.data.presentation[0].elements[0].wordSpace").value(2.0));
+    }
+
+    @Test
+    void updatePresentation_WithInvalidId_ShouldReturnNotFound() throws Exception {
+        // Given
+        String invalidId = "invalid-id";
+        PresentationUpdateRequest updateRequest = PresentationUpdateRequest.builder()
+                .title("Updated Title")
+                .slides(List.of(request.getSlides().get(0)))
+                .build();
+
+        when(presentationService.updatePresentation(eq(invalidId), any(PresentationUpdateRequest.class)))
+                .thenThrow(new AppException(ErrorCode.PRESENTATION_NOT_FOUND));
+
+        // When & Then
+        mockMvc.perform(put("/api/presentations/" + invalidId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.code").value(404))
+                .andExpect(jsonPath("$.message").exists());
+    }
+
+    @Test
+    void updatePresentation_WithInvalidJson_ShouldReturnBadRequest() throws Exception {
+        // Given
+        String presentationId = "test-id";
+
+        // When & Then
+        mockMvc.perform(put("/api/presentations/" + presentationId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{invalid json}"))
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    void updatePresentation_WithEmptySlides_ShouldReturnValidationError() throws Exception {
+        // Given
+        String presentationId = "test-id";
+        PresentationUpdateRequest updateRequest = PresentationUpdateRequest.builder()
+                .title("Updated Title")
+                .slides(List.of())
+                .build();
+
+        // When & Then
+        mockMvc.perform(put("/api/presentations/" + presentationId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.data.slides").value("Presentation must contain at least one slide"));
     }
 }
