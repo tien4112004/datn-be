@@ -7,6 +7,7 @@ import com.datn.document.dto.request.PresentationUpdateRequest;
 import com.datn.document.dto.request.PresentationCollectionRequest;
 import com.datn.document.dto.response.PresentationCreateResponseDto;
 import com.datn.document.dto.response.PresentationListResponseDto;
+import com.datn.document.dto.response.PresentationUpdateResponseDto;
 import com.datn.document.entity.Presentation;
 import com.datn.document.exception.AppException;
 import com.datn.document.exception.ErrorCode;
@@ -46,7 +47,7 @@ public class PresentationServiceImpl implements PresentationService {
     }
 
     @Override
-    public PresentationCreateResponseDto updatePresentation(String id, PresentationUpdateRequest request) {
+    public PresentationUpdateResponseDto updatePresentation(String id, PresentationUpdateRequest request) {
         log.info("Updating presentation with ID: {} and title: {}", id, request.getTitle());
 
         Presentation existingPresentation = presentationRepository.findById(id)
@@ -55,23 +56,13 @@ public class PresentationServiceImpl implements PresentationService {
                     return new AppException(ErrorCode.PRESENTATION_NOT_FOUND);
                 });
 
-        // Update only provided fields
-        if (request.getTitle() != null) {
-            existingPresentation.setTitle(request.getTitle());
-        }
-        if (request.getSlides() != null) {
-            existingPresentation.setSlides(
-                request.getSlides().stream()
-                    .map(mapper::mapSlideToEntity)
-                    .collect(Collectors.toList())
-            );
-        }
-        existingPresentation.setUpdatedAt(LocalDateTime.now());
+        mapper.updateEntity(request, existingPresentation);
+        existingPresentation.setUpdatedAt(LocalDateTime.now()); 
 
         Presentation savedPresentation = presentationRepository.save(existingPresentation);
 
         log.info("Presentation updated with ID: {}", savedPresentation.getId());
-        return mapper.toResponseDto(savedPresentation);
+        return mapper.toUpdateResponseDto(savedPresentation);
     }
 
     @Override

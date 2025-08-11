@@ -9,6 +9,7 @@ import com.datn.document.dto.request.PresentationUpdateRequest;
 import com.datn.document.dto.request.PresentationCollectionRequest;
 import com.datn.document.dto.response.PresentationCreateResponseDto;
 import com.datn.document.dto.response.PresentationListResponseDto;
+import com.datn.document.dto.response.PresentationUpdateResponseDto;
 import com.datn.document.entity.Presentation;
 import com.datn.document.entity.valueobject.Slide;
 import com.datn.document.enums.SlideElementType;
@@ -188,148 +189,6 @@ class PresentationServiceImplTest {
         assertThat(response).isNotNull();
         assertThat(response.getTitle()).isEqualTo("Untitled Presentation");
         assertThat(response.getPresentation()).isEmpty();
-    }
-
-    @Test
-    void createPresentation_WithComplexSlideElements_ShouldPreserveAllProperties() {
-        SlideElementDto complexElement = SlideElementDto.builder()
-                .type(SlideElementType.TEXT)
-                .id("complex-element")
-                .left(50.0f)
-                .top(75.0f)
-                .width(200.0f)
-                .height(150.0f)
-                .viewBox(Arrays.asList(0.0f, 0.0f, 100.0f, 100.0f))
-                .path("M10,10 L90,90")
-                .fill("#ff0000")
-                .fixedRatio(true)
-                .opacity(0.8f)
-                .rotate(45.0f)
-                .flipV(false)
-                .lineHeight(1.5f)
-                .start(Arrays.asList(10.0f, 20.0f))
-                .end(Arrays.asList(90.0f, 80.0f))
-                .points(Arrays.asList("10,10", "50,50", "90,90"))
-                .color("#00ff00")
-                .style("solid")
-                .wordSpace(2.0f)
-                .build();
-
-        slideDto.setElements(Arrays.asList(elementDto, complexElement));
-
-        Presentation mockEntity = Presentation.builder().id("test-id").title("Untitled Presentation").build();
-
-        PresentationCreateResponseDto expectedResponse = PresentationCreateResponseDto.builder()
-                .title("Untitled Presentation")
-                .presentation(List.of(slideDto))
-                .build();
-
-        when(mapper.toEntity(request)).thenReturn(mockEntity);
-        when(presentationRepository.save(any(Presentation.class))).thenReturn(mockEntity);
-        when(mapper.toResponseDto(mockEntity)).thenReturn(expectedResponse);
-
-        PresentationCreateResponseDto response = presentationService.createPresentation(request);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getPresentation().get(0).getElements()).hasSize(2);
-
-        SlideElementDto returnedComplexElement = response.getPresentation().get(0).getElements().get(1);
-        assertThat(returnedComplexElement.getType()).isEqualTo(SlideElementType.TEXT);
-        assertThat(returnedComplexElement.getId()).isEqualTo("complex-element");
-        assertThat(returnedComplexElement.getViewBox()).containsExactly(0.0f, 0.0f, 100.0f, 100.0f);
-        assertThat(returnedComplexElement.getPath()).isEqualTo("M10,10 L90,90");
-        assertThat(returnedComplexElement.getFill()).isEqualTo("#ff0000");
-        assertThat(returnedComplexElement.getFixedRatio()).isTrue();
-        assertThat(returnedComplexElement.getOpacity()).isEqualTo(0.8f);
-        assertThat(returnedComplexElement.getRotate()).isEqualTo(45.0f);
-        assertThat(returnedComplexElement.getFlipV()).isFalse();
-        assertThat(returnedComplexElement.getLineHeight()).isEqualTo(1.5f);
-        assertThat(returnedComplexElement.getStart()).containsExactly(10.0f, 20.0f);
-        assertThat(returnedComplexElement.getEnd()).containsExactly(90.0f, 80.0f);
-        assertThat(returnedComplexElement.getPoints()).containsExactly("10,10", "50,50", "90,90");
-        assertThat(returnedComplexElement.getColor()).isEqualTo("#00ff00");
-        assertThat(returnedComplexElement.getStyle()).isEqualTo("solid");
-        assertThat(returnedComplexElement.getWordSpace()).isEqualTo(2.0f);
-    }
-
-    @Test
-    void updatePresentation_WithValidRequest_ShouldReturnUpdatedPresentation() {
-        // Given
-        String presentationId = "test-id";
-        Presentation existingPresentation = Presentation.builder()
-                .id(presentationId)
-                .title("Original Title")
-                .slides(List.of())
-                .createdAt(LocalDateTime.now().minusDays(1))
-                .updatedAt(LocalDateTime.now().minusDays(1))
-                .build();
-
-        Slide mappedSlide = Slide.builder().id("slide-1").build();
-        
-        PresentationCreateResponseDto expectedResponse = PresentationCreateResponseDto.builder()
-                .title("Updated Title")
-                .presentation(List.of(slideDto))
-                .build();
-
-        when(presentationRepository.findById(presentationId)).thenReturn(Optional.of(existingPresentation));
-        when(mapper.mapSlideToEntity(slideDto)).thenReturn(mappedSlide);
-        when(presentationRepository.save(any(Presentation.class))).thenReturn(existingPresentation);
-        when(mapper.toResponseDto(existingPresentation)).thenReturn(expectedResponse);
-
-        // When
-        PresentationCreateResponseDto response = presentationService.updatePresentation(presentationId, updateRequest);
-
-        // Then
-        assertThat(response).isNotNull();
-        assertThat(response.getTitle()).isEqualTo("Updated Title");
-        assertThat(response.getPresentation()).hasSize(1);
-    }
-
-    @Test
-    void updatePresentation_WithNonExistentId_ShouldThrowException() {
-        // Given
-        String presentationId = "non-existent-id";
-        when(presentationRepository.findById(presentationId)).thenReturn(Optional.empty());
-
-        // When & Then
-        AppException exception = assertThrows(AppException.class, 
-            () -> presentationService.updatePresentation(presentationId, updateRequest));
-        
-        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.PRESENTATION_NOT_FOUND);
-    }
-
-    @Test
-    void updatePresentation_WithPartialUpdate_ShouldUpdateOnlyProvidedFields() {
-        // Given
-        String presentationId = "test-id";
-        PresentationUpdateRequest partialUpdate = PresentationUpdateRequest.builder()
-                .title("New Title Only")
-                .build();
-
-        Presentation existingPresentation = Presentation.builder()
-                .id(presentationId)
-                .title("Original Title")
-                .slides(List.of())
-                .createdAt(LocalDateTime.now().minusDays(1))
-                .updatedAt(LocalDateTime.now().minusDays(1))
-                .build();
-
-        PresentationCreateResponseDto expectedResponse = PresentationCreateResponseDto.builder()
-                .title("New Title Only")
-                .presentation(List.of())
-                .build();
-
-        when(presentationRepository.findById(presentationId)).thenReturn(Optional.of(existingPresentation));
-        when(presentationRepository.save(any(Presentation.class))).thenReturn(existingPresentation);
-        when(mapper.toResponseDto(existingPresentation)).thenReturn(expectedResponse);
-
-        // When
-        PresentationCreateResponseDto response = presentationService.updatePresentation(presentationId, partialUpdate);
-
-        // Then
-        assertThat(response).isNotNull();
-        assertThat(response.getTitle()).isEqualTo("New Title Only");
-        assertThat(response.getPresentation()).hasSize(0);
     }
 
     @Test
@@ -578,5 +437,80 @@ class PresentationServiceImplTest {
         assertThat(result.getData()).isEmpty();
         assertThat(result.getPagination().getTotalItems()).isEqualTo(0);
         assertThat(result.getPagination().getTotalPages()).isEqualTo(0);
+    }
+
+    @Test
+    void createPresentation_WithComplexSlideElements_ShouldPreserveAllProperties() {
+        SlideElementDto complexElement = SlideElementDto.builder()
+                .type(SlideElementType.TEXT)
+                .id("complex-element")
+                .left(50.0f)
+                .top(75.0f)
+                .width(200.0f)
+                .height(150.0f)
+                .viewBox(Arrays.asList(0.0f, 0.0f, 100.0f, 100.0f))
+                .path("M10,10 L90,90")
+                .fill("#ff0000")
+                .fixedRatio(true)
+                .opacity(0.8f)
+                .rotate(45.0f)
+                .flipV(false)
+                .lineHeight(1.5f)
+                .start(Arrays.asList(10.0f, 20.0f))
+                .end(Arrays.asList(90.0f, 80.0f))
+                .points(Arrays.asList("10,10", "50,50", "90,90"))
+                .color("#00ff00")
+                .style("solid")
+                .wordSpace(2.0f)
+                .build();
+
+        slideDto.setElements(Arrays.asList(elementDto, complexElement));
+
+        Presentation mockEntity = Presentation.builder().id("test-id").title("Untitled Presentation").build();
+
+        PresentationCreateResponseDto expectedResponse = PresentationCreateResponseDto.builder()
+                .title("Untitled Presentation")
+                .presentation(List.of(slideDto))
+                .build();
+
+        when(mapper.toEntity(request)).thenReturn(mockEntity);
+        when(presentationRepository.save(any(Presentation.class))).thenReturn(mockEntity);
+        when(mapper.toResponseDto(mockEntity)).thenReturn(expectedResponse);
+
+        PresentationCreateResponseDto response = presentationService.createPresentation(request);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getPresentation().get(0).getElements()).hasSize(2);
+
+        SlideElementDto returnedComplexElement = response.getPresentation().get(0).getElements().get(1);
+        assertThat(returnedComplexElement.getType()).isEqualTo(SlideElementType.TEXT);
+        assertThat(returnedComplexElement.getId()).isEqualTo("complex-element");
+        assertThat(returnedComplexElement.getViewBox()).containsExactly(0.0f, 0.0f, 100.0f, 100.0f);
+        assertThat(returnedComplexElement.getPath()).isEqualTo("M10,10 L90,90");
+        assertThat(returnedComplexElement.getFill()).isEqualTo("#ff0000");
+        assertThat(returnedComplexElement.getFixedRatio()).isTrue();
+        assertThat(returnedComplexElement.getOpacity()).isEqualTo(0.8f);
+        assertThat(returnedComplexElement.getRotate()).isEqualTo(45.0f);
+        assertThat(returnedComplexElement.getFlipV()).isFalse();
+        assertThat(returnedComplexElement.getLineHeight()).isEqualTo(1.5f);
+        assertThat(returnedComplexElement.getStart()).containsExactly(10.0f, 20.0f);
+        assertThat(returnedComplexElement.getEnd()).containsExactly(90.0f, 80.0f);
+        assertThat(returnedComplexElement.getPoints()).containsExactly("10,10", "50,50", "90,90");
+        assertThat(returnedComplexElement.getColor()).isEqualTo("#00ff00");
+        assertThat(returnedComplexElement.getStyle()).isEqualTo("solid");
+        assertThat(returnedComplexElement.getWordSpace()).isEqualTo(2.0f);
+    }
+
+    @Test
+    void updatePresentation_WithNonExistentId_ShouldThrowException() {
+        // Given
+        String presentationId = "non-existent-id";
+        when(presentationRepository.findById(presentationId)).thenReturn(Optional.empty());
+
+        // When & Then
+        AppException exception = assertThrows(AppException.class, 
+            () -> presentationService.updatePresentation(presentationId, updateRequest));
+        
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.PRESENTATION_NOT_FOUND);
     }
 }

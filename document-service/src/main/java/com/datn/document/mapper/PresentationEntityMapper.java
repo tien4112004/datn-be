@@ -7,6 +7,7 @@ import com.datn.document.dto.request.PresentationCreateRequest;
 import com.datn.document.dto.request.PresentationUpdateRequest;
 import com.datn.document.dto.response.PresentationCreateResponseDto;
 import com.datn.document.dto.response.PresentationListResponseDto;
+import com.datn.document.dto.response.PresentationUpdateResponseDto;
 import com.datn.document.entity.Presentation;
 import com.datn.document.entity.valueobject.Slide;
 import com.datn.document.entity.valueobject.SlideBackground;
@@ -33,6 +34,9 @@ public interface PresentationEntityMapper {
 
     @Mapping(target = "presentation", source = "slides")
     PresentationCreateResponseDto toResponseDto(Presentation entity);
+
+    @Mapping(target = "presentation", source = "slides")
+    PresentationUpdateResponseDto toUpdateResponseDto(Presentation entity);
 
     @Mapping(target = "id", source = "id")
     @Mapping(target = "title", source = "title")
