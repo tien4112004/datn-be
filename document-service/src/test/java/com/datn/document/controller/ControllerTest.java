@@ -7,6 +7,7 @@ import com.datn.document.dto.common.PaginatedResponseDto;
 import com.datn.document.dto.common.PaginationDto;
 import com.datn.document.dto.request.PresentationCreateRequest;
 import com.datn.document.dto.request.PresentationUpdateRequest;
+import com.datn.document.dto.request.PresentationUpdateTitleRequest;
 import com.datn.document.dto.response.PresentationCreateResponseDto;
 import com.datn.document.dto.response.PresentationListResponseDto;
 import com.datn.document.dto.response.PresentationUpdateResponseDto;
@@ -34,6 +35,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(PresentationController.class)
@@ -588,5 +590,94 @@ class ControllerTest {
                 .andExpect(jsonPath("$.status").value("error"))
                 .andExpect(jsonPath("$.code").value(400))
                 .andExpect(jsonPath("$.data.slides").value("Presentation must contain at least one slide"));
+    }
+
+    @Test
+    void updateTitlePresentation_WithValidRequest_ShouldReturnUpdatedPresentation() throws Exception {
+        // Given
+        String presentationId = "test-id";
+        PresentationUpdateTitleRequest titleRequest = PresentationUpdateTitleRequest.builder()
+                .title("Updated Title Only")
+                .build();
+
+        PresentationUpdateResponseDto updateResponse = PresentationUpdateResponseDto.builder()
+                .title("Updated Title Only")
+                .presentation(List.of(request.getSlides().get(0)))
+                .build();
+
+        when(presentationService.updateTitlePresentation(eq(presentationId), any(PresentationUpdateTitleRequest.class)))
+                .thenReturn(updateResponse);
+
+        // When & Then
+        mockMvc.perform(patch("/api/presentations/" + presentationId + "/title")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(titleRequest)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.title").value("Updated Title Only"))
+                .andExpect(jsonPath("$.data.presentation").isArray())
+                .andExpect(jsonPath("$.data.presentation", hasSize(1)));
+    }
+
+    @Test
+    void updateTitlePresentation_WithEmptyTitle_ShouldReturnValidationError() throws Exception {
+        // Given
+        String presentationId = "test-id";
+        PresentationUpdateTitleRequest titleRequest = PresentationUpdateTitleRequest.builder()
+                .title("")
+                .build();
+
+        // When & Then
+        mockMvc.perform(patch("/api/presentations/" + presentationId + "/title")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(titleRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.data.title").exists());
+    }
+
+    @Test
+    void updateTitlePresentation_WithNullTitle_ShouldReturnValidationError() throws Exception {
+        // Given
+        String presentationId = "test-id";
+        PresentationUpdateTitleRequest titleRequest = PresentationUpdateTitleRequest.builder()
+                .title(null)
+                .build();
+
+        // When & Then
+        mockMvc.perform(patch("/api/presentations/" + presentationId + "/title")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(titleRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.data.title").exists());
+    }
+
+    @Test
+    void updateTitlePresentation_WithInvalidId_ShouldReturnNotFound() throws Exception {
+        // Given
+        String invalidId = "invalid-id";
+        PresentationUpdateTitleRequest titleRequest = PresentationUpdateTitleRequest.builder()
+                .title("Valid Title")
+                .build();
+
+        when(presentationService.updateTitlePresentation(eq(invalidId), any(PresentationUpdateTitleRequest.class)))
+                .thenThrow(new AppException(ErrorCode.PRESENTATION_NOT_FOUND));
+
+        // When & Then
+        mockMvc.perform(patch("/api/presentations/" + invalidId + "/title")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(titleRequest)))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.code").value(404))
+                .andExpect(jsonPath("$.message").exists());
     }
 }

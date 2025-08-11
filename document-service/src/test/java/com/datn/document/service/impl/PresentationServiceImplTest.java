@@ -6,6 +6,7 @@ import com.datn.document.dto.SlideDto.SlideBackgroundDto;
 import com.datn.document.dto.common.PaginatedResponseDto;
 import com.datn.document.dto.request.PresentationCreateRequest;
 import com.datn.document.dto.request.PresentationUpdateRequest;
+import com.datn.document.dto.request.PresentationUpdateTitleRequest;
 import com.datn.document.dto.request.PresentationCollectionRequest;
 import com.datn.document.dto.response.PresentationCreateResponseDto;
 import com.datn.document.dto.response.PresentationListResponseDto;
@@ -58,6 +59,7 @@ class PresentationServiceImplTest {
 
     private PresentationCreateRequest request;
     private PresentationUpdateRequest updateRequest;
+    private PresentationUpdateTitleRequest updateTitleRequest;
     private SlideDto slideDto;
     private SlideElementDto elementDto;
     private SlideBackgroundDto backgroundDto;
@@ -82,6 +84,7 @@ class PresentationServiceImplTest {
 
         request = PresentationCreateRequest.builder().slides(List.of(slideDto)).build();
         updateRequest = PresentationUpdateRequest.builder().title("Updated Title").slides(List.of(slideDto)).build();
+        updateTitleRequest = PresentationUpdateTitleRequest.builder().title("Updated Title Only").build();
     }
 
     @Test
@@ -718,5 +721,169 @@ class PresentationServiceImplTest {
         
         verify(mapper).updateEntity(complexRequest, existingPresentation);
         verify(presentationRepository).save(existingPresentation);
+    }
+
+    @Test
+    void updateTitlePresentation_WithValidRequest_ShouldReturnUpdatedPresentation() {
+        // Given
+        String presentationId = "test-id";
+        LocalDateTime now = LocalDateTime.now();
+        
+        Presentation existingPresentation = Presentation.builder()
+                .id(presentationId)
+                .title("Original Title")
+                .slides(List.of())
+                .createdAt(now.minusHours(1))
+                .updatedAt(now.minusHours(1))
+                .build();
+
+        Presentation updatedPresentation = Presentation.builder()
+                .id(presentationId)
+                .title("Updated Title Only")
+                .slides(List.of())
+                .createdAt(now.minusHours(1))
+                .updatedAt(now)
+                .build();
+
+        PresentationUpdateResponseDto expectedResponse = PresentationUpdateResponseDto.builder()
+                .title("Updated Title Only")
+                .presentation(List.of(slideDto))
+                .build();
+
+        when(presentationRepository.findById(presentationId)).thenReturn(Optional.of(existingPresentation));
+        when(presentationRepository.save(any(Presentation.class))).thenReturn(updatedPresentation);
+        when(mapper.toUpdateResponseDto(updatedPresentation)).thenReturn(expectedResponse);
+
+        // When
+        PresentationUpdateResponseDto response = presentationService.updateTitlePresentation(presentationId, updateTitleRequest);
+
+        // Then
+        assertThat(response).isNotNull();
+        assertThat(response.getTitle()).isEqualTo("Updated Title Only");
+        assertThat(response.getPresentation()).isNotNull();
+        assertThat(response.getPresentation()).hasSize(1);
+        
+        // Verify that only title was updated and updatedAt was set
+        verify(presentationRepository).save(argThat(presentation -> 
+            presentation.getTitle().equals("Updated Title Only") &&
+            presentation.getUpdatedAt().isAfter(now.minusMinutes(1))
+        ));
+    }
+
+    @Test
+    void updateTitlePresentation_WithNonExistentId_ShouldThrowException() {
+        // Given
+        String presentationId = "non-existent-id";
+        when(presentationRepository.findById(presentationId)).thenReturn(Optional.empty());
+
+        // When & Then
+        AppException exception = assertThrows(AppException.class, 
+            () -> presentationService.updateTitlePresentation(presentationId, updateTitleRequest));
+        
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.PRESENTATION_NOT_FOUND);
+    }
+
+    @Test
+    void updateTitlePresentation_WithDifferentTitle_ShouldUpdateOnlyTitle() {
+        // Given
+        String presentationId = "test-id";
+        LocalDateTime now = LocalDateTime.now();
+        
+        PresentationUpdateTitleRequest customTitleRequest = PresentationUpdateTitleRequest.builder()
+                .title("Custom New Title")
+                .build();
+
+        Presentation existingPresentation = Presentation.builder()
+                .id(presentationId)
+                .title("Old Title")
+                .slides(List.of())
+                .createdAt(now.minusHours(2))
+                .updatedAt(now.minusHours(1))
+                .build();
+
+        Presentation updatedPresentation = Presentation.builder()
+                .id(presentationId)
+                .title("Custom New Title")
+                .slides(List.of())
+                .createdAt(now.minusHours(2))
+                .updatedAt(now)
+                .build();
+
+        PresentationUpdateResponseDto expectedResponse = PresentationUpdateResponseDto.builder()
+                .title("Custom New Title")
+                .presentation(List.of(slideDto))
+                .build();
+
+        when(presentationRepository.findById(presentationId)).thenReturn(Optional.of(existingPresentation));
+        when(presentationRepository.save(any(Presentation.class))).thenReturn(updatedPresentation);
+        when(mapper.toUpdateResponseDto(updatedPresentation)).thenReturn(expectedResponse);
+
+        // When
+        PresentationUpdateResponseDto response = presentationService.updateTitlePresentation(presentationId, customTitleRequest);
+
+        // Then
+        assertThat(response).isNotNull();
+        assertThat(response.getTitle()).isEqualTo("Custom New Title");
+        assertThat(response.getPresentation()).isNotNull();
+        
+        // Verify the correct presentation was saved with updated title and timestamp
+        verify(presentationRepository).save(argThat(presentation -> 
+            presentation.getTitle().equals("Custom New Title") &&
+            presentation.getId().equals(presentationId) &&
+            presentation.getCreatedAt().equals(now.minusHours(2)) && // CreatedAt should remain unchanged
+            presentation.getUpdatedAt().isAfter(now.minusMinutes(1)) // UpdatedAt should be recent
+        ));
+    }
+
+    @Test
+    void updateTitlePresentation_ShouldPreserveExistingSlides() {
+        // Given
+        String presentationId = "test-id";
+        LocalDateTime now = LocalDateTime.now();
+        
+        // Create existing presentation with slides
+        List<Slide> existingSlides = List.of(
+            Slide.builder().id("existing-slide-1").build(),
+            Slide.builder().id("existing-slide-2").build()
+        );
+        
+        Presentation existingPresentation = Presentation.builder()
+                .id(presentationId)
+                .title("Original Title")
+                .slides(existingSlides)
+                .createdAt(now.minusHours(1))
+                .updatedAt(now.minusHours(1))
+                .build();
+
+        Presentation updatedPresentation = Presentation.builder()
+                .id(presentationId)
+                .title("Updated Title Only")
+                .slides(existingSlides) // Slides should remain unchanged
+                .createdAt(now.minusHours(1))
+                .updatedAt(now)
+                .build();
+
+        PresentationUpdateResponseDto expectedResponse = PresentationUpdateResponseDto.builder()
+                .title("Updated Title Only")
+                .presentation(List.of(slideDto, slideDto)) // Two slides preserved
+                .build();
+
+        when(presentationRepository.findById(presentationId)).thenReturn(Optional.of(existingPresentation));
+        when(presentationRepository.save(any(Presentation.class))).thenReturn(updatedPresentation);
+        when(mapper.toUpdateResponseDto(updatedPresentation)).thenReturn(expectedResponse);
+
+        // When
+        PresentationUpdateResponseDto response = presentationService.updateTitlePresentation(presentationId, updateTitleRequest);
+
+        // Then
+        assertThat(response).isNotNull();
+        assertThat(response.getTitle()).isEqualTo("Updated Title Only");
+        assertThat(response.getPresentation()).hasSize(2); // Slides preserved
+        
+        // Verify that slides were not modified
+        verify(presentationRepository).save(argThat(presentation -> 
+            presentation.getSlides().size() == 2 && // Same number of slides
+            presentation.getSlides().equals(existingSlides) // Same slide objects
+        ));
     }
 }
