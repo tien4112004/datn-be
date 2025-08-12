@@ -122,7 +122,7 @@ services:
       - MODEL_CONFIG_DB_URL
       - MODEL_CONFIG_DB_USERNAME
       - MODEL_CONFIG_DB_PASSWORD
-      - GOOGLE_APPLICATION_CREDENTIALS=/root/key.json
+      - GOOGLE_APPLICATION_CREDENTIALS=/secrets/key.json
       - VERTEX_PROJECT_ID
       - VERTEX_LOCATION
       - RABBITMQ_HOST
@@ -130,7 +130,7 @@ services:
       - RABBITMQ_USERNAME
       - RABBITMQ_PASSWORD
     volumes:
-      - ${VERTEX_SERVICE_ACCOUNT_KEY_PATH:-/dev/null}:/root/key.json:ro
+      - ${VERTEX_SERVICE_ACCOUNT_KEY_PATH}:/secrets/key.json:ro
     depends_on:
       config-server:
         condition: service_healthy

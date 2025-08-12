@@ -92,6 +92,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
             <scope>runtime</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -214,6 +215,7 @@
                             <layers>
                                 <enabled>true</enabled>
                             </layers>
+                            <excludeDevtools>false</excludeDevtools>
                         </configuration>
                         <executions>
                             <execution>
