@@ -16,5 +16,5 @@ public interface PresentationRepository extends MongoRepository<Presentation, St
     Page<Presentation> findAll(Pageable pageable);
 
     @Query("{ 'title': ?0 }")
-    Presentation findByTitle(String title);
+    boolean existsByTitle(String title);
 }

@@ -107,6 +107,12 @@ public class PresentationServiceImpl implements PresentationService {
                     return new AppException(ErrorCode.PRESENTATION_NOT_FOUND);
                 });
 
+        if(presentationRepository.existsByTitle(request.getTitle())) {
+            log.error("Presentation with title '{}' already exists", request.getTitle());
+            throw new AppException(ErrorCode.PRESENTATION_TITLE_ALREADY_EXISTS);
+        }
+
+
         mapper.updateEntity(request, existingPresentation);
 
         Presentation savedPresentation = presentationRepository.save(existingPresentation);
@@ -122,7 +128,12 @@ public class PresentationServiceImpl implements PresentationService {
                     log.error("Presentation not found with ID: {}", id);
                     return new AppException(ErrorCode.PRESENTATION_NOT_FOUND);
                 });
-        
+                
+        if(presentationRepository.existsByTitle(request.getTitle())) {
+            log.error("Presentation with title '{}' already exists", request.getTitle());
+            throw new AppException(ErrorCode.PRESENTATION_TITLE_ALREADY_EXISTS);
+        }
+
         existingPresentation.setTitle(request.getTitle());
         Presentation savedPresentation = presentationRepository.save(existingPresentation);
         log.info("Presentation title updated with ID: {}", savedPresentation.getId());
