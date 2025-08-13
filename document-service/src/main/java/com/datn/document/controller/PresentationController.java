@@ -49,18 +49,18 @@ public class PresentationController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<AppResponseDto<PresentationUpdateResponseDto>> updatePresentation(
+    public ResponseEntity<AppResponseDto<Void>> updatePresentation(
             @PathVariable String id,
             @Valid @RequestBody PresentationUpdateRequest request) {
-        PresentationUpdateResponseDto response = presentationService.updatePresentation(id, request);
-        return ResponseEntity.ok(AppResponseDto.success(response));
+        presentationService.updatePresentation(id, request);
+        return ResponseEntity.ok(AppResponseDto.success(null));
     }
 
     @PatchMapping("/{id}/title")
-    public ResponseEntity<AppResponseDto<PresentationUpdateResponseDto>> updateTitlePresentation(
+    public ResponseEntity<AppResponseDto<Void>> updateTitlePresentation(
             @PathVariable String id,
             @Valid @RequestBody PresentationUpdateTitleRequest request) {
-        PresentationUpdateResponseDto response = presentationService.updateTitlePresentation(id, request);
-        return ResponseEntity.ok(AppResponseDto.success(response));
+        presentationService.updateTitlePresentation(id, request);
+        return ResponseEntity.ok(AppResponseDto.success(null));
     }
 }

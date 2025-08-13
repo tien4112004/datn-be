@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -35,5 +36,6 @@ public class Presentation {
     LocalDateTime createdAt;
 
     @Field("updatedAt")
+    @LastModifiedDate
     LocalDateTime updatedAt;
 }

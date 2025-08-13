@@ -13,6 +13,7 @@ import com.datn.document.dto.response.PresentationListResponseDto;
 import com.datn.document.dto.response.PresentationUpdateResponseDto;
 import com.datn.document.entity.Presentation;
 import com.datn.document.entity.valueobject.Slide;
+import com.datn.document.entity.valueobject.SlideElement;
 import com.datn.document.enums.SlideElementType;
 import com.datn.document.exception.AppException;
 import com.datn.document.exception.ErrorCode;
@@ -85,6 +86,7 @@ class PresentationServiceImplTest {
         request = PresentationCreateRequest.builder().slides(List.of(slideDto)).build();
         updateRequest = PresentationUpdateRequest.builder().title("Updated Title").slides(List.of(slideDto)).build();
         updateTitleRequest = PresentationUpdateTitleRequest.builder().title("Updated Title Only").build();
+        
     }
 
     @Test
@@ -551,14 +553,16 @@ class PresentationServiceImplTest {
         when(mapper.toUpdateResponseDto(updatedPresentation)).thenReturn(expectedResponse);
 
         // When
-        PresentationUpdateResponseDto response = presentationService.updatePresentation(presentationId, updateRequest);
+        presentationService.updatePresentation(presentationId, updateRequest);
+
+        updatedPresentation = presentationRepository.findById(presentationId).orElse(null);
 
         // Then
-        assertThat(response).isNotNull();
-        assertThat(response.getTitle()).isEqualTo("Updated Title");
-        assertThat(response.getPresentation()).isNotNull();
-        assertThat(response.getPresentation()).hasSize(1);
-        
+        assertThat(updatedPresentation).isNotNull();
+        assertThat(updatedPresentation.getTitle()).isEqualTo("Updated Title");
+        assertThat(updatedPresentation.getSlides()).isNotNull();
+        assertThat(updatedPresentation.getSlides()).hasSize(1);
+
         verify(mapper).updateEntity(updateRequest, existingPresentation);
         verify(presentationRepository).save(existingPresentation);
     }
@@ -612,15 +616,16 @@ class PresentationServiceImplTest {
         when(mapper.toUpdateResponseDto(updatedPresentation)).thenReturn(expectedResponse);
 
         // When
-        PresentationUpdateResponseDto response = presentationService.updatePresentation(presentationId, multiSlideRequest);
+        presentationService.updatePresentation(presentationId, multiSlideRequest);
+        updatedPresentation = presentationRepository.findById(presentationId).orElse(null);
 
         // Then
-        assertThat(response).isNotNull();
-        assertThat(response.getTitle()).isEqualTo("Multi-slide Presentation");
-        assertThat(response.getPresentation()).hasSize(2);
-        assertThat(response.getPresentation().get(0).getId()).isEqualTo("slide-1");
-        assertThat(response.getPresentation().get(1).getId()).isEqualTo("slide-2");
-        
+        assertThat(updatedPresentation).isNotNull();
+        assertThat(updatedPresentation.getTitle()).isEqualTo("Multi-slide Presentation");
+        assertThat(updatedPresentation.getSlides()).hasSize(2);
+        assertThat(updatedPresentation.getSlides().get(0).getId()).isEqualTo("slide-1");
+        assertThat(updatedPresentation.getSlides().get(1).getId()).isEqualTo("slide-2");
+
         verify(mapper).updateEntity(multiSlideRequest, existingPresentation);
         verify(presentationRepository).save(existingPresentation);
     }
@@ -694,14 +699,15 @@ class PresentationServiceImplTest {
         when(mapper.toUpdateResponseDto(updatedPresentation)).thenReturn(expectedResponse);
 
         // When
-        PresentationUpdateResponseDto response = presentationService.updatePresentation(presentationId, complexRequest);
+        presentationService.updatePresentation(presentationId, complexRequest);
+        updatedPresentation = presentationRepository.findById(presentationId).orElse(null);
 
         // Then
-        assertThat(response).isNotNull();
-        assertThat(response.getTitle()).isEqualTo("Complex Presentation");
-        assertThat(response.getPresentation()).hasSize(1);
-        
-        SlideElementDto returnedElement = response.getPresentation().get(0).getElements().get(0);
+        assertThat(updatedPresentation).isNotNull();
+        assertThat(updatedPresentation.getTitle()).isEqualTo("Complex Presentation");
+        assertThat(updatedPresentation.getSlides()).hasSize(1);
+
+        SlideElement returnedElement = updatedPresentation.getSlides().get(0).getElements().get(0);
         assertThat(returnedElement.getType()).isEqualTo(SlideElementType.TEXT);
         assertThat(returnedElement.getId()).isEqualTo("complex-element");
         assertThat(returnedElement.getViewBox()).containsExactly(0.0f, 0.0f, 100.0f, 100.0f);
@@ -755,14 +761,16 @@ class PresentationServiceImplTest {
         when(mapper.toUpdateResponseDto(updatedPresentation)).thenReturn(expectedResponse);
 
         // When
-        PresentationUpdateResponseDto response = presentationService.updateTitlePresentation(presentationId, updateTitleRequest);
+        presentationService.updateTitlePresentation(presentationId, updateTitleRequest);
+
+        updatedPresentation = presentationRepository.findById(presentationId).orElse(null);
 
         // Then
-        assertThat(response).isNotNull();
-        assertThat(response.getTitle()).isEqualTo("Updated Title Only");
-        assertThat(response.getPresentation()).isNotNull();
-        assertThat(response.getPresentation()).hasSize(1);
-        
+        assertThat(updatedPresentation).isNotNull();
+        assertThat(updatedPresentation.getTitle()).isEqualTo("Updated Title Only");
+        assertThat(updatedPresentation.getSlides()).isNotNull();
+        assertThat(updatedPresentation.getSlides()).hasSize(1);
+
         // Verify that only title was updated and updatedAt was set
         verify(presentationRepository).save(argThat(presentation -> 
             presentation.getTitle().equals("Updated Title Only") &&
@@ -819,12 +827,14 @@ class PresentationServiceImplTest {
         when(mapper.toUpdateResponseDto(updatedPresentation)).thenReturn(expectedResponse);
 
         // When
-        PresentationUpdateResponseDto response = presentationService.updateTitlePresentation(presentationId, customTitleRequest);
+        presentationService.updateTitlePresentation(presentationId, customTitleRequest);
+
+        updatedPresentation = presentationRepository.findById(presentationId).orElse(null);
 
         // Then
-        assertThat(response).isNotNull();
-        assertThat(response.getTitle()).isEqualTo("Custom New Title");
-        assertThat(response.getPresentation()).isNotNull();
+        assertThat(updatedPresentation).isNotNull();
+        assertThat(updatedPresentation.getTitle()).isEqualTo("Custom New Title");
+        assertThat(updatedPresentation.getSlides()).isNotNull();
         
         // Verify the correct presentation was saved with updated title and timestamp
         verify(presentationRepository).save(argThat(presentation -> 
@@ -873,12 +883,14 @@ class PresentationServiceImplTest {
         when(mapper.toUpdateResponseDto(updatedPresentation)).thenReturn(expectedResponse);
 
         // When
-        PresentationUpdateResponseDto response = presentationService.updateTitlePresentation(presentationId, updateTitleRequest);
+        presentationService.updateTitlePresentation(presentationId, updateTitleRequest);
+
+        updatedPresentation = presentationRepository.findById(presentationId).orElse(null);
 
         // Then
-        assertThat(response).isNotNull();
-        assertThat(response.getTitle()).isEqualTo("Updated Title Only");
-        assertThat(response.getPresentation()).hasSize(2); // Slides preserved
+        assertThat(updatedPresentation).isNotNull();
+        assertThat(updatedPresentation.getTitle()).isEqualTo("Updated Title Only");
+        assertThat(updatedPresentation.getSlides()).hasSize(2); // Slides preserved
         
         // Verify that slides were not modified
         verify(presentationRepository).save(argThat(presentation -> 

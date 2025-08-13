@@ -10,7 +10,6 @@ import com.datn.document.dto.request.PresentationUpdateRequest;
 import com.datn.document.dto.request.PresentationUpdateTitleRequest;
 import com.datn.document.dto.response.PresentationCreateResponseDto;
 import com.datn.document.dto.response.PresentationListResponseDto;
-import com.datn.document.dto.response.PresentationUpdateResponseDto;
 import com.datn.document.enums.SlideElementType;
 import com.datn.document.exception.AppException;
 import com.datn.document.exception.ErrorCode;
@@ -31,7 +30,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -394,13 +393,7 @@ class ControllerTest {
                 .slides(List.of(request.getSlides().get(0)))
                 .build();
 
-        PresentationUpdateResponseDto updateResponse = PresentationUpdateResponseDto.builder()
-                .title("Updated Title")
-                .presentation(List.of(request.getSlides().get(0)))
-                .build();
-
-        when(presentationService.updatePresentation(eq(presentationId), any(PresentationUpdateRequest.class)))
-                .thenReturn(updateResponse);
+        // No mocking needed for void methods - they will be called and verified
 
         // When & Then
         mockMvc.perform(put("/api/presentations/" + presentationId)
@@ -409,10 +402,7 @@ class ControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value("success"))
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.title").value("Updated Title"))
-                .andExpect(jsonPath("$.data.presentation").isArray())
-                .andExpect(jsonPath("$.data.presentation", hasSize(1)));
+                .andExpect(jsonPath("$.code").value(200));
     }
 
     @Test
@@ -436,13 +426,7 @@ class ControllerTest {
                 .slides(List.of(slide1, slide2))
                 .build();
 
-        PresentationUpdateResponseDto updateResponse = PresentationUpdateResponseDto.builder()
-                .title("Multi-slide Presentation")
-                .presentation(List.of(slide1, slide2))
-                .build();
-
-        when(presentationService.updatePresentation(eq(presentationId), any(PresentationUpdateRequest.class)))
-                .thenReturn(updateResponse);
+        // No mocking needed for void methods
 
         // When & Then
         mockMvc.perform(put("/api/presentations/" + presentationId)
@@ -451,11 +435,7 @@ class ControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value("success"))
-                .andExpect(jsonPath("$.data.title").value("Multi-slide Presentation"))
-                .andExpect(jsonPath("$.data.presentation").isArray())
-                .andExpect(jsonPath("$.data.presentation", hasSize(2)))
-                .andExpect(jsonPath("$.data.presentation[0].id").value("slide-1"))
-                .andExpect(jsonPath("$.data.presentation[1].id").value("slide-2"));
+                .andExpect(jsonPath("$.code").value(200));
     }
 
     @Test
@@ -499,13 +479,7 @@ class ControllerTest {
                 .slides(List.of(complexSlide))
                 .build();
 
-        PresentationUpdateResponseDto updateResponse = PresentationUpdateResponseDto.builder()
-                .title("Complex Presentation")
-                .presentation(List.of(complexSlide))
-                .build();
-
-        when(presentationService.updatePresentation(eq(presentationId), any(PresentationUpdateRequest.class)))
-                .thenReturn(updateResponse);
+        // No mocking needed for void methods
 
         // When & Then
         mockMvc.perform(put("/api/presentations/" + presentationId)
@@ -514,27 +488,7 @@ class ControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value("success"))
-                .andExpect(jsonPath("$.data.title").value("Complex Presentation"))
-                .andExpect(jsonPath("$.data.presentation[0].elements[0].type").value("text"))
-                .andExpect(jsonPath("$.data.presentation[0].elements[0].id").value("complex-element"))
-                .andExpect(jsonPath("$.data.presentation[0].elements[0].viewBox[0]").value(0.0))
-                .andExpect(jsonPath("$.data.presentation[0].elements[0].viewBox[3]").value(100.0))
-                .andExpect(jsonPath("$.data.presentation[0].elements[0].path").value("M10,10 L90,90"))
-                .andExpect(jsonPath("$.data.presentation[0].elements[0].fill").value("#ff0000"))
-                .andExpect(jsonPath("$.data.presentation[0].elements[0].fixedRatio").value(true))
-                .andExpect(jsonPath("$.data.presentation[0].elements[0].opacity").value(0.8))
-                .andExpect(jsonPath("$.data.presentation[0].elements[0].rotate").value(45.0))
-                .andExpect(jsonPath("$.data.presentation[0].elements[0].flipV").value(false))
-                .andExpect(jsonPath("$.data.presentation[0].elements[0].lineHeight").value(1.5))
-                .andExpect(jsonPath("$.data.presentation[0].elements[0].start[0]").value(10.0))
-                .andExpect(jsonPath("$.data.presentation[0].elements[0].start[1]").value(20.0))
-                .andExpect(jsonPath("$.data.presentation[0].elements[0].end[0]").value(90.0))
-                .andExpect(jsonPath("$.data.presentation[0].elements[0].end[1]").value(80.0))
-                .andExpect(jsonPath("$.data.presentation[0].elements[0].points[0]").value("10,10"))
-                .andExpect(jsonPath("$.data.presentation[0].elements[0].points[2]").value("90,90"))
-                .andExpect(jsonPath("$.data.presentation[0].elements[0].color").value("#00ff00"))
-                .andExpect(jsonPath("$.data.presentation[0].elements[0].style").value("solid"))
-                .andExpect(jsonPath("$.data.presentation[0].elements[0].wordSpace").value(2.0));
+                .andExpect(jsonPath("$.code").value(200));
     }
 
     @Test
@@ -546,8 +500,8 @@ class ControllerTest {
                 .slides(List.of(request.getSlides().get(0)))
                 .build();
 
-        when(presentationService.updatePresentation(eq(invalidId), any(PresentationUpdateRequest.class)))
-                .thenThrow(new AppException(ErrorCode.PRESENTATION_NOT_FOUND));
+        doThrow(new AppException(ErrorCode.PRESENTATION_NOT_FOUND))
+                .when(presentationService).updatePresentation(eq(invalidId), any(PresentationUpdateRequest.class));
 
         // When & Then
         mockMvc.perform(put("/api/presentations/" + invalidId)
@@ -600,13 +554,7 @@ class ControllerTest {
                 .title("Updated Title Only")
                 .build();
 
-        PresentationUpdateResponseDto updateResponse = PresentationUpdateResponseDto.builder()
-                .title("Updated Title Only")
-                .presentation(List.of(request.getSlides().get(0)))
-                .build();
-
-        when(presentationService.updateTitlePresentation(eq(presentationId), any(PresentationUpdateTitleRequest.class)))
-                .thenReturn(updateResponse);
+        // No mocking needed for void methods
 
         // When & Then
         mockMvc.perform(patch("/api/presentations/" + presentationId + "/title")
@@ -615,10 +563,7 @@ class ControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value("success"))
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.title").value("Updated Title Only"))
-                .andExpect(jsonPath("$.data.presentation").isArray())
-                .andExpect(jsonPath("$.data.presentation", hasSize(1)));
+                .andExpect(jsonPath("$.code").value(200));
     }
 
     @Test
@@ -667,8 +612,8 @@ class ControllerTest {
                 .title("Valid Title")
                 .build();
 
-        when(presentationService.updateTitlePresentation(eq(invalidId), any(PresentationUpdateTitleRequest.class)))
-                .thenThrow(new AppException(ErrorCode.PRESENTATION_NOT_FOUND));
+        doThrow(new AppException(ErrorCode.PRESENTATION_NOT_FOUND))
+                .when(presentationService).updateTitlePresentation(eq(invalidId), any(PresentationUpdateTitleRequest.class));
 
         // When & Then
         mockMvc.perform(patch("/api/presentations/" + invalidId + "/title")

@@ -95,10 +95,10 @@ public class PresentationServiceImpl implements PresentationService {
                 presentationPage.getTotalElements());
 
         return new PaginatedResponseDto<>(presentations, pagination);
-    }
+    }   
 
     @Override
-    public PresentationUpdateResponseDto updatePresentation(String id, PresentationUpdateRequest request) {
+    public void updatePresentation(String id, PresentationUpdateRequest request) {
         log.info("Updating presentation with ID: {} and title: {}", id, request.getTitle());
 
         Presentation existingPresentation = presentationRepository.findById(id)
@@ -108,26 +108,23 @@ public class PresentationServiceImpl implements PresentationService {
                 });
 
         mapper.updateEntity(request, existingPresentation);
-        existingPresentation.setUpdatedAt(LocalDateTime.now()); 
 
         Presentation savedPresentation = presentationRepository.save(existingPresentation);
 
         log.info("Presentation updated with ID: {}", savedPresentation.getId());
-        return mapper.toUpdateResponseDto(savedPresentation);
     }
 
     @Override
-    public PresentationUpdateResponseDto updateTitlePresentation(String id, PresentationUpdateTitleRequest request) {
+    public void updateTitlePresentation(String id, PresentationUpdateTitleRequest request) {
         log.info("Updating title of presentation with ID: {} to title: {}", id, request.getTitle());
         Presentation existingPresentation = presentationRepository.findById(id)
                 .orElseThrow(() -> {
                     log.error("Presentation not found with ID: {}", id);
                     return new AppException(ErrorCode.PRESENTATION_NOT_FOUND);
                 });
+        
         existingPresentation.setTitle(request.getTitle());
-        existingPresentation.setUpdatedAt(LocalDateTime.now());
         Presentation savedPresentation = presentationRepository.save(existingPresentation);
         log.info("Presentation title updated with ID: {}", savedPresentation.getId());
-        return mapper.toUpdateResponseDto(savedPresentation);
     }
 }
