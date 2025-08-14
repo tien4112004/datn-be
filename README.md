@@ -1,23 +1,27 @@
 ## DATN Backend
 
-A Spring Boot microservices backend for the DATN project, with support for authentication, presentation, and API gateway services.
+A Spring Boot microservices backend for the DATN project, with support for authentication, presentation, and API gateway
+services.
 
 <!-- Add table of contents -->
+
 ## Table of Contents
+
 - [DATN Backend](#datn-backend)
 - [Table of Contents](#table-of-contents)
-  - [Prerequisites](#prerequisites)
+    - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
-  - [1. Clone the Repository](#1-clone-the-repository)
-  - [2. Configure Environment Variables](#2-configure-environment-variables)
-  - [3. Install Git Hooks \& Dependencies](#3-install-git-hooks--dependencies)
-  - [4. Running the Application](#4-running-the-application)
-    - [a. Without Docker Compose](#a-without-docker-compose)
-    - [b. With Docker Compose](#b-with-docker-compose)
+    - [1. Clone the Repository](#1-clone-the-repository)
+    - [2. Configure Environment Variables](#2-configure-environment-variables)
+    - [3. Install Git Hooks \& Dependencies](#3-install-git-hooks--dependencies)
+    - [4. Running the Application](#4-running-the-application)
+        - [a. Without Docker Compose](#a-without-docker-compose)
+        - [b. With Docker Compose](#b-with-docker-compose)
 - [Databases](#databases)
 - [Git Hooks](#git-hooks)
-  - [Available Hooks](#available-hooks)
+    - [Available Hooks](#available-hooks)
 - [Directory Structure](#directory-structure)
+
 ---
 
 ### Prerequisites
@@ -53,15 +57,16 @@ cp .env.sample .env
 
 2. Update `.env` based on your setup:
 
-   - **For fully Docker setup**: No database environment variables needed (uses Docker databases)
-   - **For local database setup**: Set database environment variables (see [Database Configuration](#database-configuration))
+    - **For fully Docker setup**: No database environment variables needed (uses Docker databases)
+    - **For local database setup**: Set database environment variables (
+      see [Database Configuration](#database-configuration))
 
 > **Note:**
 >
 > - The installer script (`script/install.sh`) automatically loads `.env`.
 > - If you skip the installer, load variables manually:
->
->   ```bash
+    >
+    >   ```bash
 >   source .env
 >   ```
 
@@ -83,7 +88,8 @@ This script will:
 
 #### a. Without Docker Compose
 
-1. Ensure your local database URLs are correctly set in `.env` (see [Database Configuration](#database-configuration) section).
+1. Ensure your local database URLs are correctly set in `.env` (see [Database Configuration](#database-configuration)
+   section).
 
 2. Create `config-server/src/main/resources/application-dev.yml` with the following content:
 
@@ -151,11 +157,13 @@ docker-compose up -d
 **Fully Docker Setup Options:**
 
 - **Option 1**: Run all services including databases:
+
 ```bash
 docker-compose -f docker-compose.db.yml -f docker-compose.yml up -d
 ```
 
 - **Option 2**: Start databases first, then other services:
+
 ```bash
 docker-compose -f docker-compose.db.yml up -d
 docker-compose up -d
@@ -176,6 +184,7 @@ Uses containerized databases - **no database environment variables needed** in `
 - All connection details are handled automatically via Docker networking
 
 To start with databases:
+
 ```bash
 docker-compose -f docker-compose.db.yml -f docker-compose.yml up -d
 ```
@@ -185,6 +194,7 @@ docker-compose -f docker-compose.db.yml -f docker-compose.yml up -d
 For connecting to local or external databases, configure these variables in `.env`:
 
 **PostgreSQL (Auth & Model Config):**
+
 ```bash
 AUTH_DB_URL=jdbc:postgresql://localhost:5432/auth_db
 AUTH_DB_USERNAME=postgres
@@ -198,11 +208,13 @@ MODEL_CONFIG_DB_PASSWORD=postgres
 **MongoDB (Document Service):**
 
 Option A - Using connection URI:
+
 ```bash
 MONGODB_URI=mongodb://localhost:27017/presentation_db?authSource=admin
 ```
 
 Option B - Using individual variables:
+
 ```bash
 MONGODB_USERNAME=mongouser
 MONGODB_PASSWORD=mongopassword
@@ -213,6 +225,7 @@ MONGODB_AUTH_DATABASE=admin
 ```
 
 After updating `.env`, reload environment variables:
+
 ```bash
 source .env
 # or run the installer again
@@ -223,11 +236,13 @@ source .env
 
 ## Git Hooks
 
-Git hooks are automatically installed via the `script/install.sh` script. They help enforce code quality and commit standards.
+Git hooks are automatically installed via the `script/install.sh` script. They help enforce code quality and commit
+standards.
 
 ### Available Hooks
 
-- **Commitlint**: Validates commit messages against conventional commit standards. It follows [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
+- **Commitlint**: Validates commit messages against conventional commit standards. It
+  follows [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 - **Java Format**: Ensures Java code is formatted according to project standards.
 
 ## Directory Structure

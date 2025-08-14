@@ -1,0 +1,60 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.5.4'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+ext {
+    springAiVersion = "1.0.1"
+    springModulithVersion = "1.4.1"
+}
+
+group = 'com.datn'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-configuration-processor'
+    implementation 'org.springframework.ai:spring-ai-starter-model-openai'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.ai:spring-ai-starter-model-vertex-ai-gemini'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.mapstruct:mapstruct:1.6.3'
+    implementation 'org.springframework.modulith:spring-modulith-starter-core'
+    implementation 'org.springframework.modulith:spring-modulith-starter-mongodb'
+    implementation 'org.springframework.modulith:spring-modulith-starter-jpa'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    runtimeOnly 'org.postgresql:postgresql'
+    runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'org.springframework.modulith:spring-modulith-actuator'
+    runtimeOnly 'org.springframework.modulith:spring-modulith-observability'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+
+}
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.ai:spring-ai-bom:$springAiVersion"
+        mavenBom "org.springframework.modulith:spring-modulith-bom:$springModulithVersion"
+    }
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

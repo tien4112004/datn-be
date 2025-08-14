@@ -12,7 +12,7 @@ services:
       - CONFIG_REPO_URL=${CONFIG_REPO_URL}
       - EUREKA_URI=${EUREKA_URI}
     healthcheck:
-      test: ["CMD", "curl", "-I", "http://config-server:8888"]
+      test: [ "CMD", "curl", "-I", "http://config-server:8888" ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -29,7 +29,7 @@ services:
     environment:
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://discovery-service:8761"]
+      test: [ "CMD", "curl", "-f", "http://discovery-service:8761" ]
       interval: 5s
       timeout: 3s
       retries: 10

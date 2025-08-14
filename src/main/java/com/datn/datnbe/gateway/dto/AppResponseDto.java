@@ -1,0 +1,47 @@
+package com.datn.datnbe.gateway.dto;
+
+import com.datn.datnbe.document.src.management.exception.AppException;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Data;
+import lombok.experimental.FieldDefaults;
+import org.springframework.http.HttpStatus;
+
+@Data
+@Builder(toBuilder = true)
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class AppResponseDto<T> {
+    @Builder.Default
+    String status = "success";
+
+    @Builder.Default
+    int code = HttpStatus.OK.value();
+
+    T data;
+    String message;
+    String errorCode;
+    PaginationDto pagination;
+
+    public static <T> AppResponseDto<T> success(T data) {
+        return AppResponseDto.<T>builder().data(data).build();
+    }
+
+    public static <T> AppResponseDto<T> success() {
+        return AppResponseDto.<T>builder().build();
+    }
+
+    public static <T> AppResponseDto<T> successWithPagination(T data, PaginationDto pagination) {
+        return AppResponseDto.<T>builder().data(data).pagination(pagination).build();
+    }
+
+    public static <T> AppResponseDto<T> failure(AppException exception) {
+        return AppResponseDto.<T>builder()
+                .status("error")
+                .code(exception.getStatusCode())
+                .message(exception.getErrorMessage())
+                .errorCode(exception.getErrorCode().getErrorCodeName())
+                .build();
+    }
+}
