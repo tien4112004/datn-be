@@ -1,7 +1,6 @@
 ## DATN Backend
 
-A Spring Boot microservices backend for the DATN project, with support for authentication, presentation, and API gateway
-services.
+A Spring Boot modular monolith backend for the DATN project, built with Spring Modulith, featuring authentication, document management, AI services, and API gateway functionality in a single deployable application.
 
 <!-- Add table of contents -->
 
@@ -9,17 +8,20 @@ services.
 
 - [DATN Backend](#datn-backend)
 - [Table of Contents](#table-of-contents)
-    - [Prerequisites](#prerequisites)
+  - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
-    - [1. Clone the Repository](#1-clone-the-repository)
-    - [2. Configure Environment Variables](#2-configure-environment-variables)
-    - [3. Install Git Hooks \& Dependencies](#3-install-git-hooks--dependencies)
-    - [4. Running the Application](#4-running-the-application)
-        - [a. Without Docker Compose](#a-without-docker-compose)
-        - [b. With Docker Compose](#b-with-docker-compose)
-- [Databases](#databases)
+  - [1. Clone the Repository](#1-clone-the-repository)
+  - [2. Configure Environment Variables](#2-configure-environment-variables)
+  - [3. Install Git Hooks \& Dependencies](#3-install-git-hooks--dependencies)
+  - [4. Running the Application](#4-running-the-application)
+    - [a. Local Development](#a-local-development)
+    - [b. With Docker](#b-with-docker)
+- [Database Configuration](#database-configuration)
+  - [1. Fully Docker Setup (Recommended)](#1-fully-docker-setup-recommended)
+  - [2. Local Database Setup](#2-local-database-setup)
+- [Modules](#modules)
 - [Git Hooks](#git-hooks)
-    - [Available Hooks](#available-hooks)
+  - [Available Hooks](#available-hooks)
 - [Directory Structure](#directory-structure)
 
 ---
@@ -31,7 +33,7 @@ Ensure the following are installed on your development machine:
 - **Git**: [https://git-scm.com/](https://git-scm.com/)
 - **Docker & Docker Compose**: [https://docs.docker.com/](https://docs.docker.com/)
 - **Java 21** (or later): [https://adoptium.net/](https://adoptium.net/)
-- **Maven**: [https://maven.apache.org/](https://maven.apache.org/)
+- **Gradle**: [https://gradle.org/](https://gradle.org/) (or use the included Gradle wrapper)
 - **Node.js** (for commitlint): [https://nodejs.org/](https://nodejs.org/)
 
 ---
@@ -86,86 +88,50 @@ This script will:
 
 ### 4. Running the Application
 
-#### a. Without Docker Compose
+#### a. Local Development
 
-1. Ensure your local database URLs are correctly set in `.env` (see [Database Configuration](#database-configuration)
-   section).
+1. Ensure your local database URLs are correctly set in `.env` (see [Database Configuration](#database-configuration) section).
 
-2. Create `config-server/src/main/resources/application-dev.yml` with the following content:
-
-```yaml
-spring:
-  cloud:
-    config:
-      server:
-        git:
-          username: ${GIT_USERNAME:your_username}
-          password: ${GIT_TOKEN:your_token}
-```
-
-3. Start the Spring Boot apps via Maven:
+2. Start the Spring Boot application using Gradle:
 
 ```bash
-mvn spring-boot:run -pl <module-name>
+# Build the application
+./gradlew build
+
+# Run the application
+./gradlew bootRun
 ```
 
-#### b. With Docker Compose
-
-Use the provided scripts to build images and start services :
-
-1. **Build Docker Images**
-
-- All images:
+Or run with specific profiles:
 
 ```bash
-chmod +x script/build-images.sh
-./script/build-images.sh
+./gradlew bootRun --args='--spring.profiles.active=dev'
 ```
 
-- Only business services (auth, presentation, api-gateway):
+#### b. With Docker
+
+1. **Build and run the application using Docker**
 
 ```bash
-./script/build-images.sh --business-only
+# Build the Docker image
+docker build -t datn-be:latest .
+
+# Run the container
+docker run -p 8080:8080 \
+  -e SPRING_PROFILES_ACTIVE=docker \
+  -e DATABASE_URL=your_db_url \
+  -e DATABASE_USERNAME=your_username \
+  -e DATABASE_PASSWORD=your_password \
+  datn-be:latest
 ```
 
-2. **Start Services**
-
-- **Databases** (PostgreSQL & MongoDB):
+2. **Using Docker Compose**
 
 ```bash
+# Start with databases
 docker-compose -f docker-compose.db.yml up -d
-```
 
-- **Infrastructure** (Config Server, Discovery Service, Admin Server):
-
-```bash
-docker-compose -f docker-compose.infra.yml up -d
-```
-
-- **Business Services** (Auth, Presentation, API Gateway):
-
-```bash
-docker-compose -f docker-compose.business.yml up -d
-```
-
-- **Run all services together**:
-
-```bash
-docker-compose up -d
-```
-
-**Fully Docker Setup Options:**
-
-- **Option 1**: Run all services including databases:
-
-```bash
-docker-compose -f docker-compose.db.yml -f docker-compose.yml up -d
-```
-
-- **Option 2**: Start databases first, then other services:
-
-```bash
-docker-compose -f docker-compose.db.yml up -d
+# Start the application
 docker-compose up -d
 ```
 
@@ -234,6 +200,26 @@ source .env
 
 ---
 
+## Modules
+
+This application is built as a modular monolith using Spring Modulith. The main modules are:
+
+- **Auth Module** (`com.datn.datnbe.auth`): Handles user authentication and authorization
+- **Document Module** (`com.datn.datnbe.document`): Manages document storage and retrieval using MongoDB
+- **AI Module** (`com.datn.datnbe.ai`): Provides AI-powered features using OpenAI and Vertex AI
+- **Gateway Module** (`com.datn.datnbe.gateway`): Internal routing and request handling
+
+Each module is self-contained with its own:
+- Domain models
+- Service layer
+- Repository/Data access layer
+- REST controllers
+- Configuration
+
+Spring Modulith ensures proper module boundaries and dependencies are respected at compile time.
+
+---
+
 ## Git Hooks
 
 Git hooks are automatically installed via the `script/install.sh` script. They help enforce code quality and commit
@@ -243,7 +229,7 @@ standards.
 
 - **Commitlint**: Validates commit messages against conventional commit standards. It
   follows [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
-- **Java Format**: Ensures Java code is formatted according to project standards.
+- **Java Format**: Ensures Java code is formatted according to project standards using Spotless.
 
 ## Directory Structure
 

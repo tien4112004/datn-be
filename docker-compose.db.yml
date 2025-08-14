@@ -16,6 +16,8 @@ services:
       - "5434:5432"
     volumes:
       - pgdata-auth:/var/lib/postgresql/data
+    networks:
+      - datn-network
 
   model-configuration-db:
     <<: *postgres-common
@@ -28,6 +30,8 @@ services:
       - "5433:5432"
     volumes:
       - pgdata-model-config:/var/lib/postgresql/data
+    networks:
+      - datn-network
 
   mongo:
     image: mongo:6
@@ -41,9 +45,16 @@ services:
       - "27018:27017"
     volumes:
       - mongodata:/data/db
-      - ./document-service/docker/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./src/main/java/com/datn/datnbe/document-module/docker/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - datn-network
 
 volumes:
   pgdata-auth:
   pgdata-model-config:
   mongodata:
+
+networks:
+  datn-network:
+    driver: bridge
+    external: true
