@@ -9,6 +9,7 @@ public enum ErrorCode {
     UNCATEGORIZED_ERROR("An unexpected error occurred", 500),
 
     PRESENTATION_NOT_FOUND("Presentation not found", 404), SLIDE_NOT_FOUND("Slide not found", 404),
+    PRESENTATION_TITLE_ALREADY_EXISTS("Presentation title already exists", 409),
 
     INVALID_PRESENTATION_DATA("Invalid presentation data", 400), INVALID_SLIDE_DATA("Invalid slide data", 400),
     INVALID_ELEMENT_DATA("Invalid element data", 400), MISSING_REQUIRED_FIELD("Missing required field", 400),

@@ -3,10 +3,15 @@ package com.datn.document.service.impl;
 import com.datn.document.dto.common.PaginatedResponseDto;
 import com.datn.document.dto.common.PaginationDto;
 import com.datn.document.dto.request.PresentationCreateRequest;
+import com.datn.document.dto.request.PresentationUpdateRequest;
+import com.datn.document.dto.request.PresentationUpdateTitleRequest;
 import com.datn.document.dto.request.PresentationCollectionRequest;
 import com.datn.document.dto.response.PresentationCreateResponseDto;
 import com.datn.document.dto.response.PresentationListResponseDto;
+import com.datn.document.dto.response.PresentationUpdateResponseDto;
 import com.datn.document.entity.Presentation;
+import com.datn.document.exception.AppException;
+import com.datn.document.exception.ErrorCode;
 import com.datn.document.mapper.PresentationEntityMapper;
 import com.datn.document.repository.PresentationRepository;
 import com.datn.document.service.interfaces.PresentationService;
@@ -19,6 +24,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -89,5 +95,47 @@ public class PresentationServiceImpl implements PresentationService {
                 presentationPage.getTotalElements());
 
         return new PaginatedResponseDto<>(presentations, pagination);
+    }   
+
+    @Override
+    public void updatePresentation(String id, PresentationUpdateRequest request) {
+        log.info("Updating presentation with ID: {} and title: {}", id, request.getTitle());
+
+        Presentation existingPresentation = presentationRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.error("Presentation not found with ID: {}", id);
+                    return new AppException(ErrorCode.PRESENTATION_NOT_FOUND);
+                });
+
+        if(presentationRepository.existsByTitle(request.getTitle())) {
+            log.error("Presentation with title '{}' already exists", request.getTitle());
+            throw new AppException(ErrorCode.PRESENTATION_TITLE_ALREADY_EXISTS);
+        }
+
+
+        mapper.updateEntity(request, existingPresentation);
+
+        Presentation savedPresentation = presentationRepository.save(existingPresentation);
+
+        log.info("Presentation updated with ID: {}", savedPresentation.getId());
+    }
+
+    @Override
+    public void updateTitlePresentation(String id, PresentationUpdateTitleRequest request) {
+        log.info("Updating title of presentation with ID: {} to title: {}", id, request.getTitle());
+        Presentation existingPresentation = presentationRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.error("Presentation not found with ID: {}", id);
+                    return new AppException(ErrorCode.PRESENTATION_NOT_FOUND);
+                });
+                
+        if(presentationRepository.existsByTitle(request.getTitle())) {
+            log.error("Presentation with title '{}' already exists", request.getTitle());
+            throw new AppException(ErrorCode.PRESENTATION_TITLE_ALREADY_EXISTS);
+        }
+
+        existingPresentation.setTitle(request.getTitle());
+        Presentation savedPresentation = presentationRepository.save(existingPresentation);
+        log.info("Presentation title updated with ID: {}", savedPresentation.getId());
     }
 }

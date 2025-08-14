@@ -6,9 +6,13 @@ import com.datn.document.dto.SlideDto.SlideBackgroundDto;
 import com.datn.document.dto.common.PaginatedResponseDto;
 import com.datn.document.dto.common.PaginationDto;
 import com.datn.document.dto.request.PresentationCreateRequest;
+import com.datn.document.dto.request.PresentationUpdateRequest;
+import com.datn.document.dto.request.PresentationUpdateTitleRequest;
 import com.datn.document.dto.response.PresentationCreateResponseDto;
 import com.datn.document.dto.response.PresentationListResponseDto;
 import com.datn.document.enums.SlideElementType;
+import com.datn.document.exception.AppException;
+import com.datn.document.exception.ErrorCode;
 import com.datn.document.service.interfaces.PresentationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,9 +28,13 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(PresentationController.class)
@@ -374,5 +382,247 @@ class ControllerTest {
                 .andExpect(jsonPath("$.data.length()").value(0))
                 .andExpect(jsonPath("$.pagination.totalItems").value(0))
                 .andExpect(jsonPath("$.pagination.totalPages").value(0));
+    }
+
+    @Test
+    void updatePresentation_WithValidRequest_ShouldReturnUpdatedPresentation() throws Exception {
+        // Given
+        String presentationId = "test-id";
+        PresentationUpdateRequest updateRequest = PresentationUpdateRequest.builder()
+                .title("Updated Title")
+                .slides(List.of(request.getSlides().get(0)))
+                .build();
+
+        // No mocking needed for void methods - they will be called and verified
+
+        // When & Then
+        mockMvc.perform(put("/api/presentations/" + presentationId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    void updatePresentation_WithMultipleSlides_ShouldReturnAllSlides() throws Exception {
+        // Given
+        String presentationId = "test-id";
+        SlideDto slide1 = SlideDto.builder()
+                .id("slide-1")
+                .elements(List.of(request.getSlides().get(0).getElements().get(0)))
+                .background(request.getSlides().get(0).getBackground())
+                .build();
+
+        SlideDto slide2 = SlideDto.builder()
+                .id("slide-2")
+                .elements(List.of(request.getSlides().get(0).getElements().get(0)))
+                .background(request.getSlides().get(0).getBackground())
+                .build();
+
+        PresentationUpdateRequest updateRequest = PresentationUpdateRequest.builder()
+                .title("Multi-slide Presentation")
+                .slides(List.of(slide1, slide2))
+                .build();
+
+        // No mocking needed for void methods
+
+        // When & Then
+        mockMvc.perform(put("/api/presentations/" + presentationId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    void updatePresentation_WithComplexElements_ShouldPreserveAllProperties() throws Exception {
+        // Given
+        String presentationId = "test-id";
+        SlideElementDto complexElement = SlideElementDto.builder()
+                .type(SlideElementType.TEXT)
+                .id("complex-element")
+                .left(50.0f)
+                .top(75.0f)
+                .width(200.0f)
+                .height(150.0f)
+                .viewBox(Arrays.asList(0.0f, 0.0f, 100.0f, 100.0f))
+                .path("M10,10 L90,90")
+                .fill("#ff0000")
+                .fixedRatio(true)
+                .opacity(0.8f)
+                .rotate(45.0f)
+                .flipV(false)
+                .lineHeight(1.5f)
+                .content("Complex element")
+                .defaultFontName("Arial")
+                .defaultColor("#000000")
+                .start(Arrays.asList(10.0f, 20.0f))
+                .end(Arrays.asList(90.0f, 80.0f))
+                .points(Arrays.asList("10,10", "50,50", "90,90"))
+                .color("#00ff00")
+                .style("solid")
+                .wordSpace(2.0f)
+                .build();
+
+        SlideDto complexSlide = SlideDto.builder()
+                .id("complex-slide")
+                .elements(List.of(complexElement))
+                .background(request.getSlides().get(0).getBackground())
+                .build();
+
+        PresentationUpdateRequest updateRequest = PresentationUpdateRequest.builder()
+                .title("Complex Presentation")
+                .slides(List.of(complexSlide))
+                .build();
+
+        // No mocking needed for void methods
+
+        // When & Then
+        mockMvc.perform(put("/api/presentations/" + presentationId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    void updatePresentation_WithInvalidId_ShouldReturnNotFound() throws Exception {
+        // Given
+        String invalidId = "invalid-id";
+        PresentationUpdateRequest updateRequest = PresentationUpdateRequest.builder()
+                .title("Updated Title")
+                .slides(List.of(request.getSlides().get(0)))
+                .build();
+
+        doThrow(new AppException(ErrorCode.PRESENTATION_NOT_FOUND))
+                .when(presentationService).updatePresentation(eq(invalidId), any(PresentationUpdateRequest.class));
+
+        // When & Then
+        mockMvc.perform(put("/api/presentations/" + invalidId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.code").value(404))
+                .andExpect(jsonPath("$.message").exists());
+    }
+
+    @Test
+    void updatePresentation_WithInvalidJson_ShouldReturnBadRequest() throws Exception {
+        // Given
+        String presentationId = "test-id";
+
+        // When & Then
+        mockMvc.perform(put("/api/presentations/" + presentationId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{invalid json}"))
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    void updatePresentation_WithEmptySlides_ShouldReturnValidationError() throws Exception {
+        // Given
+        String presentationId = "test-id";
+        PresentationUpdateRequest updateRequest = PresentationUpdateRequest.builder()
+                .title("Updated Title")
+                .slides(List.of())
+                .build();
+
+        // When & Then
+        mockMvc.perform(put("/api/presentations/" + presentationId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.data.slides").value("Presentation must contain at least one slide"));
+    }
+
+    @Test
+    void updateTitlePresentation_WithValidRequest_ShouldReturnUpdatedPresentation() throws Exception {
+        // Given
+        String presentationId = "test-id";
+        PresentationUpdateTitleRequest titleRequest = PresentationUpdateTitleRequest.builder()
+                .title("Updated Title Only")
+                .build();
+
+        // No mocking needed for void methods
+
+        // When & Then
+        mockMvc.perform(patch("/api/presentations/" + presentationId + "/title")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(titleRequest)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    void updateTitlePresentation_WithEmptyTitle_ShouldReturnValidationError() throws Exception {
+        // Given
+        String presentationId = "test-id";
+        PresentationUpdateTitleRequest titleRequest = PresentationUpdateTitleRequest.builder()
+                .title("")
+                .build();
+
+        // When & Then
+        mockMvc.perform(patch("/api/presentations/" + presentationId + "/title")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(titleRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.data.title").exists());
+    }
+
+    @Test
+    void updateTitlePresentation_WithNullTitle_ShouldReturnValidationError() throws Exception {
+        // Given
+        String presentationId = "test-id";
+        PresentationUpdateTitleRequest titleRequest = PresentationUpdateTitleRequest.builder()
+                .title(null)
+                .build();
+
+        // When & Then
+        mockMvc.perform(patch("/api/presentations/" + presentationId + "/title")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(titleRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.data.title").exists());
+    }
+
+    @Test
+    void updateTitlePresentation_WithInvalidId_ShouldReturnNotFound() throws Exception {
+        // Given
+        String invalidId = "invalid-id";
+        PresentationUpdateTitleRequest titleRequest = PresentationUpdateTitleRequest.builder()
+                .title("Valid Title")
+                .build();
+
+        doThrow(new AppException(ErrorCode.PRESENTATION_NOT_FOUND))
+                .when(presentationService).updateTitlePresentation(eq(invalidId), any(PresentationUpdateTitleRequest.class));
+
+        // When & Then
+        mockMvc.perform(patch("/api/presentations/" + invalidId + "/title")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(titleRequest)))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.code").value(404))
+                .andExpect(jsonPath("$.message").exists());
     }
 }

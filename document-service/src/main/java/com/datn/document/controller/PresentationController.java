@@ -3,9 +3,12 @@ package com.datn.document.controller;
 import com.datn.document.dto.common.AppResponseDto;
 import com.datn.document.dto.common.PaginatedResponseDto;
 import com.datn.document.dto.request.PresentationCreateRequest;
+import com.datn.document.dto.request.PresentationUpdateRequest;
+import com.datn.document.dto.request.PresentationUpdateTitleRequest;
 import com.datn.document.dto.request.PresentationCollectionRequest;
 import com.datn.document.dto.response.PresentationCreateResponseDto;
 import com.datn.document.dto.response.PresentationListResponseDto;
+import com.datn.document.dto.response.PresentationUpdateResponseDto;
 import com.datn.document.service.interfaces.PresentationService;
 
 import java.util.List;
@@ -43,5 +46,21 @@ public class PresentationController {
 
         return ResponseEntity.ok(
                 AppResponseDto.successWithPagination(paginatedResponse.getData(), paginatedResponse.getPagination()));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<AppResponseDto<Void>> updatePresentation(
+            @PathVariable String id,
+            @Valid @RequestBody PresentationUpdateRequest request) {
+        presentationService.updatePresentation(id, request);
+        return ResponseEntity.ok(AppResponseDto.success(null));
+    }
+
+    @PatchMapping("/{id}/title")
+    public ResponseEntity<AppResponseDto<Void>> updateTitlePresentation(
+            @PathVariable String id,
+            @Valid @RequestBody PresentationUpdateTitleRequest request) {
+        presentationService.updateTitlePresentation(id, request);
+        return ResponseEntity.ok(AppResponseDto.success(null));
     }
 }
