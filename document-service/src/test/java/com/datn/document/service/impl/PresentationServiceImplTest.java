@@ -5,11 +5,18 @@ import com.datn.document.dto.SlideDto.SlideElementDto;
 import com.datn.document.dto.SlideDto.SlideBackgroundDto;
 import com.datn.document.dto.common.PaginatedResponseDto;
 import com.datn.document.dto.request.PresentationCreateRequest;
+import com.datn.document.dto.request.PresentationUpdateRequest;
+import com.datn.document.dto.request.PresentationUpdateTitleRequest;
 import com.datn.document.dto.request.PresentationCollectionRequest;
 import com.datn.document.dto.response.PresentationCreateResponseDto;
 import com.datn.document.dto.response.PresentationListResponseDto;
+import com.datn.document.dto.response.PresentationUpdateResponseDto;
 import com.datn.document.entity.Presentation;
+import com.datn.document.entity.valueobject.Slide;
+import com.datn.document.entity.valueobject.SlideElement;
 import com.datn.document.enums.SlideElementType;
+import com.datn.document.exception.AppException;
+import com.datn.document.exception.ErrorCode;
 import com.datn.document.mapper.PresentationEntityMapper;
 import com.datn.document.repository.PresentationRepository;
 
@@ -23,6 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -31,9 +39,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class PresentationServiceImplTest {
@@ -48,6 +59,8 @@ class PresentationServiceImplTest {
     private PresentationServiceImpl presentationService;
 
     private PresentationCreateRequest request;
+    private PresentationUpdateRequest updateRequest;
+    private PresentationUpdateTitleRequest updateTitleRequest;
     private SlideDto slideDto;
     private SlideElementDto elementDto;
     private SlideBackgroundDto backgroundDto;
@@ -71,6 +84,9 @@ class PresentationServiceImplTest {
         slideDto = SlideDto.builder().id("slide-1").elements(List.of(elementDto)).background(backgroundDto).build();
 
         request = PresentationCreateRequest.builder().slides(List.of(slideDto)).build();
+        updateRequest = PresentationUpdateRequest.builder().title("Updated Title").slides(List.of(slideDto)).build();
+        updateTitleRequest = PresentationUpdateTitleRequest.builder().title("Updated Title Only").build();
+        
     }
 
     @Test
@@ -490,5 +506,396 @@ class PresentationServiceImplTest {
         assertThat(result.getData()).isEmpty();
         assertThat(result.getPagination().getTotalItems()).isEqualTo(0);
         assertThat(result.getPagination().getTotalPages()).isEqualTo(0);
+    }
+
+    @Test
+    void updatePresentation_WithNonExistentId_ShouldThrowException() {
+        // Given
+        String presentationId = "non-existent-id";
+        when(presentationRepository.findById(presentationId)).thenReturn(Optional.empty());
+
+        // When & Then
+        AppException exception = assertThrows(AppException.class, 
+            () -> presentationService.updatePresentation(presentationId, updateRequest));
+        
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.PRESENTATION_NOT_FOUND);
+    }
+
+    @Test
+    void updatePresentation_WithValidRequest_ShouldReturnUpdatedPresentation() {
+        // Given
+        String presentationId = "test-id";
+        LocalDateTime now = LocalDateTime.now();
+        
+        Presentation existingPresentation = Presentation.builder()
+                .id(presentationId)
+                .title("Original Title")
+                .slides(List.of())
+                .createdAt(now.minusHours(1))
+                .updatedAt(now.minusHours(1))
+                .build();
+
+        Presentation updatedPresentation = Presentation.builder()
+                .id(presentationId)
+                .title("Updated Title")
+                .slides(List.of())
+                .createdAt(now.minusHours(1))
+                .updatedAt(now)
+                .build();
+
+        PresentationUpdateResponseDto expectedResponse = PresentationUpdateResponseDto.builder()
+                .title("Updated Title")
+                .presentation(List.of(slideDto))
+                .build();
+
+        when(presentationRepository.findById(presentationId)).thenReturn(Optional.of(existingPresentation));
+        when(presentationRepository.save(any(Presentation.class))).thenReturn(updatedPresentation);
+        when(mapper.toUpdateResponseDto(updatedPresentation)).thenReturn(expectedResponse);
+
+        // When
+        presentationService.updatePresentation(presentationId, updateRequest);
+
+        updatedPresentation = presentationRepository.findById(presentationId).orElse(null);
+
+        // Then
+        assertThat(updatedPresentation).isNotNull();
+        assertThat(updatedPresentation.getTitle()).isEqualTo("Updated Title");
+        assertThat(updatedPresentation.getSlides()).isNotNull();
+        assertThat(updatedPresentation.getSlides()).hasSize(1);
+
+        verify(mapper).updateEntity(updateRequest, existingPresentation);
+        verify(presentationRepository).save(existingPresentation);
+    }
+
+    @Test
+    void updatePresentation_WithMultipleSlides_ShouldUpdateAllSlides() {
+        // Given
+        String presentationId = "test-id";
+        LocalDateTime now = LocalDateTime.now();
+        
+        SlideDto slide1 = SlideDto.builder()
+                .id("slide-1")
+                .elements(List.of(elementDto))
+                .background(backgroundDto)
+                .build();
+        
+        SlideDto slide2 = SlideDto.builder()
+                .id("slide-2")
+                .elements(List.of(elementDto))
+                .background(backgroundDto)
+                .build();
+        
+        PresentationUpdateRequest multiSlideRequest = PresentationUpdateRequest.builder()
+                .title("Multi-slide Presentation")
+                .slides(List.of(slide1, slide2))
+                .build();
+
+        Presentation existingPresentation = Presentation.builder()
+                .id(presentationId)
+                .title("Original Title")
+                .slides(List.of())
+                .createdAt(now.minusHours(1))
+                .updatedAt(now.minusHours(1))
+                .build();
+
+        Presentation updatedPresentation = Presentation.builder()
+                .id(presentationId)
+                .title("Multi-slide Presentation")
+                .slides(List.of())
+                .createdAt(now.minusHours(1))
+                .updatedAt(now)
+                .build();
+
+        PresentationUpdateResponseDto expectedResponse = PresentationUpdateResponseDto.builder()
+                .title("Multi-slide Presentation")
+                .presentation(List.of(slide1, slide2))
+                .build();
+
+        when(presentationRepository.findById(presentationId)).thenReturn(Optional.of(existingPresentation));
+        when(presentationRepository.save(any(Presentation.class))).thenReturn(updatedPresentation);
+        when(mapper.toUpdateResponseDto(updatedPresentation)).thenReturn(expectedResponse);
+
+        // When
+        presentationService.updatePresentation(presentationId, multiSlideRequest);
+        updatedPresentation = presentationRepository.findById(presentationId).orElse(null);
+
+        // Then
+        assertThat(updatedPresentation).isNotNull();
+        assertThat(updatedPresentation.getTitle()).isEqualTo("Multi-slide Presentation");
+        assertThat(updatedPresentation.getSlides()).hasSize(2);
+        assertThat(updatedPresentation.getSlides().get(0).getId()).isEqualTo("slide-1");
+        assertThat(updatedPresentation.getSlides().get(1).getId()).isEqualTo("slide-2");
+
+        verify(mapper).updateEntity(multiSlideRequest, existingPresentation);
+        verify(presentationRepository).save(existingPresentation);
+    }
+
+    @Test
+    void updatePresentation_WithComplexSlideElements_ShouldPreserveAllProperties() {
+        // Given
+        String presentationId = "test-id";
+        LocalDateTime now = LocalDateTime.now();
+        
+        SlideElementDto complexElement = SlideElementDto.builder()
+                .type(SlideElementType.TEXT)
+                .id("complex-element")
+                .left(50.0f)
+                .top(75.0f)
+                .width(200.0f)
+                .height(150.0f)
+                .viewBox(Arrays.asList(0.0f, 0.0f, 100.0f, 100.0f))
+                .path("M10,10 L90,90")
+                .fill("#ff0000")
+                .fixedRatio(true)
+                .opacity(0.8f)
+                .rotate(45.0f)
+                .flipV(false)
+                .lineHeight(1.5f)
+                .start(Arrays.asList(10.0f, 20.0f))
+                .end(Arrays.asList(90.0f, 80.0f))
+                .points(Arrays.asList("10,10", "50,50", "90,90"))
+                .color("#00ff00")
+                .style("solid")
+                .wordSpace(2.0f)
+                .content("Complex element content")
+                .defaultFontName("Helvetica")
+                .defaultColor("#333333")
+                .build();
+
+        SlideDto complexSlide = SlideDto.builder()
+                .id("complex-slide")
+                .elements(List.of(complexElement))
+                .background(backgroundDto)
+                .build();
+        
+        PresentationUpdateRequest complexRequest = PresentationUpdateRequest.builder()
+                .title("Complex Presentation")
+                .slides(List.of(complexSlide))
+                .build();
+
+        Presentation existingPresentation = Presentation.builder()
+                .id(presentationId)
+                .title("Simple Title")
+                .slides(List.of())
+                .createdAt(now.minusHours(1))
+                .updatedAt(now.minusHours(1))
+                .build();
+
+        Presentation updatedPresentation = Presentation.builder()
+                .id(presentationId)
+                .title("Complex Presentation")
+                .slides(List.of())
+                .createdAt(now.minusHours(1))
+                .updatedAt(now)
+                .build();
+
+        PresentationUpdateResponseDto expectedResponse = PresentationUpdateResponseDto.builder()
+                .title("Complex Presentation")
+                .presentation(List.of(complexSlide))
+                .build();
+
+        when(presentationRepository.findById(presentationId)).thenReturn(Optional.of(existingPresentation));
+        when(presentationRepository.save(any(Presentation.class))).thenReturn(updatedPresentation);
+        when(mapper.toUpdateResponseDto(updatedPresentation)).thenReturn(expectedResponse);
+
+        // When
+        presentationService.updatePresentation(presentationId, complexRequest);
+        updatedPresentation = presentationRepository.findById(presentationId).orElse(null);
+
+        // Then
+        assertThat(updatedPresentation).isNotNull();
+        assertThat(updatedPresentation.getTitle()).isEqualTo("Complex Presentation");
+        assertThat(updatedPresentation.getSlides()).hasSize(1);
+
+        SlideElement returnedElement = updatedPresentation.getSlides().get(0).getElements().get(0);
+        assertThat(returnedElement.getType()).isEqualTo(SlideElementType.TEXT);
+        assertThat(returnedElement.getId()).isEqualTo("complex-element");
+        assertThat(returnedElement.getViewBox()).containsExactly(0.0f, 0.0f, 100.0f, 100.0f);
+        assertThat(returnedElement.getPath()).isEqualTo("M10,10 L90,90");
+        assertThat(returnedElement.getFill()).isEqualTo("#ff0000");
+        assertThat(returnedElement.getFixedRatio()).isTrue();
+        assertThat(returnedElement.getOpacity()).isEqualTo(0.8f);
+        assertThat(returnedElement.getRotate()).isEqualTo(45.0f);
+        assertThat(returnedElement.getFlipV()).isFalse();
+        assertThat(returnedElement.getLineHeight()).isEqualTo(1.5f);
+        assertThat(returnedElement.getStart()).containsExactly(10.0f, 20.0f);
+        assertThat(returnedElement.getEnd()).containsExactly(90.0f, 80.0f);
+        assertThat(returnedElement.getPoints()).containsExactly("10,10", "50,50", "90,90");
+        assertThat(returnedElement.getColor()).isEqualTo("#00ff00");
+        assertThat(returnedElement.getStyle()).isEqualTo("solid");
+        assertThat(returnedElement.getWordSpace()).isEqualTo(2.0f);
+        
+        verify(mapper).updateEntity(complexRequest, existingPresentation);
+        verify(presentationRepository).save(existingPresentation);
+    }
+
+    @Test
+    void updateTitlePresentation_WithValidRequest_ShouldReturnUpdatedPresentation() {
+        // Given
+        String presentationId = "test-id";
+        LocalDateTime now = LocalDateTime.now();
+        
+        Presentation existingPresentation = Presentation.builder()
+                .id(presentationId)
+                .title("Original Title")
+                .slides(List.of())
+                .createdAt(now.minusHours(1))
+                .updatedAt(now.minusHours(1))
+                .build();
+
+        Presentation updatedPresentation = Presentation.builder()
+                .id(presentationId)
+                .title("Updated Title Only")
+                .slides(List.of())
+                .createdAt(now.minusHours(1))
+                .updatedAt(now)
+                .build();
+
+        PresentationUpdateResponseDto expectedResponse = PresentationUpdateResponseDto.builder()
+                .title("Updated Title Only")
+                .presentation(List.of(slideDto))
+                .build();
+
+        when(presentationRepository.findById(presentationId)).thenReturn(Optional.of(existingPresentation));
+        when(presentationRepository.save(any(Presentation.class))).thenReturn(updatedPresentation);
+        when(mapper.toUpdateResponseDto(updatedPresentation)).thenReturn(expectedResponse);
+
+        // When
+        presentationService.updateTitlePresentation(presentationId, updateTitleRequest);
+
+        updatedPresentation = presentationRepository.findById(presentationId).orElse(null);
+
+        // Then
+        assertThat(updatedPresentation).isNotNull();
+        assertThat(updatedPresentation.getTitle()).isEqualTo("Updated Title Only");
+        assertThat(updatedPresentation.getSlides()).isNotNull();
+        assertThat(updatedPresentation.getSlides()).hasSize(1);
+
+        // Verify that only title was updated and updatedAt was set
+        verify(presentationRepository).save(argThat(presentation -> 
+            presentation.getTitle().equals("Updated Title Only") &&
+            presentation.getUpdatedAt().isAfter(now.minusMinutes(1))
+        ));
+    }
+
+    @Test
+    void updateTitlePresentation_WithNonExistentId_ShouldThrowException() {
+        // Given
+        String presentationId = "non-existent-id";
+        when(presentationRepository.findById(presentationId)).thenReturn(Optional.empty());
+
+        // When & Then
+        AppException exception = assertThrows(AppException.class, 
+            () -> presentationService.updateTitlePresentation(presentationId, updateTitleRequest));
+        
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.PRESENTATION_NOT_FOUND);
+    }
+
+    @Test
+    void updateTitlePresentation_WithDifferentTitle_ShouldUpdateOnlyTitle() {
+        // Given
+        String presentationId = "test-id";
+        LocalDateTime now = LocalDateTime.now();
+        
+        PresentationUpdateTitleRequest customTitleRequest = PresentationUpdateTitleRequest.builder()
+                .title("Custom New Title")
+                .build();
+
+        Presentation existingPresentation = Presentation.builder()
+                .id(presentationId)
+                .title("Old Title")
+                .slides(List.of())
+                .createdAt(now.minusHours(2))
+                .updatedAt(now.minusHours(1))
+                .build();
+
+        Presentation updatedPresentation = Presentation.builder()
+                .id(presentationId)
+                .title("Custom New Title")
+                .slides(List.of())
+                .createdAt(now.minusHours(2))
+                .updatedAt(now)
+                .build();
+
+        PresentationUpdateResponseDto expectedResponse = PresentationUpdateResponseDto.builder()
+                .title("Custom New Title")
+                .presentation(List.of(slideDto))
+                .build();
+
+        when(presentationRepository.findById(presentationId)).thenReturn(Optional.of(existingPresentation));
+        when(presentationRepository.save(any(Presentation.class))).thenReturn(updatedPresentation);
+        when(mapper.toUpdateResponseDto(updatedPresentation)).thenReturn(expectedResponse);
+
+        // When
+        presentationService.updateTitlePresentation(presentationId, customTitleRequest);
+
+        updatedPresentation = presentationRepository.findById(presentationId).orElse(null);
+
+        // Then
+        assertThat(updatedPresentation).isNotNull();
+        assertThat(updatedPresentation.getTitle()).isEqualTo("Custom New Title");
+        assertThat(updatedPresentation.getSlides()).isNotNull();
+        
+        // Verify the correct presentation was saved with updated title and timestamp
+        verify(presentationRepository).save(argThat(presentation -> 
+            presentation.getTitle().equals("Custom New Title") &&
+            presentation.getId().equals(presentationId) &&
+            presentation.getCreatedAt().equals(now.minusHours(2)) && // CreatedAt should remain unchanged
+            presentation.getUpdatedAt().isAfter(now.minusMinutes(1)) // UpdatedAt should be recent
+        ));
+    }
+
+    @Test
+    void updateTitlePresentation_ShouldPreserveExistingSlides() {
+        // Given
+        String presentationId = "test-id";
+        LocalDateTime now = LocalDateTime.now();
+        
+        // Create existing presentation with slides
+        List<Slide> existingSlides = List.of(
+            Slide.builder().id("existing-slide-1").build(),
+            Slide.builder().id("existing-slide-2").build()
+        );
+        
+        Presentation existingPresentation = Presentation.builder()
+                .id(presentationId)
+                .title("Original Title")
+                .slides(existingSlides)
+                .createdAt(now.minusHours(1))
+                .updatedAt(now.minusHours(1))
+                .build();
+
+        Presentation updatedPresentation = Presentation.builder()
+                .id(presentationId)
+                .title("Updated Title Only")
+                .slides(existingSlides) // Slides should remain unchanged
+                .createdAt(now.minusHours(1))
+                .updatedAt(now)
+                .build();
+
+        PresentationUpdateResponseDto expectedResponse = PresentationUpdateResponseDto.builder()
+                .title("Updated Title Only")
+                .presentation(List.of(slideDto, slideDto)) // Two slides preserved
+                .build();
+
+        when(presentationRepository.findById(presentationId)).thenReturn(Optional.of(existingPresentation));
+        when(presentationRepository.save(any(Presentation.class))).thenReturn(updatedPresentation);
+        when(mapper.toUpdateResponseDto(updatedPresentation)).thenReturn(expectedResponse);
+
+        // When
+        presentationService.updateTitlePresentation(presentationId, updateTitleRequest);
+
+        updatedPresentation = presentationRepository.findById(presentationId).orElse(null);
+
+        // Then
+        assertThat(updatedPresentation).isNotNull();
+        assertThat(updatedPresentation.getTitle()).isEqualTo("Updated Title Only");
+        assertThat(updatedPresentation.getSlides()).hasSize(2); // Slides preserved
+        
+        // Verify that slides were not modified
+        verify(presentationRepository).save(argThat(presentation -> 
+            presentation.getSlides().size() == 2 && // Same number of slides
+            presentation.getSlides().equals(existingSlides) // Same slide objects
+        ));
     }
 }
