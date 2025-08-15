@@ -36,7 +36,6 @@ spring:
   data:
     mongodb:
       uri: ${MONGODB_URI:mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DATABASE}?authSource=${MONGODB_AUTH_DATABASE}}
-
 app:
   models:
     configurations:
@@ -49,7 +48,7 @@ app:
           display-name: "GPT-4.1 Nano"
           provider: "OpenAI"
           default-model: false
-      # ??? GEMINI MODELS ???
+      # --- GEMINI MODELS ---
       gemini:
         - model-name: "gemini-2.0-flash-001"
           display-name: "Gemini 2.0 Flash"
@@ -63,3 +62,9 @@ app:
           display-name: "Gemini 2.5 Flash Lite"
           provider: "Google"
           default-model: false
+  cors:
+    allowed-origins: ${ALLOWED_ORIGINS}
+    allowed-origin-patterns: ${ALLOWED_ORIGINS}
+    allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+    allow-credentials: true
+    max-age: 3600
