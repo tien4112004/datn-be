@@ -1,25 +1,16 @@
-//package com.datn.datnbe.ai.messaging;
-//
-//import org.springframework.beans.factory.annotation.Value;
-//import org.springframework.cloud.stream.function.StreamBridge;
-//import org.springframework.stereotype.Service;
-//
-//import com.datn.aiservice.event.PresentationGeneratedEvent;
-//
-//import org.springframework.messaging.Message;
-//import org.springframework.messaging.support.MessageBuilder;
-//
-//import lombok.AccessLevel;
-//import lombok.RequiredArgsConstructor;
-//import lombok.experimental.FieldDefaults;
-//import lombok.experimental.NonFinal;
-//import lombok.extern.slf4j.Slf4j;
-//
-//@Service
-//@RequiredArgsConstructor
-//@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-//@Slf4j
-//public class AIEventPublisher {
+package com.datn.datnbe.ai.messaging;
+
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
+public class AIEventPublisher {
 //    StreamBridge streamBridge;
 //
 //    @Value("${app.messaging.binding-name}")
@@ -50,4 +41,4 @@
 //            throw new RuntimeException("Failed to publish AI event", e);
 //        }
 //    }
-//}
+}

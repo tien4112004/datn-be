@@ -2,20 +2,18 @@ package com.datn.datnbe.ai.management;
 
 import com.datn.datnbe.ai.api.ContentGenerationApi;
 import com.datn.datnbe.ai.api.ModelSelectionApi;
-import com.datn.datnbe.ai.config.chatmodelconfiguration.SystemPromptConfig;
+import com.datn.datnbe.ai.infrastructure.config.chatmodelconfiguration.SystemPromptConfig;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
-import com.datn.datnbe.ai.factory.ChatClientFactory;
+import com.datn.datnbe.ai.infrastructure.factory.ChatClientFactory;
 import com.datn.datnbe.ai.utils.MappingParamsUtils;
-import com.datn.datnbe.gateway.exceptions.AppException;
-import com.datn.datnbe.gateway.exceptions.ErrorCode;
+import com.datn.datnbe.sharedkernel.exceptions.AppException;
+import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
@@ -28,7 +26,6 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     ModelSelectionApi modelSelectionApi;
     ChatClientFactory chatClientFactory;
 //    AIEventPublisher aiEventPublisher;
-    ObjectMapper objectMapper;
 
     @Override
     public Flux<String> generateOutline(OutlinePromptRequest request) {

@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
-public class StreamingResponseUtils {
+public class    StreamingResponseUtils {
 
     public static final int X_DELAY = 50;
     public static final int LOW_DELAY = 100;
