@@ -207,7 +207,7 @@ This application is built as a modular monolith using Spring Modulith. The main 
 - **Auth Module** (`com.datn.datnbe.auth`): Handles user authentication and authorization
 - **Document Module** (`com.datn.datnbe.document`): Manages document storage and retrieval using MongoDB
 - **AI Module** (`com.datn.datnbe.ai`): Provides AI-powered features using OpenAI and Vertex AI
-- **Gateway Module** (`com.datn.datnbe.gateway`): Internal routing and request handling
+- **Gateway Module** (`com.datn.datnbe.sharedkernel`): Internal routing and request handling
 
 Each module is self-contained with its own:
 - Domain models

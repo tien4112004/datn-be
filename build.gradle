@@ -32,21 +32,28 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.mapstruct:mapstruct:1.6.3'
+    implementation 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
     implementation 'org.springframework.modulith:spring-modulith-starter-core'
-    implementation 'org.springframework.modulith:spring-modulith-starter-mongodb'
     implementation 'org.springframework.modulith:spring-modulith-starter-jpa'
+    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+    compileOnly 'org.projectlombok:lombok:1.18.38'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
+    testCompileOnly 'org.projectlombok:lombok:1.18.38'
+
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
     runtimeOnly 'org.postgresql:postgresql'
     runtimeOnly 'com.h2database:h2'
     runtimeOnly 'org.springframework.modulith:spring-modulith-actuator'
     runtimeOnly 'org.springframework.modulith:spring-modulith-observability'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+    annotationProcessor 'org.projectlombok:lombok:1.18.38'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
-
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.38'
+    testAnnotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
 }
 dependencyManagement {
     imports {

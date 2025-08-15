@@ -45,9 +45,3 @@ services:
     restart: unless-stopped
     ports:
       - "8080:8080"
-    networks:
-      - datn-network
-
-networks:
-  datn-network:
-    driver: bridge
