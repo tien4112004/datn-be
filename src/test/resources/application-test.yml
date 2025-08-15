@@ -43,6 +43,12 @@ server:
 app:
   init:
     enabled: false
+  cors:
+    allowed-origins: "http://localhost:3000,http://localhost:8080"
+    allowed-origin-patterns: "http://localhost:3000,http://localhost:8080"
+    allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+    allow-credentials: true
+    max-age: 3600
   models:
     configurations:
       openai:
