@@ -49,14 +49,6 @@ jobs:
       - name: Run Spring Modulith tests
         run: ./gradlew test --tests "*ModularityTests"
 
-      - name: Generate test report
-        uses: dorny/test-reporter@v1
-        if: success() || failure()
-        with:
-          name: Gradle Tests
-          path: build/test-results/test/*.xml
-          reporter: java-junit
-
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
@@ -68,41 +60,41 @@ jobs:
             build/reports/jacoco/
           retention-days: 30
 
-  build:
-    name: Build Application
-    runs-on: ubuntu-latest
-    needs: test
+  # build:
+  #   name: Build Application
+  #   runs-on: ubuntu-latest
+  #   needs: test
     
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
-          cache: gradle
+  #     - name: Set up Java
+  #       uses: actions/setup-java@v4
+  #       with:
+  #         distribution: temurin
+  #         java-version: '21'
+  #         cache: gradle
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          cache-disabled: false
+  #     - name: Setup Gradle
+  #       uses: gradle/actions/setup-gradle@v4
+  #       with:
+  #         cache-disabled: false
 
-      - name: Make gradlew executable
-        run: chmod +x gradlew
+  #     - name: Make gradlew executable
+  #       run: chmod +x gradlew
 
-      - name: Build application
-        run: ./gradlew clean build -x test
+  #     - name: Build application
+  #       run: ./gradlew clean build -x test
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: jar-artifact
-          path: build/libs/*.jar
-          retention-days: 30
+  #     - name: Upload build artifacts
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: jar-artifact
+  #         path: build/libs/*.jar
+  #         retention-days: 30
 
 # FUTURE WORKFLOWS
   # docker:
