@@ -1,7 +1,7 @@
 package com.datn.datnbe.document.management;
 
-import com.datn.datnbe.gateway.exceptions.ErrorCode;
-import com.datn.datnbe.gateway.exceptions.AppException;
+import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
 import com.datn.datnbe.document.dto.request.PresentationUpdateRequest;
 import com.datn.datnbe.document.dto.request.PresentationUpdateTitleRequest;
