@@ -1,8 +1,6 @@
 ## DATN Backend
 
-A Spring Boot modular monolith backend for the DATN project, built with Spring Modulith, featuring authentication, document management, AI services, and API gateway functionality in a single deployable application.
-
-<!-- Add table of contents -->
+A Spring Boot modular monolith backend for the DATN project, built with Spring Modulith, featuring authentication, document management, AI services, and presentation functionality in a single deployable application.
 
 ## Table of Contents
 
@@ -16,10 +14,16 @@ A Spring Boot modular monolith backend for the DATN project, built with Spring M
   - [4. Running the Application](#4-running-the-application)
     - [a. Local Development](#a-local-development)
     - [b. With Docker](#b-with-docker)
+- [Build \& Deployment](#build--deployment)
+  - [Gradle Build System](#gradle-build-system)
+  - [Docker Build](#docker-build)
 - [Database Configuration](#database-configuration)
   - [1. Fully Docker Setup (Recommended)](#1-fully-docker-setup-recommended)
   - [2. Local Database Setup](#2-local-database-setup)
 - [Modules](#modules)
+- [Scripts](#scripts)
+  - [`install.sh`](#installsh)
+  - [`build-image.sh`](#build-imagesh)
 - [Git Hooks](#git-hooks)
   - [Available Hooks](#available-hooks)
 - [Directory Structure](#directory-structure)
@@ -35,6 +39,7 @@ Ensure the following are installed on your development machine:
 - **Java 21** (or later): [https://adoptium.net/](https://adoptium.net/)
 - **Gradle**: [https://gradle.org/](https://gradle.org/) (or use the included Gradle wrapper)
 - **Node.js** (for commitlint): [https://nodejs.org/](https://nodejs.org/)
+- **curl** (for health checks): Usually pre-installed on most systems
 
 ---
 
@@ -45,7 +50,7 @@ Follow these steps to get the backend up and running.
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/Tondeptrai23/datn-be.git
+git clone https://github.com/tien4112004/datn-be.git
 cd datn-be
 ```
 
@@ -110,30 +115,113 @@ Or run with specific profiles:
 
 #### b. With Docker
 
-1. **Build and run the application using Docker**
+**Option 1: Build and run manually**
 
 ```bash
 # Build the Docker image
 docker build -t datn-be:latest .
 
-# Run the container
+# Run with databases (start databases first)
+docker-compose -f docker-compose.db.yml up -d
+
+# Run the application container
 docker run -p 8080:8080 \
+  --network datn-be_default \
   -e SPRING_PROFILES_ACTIVE=docker \
-  -e DATABASE_URL=your_db_url \
-  -e DATABASE_USERNAME=your_username \
-  -e DATABASE_PASSWORD=your_password \
+  -e AUTH_DB_URL=jdbc:postgresql://auth-db:5432/auth_db \
+  -e AUTH_DB_USERNAME=postgres \
+  -e AUTH_DB_PASSWORD=postgres \
+  -e MODEL_CONFIG_DB_URL=jdbc:postgresql://model-configuration-db:5432/model_configuration_db \
+  -e MODEL_CONFIG_DB_USERNAME=postgres \
+  -e MODEL_CONFIG_DB_PASSWORD=postgres \
+  -e MONGODB_URI=mongodb://mongouser:mongopassword@mongo:27017/presentation_db?authSource=admin \
+  -v ${VERTEX_SERVICE_ACCOUNT_KEY_PATH}:/secrets/key.json:ro \
   datn-be:latest
 ```
 
-2. **Using Docker Compose**
+**Option 2: Using Docker Compose (Recommended)**
 
 ```bash
-# Start with databases
+# Start databases only
 docker-compose -f docker-compose.db.yml up -d
 
-# Start the application
+# Start the complete stack (databases + application)
 docker-compose up -d
+
+# Or start everything at once
+docker-compose -f docker-compose.db.yml -f docker-compose.yml up -d
 ```
+
+**Option 3: Using build script**
+
+```bash
+# Build image with the provided script
+./script/build-image.sh
+
+# Build with specific tag
+./script/build-image.sh -t v1.0.0
+
+# Build and push to registry
+./script/build-image.sh -t latest -p
+```
+
+---
+
+## Build & Deployment
+
+### Gradle Build System
+
+The project uses Gradle with the following key features:
+
+- **Java 21 Toolchain**: Ensures consistent Java version across environments
+- **Spring Boot 3.5.4**: Latest stable Spring Boot version
+- **Spring Modulith**: For modular monolith architecture
+- **Multi-layered Dependencies**: AI services, data persistence, validation, and monitoring
+
+**Key Gradle Commands:**
+
+```bash
+# Clean and build the project
+./gradlew clean build
+
+# Run the application
+./gradlew bootRun
+
+# Run with specific profile
+./gradlew bootRun --args='--spring.profiles.active=dev'
+
+# Run tests
+./gradlew test
+
+# Build without running tests
+./gradlew build -x test
+
+# Generate dependency insight
+./gradlew dependencyInsight --dependency spring-boot-starter-web
+```
+
+### Docker Build
+
+The application uses a **multi-stage Docker build** for optimal image size and security:
+
+**Build Stages:**
+1. **Builder Stage** (`eclipse-temurin:21`):
+   - Copies Gradle wrapper and build files
+   - Builds the application using `./gradlew clean build -x test`
+   - Extracts Spring Boot layers using `jarmode=layertools`
+
+2. **Runtime Stage** (`eclipse-temurin:21-jre`):
+   - Uses JRE-only image for smaller footprint
+   - Creates non-root user for security
+   - Copies extracted layers for better Docker layer caching
+   - Includes health check and optimized JVM settings
+
+**Docker Features:**
+- **Layer-based extraction**: Better caching and faster subsequent builds
+- **Non-root user**: Enhanced security
+- **Health checks**: Built-in endpoint monitoring
+- **JVM optimization**: Container-aware memory settings
+- **Environment-specific profiles**: Docker profile activation
 
 ---
 
@@ -162,7 +250,8 @@ For connecting to local or external databases, configure these variables in `.en
 **PostgreSQL (Auth & Model Config):**
 
 ```bash
-AUTH_DB_URL=jdbc:postgresql://localhost:5432/auth_db
+# For local development
+AUTH_DB_URL=jdbc:postgresql://localhost:5434/auth_db
 AUTH_DB_USERNAME=postgres
 AUTH_DB_PASSWORD=postgres
 
@@ -190,6 +279,31 @@ MONGODB_DATABASE=presentation_db
 MONGODB_AUTH_DATABASE=admin
 ```
 
+**AI Services Configuration:**
+
+```bash
+# OpenAI API
+OPENAI_KEY=your_openai_api_key
+
+# Google Vertex AI
+VERTEX_PROJECT_ID=your_gcp_project_id
+VERTEX_LOCATION=us-central1
+VERTEX_SERVICE_ACCOUNT_KEY_PATH=/path/to/service-account.json
+```
+
+**Other Configuration:**
+
+```bash
+# CORS settings
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+
+# RabbitMQ (if needed)
+RABBITMQ_HOST=localhost
+RABBITMQ_PORT=5672
+RABBITMQ_USERNAME=guest
+RABBITMQ_PASSWORD=guest
+```
+
 After updating `.env`, reload environment variables:
 
 ```bash
@@ -202,50 +316,128 @@ source .env
 
 ## Modules
 
-This application is built as a modular monolith using Spring Modulith. The main modules are:
+This application is built as a **modular monolith** using **Spring Modulith**. The main modules are:
 
-- **Auth Module** (`com.datn.datnbe.auth`): Handles user authentication and authorization
-- **Document Module** (`com.datn.datnbe.document`): Manages document storage and retrieval using MongoDB
-- **AI Module** (`com.datn.datnbe.ai`): Provides AI-powered features using OpenAI and Vertex AI
-- **Gateway Module** (`com.datn.datnbe.sharedkernel`): Internal routing and request handling
+- **Auth Module** (`com.datn.datnbe.auth`): Handles user authentication and authorization using PostgreSQL
+- **Document Module** (`com.datn.datnbe.document`): Manages document storage, retrieval, and presentation generation using MongoDB  
+- **AI Module** (`com.datn.datnbe.ai`): Provides AI-powered features using OpenAI GPT and Google Vertex AI Gemini
+- **Shared Kernel** (`com.datn.datnbe.sharedkernel`): Common DTOs, events, exceptions, and cross-module utilities
 
+**Module Architecture:**
 Each module is self-contained with its own:
-- Domain models
-- Service layer
-- Repository/Data access layer
-- REST controllers
-- Configuration
+- **Domain models**: Business entities and value objects
+- **Service layer**: Business logic and orchestration
+- **Repository/Data access**: JPA repositories for PostgreSQL, MongoDB repositories for document storage
+- **REST controllers**: HTTP endpoints and request/response handling
+- **Configuration**: Module-specific beans and settings
+- **Events**: Inter-module communication via Spring Application Events
 
-Spring Modulith ensures proper module boundaries and dependencies are respected at compile time.
+**Spring Modulith Benefits:**
+- **Compile-time validation**: Ensures proper module boundaries
+- **Documentation generation**: Automatic module documentation
+- **Integration testing**: Module slice testing capabilities
+- **Event-driven architecture**: Async communication between modules
+- **Observability**: Built-in monitoring and tracing
+
+---
+
+## Scripts
+
+The `script/` directory contains automation tools for development and deployment:
+
+### `install.sh`
+**Purpose**: Environment setup and dependency installation
+
+**Features:**
+- Loads environment variables from `.env` file
+- Installs Node.js dependencies for commitlint
+- Sets up Husky git hooks automatically
+- Validates environment configuration
+
+**Usage:**
+```bash
+chmod +x script/install.sh
+./script/install.sh
+```
+
+### `build-image.sh`
+**Purpose**: Advanced Docker image building with multiple options
+
+**Features:**
+- **Flexible tagging**: Custom image names and tags
+- **Multi-platform builds**: Support for different architectures
+- **Registry integration**: Automatic push to Docker registries
+- **Build optimization**: Cache management and cleanup options
+- **Environment validation**: Docker installation and daemon checks
+
+**Usage Examples:**
+```bash
+# Basic build
+./script/build-image.sh
+
+# Build with custom tag
+./script/build-image.sh -t v1.0.0
+
+# Build and push to registry
+./script/build-image.sh -t latest -p
+
+# Clean build without cache
+./script/build-image.sh --no-cache -c
+
+# Multi-platform build
+./script/build-image.sh --platform linux/amd64,linux/arm64
+
+# Build with custom registry
+DOCKER_REGISTRY=myregistry.com ./script/build-image.sh -t v1.0.0 -p
+```
+
+**Environment Variables for Registry Push:**
+```bash
+DOCKER_REGISTRY=your-registry.com
+DOCKER_USERNAME=your-username  
+DOCKER_PASSWORD=your-password-or-token
+```
 
 ---
 
 ## Git Hooks
 
-Git hooks are automatically installed via the `script/install.sh` script. They help enforce code quality and commit
-standards.
+Git hooks are automatically installed via the `script/install.sh` script using **Husky**. They help enforce code quality and commit standards.
 
 ### Available Hooks
 
-- **Commitlint**: Validates commit messages against conventional commit standards. It
-  follows [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
-- **Java Format**: Ensures Java code is formatted according to project standards using Spotless.
+- **Commitlint**: Validates commit messages against conventional commit standards following [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+  - **Types**: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
+  - **Format**: `type(scope): description`
+  - **Example**: `feat(auth): add OAuth2 login functionality`
+
+- **Pre-commit**: Future integration for code formatting and linting
+  - Java code formatting using Spotless (planned)
+  - Import organization and style checks (planned)
+
+**Manual Hook Setup:**
+```bash
+# If hooks aren't working, reinstall manually
+npm install
+npx husky install
+```
 
 ## Directory Structure
 
 ```text
-datn-be/
-├── api-gateway/             # Spring Cloud Gateway
-├── auth-service/            # Authentication microservice
-├── presentation-service/    # Presentation microservice
-├── config-server/           # Spring Cloud Config server
-├── discovery-service/       # Eureka Discovery server
-├── admin-server/            # Spring Boot Admin server
-├── docker-compose.db.yml    # Database definitions
-├── docker-compose.infra.yml # Infrastructure services
-├── docker-compose.business.yml # Business services
-├── docker-compose.yml        # Combined Docker Compose file
-├── script/                  # Build & install scripts
-├── .env.sample              # Sample environment variables
-└── pom.xml                  # Parent Maven POM
+.
+└── datnbe/
+    ├── ai/
+    ├── auth/
+    ├── DatnBeApplication.java
+    ├── document/
+    └── sharedkernel/
 ```
+
+**Key Features:**
+- **Modular Architecture**: Clear separation using Spring Modulith
+- **Multi-database Support**: PostgreSQL for relational data, MongoDB for documents
+- **AI Integration**: OpenAI and Google Vertex AI services
+- **Container-ready**: Docker and Docker Compose support
+- **Development Tools**: Git hooks, automated builds, health monitoring
+- **Configuration Management**: Environment-based configuration with Docker profiles
