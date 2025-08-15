@@ -41,6 +41,8 @@ server:
 
 # Test model configurations
 app:
+  init:
+    enabled: false
   models:
     configurations:
       openai:
@@ -54,3 +56,9 @@ app:
           display-name: "Gemini 2.0 Flash"
           provider: "Google"
           default-model: true
+
+logging:
+  level:
+    org.springframework.boot.autoconfigure: DEBUG
+    org.hibernate: WARN
+    com.datn.datnbe: DEBUG
