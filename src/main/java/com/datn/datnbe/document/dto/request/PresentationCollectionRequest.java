@@ -1,8 +1,11 @@
 package com.datn.datnbe.document.dto.request;
 
-import com.datn.datnbe.gateway.dto.BaseCollectionRequest;
-import lombok.*;
+import com.datn.datnbe.sharedkernel.dto.BaseCollectionRequest;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

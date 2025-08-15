@@ -1,11 +1,7 @@
-package com.datn.datnbe.document.entity;
+package com.datn.datnbe.document.infrastructure.entity;
 
-import com.datn.datnbe.document.entity.valueobject.Slide;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.datn.datnbe.document.infrastructure.entity.valueobject.Slide;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;

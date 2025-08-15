@@ -1,4 +1,4 @@
-package com.datn.datnbe.document.enums;
+package com.datn.datnbe.document.infrastructure.enums;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 

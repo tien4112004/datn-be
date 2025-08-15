@@ -1,10 +1,6 @@
-package com.datn.datnbe.document.entity.valueobject;
+package com.datn.datnbe.document.infrastructure.entity.valueobject;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.mongodb.core.mapping.Field;
 

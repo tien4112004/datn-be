@@ -1,18 +1,18 @@
-package com.datn.datnbe.document.mapper;
+package com.datn.datnbe.document.infrastructure.mapper;
 
 import com.datn.datnbe.document.dto.SlideDto;
-import com.datn.datnbe.document.dto.SlideDto.SlideElementDto;
 import com.datn.datnbe.document.dto.SlideDto.SlideBackgroundDto;
+import com.datn.datnbe.document.dto.SlideDto.SlideElementDto;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
 import com.datn.datnbe.document.dto.request.PresentationUpdateRequest;
 import com.datn.datnbe.document.dto.response.PresentationCreateResponseDto;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
 import com.datn.datnbe.document.dto.response.PresentationUpdateResponseDto;
-import com.datn.datnbe.document.entity.Presentation;
-import com.datn.datnbe.document.entity.valueobject.Slide;
-import com.datn.datnbe.document.entity.valueobject.SlideBackground;
-import com.datn.datnbe.document.entity.valueobject.SlideElement;
-import com.datn.datnbe.document.enums.SlideElementType;
+import com.datn.datnbe.document.infrastructure.entity.Presentation;
+import com.datn.datnbe.document.infrastructure.entity.valueobject.Slide;
+import com.datn.datnbe.document.infrastructure.entity.valueobject.SlideBackground;
+import com.datn.datnbe.document.infrastructure.entity.valueobject.SlideElement;
+import com.datn.datnbe.document.infrastructure.enums.SlideElementType;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;

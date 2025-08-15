@@ -1,5 +1,6 @@
 package com.datn.datnbe.document.event;
 
+import com.datn.datnbe.sharedkernel.event.BaseEvent;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,7 +9,6 @@ import lombok.Setter;
 /**
  * Event for slide Generated operations
  */
-@Deprecated
 public class SlideGeneratedEvent extends BaseEvent {
 
     private String presentationId;

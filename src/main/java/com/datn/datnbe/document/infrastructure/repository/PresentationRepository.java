@@ -1,6 +1,6 @@
-package com.datn.datnbe.document.repository;
+package com.datn.datnbe.document.infrastructure.repository;
 
-import com.datn.datnbe.document.entity.Presentation;
+import com.datn.datnbe.document.infrastructure.entity.Presentation;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;

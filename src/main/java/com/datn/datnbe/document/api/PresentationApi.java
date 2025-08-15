@@ -6,7 +6,7 @@ import com.datn.datnbe.document.dto.request.PresentationUpdateRequest;
 import com.datn.datnbe.document.dto.request.PresentationUpdateTitleRequest;
 import com.datn.datnbe.document.dto.response.PresentationCreateResponseDto;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
-import com.datn.datnbe.gateway.dto.PaginatedResponseDto;
+import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 
 import java.util.List;
 
