@@ -1,15 +1,14 @@
-package com.datn.datnbe;
+package com.datn.datnbe.ai.management;
 
-import com.datn.datnbe.ai.management.ModelSelectionManagement;
-import com.datn.datnbe.ai.config.chatmodelconfiguration.ModelProperties.ModelInfo;
+import com.datn.datnbe.ai.infrastructure.config.chatmodelconfiguration.ModelProperties;
 import com.datn.datnbe.ai.dto.response.ModelMinimalResponseDto;
 import com.datn.datnbe.ai.dto.response.ModelResponseDto;
-import com.datn.datnbe.ai.entity.ModelConfigurationEntity;
-import com.datn.datnbe.gateway.exceptions.AppException;
-import com.datn.datnbe.gateway.exceptions.ErrorCode;
-import com.datn.datnbe.ai.mapper.ModelDataMapper;
-import com.datn.datnbe.ai.repository.impl.jpa.ModelConfigurationJPARepo;
-import com.datn.datnbe.ai.repository.interfaces.ModelConfigurationRepo;
+import com.datn.datnbe.ai.infrastructure.entity.ModelConfigurationEntity;
+import com.datn.datnbe.ai.infrastructure.mapper.ModelDataMapper;
+import com.datn.datnbe.ai.infrastructure.repository.impl.jpa.ModelConfigurationJPARepo;
+import com.datn.datnbe.ai.infrastructure.repository.interfaces.ModelConfigurationRepo;
+import com.datn.datnbe.sharedkernel.exceptions.AppException;
+import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,8 +21,13 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+
 
 @ExtendWith(MockitoExtension.class)
 class ModelSelectionManagementTest {
@@ -45,7 +49,7 @@ class ModelSelectionManagementTest {
     private ModelMinimalResponseDto minimalResponseDto1;
     private ModelMinimalResponseDto minimalResponseDto2;
     private ModelResponseDto responseDto;
-    private ModelInfo modelInfo;
+    private ModelProperties.ModelInfo modelInfo;
 
     @BeforeEach
     void setUp() {
@@ -90,7 +94,7 @@ class ModelSelectionManagementTest {
                 .build();
 
         // Setup test ModelInfo
-        modelInfo = new ModelInfo();
+        modelInfo = new ModelProperties.ModelInfo();
         modelInfo.setModelName("new-model");
         modelInfo.setDisplayName("New Model");
         modelInfo.setProvider("test-provider");
