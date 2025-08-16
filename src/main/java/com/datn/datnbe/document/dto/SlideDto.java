@@ -1,6 +1,6 @@
 package com.datn.datnbe.document.dto;
 
-import com.datn.datnbe.document.infrastructure.enums.SlideElementType;
+import com.datn.datnbe.document.enums.SlideElementType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;

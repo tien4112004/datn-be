@@ -1,7 +1,7 @@
 spring:
   application:
     name: 'datn-be'
-# AI MODULE CONFIGURATION
+  # AI MODULE CONFIGURATION
   ai:
     model:
       chat: none
@@ -16,23 +16,21 @@ spring:
           project-id: ${VERTEX_PROJECT_ID}
           location: ${VERTEX_LOCATION}
   datasource:
-    models:
-      url: ${MODEL_CONFIG_DB_URL:jdbc:postgresql://localhost:5432/model_configuration_db}
-      username: ${MODEL_CONFIG_DB_USERNAME}
-      password: ${MODEL_CONFIG_DB_PASSWORD}
-    auth:
-      url: ${AUTH_DB_URL:jdbc:postgresql://localhost:5432/auth_db}
-      username: ${AUTH_DB_USERNAME:auth_user}
-      password: ${AUTH_DB_PASSWORD:auth_password}
+    url: ${POSTGRES_DB_URL:jdbc:postgresql://localhost:5432/datn_monolith_db}
+    username: ${POSTGRES_DB_USERNAME:postgres}
+    password: ${POSTGRES_DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: update
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
 
-# DOCUMENTS MODULE CONFIGURATION
+  # DOCUMENTS MODULE CONFIGURATION
   data:
     mongodb:
       uri: ${MONGODB_URI:mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DATABASE}?authSource=${MONGODB_AUTH_DATABASE}}

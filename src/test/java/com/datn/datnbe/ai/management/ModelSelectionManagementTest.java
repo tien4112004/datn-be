@@ -1,12 +1,12 @@
 package com.datn.datnbe.ai.management;
 
-import com.datn.datnbe.ai.infrastructure.config.chatmodelconfiguration.ModelProperties;
+import com.datn.datnbe.ai.config.chatmodelconfiguration.ModelProperties;
 import com.datn.datnbe.ai.dto.response.ModelMinimalResponseDto;
 import com.datn.datnbe.ai.dto.response.ModelResponseDto;
-import com.datn.datnbe.ai.infrastructure.entity.ModelConfigurationEntity;
-import com.datn.datnbe.ai.infrastructure.mapper.ModelDataMapper;
-import com.datn.datnbe.ai.infrastructure.repository.impl.jpa.ModelConfigurationJPARepo;
-import com.datn.datnbe.ai.infrastructure.repository.interfaces.ModelConfigurationRepo;
+import com.datn.datnbe.ai.entity.ModelConfigurationEntity;
+import com.datn.datnbe.ai.mapper.ModelDataMapper;
+import com.datn.datnbe.ai.repository.impl.jpa.ModelConfigurationJPARepo;
+import com.datn.datnbe.ai.repository.interfaces.ModelConfigurationRepo;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,6 +1,6 @@
 package com.datn.datnbe.ai.api;
 
-import com.datn.datnbe.ai.infrastructure.config.chatmodelconfiguration.ModelProperties;
+import com.datn.datnbe.ai.config.chatmodelconfiguration.ModelProperties;
 import com.datn.datnbe.ai.dto.response.ModelMinimalResponseDto;
 import com.datn.datnbe.ai.dto.response.ModelResponseDto;
 

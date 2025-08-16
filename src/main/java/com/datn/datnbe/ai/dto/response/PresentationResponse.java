@@ -1,6 +1,6 @@
 package com.datn.datnbe.ai.dto.response;
 
-import com.datn.datnbe.ai.infrastructure.entity.BaseSlide;
+import com.datn.datnbe.ai.entity.BaseSlide;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;

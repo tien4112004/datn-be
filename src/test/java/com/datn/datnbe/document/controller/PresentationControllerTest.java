@@ -6,7 +6,7 @@ import com.datn.datnbe.document.dto.SlideDto.SlideElementDto;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
 import com.datn.datnbe.document.dto.response.PresentationCreateResponseDto;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
-import com.datn.datnbe.document.infrastructure.enums.SlideElementType;
+import com.datn.datnbe.document.enums.SlideElementType;
 import com.datn.datnbe.document.presentation.PresentationController;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;

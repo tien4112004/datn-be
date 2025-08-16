@@ -1,11 +1,11 @@
 package com.datn.datnbe.ai.management;
 
 import com.datn.datnbe.ai.api.ModelSelectionApi;
-import com.datn.datnbe.ai.infrastructure.config.chatmodelconfiguration.ModelProperties;
+import com.datn.datnbe.ai.config.chatmodelconfiguration.ModelProperties;
 import com.datn.datnbe.ai.dto.response.ModelMinimalResponseDto;
 import com.datn.datnbe.ai.dto.response.ModelResponseDto;
-import com.datn.datnbe.ai.infrastructure.mapper.ModelDataMapper;
-import com.datn.datnbe.ai.infrastructure.repository.interfaces.ModelConfigurationRepo;
+import com.datn.datnbe.ai.mapper.ModelDataMapper;
+import com.datn.datnbe.ai.repository.interfaces.ModelConfigurationRepo;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
