@@ -70,7 +70,7 @@ cp .env.sample .env
 
 > **Note:**
 >
-> - The installer script (`script/install.sh`) automatically loads `.env`.
+> - The installer script (`scripts/install.sh`) automatically loads `.env`.
 > - If you skip the installer, load variables manually:
     >
     >   ```bash
@@ -82,8 +82,8 @@ cp .env.sample .env
 Make the installer executable and run it:
 
 ```bash
-chmod +x script/install.sh
-./script/install.sh
+chmod +x scripts/install.sh
+./scripts/install.sh
 ```
 
 This script will:
@@ -128,12 +128,9 @@ docker-compose -f docker-compose.db.yml up -d
 docker run -p 8080:8080 \
   --network datn-be_default \
   -e SPRING_PROFILES_ACTIVE=docker \
-  -e AUTH_DB_URL=jdbc:postgresql://auth-db:5432/auth_db \
-  -e AUTH_DB_USERNAME=postgres \
-  -e AUTH_DB_PASSWORD=postgres \
-  -e MODEL_CONFIG_DB_URL=jdbc:postgresql://model-configuration-db:5432/model_configuration_db \
-  -e MODEL_CONFIG_DB_USERNAME=postgres \
-  -e MODEL_CONFIG_DB_PASSWORD=postgres \
+  -e POSTGRES_DB_URL=jdbc:postgresql://postgres-monolith:5432/datn_monolith_db \
+  -e POSTGRES_DB_USERNAME=postgres \
+  -e POSTGRES_DB_PASSWORD=postgres \
   -e MONGODB_URI=mongodb://mongouser:mongopassword@mongo:27017/presentation_db?authSource=admin \
   -v ${VERTEX_SERVICE_ACCOUNT_KEY_PATH}:/secrets/key.json:ro \
   datn-be:latest
@@ -156,13 +153,13 @@ docker-compose -f docker-compose.db.yml -f docker-compose.yml up -d
 
 ```bash
 # Build image with the provided script
-./script/build-image.sh
+./scripts/build-image.sh
 
 # Build with specific tag
-./script/build-image.sh -t v1.0.0
+./scripts/build-image.sh -t v1.0.0
 
 # Build and push to registry
-./script/build-image.sh -t latest -p
+./scripts/build-image.sh -t latest -p
 ```
 
 ---
@@ -247,17 +244,13 @@ docker-compose -f docker-compose.db.yml -f docker-compose.yml up -d
 
 For connecting to local or external databases, configure these variables in `.env`:
 
-**PostgreSQL (Auth & Model Config):**
+**PostgreSQL (Single Monolith Database):**
 
 ```bash
-# For local development
-AUTH_DB_URL=jdbc:postgresql://localhost:5434/auth_db
-AUTH_DB_USERNAME=postgres
-AUTH_DB_PASSWORD=postgres
-
-MODEL_CONFIG_DB_URL=jdbc:postgresql://localhost:5433/model_configuration_db
-MODEL_CONFIG_DB_USERNAME=postgres
-MODEL_CONFIG_DB_PASSWORD=postgres
+# Single PostgreSQL database for the monolith
+POSTGRES_DB_URL=jdbc:postgresql://localhost:5432/datn_monolith_db
+POSTGRES_DB_USERNAME=postgres
+POSTGRES_DB_PASSWORD=postgres
 ```
 
 **MongoDB (Document Service):**
@@ -309,7 +302,7 @@ After updating `.env`, reload environment variables:
 ```bash
 source .env
 # or run the installer again
-./script/install.sh
+./scripts/install.sh
 ```
 
 ---
@@ -343,7 +336,7 @@ Each module is self-contained with its own:
 
 ## Scripts
 
-The `script/` directory contains automation tools for development and deployment:
+The `scripts/` directory contains automation tools for development and deployment:
 
 ### `install.sh`
 **Purpose**: Environment setup and dependency installation
@@ -356,8 +349,8 @@ The `script/` directory contains automation tools for development and deployment
 
 **Usage:**
 ```bash
-chmod +x script/install.sh
-./script/install.sh
+chmod +x scripts/install.sh
+./scripts/install.sh
 ```
 
 ### `build-image.sh`
@@ -373,22 +366,22 @@ chmod +x script/install.sh
 **Usage Examples:**
 ```bash
 # Basic build
-./script/build-image.sh
+./scripts/build-image.sh
 
 # Build with custom tag
-./script/build-image.sh -t v1.0.0
+./scripts/build-image.sh -t v1.0.0
 
 # Build and push to registry
-./script/build-image.sh -t latest -p
+./scripts/build-image.sh -t latest -p
 
 # Clean build without cache
-./script/build-image.sh --no-cache -c
+./scripts/build-image.sh --no-cache -c
 
 # Multi-platform build
-./script/build-image.sh --platform linux/amd64,linux/arm64
+./scripts/build-image.sh --platform linux/amd64,linux/arm64
 
 # Build with custom registry
-DOCKER_REGISTRY=myregistry.com ./script/build-image.sh -t v1.0.0 -p
+DOCKER_REGISTRY=myregistry.com ./scripts/build-image.sh -t v1.0.0 -p
 ```
 
 **Environment Variables for Registry Push:**
@@ -402,7 +395,7 @@ DOCKER_PASSWORD=your-password-or-token
 
 ## Git Hooks
 
-Git hooks are automatically installed via the `script/install.sh` script using **Husky**. They help enforce code quality and commit standards.
+Git hooks are automatically installed via the `scripts/install.sh` script using **Husky**. They help enforce code quality and commit standards.
 
 ### Available Hooks
 

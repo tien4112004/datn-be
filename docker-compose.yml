@@ -8,13 +8,12 @@ services:
         limits:
           memory: 1024M
     environment:
-      # Database connections
-      - AUTH_DB_URL=jdbc:postgresql://auth-db:5432/auth_db
-      - AUTH_DB_USERNAME=postgres
-      - AUTH_DB_PASSWORD=postgres
-      - MODEL_CONFIG_DB_URL=jdbc:postgresql://model-configuration-db:5432/model_configuration_db
-      - MODEL_CONFIG_DB_USERNAME=postgres
-      - MODEL_CONFIG_DB_PASSWORD=postgres
+      # Single PostgreSQL database connection
+      - POSTGRES_DB_URL=jdbc:postgresql://postgres-monolith:5432/datn_monolith_db
+      - POSTGRES_DB_USERNAME=postgres
+      - POSTGRES_DB_PASSWORD=postgres
+      
+      # MongoDB connection for document persistence
       - MONGODB_URI=mongodb://mongouser:mongopassword@mongo:27017/presentation_db?authSource=admin
       
       # AI services configuration

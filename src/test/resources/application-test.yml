@@ -1,28 +1,23 @@
 spring:
   application:
     name: document-service-test
+  # Single H2 in-memory database for tests
   datasource:
-    models:
-      url: jdbc:h2:mem:testdb_models
-      driver-class-name: org.h2.Driver
-      username: sa
-      password:
-    auth:
-      url: jdbc:h2:mem:testdb_auth
-      driver-class-name: org.h2.Driver
-      username: sa
-      password:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
   jpa:
     hibernate:
       ddl-auto: create-drop
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
-        format_sql: true
+        format_sql: false
   h2:
     console:
-      enabled: true
+      enabled: false
   ai:
     openai:
       api-key: "test-key"
@@ -65,6 +60,6 @@ app:
 
 logging:
   level:
-    org.springframework.boot.autoconfigure: DEBUG
+    org.springframework: WARN
     org.hibernate: WARN
-    com.datn.datnbe: DEBUG
+    com.datn.datnbe: WARN

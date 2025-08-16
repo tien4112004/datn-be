@@ -139,6 +139,8 @@ fi
 # Build Docker build command
 BUILD_CMD="docker build"
 
+export DOCKER_BUILDKIT=1
+
 # Add platform if specified
 if [ -n "$PLATFORM" ]; then
     BUILD_CMD="$BUILD_CMD --platform $PLATFORM"

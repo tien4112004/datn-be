@@ -56,3 +56,8 @@ node_modules
 
 ### GCLOUD ###
 service-account.json
+
+*.class
+
+/bin
+/bin/*
