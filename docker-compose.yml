@@ -9,7 +9,7 @@ services:
           memory: 1024M
     environment:
       # Single PostgreSQL database connection
-      - POSTGRES_DB_URL=jdbc:postgresql://postgres-monolith:5432/datn_monolith_db
+      - POSTGRES_DB_URL=jdbc:postgresql://postgres:5432/datn_monolith_db
       - POSTGRES_DB_USERNAME=postgres
       - POSTGRES_DB_PASSWORD=postgres
       

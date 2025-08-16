@@ -2,13 +2,15 @@
 FROM eclipse-temurin:21 AS builder
 WORKDIR /application
 
-# Copy Gradle wrapper and Gradle configuration files
-COPY gradlew gradlew.bat settings.gradle* build.gradle* gradle/ gradle.properties ./
+# Copy Gradle wrapper and build files
+COPY gradlew gradlew.bat ./
+COPY gradle/ gradle/
+COPY gradle.properties build.gradle settings.gradle ./
 
-# Warm Gradle
-RUN --mount=type=cache,target=/home/gradle/.gradle \
+# Use cache mount for Gradle cache directory
+RUN --mount=type=cache,target=/root/.gradle \
     chmod +x gradlew && \
-    ./gradlew --no-daemon --version
+    ./gradlew --no-daemon dependencies --quiet
 
 # Copy source code
 COPY src/ src/
