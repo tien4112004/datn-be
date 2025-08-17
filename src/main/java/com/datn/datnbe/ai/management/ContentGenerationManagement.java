@@ -24,7 +24,7 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     SystemPromptConfig systemPromptConfig;
     ModelSelectionApi modelSelectionApi;
     ChatClientFactory chatClientFactory;
-//    AIEventPublisher aiEventPublisher;
+    // AIEventPublisher aiEventPublisher;
 
     @Override
     public Flux<String> generateOutline(OutlinePromptRequest request) {
@@ -65,30 +65,31 @@ public class ContentGenerationManagement implements ContentGenerationApi {
                 .doOnNext(chunk -> completeResponse.append(chunk))
                 .doOnComplete(() -> {
                     log.info("Streaming presentation generation completed");
-                    String cleanedJson = extractJsonFromResponse(completeResponse.toString());
-//                    try {
-//                        // Parse the complete JSON response
-//                        PresentationResponse slideResponse = objectMapper.readValue(cleanedJson,
-//                                PresentationResponse.class);
-//
-//                        // Publish event with actual slides
-//                        var event = new PresentationGeneratedEvent(slideResponse.getSlides());
-//                        aiEventPublisher.publishEvent(event);
-//                    } catch (JsonProcessingException e) {
-//                        log.error("Error parsing JSON response: {}", e.getMessage());
-//                        throw new AppException(ErrorCode.JSON_PARSING_ERROR);
-//                    }
+                    // String cleanedJson = extractJsonFromResponse(completeResponse.toString());
+                    // try {
+                    // // Parse the complete JSON response
+                    // PresentationResponse slideResponse = objectMapper.readValue(cleanedJson,
+                    // PresentationResponse.class);
+                    //
+                    // // Publish event with actual slides
+                    // var event = new PresentationGeneratedEvent(slideResponse.getSlides());
+                    // aiEventPublisher.publishEvent(event);
+                    // } catch (JsonProcessingException e) {
+                    // log.error("Error parsing JSON response: {}", e.getMessage());
+                    // throw new AppException(ErrorCode.JSON_PARSING_ERROR);
+                    // }
                 })
                 .doOnError(error -> log.error("Error in streaming presentation generation: {}", error.getMessage()));
     }
 
-    private String extractJsonFromResponse(String response) {
-        // Remove markdown code blocks
-        String cleaned = response.trim();
+    // private String extractJsonFromResponse(String response) {
+    // // Remove markdown code blocks
+    // String cleaned = response.trim();
 
-        cleaned = cleaned.replaceAll("(?m)^```json\\s*|^```\\s*", "").replaceAll("\n---", ",").replaceAll(",\\s*$", "");
+    // cleaned = cleaned.replaceAll("(?m)^```json\\s*|^```\\s*",
+    // "").replaceAll("\n---", ",").replaceAll(",\\s*$", "");
 
-        cleaned = "{\"slides\":[" + cleaned + "]}";
-        return cleaned;
-    }
+    // cleaned = "{\"slides\":[" + cleaned + "]}";
+    // return cleaned;
+    // }
 }
