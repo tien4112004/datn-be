@@ -25,6 +25,7 @@ A Spring Boot modular monolith backend for the DATN project, built with Spring M
   - [`install.sh`](#installsh)
   - [`build-image.sh`](#build-imagesh)
 - [Git Hooks](#git-hooks)
+  - [Available Hooks](#available-hooks)
 - [Directory Structure](#directory-structure)
 
 ---
@@ -394,13 +395,10 @@ DOCKER_PASSWORD=your-password-or-token
 
 ## Git Hooks
 
-- Git hooks are automatically installed via the `scripts/install.sh` script using **Husky**. They help enforce code quality and commit standards.
-- With gradle, the pre-commit hook applies code formatting using **Spotless**.
-- It is recommended to have a latest version  of gradle installed to ensure compatibility with the Spotless plugin:
-```bash
-### Using SDKMAN, most available in UNIX-like systems
-sdk install gradle
-```
+Git hooks are automatically installed via the `scripts/install.sh` script using **Husky**. They help enforce code quality and commit standards.
+
+### Available Hooks
+
 - **Commitlint**: Validates commit messages against conventional commit standards following [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
   - **Types**: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
   - **Format**: `type(scope): description`
