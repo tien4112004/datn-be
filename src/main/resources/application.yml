@@ -29,7 +29,6 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-
   # DOCUMENTS MODULE CONFIGURATION
   data:
     mongodb:
