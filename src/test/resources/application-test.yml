@@ -1,0 +1,65 @@
+spring:
+  application:
+    name: document-service-test
+  # Single H2 in-memory database for tests
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+  h2:
+    console:
+      enabled: false
+  ai:
+    openai:
+      api-key: "test-key"
+      base-url: "http://test-url"
+    vertex:
+      ai:
+        gemini:
+          project-id: "test-project-id"
+          location: "us-central1"
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/test-db
+
+server:
+  port: 0
+
+# Test model configurations
+app:
+  init:
+    enabled: false
+  cors:
+    allowed-origins: "http://localhost:3000,http://localhost:8080"
+    allowed-origin-patterns: "http://localhost:3000,http://localhost:8080"
+    allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+    allow-credentials: true
+    max-age: 3600
+  models:
+    configurations:
+      openai:
+        - model-name: "gpt-4o-mini"
+          display-name: "GPT-4 Optimized"
+          provider: "OpenAI"
+          default-model: false
+      # ??? GEMINI MODELS ???
+      gemini:
+        - model-name: "gemini-2.0-flash-001"
+          display-name: "Gemini 2.0 Flash"
+          provider: "Google"
+          default-model: true
+
+logging:
+  level:
+    org.springframework: WARN
+    org.hibernate: WARN
+    com.datn.datnbe: WARN

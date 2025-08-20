@@ -1,0 +1,53 @@
+# Build artifacts
+build/
+target/
+*.jar
+*.war
+
+# Gradle cache
+.gradle/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+HELP.md
+*.md
+
+# Docker files (to avoid copying other Dockerfiles)
+src/main/java/com/datn/datnbe/*/Dockerfile
+docker-compose*.yml
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+
+# Node modules (if any)
+node_modules/
+
+# Test files
+src/test/
+
+# Development tools
+.editorconfig
+commitlint.config.js
+
+# Maven artifacts (since you're using Gradle)
+pom.xml
