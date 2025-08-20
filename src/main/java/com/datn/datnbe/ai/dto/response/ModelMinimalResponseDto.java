@@ -10,6 +10,7 @@ import lombok.experimental.FieldDefaults;
 public class ModelMinimalResponseDto {
     String modelId;
     String displayName;
+    String modelName;
     boolean isEnabled;
     String provider;
 

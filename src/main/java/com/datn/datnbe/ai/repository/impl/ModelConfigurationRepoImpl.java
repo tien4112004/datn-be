@@ -55,10 +55,9 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
     }
 
     @Override
-    public void save(ModelConfigurationEntity modelEntity) {
-        // Add validation or transformation logic if needed
+    public ModelConfigurationEntity save(ModelConfigurationEntity modelEntity) {
         log.info("Saving model {}", modelEntity);
-        modelConfigurationJPARepo.save(modelEntity);
+        return modelConfigurationJPARepo.save(modelEntity);
     }
 
     @Override
@@ -81,7 +80,7 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
                 .orElseThrow(() -> new AppException(ErrorCode.MODEL_NOT_FOUND));
 
         if (isDefault && !existingModel.isEnabled()) {
-            throw new AppException(ErrorCode.MODEL_NOT_ENABLED);
+            throw new AppException(ErrorCode.INVALID_MODEL_STATUS, "A model cannot be default if it is disabled");
         }
 
         // Set others models to not default
@@ -91,5 +90,29 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
 
         existingModel.setDefault(isDefault);
         modelConfigurationJPARepo.save(existingModel);
+    }
+
+    @Override
+    public void deleteByModelName(String modelName) {
+        var model = modelConfigurationJPARepo.findByModelName(modelName)
+                .orElseThrow(() -> new AppException(ErrorCode.MODEL_NOT_FOUND,
+                        "Model not found with name: " + modelName));
+
+        if (model.isDefault()) {
+            resetDefaultModel();
+        }
+
+        modelConfigurationJPARepo.delete(model);
+        log.info("Deleted model: {}", modelName);
+    }
+
+    private void resetDefaultModel() {
+        int DEFAULT_MODEL_ID = 1;
+
+        boolean IS_DEFAULT_MODEL = true;
+        setDefault(DEFAULT_MODEL_ID, IS_DEFAULT_MODEL);
+
+        boolean IS_ENABLED_MODEL = true;
+        setEnabled(DEFAULT_MODEL_ID, IS_ENABLED_MODEL);
     }
 }
