@@ -1,33 +1,23 @@
 version: "3.8"
 
-x-postgres-common: &postgres-common
-  image: postgres:17
-  restart: unless-stopped
-
 services:
-  auth-db:
-    <<: *postgres-common
-    container_name: auth-db
+  postgres:
+    image: postgres:17
+    container_name: postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: auth_db
+      POSTGRES_DB: datn_monolith_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5434:5432"
+      - "5432:5432"
     volumes:
-      - pgdata-auth:/var/lib/postgresql/data
-
-  model-configuration-db:
-    <<: *postgres-common
-    container_name: model-configuration-db
-    environment:
-      POSTGRES_DB: model_configuration_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5433:5432"
-    volumes:
-      - pgdata-model-config:/var/lib/postgresql/data
+      - pgdata-monolith:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d datn_monolith_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   mongo:
     image: mongo:6
@@ -38,12 +28,16 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: mongopassword
       MONGO_INITDB_DATABASE: presentationdb
     ports:
-      - "27018:27017"
+      - "27017:27017"
     volumes:
       - mongodata:/data/db
-      - ./document-service/docker/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./src/main/resources/docker/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
-  pgdata-auth:
-  pgdata-model-config:
+  pgdata-monolith:
   mongodata:

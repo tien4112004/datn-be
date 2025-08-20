@@ -1,0 +1,67 @@
+spring:
+  application:
+    name: 'datn-be'
+  # AI MODULE CONFIGURATION
+  ai:
+    model:
+      chat: none
+    chat:
+      client:
+        enabled: false
+    openai:
+      api-key: ${OPENAI_KEY}
+    vertex:
+      ai:
+        gemini:
+          project-id: ${VERTEX_PROJECT_ID}
+          location: ${VERTEX_LOCATION}
+  datasource:
+    url: ${POSTGRES_DB_URL:jdbc:postgresql://localhost:5432/datn_monolith_db}
+    username: ${POSTGRES_DB_USERNAME:postgres}
+    password: ${POSTGRES_DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  # DOCUMENTS MODULE CONFIGURATION
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DATABASE}?authSource=${MONGODB_AUTH_DATABASE}}
+app:
+  models:
+    configurations:
+      openai:
+        - model-name: "gpt-4o-mini-2024-07-18"
+          display-name: "GPT-4 Optimized"
+          provider: "OpenAI"
+          default-model: false
+        - model-name: "gpt-4.1-nano-2025-04-14"
+          display-name: "GPT-4.1 Nano"
+          provider: "OpenAI"
+          default-model: false
+      # --- GEMINI MODELS ---
+      gemini:
+        - model-name: "gemini-2.0-flash-001"
+          display-name: "Gemini 2.0 Flash"
+          provider: "Google"
+          default-model: true
+        - model-name: "gemini-2.5-flash"
+          display-name: "Gemini 2.5 Flash"
+          provider: "Google"
+          default-model: false
+        - model-name: "gemini-2.5-flash-lite"
+          display-name: "Gemini 2.5 Flash Lite"
+          provider: "Google"
+          default-model: false
+  cors:
+    allowed-origins: ${ALLOWED_ORIGINS}
+    allowed-origin-patterns: ${ALLOWED_ORIGINS}
+    allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+    allow-credentials: true
+    max-age: 3600
