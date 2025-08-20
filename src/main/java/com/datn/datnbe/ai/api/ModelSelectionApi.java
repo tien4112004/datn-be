@@ -1,7 +1,6 @@
 package com.datn.datnbe.ai.api;
 
 import com.datn.datnbe.ai.config.chatmodelconfiguration.ModelProperties;
-import com.datn.datnbe.ai.dto.response.ModelMinimalResponseDto;
 import com.datn.datnbe.ai.dto.response.ModelResponseDto;
 
 import java.util.List;
@@ -14,7 +13,7 @@ public interface ModelSelectionApi {
      * @return a list of ModelMinimalResponseDto containing the minimal
      * configuration of the model
      */
-    List<ModelMinimalResponseDto> getModelConfigurations();
+    List<ModelResponseDto> getModelConfigurations();
 
     /**
      * Retrieves the full configuration of a model by its ID.
@@ -27,17 +26,12 @@ public interface ModelSelectionApi {
     /**
      * Enables a model by its ID.
      *
-     * @param modelId the ID of the model to enable
-     */
-    void setModelEnabled(Integer modelId, boolean isEnabled);
-
-    /**
-     * Sets a model as the default model by its ID.
-     *
-     * @param modelId   the ID of the model to set as default
+     * @param modelId   the ID of the model to enable
+     * @param isEnabled true if the model should be enabled, false otherwise
      * @param isDefault true if the model should be set as default, false otherwise
+     * @return a ModelMinimalResponseDto containing the updated model information
      */
-    void setModelDefault(Integer modelId, boolean isDefault);
+    ModelResponseDto setModelStatus(Integer modelId, Boolean isEnabled, Boolean isDefault);
 
     /**
      * Checks if a model is enabled by its ID.
@@ -61,4 +55,11 @@ public interface ModelSelectionApi {
      * @return true if the model exists, false otherwise
      */
     boolean existByName(String modelName);
+
+    /**
+     * Removes a model by its name. This method is only be used internally
+     *
+     * @param modelName the name of the model to remove
+     */
+    void removeModelByName(String modelName);
 }
