@@ -11,6 +11,7 @@ public class ModelResponseDto {
     String modelId;
     String modelName;
     String displayName;
+    String provider;
     boolean isEnabled;
     boolean isDefault;
 }

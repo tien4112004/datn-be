@@ -1,6 +1,7 @@
 package com.datn.datnbe.ai.api;
 
 import com.datn.datnbe.ai.config.chatmodelconfiguration.ModelProperties;
+import com.datn.datnbe.ai.dto.request.UpdateModelStatusRequest;
 import com.datn.datnbe.ai.dto.response.ModelResponseDto;
 
 import java.util.List;
@@ -16,22 +17,13 @@ public interface ModelSelectionApi {
     List<ModelResponseDto> getModelConfigurations();
 
     /**
-     * Retrieves the full configuration of a model by its ID.
-     *
-     * @param modelId the ID of the model to retrieve
-     * @return a ModelResponseDto containing the full configuration of the model
-     */
-    ModelResponseDto getModelConfiguration(Integer modelId);
-
-    /**
      * Enables a model by its ID.
      *
-     * @param modelId   the ID of the model to enable
-     * @param isEnabled true if the model should be enabled, false otherwise
-     * @param isDefault true if the model should be set as default, false otherwise
+     * @param modelId the ID of the model to enable
+     * @param request the request containing the status update information
      * @return a ModelMinimalResponseDto containing the updated model information
      */
-    ModelResponseDto setModelStatus(Integer modelId, Boolean isEnabled, Boolean isDefault);
+    ModelResponseDto setModelStatus(Integer modelId, UpdateModelStatusRequest request);
 
     /**
      * Checks if a model is enabled by its ID.
