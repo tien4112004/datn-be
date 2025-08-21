@@ -1,11 +1,14 @@
-package com.datn.datnbe.document.dto;
+package com.datn.datnbe.document.dto.request;
 
-import com.datn.datnbe.document.enums.SlideElementType;
+import com.datn.datnbe.document.dto.SlideDto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
@@ -14,25 +17,22 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class SlideDto {
-    @NotBlank(message = "Slide ID cannot be blank")
-    String id;
+public class SlideCreateRequest {
 
     @Valid
-    List<SlideElementDto> elements;
+    List<SlideElementCreateRequest> elements;
 
     @Valid
-    SlideBackgroundDto background;
+    SlideDto.SlideBackgroundDto background;
 
     @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public static class SlideElementDto {
+    public static class SlideElementCreateRequest {
         @NotNull(message = "Element type cannot be null")
         String type;
-        String id;
         Float left;
         Float top;
         Float width;
@@ -56,13 +56,4 @@ public class SlideDto {
         Float wordSpace;
     }
 
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor(access = AccessLevel.PRIVATE)
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    public static class SlideBackgroundDto {
-        String type;
-        String color;
-    }
 }

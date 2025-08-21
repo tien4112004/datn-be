@@ -1,5 +1,7 @@
 package com.datn.datnbe.document.entity.valueobject;
 
+import com.datn.datnbe.document.dto.SlideDto;
+import com.datn.datnbe.document.enums.SlideElementType;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -13,7 +15,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SlideElement {
     @Field("type")
-    String type;
+    SlideElementType type;
 
     @Field("id")
     String id;
