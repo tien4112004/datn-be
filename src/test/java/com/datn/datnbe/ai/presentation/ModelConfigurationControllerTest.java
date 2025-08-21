@@ -210,8 +210,8 @@ class ModelConfigurationControllerTest {
                 .andExpect(jsonPath("$.status").value("success"))
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.modelId").value("1"))
-                .andExpect(jsonPath("$.data.isEnabled").value(false))
-                .andExpect(jsonPath("$.data.isDefault").value(false));
+                .andExpect(jsonPath("$.data.enabled").value(false))
+                .andExpect(jsonPath("$.data.default").value(false));
     }
 
     @Test
