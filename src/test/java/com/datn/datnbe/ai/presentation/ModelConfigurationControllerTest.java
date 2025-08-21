@@ -179,8 +179,8 @@ class ModelConfigurationControllerTest {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.modelId").value("1"))
                 .andExpect(jsonPath("$.data.modelName").value("gpt-4"))
-                .andExpect(jsonPath("$.data.isEnabled").value(true))
-                .andExpect(jsonPath("$.data.isDefault").value(true));
+                .andExpect(jsonPath("$.data.enabled").value(true))
+                .andExpect(jsonPath("$.data.default").value(true));
     }
 
     @Test
@@ -241,8 +241,8 @@ class ModelConfigurationControllerTest {
                 .andExpect(jsonPath("$.status").value("success"))
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.modelId").value("1"))
-                .andExpect(jsonPath("$.data.isEnabled").value(true))
-                .andExpect(jsonPath("$.data.isDefault").value(true));
+                .andExpect(jsonPath("$.data.enabled").value(true))
+                .andExpect(jsonPath("$.data.default").value(true));
     }
 
     @Test
@@ -282,10 +282,10 @@ class ModelConfigurationControllerTest {
         mockMvc.perform(patch("/api/models/{id}", modelId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isForbidden())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value("error"))
-                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.code").value(403))
                 .andExpect(jsonPath("$.message").value("A model cannot be default if it is disabled"))
                 .andExpect(jsonPath("$.errorCode").value("INVALID_MODEL_STATUS"));
     }
@@ -305,10 +305,10 @@ class ModelConfigurationControllerTest {
         mockMvc.perform(patch("/api/models/{id}", modelId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isForbidden())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value("error"))
-                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.code").value(403))
                 .andExpect(jsonPath("$.message").value("At least one of isEnabled or isDefault must be provided"))
                 .andExpect(jsonPath("$.errorCode").value("INVALID_MODEL_STATUS"));
     }
@@ -342,7 +342,7 @@ class ModelConfigurationControllerTest {
         mockMvc.perform(patch("/api/models/{id}", invalidModelId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isForbidden());
     }
 
     @Test
