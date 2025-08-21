@@ -1,11 +1,10 @@
 package com.datn.datnbe.ai.management;
 
 import com.datn.datnbe.ai.config.chatmodelconfiguration.ModelProperties;
-import com.datn.datnbe.ai.dto.response.ModelMinimalResponseDto;
+import com.datn.datnbe.ai.dto.request.UpdateModelStatusRequest;
 import com.datn.datnbe.ai.dto.response.ModelResponseDto;
 import com.datn.datnbe.ai.entity.ModelConfigurationEntity;
 import com.datn.datnbe.ai.mapper.ModelDataMapper;
-import com.datn.datnbe.ai.repository.impl.jpa.ModelConfigurationJPARepo;
 import com.datn.datnbe.ai.repository.interfaces.ModelConfigurationRepo;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
@@ -13,7 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -28,31 +27,27 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.verify;
 
-
 @ExtendWith(MockitoExtension.class)
 class ModelSelectionManagementTest {
 
     @Mock
     private ModelConfigurationRepo modelConfigurationRepo;
-
-    @Mock
-    private ModelConfigurationJPARepo modelConfigurationJPARepo;
-
-    @Mock
     private ModelDataMapper modelDataMapper;
 
-    @InjectMocks
     private ModelSelectionManagement modelSelectionService;
 
     private ModelConfigurationEntity modelEntity1;
     private ModelConfigurationEntity modelEntity2;
-    private ModelMinimalResponseDto minimalResponseDto1;
-    private ModelMinimalResponseDto minimalResponseDto2;
+    private ModelConfigurationEntity modelEntity3;
     private ModelResponseDto responseDto;
     private ModelProperties.ModelInfo modelInfo;
+    private UpdateModelStatusRequest updateModelStatusRequest;
 
     @BeforeEach
     void setUp() {
+        modelDataMapper = Mappers.getMapper(ModelDataMapper.class);
+        modelSelectionService = new ModelSelectionManagement(modelConfigurationRepo, modelDataMapper);
+
         // Setup test entities
         modelEntity1 = new ModelConfigurationEntity();
         modelEntity1.setModelId(1);
@@ -70,20 +65,13 @@ class ModelSelectionManagementTest {
         modelEntity2.setDefault(true);
         modelEntity2.setProvider("anthropic");
 
-        // Setup test DTOs
-        minimalResponseDto1 = ModelMinimalResponseDto.builder()
-                .modelId("1")
-                .displayName("GPT-4")
-                .isEnabled(true)
-                .provider("OpenAI")
-                .build();
-
-        minimalResponseDto2 = ModelMinimalResponseDto.builder()
-                .modelId("2")
-                .displayName("Claude 3")
-                .isEnabled(false)
-                .provider("Anthropic")
-                .build();
+        modelEntity3 = new ModelConfigurationEntity();
+        modelEntity3.setModelId(3);
+        modelEntity3.setModelName("gemini-pro");
+        modelEntity3.setDisplayName("Gemini Pro");
+        modelEntity3.setEnabled(true);
+        modelEntity3.setDefault(false);
+        modelEntity3.setProvider("google");
 
         responseDto = ModelResponseDto.builder()
                 .modelId("1")
@@ -99,194 +87,15 @@ class ModelSelectionManagementTest {
         modelInfo.setDisplayName("New Model");
         modelInfo.setProvider("test-provider");
         modelInfo.setDefaultModel(true);
+
+        // Setup UpdateModelStatusRequest - using reflection or helper method since
+        // fields are final
+        updateModelStatusRequest = createUpdateModelStatusRequest(true, false);
     }
 
-    @Test
-    @DisplayName("Should return list of model configurations")
-    void getModelConfigurations() {
-        // Given
-        List<ModelConfigurationEntity> entities = Arrays.asList(modelEntity1, modelEntity2);
-        List<ModelMinimalResponseDto> expectedDtos = Arrays.asList(minimalResponseDto1, minimalResponseDto2);
-
-        when(modelConfigurationRepo.getModels()).thenReturn(entities);
-        when(modelDataMapper.toModelMinimalResponseDto(modelEntity1)).thenReturn(minimalResponseDto1);
-        when(modelDataMapper.toModelMinimalResponseDto(modelEntity2)).thenReturn(minimalResponseDto2);
-
-        // When
-        List<ModelMinimalResponseDto> result = modelSelectionService.getModelConfigurations();
-
-        // Then
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals(expectedDtos, result);
-        verify(modelConfigurationRepo).getModels();
-        verify(modelDataMapper, times(2)).toModelMinimalResponseDto(any(ModelConfigurationEntity.class));
-    }
-
-    @Test
-    @DisplayName("Should return model configuration for valid model id")
-    void getModelConfiguration_ValidModelId() {
-        // Given
-        Integer modelId = 1;
-        // when(modelConfigurationRepo.existsByModelId(modelId)).thenReturn(true);
-        when(modelConfigurationRepo.getModelById(modelId)).thenReturn(modelEntity1);
-        when(modelDataMapper.toModelResponseDto(modelEntity1)).thenReturn(responseDto);
-
-        // When
-        ModelResponseDto result = modelSelectionService.getModelConfiguration(modelId);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(responseDto, result);
-        verify(modelConfigurationRepo).getModelById(modelId);
-        verify(modelDataMapper).toModelResponseDto(modelEntity1);
-    }
-
-    @Test
-    @DisplayName("Should throw AppException when model not found for getModelConfiguration")
-    void getModelConfiguration_ModelNotFound() {
-        // Given
-        Integer nonExistentModelId = 999;
-        when(modelConfigurationRepo.getModelById(nonExistentModelId))
-                .thenThrow(new AppException(ErrorCode.MODEL_NOT_FOUND));
-
-        // When & Then
-        AppException exception = assertThrows(AppException.class,
-                () -> modelSelectionService.getModelConfiguration(nonExistentModelId));
-
-        assertEquals(ErrorCode.MODEL_NOT_FOUND, exception.getErrorCode());
-        verify(modelConfigurationRepo, never()).getModelByName(anyString());
-        verify(modelDataMapper, never()).toModelResponseDto(any());
-    }
-
-    @Test
-    @DisplayName("Should set model enabled for valid model id")
-    void setModelEnabled_ValidModelId() {
-        // Given
-        Integer modelId = 1;
-        boolean isEnabled = true;
-
-        // When
-        assertDoesNotThrow(() -> modelSelectionService.setModelEnabled(modelId, isEnabled));
-
-        // Then
-        verify(modelConfigurationRepo).setEnabled(modelId, isEnabled);
-    }
-
-    @Test
-    @DisplayName("Should set model disabled for non-default model")
-    void setModelEnabled_DisableNonDefaultModel() {
-        // Given
-        Integer modelId = 1;
-        boolean isEnabled = false;
-
-        // When
-        assertDoesNotThrow(() -> modelSelectionService.setModelEnabled(modelId, isEnabled));
-
-        // Then
-        verify(modelConfigurationRepo).setEnabled(modelId, isEnabled);
-    }
-
-    @Test
-    @DisplayName("Should throw AppException when trying to disable default model")
-    void setModelEnabled_DisableDefaultModel() {
-        // Given
-        Integer modelId = 1;
-        boolean isEnabled = false;
-
-        doThrow(new AppException(ErrorCode.INVALID_MODEL_STATUS,
-                "Cannot disable the default model. Please set another model as default first."))
-                .when(modelConfigurationRepo)
-                .setEnabled(modelId, isEnabled);
-
-        // When & Then
-        AppException exception = assertThrows(AppException.class,
-                () -> modelSelectionService.setModelEnabled(modelId, isEnabled));
-
-        assertEquals(ErrorCode.INVALID_MODEL_STATUS, exception.getErrorCode());
-        verify(modelConfigurationRepo).setEnabled(modelId, isEnabled);
-    }
-
-    @Test
-    @DisplayName("Should throw AppException when model not found for setModelEnabled")
-    void setModelEnabled_ModelNotFound() {
-        // Given
-        Integer nonExistentModelId = 999;
-        boolean isEnabled = true;
-
-        doThrow(new AppException(ErrorCode.MODEL_NOT_FOUND)).when(modelConfigurationRepo)
-                .setEnabled(nonExistentModelId, isEnabled);
-
-        // When & Then
-        AppException exception = assertThrows(AppException.class,
-                () -> modelSelectionService.setModelEnabled(nonExistentModelId, isEnabled));
-
-        assertEquals(ErrorCode.MODEL_NOT_FOUND, exception.getErrorCode());
-        verify(modelConfigurationRepo).setEnabled(nonExistentModelId, isEnabled);
-    }
-
-    @Test
-    @DisplayName("Should set enabled model as default and unset other defaults")
-    void setDefault_SetEnabledModelAsDefault() {
-        // Given
-        Integer modelId = 1;
-        boolean isDefault = true;
-
-        // When
-        assertDoesNotThrow(() -> modelSelectionService.setModelDefault(modelId, isDefault));
-
-        // Then
-        verify(modelConfigurationRepo).setDefault(modelId, isDefault);
-    }
-
-    @Test
-    @DisplayName("Should unset model as default without affecting others")
-    void setDefault_UnsetModelAsDefault() {
-        // Given
-        Integer modelId = 1;
-        boolean isDefault = false;
-
-        // When
-        assertDoesNotThrow(() -> modelSelectionService.setModelDefault(modelId, isDefault));
-
-        // Then
-        verify(modelConfigurationRepo).setDefault(modelId, isDefault);
-    }
-
-    @Test
-    @DisplayName("Should throw AppException when trying to set disabled model as default")
-    void setModelDefault_SetDisabledModelAsDefault() {
-        // Given
-        Integer modelId = 2;
-        boolean isDefault = true;
-
-        doThrow(new AppException(ErrorCode.MODEL_NOT_ENABLED)).when(modelConfigurationRepo)
-                .setDefault(modelId, isDefault);
-
-        // When & Then
-        AppException exception = assertThrows(AppException.class,
-                () -> modelSelectionService.setModelDefault(modelId, isDefault));
-
-        assertEquals(ErrorCode.MODEL_NOT_ENABLED, exception.getErrorCode());
-        verify(modelConfigurationRepo).setDefault(modelId, isDefault);
-    }
-
-    @Test
-    @DisplayName("Should throw AppException when model not found for setDefault")
-    void setModelDefault_ModelNotFound() {
-        // Given
-        Integer nonExistentModelId = 999;
-        boolean isDefault = true;
-
-        doThrow(new AppException(ErrorCode.MODEL_NOT_FOUND)).when(modelConfigurationRepo)
-                .setDefault(nonExistentModelId, isDefault);
-
-        // When & Then
-        AppException exception = assertThrows(AppException.class,
-                () -> modelSelectionService.setModelDefault(nonExistentModelId, isDefault));
-
-        assertEquals(ErrorCode.MODEL_NOT_FOUND, exception.getErrorCode());
-        verify(modelConfigurationRepo).setDefault(nonExistentModelId, isDefault);
+    // Helper method to create UpdateModelStatusRequest instances
+    private UpdateModelStatusRequest createUpdateModelStatusRequest(Boolean isEnable, Boolean isDefault) {
+        return new UpdateModelStatusRequest(isEnable, isDefault);
     }
 
     @Test
@@ -341,19 +150,17 @@ class ModelSelectionManagementTest {
     @Test
     @DisplayName("Should save model info successfully")
     void saveModelInfo_Success() {
+
         // Given
         ModelConfigurationEntity mappedEntity = new ModelConfigurationEntity();
         mappedEntity.setModelName(modelInfo.getModelName());
         mappedEntity.setDisplayName(modelInfo.getDisplayName());
         mappedEntity.setProvider(modelInfo.getProvider());
 
-        when(modelDataMapper.toModelConfigurationEntity(modelInfo)).thenReturn(mappedEntity);
-
         // When
         assertDoesNotThrow(() -> modelSelectionService.saveModelInfo(modelInfo));
 
         // Then
-        verify(modelDataMapper).toModelConfigurationEntity(modelInfo);
         verify(modelConfigurationRepo)
                 .save(argThat(entity -> entity.isEnabled() && entity.isDefault() == modelInfo.isDefaultModel()
                         && entity.getModelName().equals(modelInfo.getModelName())));
@@ -369,14 +176,296 @@ class ModelSelectionManagementTest {
         mappedEntity.setDisplayName(modelInfo.getDisplayName());
         mappedEntity.setProvider(modelInfo.getProvider());
 
-        when(modelDataMapper.toModelConfigurationEntity(modelInfo)).thenReturn(mappedEntity);
-
         // When
         assertDoesNotThrow(() -> modelSelectionService.saveModelInfo(modelInfo));
 
         // Then
-        verify(modelDataMapper).toModelConfigurationEntity(modelInfo);
         verify(modelConfigurationRepo).save(argThat(entity -> entity.isEnabled() && !entity.isDefault()
                 && entity.getModelName().equals(modelInfo.getModelName())));
+    }
+
+    // ===============================
+    // Tests for getModelConfigurations
+    // ===============================
+
+    @Test
+    @DisplayName("Should return sorted list of model configurations")
+    void getModelConfigurations_Success() {
+        // Given
+        List<ModelConfigurationEntity> models = Arrays.asList(modelEntity3, modelEntity2, modelEntity1); // Not sorted
+                                                                                                         // by provider
+        when(modelConfigurationRepo.getModels()).thenReturn(models);
+
+        // When
+        List<ModelResponseDto> result = modelSelectionService.getModelConfigurations();
+
+        // Then
+        assertNotNull(result);
+        assertEquals(3, result.size());
+        verify(modelConfigurationRepo).getModels();
+
+        // Verify the models are sorted by provider (anthropic, google, openai)
+        assertEquals("claude-3", result.get(0).getModelName());
+        assertEquals("gemini-pro", result.get(1).getModelName());
+        assertEquals("gpt-4", result.get(2).getModelName());
+    }
+
+    @Test
+    @DisplayName("Should return empty list when no models exist")
+    void getModelConfigurations_EmptyList() {
+        // Given
+        when(modelConfigurationRepo.getModels()).thenReturn(Arrays.asList());
+
+        // When
+        List<ModelResponseDto> result = modelSelectionService.getModelConfigurations();
+
+        // Then
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(modelConfigurationRepo).getModels();
+    }
+
+    // ===============================
+    // Tests for setModelStatus
+    // ===============================
+
+    @Test
+    @DisplayName("Should update model enabled status when only isEnabled is provided")
+    void setModelStatus_OnlyEnabledProvided_Success() {
+        // Given
+        Integer modelId = 1;
+        UpdateModelStatusRequest request = createUpdateModelStatusRequest(true, null);
+        when(modelConfigurationRepo.getModelById(modelId)).thenReturn(modelEntity1);
+
+        // When
+        ModelResponseDto result = modelSelectionService.setModelStatus(modelId, request);
+
+        // Then
+        assertNotNull(result);
+        verify(modelConfigurationRepo).setEnabled(modelId, true);
+        verify(modelConfigurationRepo, never()).setDefault(anyInt(), any(Boolean.class));
+        verify(modelConfigurationRepo).getModelById(modelId);
+    }
+
+    @Test
+    @DisplayName("Should update model default status when only isDefault is provided")
+    void setModelStatus_OnlyDefaultProvided_Success() {
+        // Given
+        Integer modelId = 1;
+        UpdateModelStatusRequest request = createUpdateModelStatusRequest(null, true);
+        when(modelConfigurationRepo.getModelById(modelId)).thenReturn(modelEntity1);
+
+        // When
+        ModelResponseDto result = modelSelectionService.setModelStatus(modelId, request);
+
+        // Then
+        assertNotNull(result);
+        verify(modelConfigurationRepo).setDefault(modelId, true);
+        verify(modelConfigurationRepo, never()).setEnabled(anyInt(), any(Boolean.class));
+        verify(modelConfigurationRepo).getModelById(modelId);
+    }
+
+    @Test
+    @DisplayName("Should update both enabled and default status when both are provided")
+    void setModelStatus_BothProvided_Success() {
+        // Given
+        Integer modelId = 1;
+        UpdateModelStatusRequest request = createUpdateModelStatusRequest(true, true);
+        when(modelConfigurationRepo.getModelById(modelId)).thenReturn(modelEntity1);
+
+        // When
+        ModelResponseDto result = modelSelectionService.setModelStatus(modelId, request);
+
+        // Then
+        assertNotNull(result);
+        verify(modelConfigurationRepo).setEnabled(modelId, true);
+        verify(modelConfigurationRepo).setDefault(modelId, true);
+        verify(modelConfigurationRepo).getModelById(modelId);
+    }
+
+    @Test
+    @DisplayName("Should throw exception when trying to set disabled model as default")
+    void setModelStatus_DisabledAndDefault_ThrowsException() {
+        // Given
+        Integer modelId = 1;
+        UpdateModelStatusRequest request = createUpdateModelStatusRequest(false, true);
+
+        // When & Then
+        AppException exception = assertThrows(AppException.class,
+                () -> modelSelectionService.setModelStatus(modelId, request));
+
+        assertEquals(ErrorCode.INVALID_MODEL_STATUS, exception.getErrorCode());
+        assertEquals("A model cannot be default if it is disabled", exception.getMessage());
+        verify(modelConfigurationRepo, never()).setEnabled(anyInt(), any(Boolean.class));
+        verify(modelConfigurationRepo, never()).setDefault(anyInt(), any(Boolean.class));
+    }
+
+    @Test
+    @DisplayName("Should throw exception when both isEnabled and isDefault are null")
+    void setModelStatus_BothNull_ThrowsException() {
+        // Given
+        Integer modelId = 1;
+        UpdateModelStatusRequest request = createUpdateModelStatusRequest(null, null);
+
+        // When & Then
+        AppException exception = assertThrows(AppException.class,
+                () -> modelSelectionService.setModelStatus(modelId, request));
+
+        assertEquals(ErrorCode.INVALID_MODEL_STATUS, exception.getErrorCode());
+        assertEquals("At least one of isEnabled or isDefault must be provided", exception.getMessage());
+        verify(modelConfigurationRepo, never()).setEnabled(anyInt(), any(Boolean.class));
+        verify(modelConfigurationRepo, never()).setDefault(anyInt(), any(Boolean.class));
+    }
+
+    @Test
+    @DisplayName("Should handle model not found in setModelStatus")
+    void setModelStatus_ModelNotFound_ThrowsException() {
+        // Given
+        Integer modelId = 999;
+        UpdateModelStatusRequest request = createUpdateModelStatusRequest(true, false);
+        when(modelConfigurationRepo.getModelById(modelId)).thenThrow(new AppException(ErrorCode.MODEL_NOT_FOUND));
+
+        // When & Then
+        AppException exception = assertThrows(AppException.class,
+                () -> modelSelectionService.setModelStatus(modelId, request));
+
+        assertEquals(ErrorCode.MODEL_NOT_FOUND, exception.getErrorCode());
+    }
+
+    // ===============================
+    // Tests for existByName
+    // ===============================
+
+    @Test
+    @DisplayName("Should return true when model exists by name")
+    void existByName_ModelExists_ReturnsTrue() {
+        // Given
+        String modelName = "gpt-4";
+        when(modelConfigurationRepo.existsByModelName(modelName)).thenReturn(true);
+
+        // When
+        boolean result = modelSelectionService.existByName(modelName);
+
+        // Then
+        assertTrue(result);
+        verify(modelConfigurationRepo).existsByModelName(modelName);
+    }
+
+    @Test
+    @DisplayName("Should return false when model does not exist by name")
+    void existByName_ModelDoesNotExist_ReturnsFalse() {
+        // Given
+        String modelName = "non-existent-model";
+        when(modelConfigurationRepo.existsByModelName(modelName)).thenReturn(false);
+
+        // When
+        boolean result = modelSelectionService.existByName(modelName);
+
+        // Then
+        assertFalse(result);
+        verify(modelConfigurationRepo).existsByModelName(modelName);
+    }
+
+    // ===============================
+    // Tests for removeModelByName
+    // ===============================
+
+    @Test
+    @DisplayName("Should remove model when it exists")
+    void removeModelByName_ModelExists_Success() {
+        // Given
+        String modelName = "gpt-4";
+        when(modelConfigurationRepo.existsByModelName(modelName)).thenReturn(true);
+
+        // When
+        assertDoesNotThrow(() -> modelSelectionService.removeModelByName(modelName));
+
+        // Then
+        verify(modelConfigurationRepo).existsByModelName(modelName);
+        verify(modelConfigurationRepo).deleteByModelName(modelName);
+    }
+
+    @Test
+    @DisplayName("Should not attempt to remove model when it does not exist")
+    void removeModelByName_ModelDoesNotExist_NoAction() {
+        // Given
+        String modelName = "non-existent-model";
+        when(modelConfigurationRepo.existsByModelName(modelName)).thenReturn(false);
+
+        // When
+        assertDoesNotThrow(() -> modelSelectionService.removeModelByName(modelName));
+
+        // Then
+        verify(modelConfigurationRepo).existsByModelName(modelName);
+        verify(modelConfigurationRepo, never()).deleteByModelName(anyString());
+    }
+
+    // ===============================
+    // Additional edge case tests
+    // ===============================
+
+    @Test
+    @DisplayName("Should handle repository exception during model configuration retrieval")
+    void getModelConfigurations_RepositoryException_ThrowsException() {
+        // Given
+        when(modelConfigurationRepo.getModels()).thenThrow(new RuntimeException("Database connection error"));
+
+        // When & Then
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> modelSelectionService.getModelConfigurations());
+
+        assertEquals("Database connection error", exception.getMessage());
+        verify(modelConfigurationRepo).getModels();
+    }
+
+    @Test
+    @DisplayName("Should handle repository exception during model save")
+    void saveModelInfo_RepositoryException_ThrowsException() {
+        // Given
+        when(modelConfigurationRepo.save(any(ModelConfigurationEntity.class)))
+                .thenThrow(new RuntimeException("Database save error"));
+
+        // When & Then
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> modelSelectionService.saveModelInfo(modelInfo));
+
+        assertEquals("Database save error", exception.getMessage());
+        verify(modelConfigurationRepo).save(any(ModelConfigurationEntity.class));
+    }
+
+    @Test
+    @DisplayName("Should disable model successfully when enabled is false and default is null")
+    void setModelStatus_DisableModel_Success() {
+        // Given
+        Integer modelId = 1;
+        UpdateModelStatusRequest request = createUpdateModelStatusRequest(false, null);
+        when(modelConfigurationRepo.getModelById(modelId)).thenReturn(modelEntity1);
+
+        // When
+        ModelResponseDto result = modelSelectionService.setModelStatus(modelId, request);
+
+        // Then
+        assertNotNull(result);
+        verify(modelConfigurationRepo).setEnabled(modelId, false);
+        verify(modelConfigurationRepo, never()).setDefault(anyInt(), any(Boolean.class));
+        verify(modelConfigurationRepo).getModelById(modelId);
+    }
+
+    @Test
+    @DisplayName("Should set model as non-default successfully when default is false and enabled is null")
+    void setModelStatus_SetNonDefault_Success() {
+        // Given
+        Integer modelId = 1;
+        UpdateModelStatusRequest request = createUpdateModelStatusRequest(null, false);
+        when(modelConfigurationRepo.getModelById(modelId)).thenReturn(modelEntity1);
+
+        // When
+        ModelResponseDto result = modelSelectionService.setModelStatus(modelId, request);
+
+        // Then
+        assertNotNull(result);
+        verify(modelConfigurationRepo).setDefault(modelId, false);
+        verify(modelConfigurationRepo, never()).setEnabled(anyInt(), any(Boolean.class));
+        verify(modelConfigurationRepo).getModelById(modelId);
     }
 }
