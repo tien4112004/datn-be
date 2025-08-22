@@ -41,7 +41,6 @@ public class ModelSelectionManagement implements ModelSelectionApi {
             throw new AppException(ErrorCode.MODEL_NOT_FOUND, "Model with ID " + modelId + " does not exist");
         }
 
-
         Boolean isEnabled = request.getIsEnable();
         Boolean isDefault = request.getIsDefault();
 

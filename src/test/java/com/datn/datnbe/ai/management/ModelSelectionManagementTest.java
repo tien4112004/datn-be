@@ -20,12 +20,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class ModelSelectionManagementTest {
@@ -193,7 +189,7 @@ class ModelSelectionManagementTest {
     void getModelConfigurations_Success() {
         // Given
         List<ModelConfigurationEntity> models = Arrays.asList(modelEntity3, modelEntity2, modelEntity1); // Not sorted
-                                                                                                         // by provider
+        // by provider
         when(modelConfigurationRepo.getModels()).thenReturn(models);
 
         // When
@@ -235,6 +231,7 @@ class ModelSelectionManagementTest {
         // Given
         Integer modelId = 1;
         UpdateModelStatusRequest request = createUpdateModelStatusRequest(true, null);
+        when(modelConfigurationRepo.existsByModelId(modelId)).thenReturn(true);
         when(modelConfigurationRepo.getModelById(modelId)).thenReturn(modelEntity1);
 
         // When
@@ -253,6 +250,7 @@ class ModelSelectionManagementTest {
         // Given
         Integer modelId = 1;
         UpdateModelStatusRequest request = createUpdateModelStatusRequest(null, true);
+        when(modelConfigurationRepo.existsByModelId(modelId)).thenReturn(true);
         when(modelConfigurationRepo.getModelById(modelId)).thenReturn(modelEntity1);
 
         // When
@@ -271,7 +269,9 @@ class ModelSelectionManagementTest {
         // Given
         Integer modelId = 1;
         UpdateModelStatusRequest request = createUpdateModelStatusRequest(true, true);
+
         when(modelConfigurationRepo.getModelById(modelId)).thenReturn(modelEntity1);
+        when(modelConfigurationRepo.existsByModelId(modelId)).thenReturn(true);
 
         // When
         ModelResponseDto result = modelSelectionService.setModelStatus(modelId, request);
@@ -289,6 +289,7 @@ class ModelSelectionManagementTest {
         // Given
         Integer modelId = 1;
         UpdateModelStatusRequest request = createUpdateModelStatusRequest(false, true);
+        when(modelConfigurationRepo.existsByModelId(modelId)).thenReturn(true);
 
         // When & Then
         AppException exception = assertThrows(AppException.class,
@@ -306,6 +307,7 @@ class ModelSelectionManagementTest {
         // Given
         Integer modelId = 1;
         UpdateModelStatusRequest request = createUpdateModelStatusRequest(null, null);
+        when(modelConfigurationRepo.existsByModelId(modelId)).thenReturn(true);
 
         // When & Then
         AppException exception = assertThrows(AppException.class,
@@ -323,7 +325,7 @@ class ModelSelectionManagementTest {
         // Given
         Integer modelId = 999;
         UpdateModelStatusRequest request = createUpdateModelStatusRequest(true, false);
-        when(modelConfigurationRepo.getModelById(modelId)).thenThrow(new AppException(ErrorCode.MODEL_NOT_FOUND));
+        when(modelConfigurationRepo.existsByModelId(modelId)).thenReturn(false);
 
         // When & Then
         AppException exception = assertThrows(AppException.class,
@@ -439,6 +441,7 @@ class ModelSelectionManagementTest {
         // Given
         Integer modelId = 1;
         UpdateModelStatusRequest request = createUpdateModelStatusRequest(false, null);
+        when(modelConfigurationRepo.existsByModelId(modelId)).thenReturn(true);
         when(modelConfigurationRepo.getModelById(modelId)).thenReturn(modelEntity1);
 
         // When
@@ -457,6 +460,7 @@ class ModelSelectionManagementTest {
         // Given
         Integer modelId = 1;
         UpdateModelStatusRequest request = createUpdateModelStatusRequest(null, false);
+        when(modelConfigurationRepo.existsByModelId(modelId)).thenReturn(true);
         when(modelConfigurationRepo.getModelById(modelId)).thenReturn(modelEntity1);
 
         // When
