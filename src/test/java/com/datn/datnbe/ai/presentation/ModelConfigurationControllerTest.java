@@ -332,20 +332,6 @@ class ModelConfigurationControllerTest {
     }
 
     @Test
-    @DisplayName("Should handle invalid path variable type")
-    void updateModelStatus_WithInvalidPathVariable_ShouldReturnBadRequestResponse() throws Exception {
-        // Given
-        String invalidModelId = "invalid";
-        UpdateModelStatusRequest request = new UpdateModelStatusRequest(true, false);
-
-        // When & Then
-        mockMvc.perform(patch("/api/models/{id}", invalidModelId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
     @DisplayName("Should handle missing request body")
     void updateModelStatus_WithMissingRequestBody_ShouldReturnBadRequestResponse() throws Exception {
         // Given

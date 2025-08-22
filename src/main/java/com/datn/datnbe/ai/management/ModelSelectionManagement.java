@@ -37,6 +37,11 @@ public class ModelSelectionManagement implements ModelSelectionApi {
 
     @Override
     public ModelResponseDto setModelStatus(Integer modelId, UpdateModelStatusRequest request) {
+        if (!modelConfigurationRepo.existsByModelId(modelId)) {
+            throw new AppException(ErrorCode.MODEL_NOT_FOUND, "Model with ID " + modelId + " does not exist");
+        }
+
+
         Boolean isEnabled = request.getIsEnable();
         Boolean isDefault = request.getIsDefault();
 

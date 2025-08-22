@@ -9,6 +9,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +20,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AppException.class)
     public ResponseEntity<AppResponseDto<Object>> handleAppException(AppException ex) {
+        log.error("Application exception occurred: {}", ex.getMessage(), ex);
+
         var response = AppResponseDto.failure(ex);
         log.error(response.getMessage());
         return ResponseEntity.status(ex.getStatusCode()).body(response);
@@ -26,6 +29,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<AppResponseDto<Object>> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+        log.error("Malformed JSON request: {}", ex.getMessage(), ex);
+
         AppException appException = new AppException(ErrorCode.VALIDATION_ERROR);
         AppResponseDto<Object> response = AppResponseDto.failure(appException);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
@@ -33,6 +38,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<AppResponseDto<Object>> handleValidationException(ValidationException ex) {
+        log.error("Validation error: {}", ex.getMessage(), ex);
+
         AppResponseDto<Object> response = AppResponseDto.failure(ex);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
@@ -40,6 +47,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<AppResponseDto<Map<String, String>>> handleValidationExceptions(
             MethodArgumentNotValidException ex) {
+        log.error("Validation error: {}", ex.getMessage(), ex);
+
         Map<String, String> errors = new HashMap<>();
         log.error("Validation errors occurred: {}", ex.getMessage());
         ex.getBindingResult().getAllErrors().forEach((error) -> {
@@ -62,6 +71,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<AppResponseDto<Object>> handleGenericException(Exception ex) {
+        log.error("An unexpected error occurred: {}", ex.getMessage(), ex);
+
         AppException appException = new AppException(ErrorCode.UNCATEGORIZED_ERROR, ex.getMessage());
         log.error("An unexpected error occurred: {}", ex.getMessage(), ex);
         AppResponseDto<Object> response = AppResponseDto.failure(appException);
