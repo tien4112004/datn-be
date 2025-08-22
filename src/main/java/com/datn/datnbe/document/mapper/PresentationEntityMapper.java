@@ -19,7 +19,8 @@ import org.mapstruct.*;
 import java.util.ArrayList;
 import java.util.List;
 
-@Mapper(componentModel = "spring", nullValueMappingStrategy = NullValueMappingStrategy.RETURN_NULL, collectionMappingStrategy = CollectionMappingStrategy.ADDER_PREFERRED, uses = {
+@Mapper(componentModel = "spring", nullValueMappingStrategy = NullValueMappingStrategy.RETURN_NULL,
+        collectionMappingStrategy = CollectionMappingStrategy.ADDER_PREFERRED, uses = {
         SlideEntityMapper.class})
 @Named("PresentationEntityMapper")
 public interface PresentationEntityMapper {
@@ -27,7 +28,7 @@ public interface PresentationEntityMapper {
     @Mapping(target = "title", expression = "java((request.getTitle() == null || request.getTitle().isEmpty()) ? \"Untitled Presentation\" : request.getTitle())")
     @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
-    @Mapping(target = "slides", source = "slides")
+    @Mapping(target = "slides", source = "slides", qualifiedByName = "toEntityList")
     Presentation createRequestToEntity(PresentationCreateRequest request);
 
     @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")

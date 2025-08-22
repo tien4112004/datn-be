@@ -15,7 +15,7 @@ public interface SlideEntityMapper {
 
     @Mapping(target = "id", source = "id")
     @Mapping(target = "background", source = "background")
-    @Mapping(target = "elements", source = "elements")
+    @Mapping(target = "elements", source = "elements", qualifiedByName = "toEntityList")
     @Named("toEntity")
     Slide toEntity(SlideDto slideDto);
 
