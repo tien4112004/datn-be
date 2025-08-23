@@ -6,6 +6,7 @@ import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
 import com.datn.datnbe.document.dto.request.PresentationUpdateRequest;
 import com.datn.datnbe.document.dto.request.PresentationUpdateTitleRequest;
 import com.datn.datnbe.document.dto.response.PresentationCreateResponseDto;
+import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
@@ -62,4 +63,11 @@ public class PresentationController {
         presentationApi.updateTitlePresentation(id, request);
         return ResponseEntity.ok(AppResponseDto.success(null));
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<AppResponseDto<PresentationDto>> getPresentation(@PathVariable String id) {
+        PresentationDto response = presentationApi.getPresentation(id);
+        return ResponseEntity.ok(AppResponseDto.success(response));
+    }
+
 }

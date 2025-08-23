@@ -1,5 +1,6 @@
 package com.datn.datnbe.document.management;
 
+import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
@@ -14,6 +15,7 @@ import com.datn.datnbe.document.mapper.PresentationEntityMapper;
 import com.datn.datnbe.document.repository.PresentationRepository;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
+import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,7 +41,7 @@ public class PresentationManagement implements PresentationApi {
     public PresentationCreateResponseDto createPresentation(PresentationCreateRequest request) {
         log.info("Creating presentation with title: {}", request.getTitle());
 
-        Presentation presentation = mapper.toEntity(request);
+        Presentation presentation = mapper.createRequestToEntity(request);
         Presentation savedPresentation = presentationRepository.save(presentation);
 
         log.info("Presentation saved with ID: {}", savedPresentation.getId());
@@ -134,5 +137,24 @@ public class PresentationManagement implements PresentationApi {
         existingPresentation.setTitle(request.getTitle());
         Presentation savedPresentation = presentationRepository.save(existingPresentation);
         log.info("Presentation title updated with ID: {}", savedPresentation.getId());
+    }
+
+
+    @Override
+    public PresentationDto getPresentation(String id) {
+        log.info("Fetching presentation with ID: {}", id);
+
+        Optional<Presentation> presentationOpt = presentationRepository.findById(id);
+        if (presentationOpt.isEmpty()) {
+            log.warn("Presentation not found with ID: {}", id);
+            throw new ResourceNotFoundException("Presentation not found with ID: " + id);
+        }
+
+        Presentation presentation = presentationOpt.get();
+        log.info("Found presentation: {} with {} slides",
+                presentation.getTitle(),
+                presentation.getSlides() != null ? presentation.getSlides().size() : 0);
+
+        return mapper.toDetailedDto(presentation);
     }
 }
