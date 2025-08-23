@@ -9,7 +9,6 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -58,7 +57,7 @@ public class GlobalExceptionHandler {
         });
 
         AppResponseDto<Map<String, String>> response = AppResponseDto.<Map<String, String>>builder()
-                .status("error")
+                .success(false)
                 .code(HttpStatus.BAD_REQUEST.value())
                 .message("Validation failed")
                 .errorCode("VALIDATION_ERROR")
