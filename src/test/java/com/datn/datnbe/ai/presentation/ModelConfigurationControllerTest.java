@@ -88,7 +88,7 @@ class ModelConfigurationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data.length()").value(3))
@@ -123,7 +123,7 @@ class ModelConfigurationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data.length()").value(0));
@@ -141,7 +141,7 @@ class ModelConfigurationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value(500))
                 .andExpect(jsonPath("$.message").value("Database connection failed"))
                 .andExpect(jsonPath("$.errorCode").value("UNCATEGORIZED_ERROR"));
@@ -175,7 +175,7 @@ class ModelConfigurationControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.modelId").value("1"))
                 .andExpect(jsonPath("$.data.modelName").value("gpt-4"))
@@ -207,7 +207,7 @@ class ModelConfigurationControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.modelId").value("1"))
                 .andExpect(jsonPath("$.data.enabled").value(false))
@@ -238,7 +238,7 @@ class ModelConfigurationControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.modelId").value("1"))
                 .andExpect(jsonPath("$.data.enabled").value(true))
@@ -261,7 +261,7 @@ class ModelConfigurationControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value(404))
                 .andExpect(jsonPath("$.message").value("Model not found"))
                 .andExpect(jsonPath("$.errorCode").value("MODEL_NOT_FOUND"));
@@ -284,7 +284,7 @@ class ModelConfigurationControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value(403))
                 .andExpect(jsonPath("$.message").value("A model cannot be default if it is disabled"))
                 .andExpect(jsonPath("$.errorCode").value("INVALID_MODEL_STATUS"));
@@ -307,7 +307,7 @@ class ModelConfigurationControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value(403))
                 .andExpect(jsonPath("$.message").value("At least one of isEnabled or isDefault must be provided"))
                 .andExpect(jsonPath("$.errorCode").value("INVALID_MODEL_STATUS"));
@@ -326,7 +326,7 @@ class ModelConfigurationControllerTest {
                 .content(malformedJson))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value(400))
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
     }
@@ -359,7 +359,7 @@ class ModelConfigurationControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value(500))
                 .andExpect(jsonPath("$.message").value("Internal server error"))
                 .andExpect(jsonPath("$.errorCode").value("UNCATEGORIZED_ERROR"));
@@ -385,7 +385,7 @@ class ModelConfigurationControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.errorCode").value("MODEL_NOT_FOUND"));
     }
 
@@ -405,7 +405,7 @@ class ModelConfigurationControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.errorCode").value("MODEL_NOT_FOUND"));
     }
 }
