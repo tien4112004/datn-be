@@ -41,6 +41,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<AppResponseDto<Map<String, String>>> handleValidationExceptions(
             MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
+        log.error("Validation errors occurred: {}", ex.getMessage());
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
@@ -62,6 +63,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<AppResponseDto<Object>> handleGenericException(Exception ex) {
         AppException appException = new AppException(ErrorCode.UNCATEGORIZED_ERROR, ex.getMessage());
+        log.error("An unexpected error occurred: {}", ex.getMessage(), ex);
         AppResponseDto<Object> response = AppResponseDto.failure(appException);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }

@@ -50,7 +50,7 @@ class PresentationControllerTest {
 				.color("#ffffff").build();
 
 		SlideElementDto element = SlideElementDto.builder()
-				.type(SlideElementType.TEXT)
+				.type("text")
 				.id("element-1")
 				.left(100.0f)
 				.top(200.0f)
@@ -126,7 +126,7 @@ class PresentationControllerTest {
 	@Test
 	void createPresentation_WithComplexElements_ShouldPreserveAllProperties() throws Exception {
 		SlideElementDto complexElement = SlideElementDto.builder()
-				.type(SlideElementType.TEXT)
+				.type("text")
 				.id("complex-element")
 				.left(50.0f)
 				.top(75.0f)
