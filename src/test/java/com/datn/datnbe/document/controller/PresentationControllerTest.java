@@ -82,7 +82,7 @@ class PresentationControllerTest {
 				.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
-				.andExpect(jsonPath("$.status").value("success"))
+				.andExpect(jsonPath("$.success").value(true))
 				.andExpect(jsonPath("$.code").value(200))
 				.andExpect(jsonPath("$.data").exists())
 				.andExpect(jsonPath("$.data.title").value("Test Presentation"))
@@ -200,7 +200,7 @@ class PresentationControllerTest {
 		mockMvc.perform(post("/api/presentations").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$.status").value("error"))
+				.andExpect(jsonPath("$.success").value(false))
 				.andExpect(jsonPath("$.code").value(400))
 				.andExpect(jsonPath("$.message").value("Validation failed"))
 				.andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"))
@@ -240,7 +240,7 @@ class PresentationControllerTest {
 		mockMvc.perform(get("/api/presentations/all").contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
-				.andExpect(jsonPath("$.status").value("success"))
+				.andExpect(jsonPath("$.success").value(true))
 				.andExpect(jsonPath("$.code").value(200))
 				.andExpect(jsonPath("$.data").isArray())
 				.andExpect(jsonPath("$.data.length()").value(2))
@@ -260,7 +260,7 @@ class PresentationControllerTest {
 				.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
-				.andExpect(jsonPath("$.status").value("success"))
+				.andExpect(jsonPath("$.success").value(true))
 				.andExpect(jsonPath("$.code").value(200))
 				.andExpect(jsonPath("$.data").isArray())
 				.andExpect(jsonPath("$.data.length()").value(0));
@@ -277,7 +277,7 @@ class PresentationControllerTest {
 				.updatedAt(createdAt)
 				.build();
 
-		PaginationDto pagination = new PaginationDto(1, 10, 1L, 1, false, false);
+		PaginationDto pagination = new PaginationDto(1, 10, 1L, 1);
 		PaginatedResponseDto<PresentationListResponseDto> paginatedResponse = new PaginatedResponseDto<>(
 				List.of(presentation), pagination);
 
@@ -290,7 +290,7 @@ class PresentationControllerTest {
 				.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
-				.andExpect(jsonPath("$.status").value("success"))
+				.andExpect(jsonPath("$.success").value(true))
 				.andExpect(jsonPath("$.code").value(200))
 				.andExpect(jsonPath("$.data").exists())
 				.andExpect(jsonPath("$.data").isArray())
@@ -300,9 +300,7 @@ class PresentationControllerTest {
 				.andExpect(jsonPath("$.pagination.currentPage").value(1))
 				.andExpect(jsonPath("$.pagination.pageSize").value(10))
 				.andExpect(jsonPath("$.pagination.totalItems").value(1))
-				.andExpect(jsonPath("$.pagination.totalPages").value(1))
-				.andExpect(jsonPath("$.pagination.hasNextPage").value(false))
-				.andExpect(jsonPath("$.pagination.hasPreviousPage").value(false));
+				.andExpect(jsonPath("$.pagination.totalPages").value(1));
 	}
 
 	@Test
@@ -317,7 +315,7 @@ class PresentationControllerTest {
 				.updatedAt(createdAt)
 				.build();
 
-		PaginationDto pagination = new PaginationDto(1, 10, 1L, 1, false, false);
+		PaginationDto pagination = new PaginationDto(1, 10, 1L, 1);
 		PaginatedResponseDto<PresentationListResponseDto> paginatedResponse = new PaginatedResponseDto<>(
 				List.of(presentation), pagination);
 
@@ -344,7 +342,7 @@ class PresentationControllerTest {
 				.updatedAt(createdAt)
 				.build();
 
-		PaginationDto pagination = new PaginationDto(1, 20, 1L, 1, false, false);
+		PaginationDto pagination = new PaginationDto(1, 20, 1L, 1);
 		PaginatedResponseDto<PresentationListResponseDto> paginatedResponse = new PaginatedResponseDto<>(
 				List.of(presentation), pagination);
 
@@ -353,7 +351,7 @@ class PresentationControllerTest {
 		// When & Then
 		mockMvc.perform(get("/api/presentations").contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.status").value("success"))
+				.andExpect(jsonPath("$.success").value(true))
 				.andExpect(jsonPath("$.data").isArray())
 				.andExpect(jsonPath("$.data.length()").value(1));
 	}
@@ -361,7 +359,7 @@ class PresentationControllerTest {
 	@Test
 	void getPresentationsCollection_WithEmptyResults_ShouldReturnEmptyPaginatedResponse() throws Exception {
 		// Given
-		PaginationDto pagination = new PaginationDto(1, 10, 0L, 0, false, false);
+		PaginationDto pagination = new PaginationDto(1, 10, 0L, 0);
 		PaginatedResponseDto<PresentationListResponseDto> paginatedResponse = new PaginatedResponseDto<>(
 				List.of(),
 				pagination);

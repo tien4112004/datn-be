@@ -19,7 +19,9 @@ public interface ModelConfigurationRepo {
 
     List<ModelConfigurationEntity> getModels();
 
-    void save(ModelConfigurationEntity modelEntity);
+    ModelConfigurationEntity save(ModelConfigurationEntity modelEntity);
+
+    void deleteByModelName(String modelName);
 
     void setEnabled(Integer modelId, boolean isEnabled);
 

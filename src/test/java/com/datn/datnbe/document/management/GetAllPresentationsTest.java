@@ -262,7 +262,5 @@ class GetAllPresentationsTest {
         assertThat(result.getPagination().getPageSize()).isEqualTo(1);
         assertThat(result.getPagination().getTotalItems()).isEqualTo(2L);
         assertThat(result.getPagination().getTotalPages()).isEqualTo(2);
-        assertThat(result.getPagination().isHasNextPage()).isFalse();
-        assertThat(result.getPagination().isHasPreviousPage()).isTrue();
     }
 }

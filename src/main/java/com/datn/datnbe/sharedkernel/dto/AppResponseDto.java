@@ -2,11 +2,17 @@ package com.datn.datnbe.sharedkernel.dto;
 
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.google.type.DateTime;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
+
+import java.security.Timestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.Date;
 
 @Data
 @Builder(toBuilder = true)
@@ -14,10 +20,11 @@ import org.springframework.http.HttpStatus;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AppResponseDto<T> {
     @Builder.Default
-    String status = "success";
-
+    boolean success = true;
     @Builder.Default
     int code = HttpStatus.OK.value();
+    @Builder.Default
+    Date timestamp = new Date();
 
     T data;
     String message;
@@ -45,7 +52,7 @@ public class AppResponseDto<T> {
 
     public static <T> AppResponseDto<T> failure(AppException exception) {
         return AppResponseDto.<T>builder()
-                .status("error")
+                .success(false)
                 .code(exception.getStatusCode())
                 .message(exception.getErrorMessage())
                 .errorCode(exception.getErrorCode().getErrorCodeName())

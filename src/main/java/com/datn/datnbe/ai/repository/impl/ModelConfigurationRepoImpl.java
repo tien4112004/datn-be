@@ -55,10 +55,9 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
     }
 
     @Override
-    public void save(ModelConfigurationEntity modelEntity) {
-        // Add validation or transformation logic if needed
+    public ModelConfigurationEntity save(ModelConfigurationEntity modelEntity) {
         log.info("Saving model {}", modelEntity);
-        modelConfigurationJPARepo.save(modelEntity);
+        return modelConfigurationJPARepo.save(modelEntity);
     }
 
     @Override
@@ -81,7 +80,7 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
                 .orElseThrow(() -> new AppException(ErrorCode.MODEL_NOT_FOUND));
 
         if (isDefault && !existingModel.isEnabled()) {
-            throw new AppException(ErrorCode.MODEL_NOT_ENABLED);
+            throw new AppException(ErrorCode.INVALID_MODEL_STATUS, "A model cannot be default if it is disabled");
         }
 
         // Set others models to not default
@@ -91,5 +90,34 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
 
         existingModel.setDefault(isDefault);
         modelConfigurationJPARepo.save(existingModel);
+    }
+
+    @Override
+    public void deleteByModelName(String modelName) {
+        var model = modelConfigurationJPARepo.findByModelName(modelName)
+                .orElseThrow(() -> new AppException(ErrorCode.MODEL_NOT_FOUND,
+                        "Model not found with name: " + modelName));
+
+        // Set other model as default if the deleted model is default
+        if (model.isDefault()) {
+            resetDefaultModel();
+        }
+
+        modelConfigurationJPARepo.delete(model);
+        log.info("Deleted model: {}", modelName);
+    }
+    
+    private void resetDefaultModel() {
+        modelConfigurationJPARepo.findAll().stream()
+                .filter(ModelConfigurationEntity::isEnabled)
+                .findFirst()
+                .ifPresentOrElse(
+                        newDefaultModel -> {
+                            newDefaultModel.setDefault(true);
+                            modelConfigurationJPARepo.save(newDefaultModel);
+                            log.info("Set model '{}' as the new default.", newDefaultModel.getModelName());
+                        },
+                        () -> log.warn("Could not find an enabled model to set as the new default after deletion.")
+                );
     }
 }

@@ -9,9 +9,6 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface ModelDataMapper {
-    @Mapping(target = "isEnabled", expression = "java(modelConfigurationEntity.isEnabled())")
-    ModelMinimalResponseDto toModelMinimalResponseDto(ModelConfigurationEntity modelConfigurationEntity);
-
     @Mapping(target = "isDefault", expression = "java(modelEntity.isDefault())")
     @Mapping(target = "isEnabled", expression = "java(modelEntity.isEnabled())")
     ModelResponseDto toModelResponseDto(ModelConfigurationEntity modelEntity);
