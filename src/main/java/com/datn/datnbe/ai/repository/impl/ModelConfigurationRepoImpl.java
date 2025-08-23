@@ -98,6 +98,7 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
                 .orElseThrow(() -> new AppException(ErrorCode.MODEL_NOT_FOUND,
                         "Model not found with name: " + modelName));
 
+        // Set other model as default if the deleted model is default
         if (model.isDefault()) {
             resetDefaultModel();
         }
@@ -105,14 +106,18 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
         modelConfigurationJPARepo.delete(model);
         log.info("Deleted model: {}", modelName);
     }
-
+    
     private void resetDefaultModel() {
-        int DEFAULT_MODEL_ID = 1;
-
-        boolean IS_DEFAULT_MODEL = true;
-        setDefault(DEFAULT_MODEL_ID, IS_DEFAULT_MODEL);
-
-        boolean IS_ENABLED_MODEL = true;
-        setEnabled(DEFAULT_MODEL_ID, IS_ENABLED_MODEL);
+        modelConfigurationJPARepo.findAll().stream()
+                .filter(ModelConfigurationEntity::isEnabled)
+                .findFirst()
+                .ifPresentOrElse(
+                        newDefaultModel -> {
+                            newDefaultModel.setDefault(true);
+                            modelConfigurationJPARepo.save(newDefaultModel);
+                            log.info("Set model '{}' as the new default.", newDefaultModel.getModelName());
+                        },
+                        () -> log.warn("Could not find an enabled model to set as the new default after deletion.")
+                );
     }
 }

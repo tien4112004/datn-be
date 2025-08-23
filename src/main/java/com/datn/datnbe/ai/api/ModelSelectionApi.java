@@ -11,7 +11,7 @@ public interface ModelSelectionApi {
     /**
      * Retrieves the minimal configuration of a model by its ID.
      *
-     * @return a list of ModelMinimalResponseDto containing the minimal
+     * @return a list of ModelResponseDto containing the minimal
      * configuration of the model
      */
     List<ModelResponseDto> getModelConfigurations();
@@ -21,7 +21,7 @@ public interface ModelSelectionApi {
      *
      * @param modelId the ID of the model to enable
      * @param request the request containing the status update information
-     * @return a ModelMinimalResponseDto containing the updated model information
+     * @return a ModelResponseDto containing the updated model information
      */
     ModelResponseDto setModelStatus(Integer modelId, UpdateModelStatusRequest request);
 
@@ -49,7 +49,7 @@ public interface ModelSelectionApi {
     boolean existByName(String modelName);
 
     /**
-     * Removes a model by its name. This method is only be used internally
+     * Removes a model by its name. This method is only used internally
      *
      * @param modelName the name of the model to remove
      */
