@@ -26,4 +26,11 @@ public class ModelProperties {
     public List<ModelInfo> getModels() {
         return configurations.values().stream().flatMap(List::stream).toList();
     }
-}
+
+    public List<String> getModelNames() {
+        return configurations.values().stream()
+                .flatMap(List::stream)
+                .map(ModelInfo::getModelName)
+                .toList();
+    }
+ }

@@ -47,10 +47,6 @@ app:
           default-model: false
       # --- GEMINI MODELS ---
       gemini:
-        - model-name: "gemini-2.0-flash-001"
-          display-name: "Gemini 2.0 Flash"
-          provider: "Google"
-          default-model: true
         - model-name: "gemini-2.5-flash"
           display-name: "Gemini 2.5 Flash"
           provider: "Google"

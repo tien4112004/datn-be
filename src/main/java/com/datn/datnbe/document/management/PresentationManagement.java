@@ -88,8 +88,7 @@ public class PresentationManagement implements PresentationApi {
 
         // Create pagination metadata
         PaginationDto pagination = new PaginationDto(request.getPage(), request.getPageSize(),
-                presentationPage.getTotalElements(), presentationPage.getTotalPages(), presentationPage.hasNext(),
-                presentationPage.hasPrevious());
+                presentationPage.getTotalElements(), presentationPage.getTotalPages());
 
         log.info("Retrieved {} presentations out of {} total",
                 presentations.size(),

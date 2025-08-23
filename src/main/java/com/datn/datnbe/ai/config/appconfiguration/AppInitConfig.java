@@ -3,6 +3,7 @@ package com.datn.datnbe.ai.config.appconfiguration;
 
 import com.datn.datnbe.ai.api.ModelSelectionApi;
 import com.datn.datnbe.ai.config.chatmodelconfiguration.ModelProperties;
+import com.datn.datnbe.ai.dto.response.ModelResponseDto;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -12,32 +13,48 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.stream.Collectors;
+
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @ConditionalOnProperty(prefix = "app.init", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class AppInitConfig {
+
     ModelProperties modelProperties;
     ModelSelectionApi modelSelectionApi;
 
     @Bean
     CommandLineRunner InitializeModelConfiguration() {
         return args -> {
-            var models = modelSelectionApi.getModelConfigurations();
-            var definedModels = modelProperties.getConfigurations();
+            var existingModels = modelSelectionApi.getModelConfigurations();
+            var existingModelNames = existingModels.stream()
+                    .map(ModelResponseDto::getModelName)
+                    .collect(Collectors.toSet());
 
-            if (models.isEmpty() || models.size() != definedModels.size()) {
-                modelProperties.getModels().forEach((model) -> {
-                    if (!modelSelectionApi.existByName(model.getModelName())) {
-                        modelSelectionApi.saveModelInfo(model);
-                    } else {
-                        log.info("Model {} already exists, skipping initialization", model.getModelName());
-                    }
-                });
-            } else {
-                log.info("All models are ready");
-            }
+            var configuredModels = modelProperties.getModels();
+            var configuredModelNames = modelProperties.getModelNames();
+
+            // Synchronize configured models with existing models
+            configuredModels.forEach(model -> {
+                if (!modelSelectionApi.existByName(model.getModelName())) {
+                    log.info("Adding new model: {}", model.getModelName());
+                    modelSelectionApi.saveModelInfo(model);
+                } else {
+                    log.debug("Model {} already exists, skipping initialization", model.getModelName());
+                }
+            });
+
+            // Remove models that are no longer configured
+            existingModelNames.stream()
+                    .filter(modelName -> !configuredModelNames.contains(modelName))
+                    .forEach(modelName -> {
+                        log.info("Removing model {} as it's no longer in configuration", modelName);
+                        modelSelectionApi.removeModelByName(modelName);
+                    });
+
+            log.info("Model configuration synchronization completed");
         };
     }
 }
