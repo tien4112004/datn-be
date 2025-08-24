@@ -7,6 +7,7 @@ plugins {
 ext {
     springAiVersion = "1.0.1"
     springModulithVersion = "1.4.1"
+    testcontainersVersion = "1.20.4"
 }
 
 group = 'com.datn'
@@ -20,6 +21,13 @@ java {
 
 repositories {
 	mavenCentral()
+}
+
+test {
+  testLogging {
+    events "passed", "skipped", "failed", "standardOut", "standardError"
+    showStandardStreams = true
+  }
 }
 
 dependencies {
@@ -43,6 +51,12 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
     testCompileOnly 'org.projectlombok:lombok:1.18.38'
+    
+    // Testcontainers dependencies
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'org.testcontainers:mongodb'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
@@ -61,6 +75,7 @@ dependencyManagement {
     imports {
         mavenBom "org.springframework.ai:spring-ai-bom:$springAiVersion"
         mavenBom "org.springframework.modulith:spring-modulith-bom:$springModulithVersion"
+        mavenBom "org.testcontainers:testcontainers-bom:$testcontainersVersion"
     }
 }
 
