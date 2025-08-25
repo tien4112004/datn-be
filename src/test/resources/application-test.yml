@@ -1,6 +1,3 @@
-spring:
-  application:
-    name: document-service-test
   # Single H2 in-memory database for tests
   datasource:
     url: jdbc:h2:mem:testdb
