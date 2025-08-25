@@ -42,7 +42,7 @@ public class ContentGenerationController {
                         "Failed to generate outline: " + error.getMessage()));
     }
 
-    @PostMapping(value = "presentations/generate", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(value = "presentations/generate", produces = MediaType.TEXT_PLAIN_VALUE)
     public Flux<String> generateSlides(@RequestBody PresentationPromptRequest request) {
         return StreamingResponseUtils
             .streamByJsonObject(StreamingResponseUtils.HIGH_DELAY,
