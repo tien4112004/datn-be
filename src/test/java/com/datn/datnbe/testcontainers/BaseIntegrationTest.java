@@ -30,20 +30,22 @@ public abstract class BaseIntegrationTest {
     void cleanDatabases() {
 
             jdbc.execute(
-                "DO $$\n" +
-                "DECLARE\n" +
-                "    stm text;\n" +
-                "BEGIN\n" +
-                "    SELECT 'TRUNCATE TABLE ' || string_agg(format('%I.%I', schemaname, tablename), ', ') || ' RESTART IDENTITY CASCADE'\n" +
-                "    INTO stm\n" +
-                "    FROM pg_tables\n" +
-                "    WHERE schemaname = 'public'\n" +
-                "      AND tablename <> 'flyway_schema_history'; -- nếu bạn dùng Flyway, tránh xóa lịch sử\n" +
-                "\n" +
-                "    IF stm IS NOT NULL THEN\n" +
-                "        EXECUTE stm;\n" +
-                "    END IF;\n" +
-                "END $$;"
+                """
+                DO $$
+                DECLARE
+                    stm text;
+                BEGIN
+                    SELECT 'TRUNCATE TABLE ' || string_agg(format('%I.%I', schemaname, tablename), ', ') || ' RESTART IDENTITY CASCADE'
+                    INTO stm
+                    FROM pg_tables
+                    WHERE schemaname = 'public'
+                      AND tablename <> 'flyway_schema_history'; -- nếu bạn dùng Flyway, tránh xóa lịch sử
+
+                    IF stm IS NOT NULL THEN
+                        EXECUTE stm;
+                    END IF;
+                END $$;
+                """
             );
 
         if (mongo != null) {
