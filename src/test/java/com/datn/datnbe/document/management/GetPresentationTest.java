@@ -5,16 +5,15 @@ import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.document.entity.Presentation;
 import com.datn.datnbe.document.entity.valueobject.Slide;
 import com.datn.datnbe.document.mapper.PresentationEntityMapper;
-import com.datn.datnbe.document.mapper.SlideEntityMapper;
 import com.datn.datnbe.document.repository.PresentationRepository;
 import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mapstruct.factory.Mappers;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,14 +23,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
+@SpringBootTest(classes = {TestConfig.class,
+        PresentationManagement.class}, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ExtendWith(MockitoExtension.class)
 class GetPresentationTest {
 
-    @Mock
+    @MockBean
     private PresentationRepository presentationRepository;
 
+    @Autowired
     private PresentationEntityMapper presentationEntityMapper;
-    private SlideEntityMapper slideMapper;
 
     private PresentationManagement presentationService;
 
@@ -41,8 +42,6 @@ class GetPresentationTest {
 
     @BeforeEach
     void setUp() {
-        presentationEntityMapper = Mappers.getMapper(PresentationEntityMapper.class);
-        slideMapper = Mappers.getMapper(SlideEntityMapper.class);
         presentationService = new PresentationManagement(presentationRepository, presentationEntityMapper);
 
         backgroundDto = SlideDto.SlideBackgroundDto.builder().type("color").color("#ffffff").build();
@@ -58,7 +57,8 @@ class GetPresentationTest {
                 .defaultColor("#000000")
                 .build();
 
-        slideDto = SlideDto.builder().id("slide-1").elements(List.of(elementDto)).background(backgroundDto).build();
+        slideDto = SlideDto.builder().id("slide-1").elements(List.of(elementDto)).background(backgroundDto)
+                .build();
     }
 
     @Test
@@ -66,7 +66,7 @@ class GetPresentationTest {
         // Given
         String presentationId = "test-id-1";
         LocalDateTime createdAt = LocalDateTime.now();
-        
+
         Presentation presentation = Presentation.builder()
                 .id(presentationId)
                 .title("First Presentation")
@@ -173,7 +173,7 @@ class GetPresentationTest {
         // Given
         String presentationId = "presentation-without-slides";
         LocalDateTime createdAt = LocalDateTime.now();
-        
+
         Presentation presentation = Presentation.builder()
                 .id(presentationId)
                 .title("Empty Presentation")
