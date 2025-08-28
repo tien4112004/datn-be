@@ -8,7 +8,7 @@ git diff --name-only > /tmp/unstaged_changes.txt
 git diff --cached --name-only > /tmp/staged_changes.txt
 
 # Run formatter on all Java files in the project using Spotless
-mvn spotless:apply
+gradle spotlessApply
 
 echo "File formatter applied to all Java files."
 

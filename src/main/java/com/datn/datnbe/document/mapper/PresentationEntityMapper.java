@@ -50,7 +50,7 @@ public interface PresentationEntityMapper {
     @Mapping(target = "thumbnail", expression = "java(entity.getSlides() != null && !entity.getSlides().isEmpty() ? slideToSlideDto(entity.getSlides().get(0)) : null)")
     PresentationListResponseDto toListResponseDto(Presentation entity);
 
-    @Mapping(target = "slides", source = "slides")
+    @Mapping(target = "slides", source = "slides", qualifiedByName = "toDtoList")
     PresentationDto toDetailedDto(Presentation entity);
 
     // Helper methods for null safety
