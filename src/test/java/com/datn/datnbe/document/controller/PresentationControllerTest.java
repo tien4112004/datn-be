@@ -6,7 +6,6 @@ import com.datn.datnbe.document.dto.SlideDto.SlideElementDto;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
 import com.datn.datnbe.document.dto.response.PresentationCreateResponseDto;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
-import com.datn.datnbe.document.enums.SlideElementType;
 import com.datn.datnbe.document.presentation.PresentationController;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
@@ -68,7 +67,7 @@ class PresentationControllerTest {
 
 		mockResponse = PresentationCreateResponseDto.builder()
 				.title("Test Presentation")
-				.presentation(List.of(slide))
+				.slides(List.of(slide))
 				.build();
 	}
 
@@ -109,7 +108,7 @@ class PresentationControllerTest {
 				.build();
 		mockResponse = PresentationCreateResponseDto.builder()
 				.title("Test Presentation")
-				.presentation(Arrays.asList(request.getSlides().get(0), secondSlide))
+				.slides(Arrays.asList(request.getSlides().get(0), secondSlide))
 				.build();
 
 		when(presentationApi.createPresentation(any(PresentationCreateRequest.class))).thenReturn(mockResponse);
@@ -160,7 +159,7 @@ class PresentationControllerTest {
 		request = PresentationCreateRequest.builder().slides(List.of(slideWithComplexElement)).build();
 		mockResponse = PresentationCreateResponseDto.builder()
 				.title("Test Presentation")
-				.presentation(List.of(slideWithComplexElement))
+				.slides(List.of(slideWithComplexElement))
 				.build();
 
 		when(presentationApi.createPresentation(any(PresentationCreateRequest.class))).thenReturn(mockResponse);
