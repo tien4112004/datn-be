@@ -37,10 +37,10 @@ public interface PresentationEntityMapper {
     @Mapping(target = "slides", source = "slides", qualifiedByName = "toEntityList")
     void updateEntity(PresentationUpdateRequest request, @MappingTarget Presentation presentation);
 
-    @Mapping(target = "presentation", source = "slides")
+    @Mapping(target = "slides", source = "slides")
     PresentationCreateResponseDto toResponseDto(Presentation entity);
 
-    @Mapping(target = "presentation", source = "slides")
+    @Mapping(target = "slides", source = "slides")
     PresentationUpdateResponseDto toUpdateResponseDto(Presentation entity);
 
     @Mapping(target = "id", source = "id")

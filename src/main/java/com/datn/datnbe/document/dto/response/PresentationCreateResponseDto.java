@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -15,6 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PresentationCreateResponseDto {
+    private String id;
     private String title;
-    private List<SlideDto> presentation;
+    private List<SlideDto> slides;
 }
