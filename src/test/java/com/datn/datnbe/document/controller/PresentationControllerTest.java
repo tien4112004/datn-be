@@ -6,7 +6,6 @@ import com.datn.datnbe.document.dto.SlideDto.SlideElementDto;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
 import com.datn.datnbe.document.dto.response.PresentationCreateResponseDto;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
-import com.datn.datnbe.document.enums.SlideElementType;
 import com.datn.datnbe.document.presentation.PresentationController;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
@@ -68,7 +67,7 @@ class PresentationControllerTest {
 
 		mockResponse = PresentationCreateResponseDto.builder()
 				.title("Test Presentation")
-				.presentation(List.of(slide))
+				.slides(List.of(slide))
 				.build();
 	}
 
@@ -86,14 +85,14 @@ class PresentationControllerTest {
 				.andExpect(jsonPath("$.code").value(200))
 				.andExpect(jsonPath("$.data").exists())
 				.andExpect(jsonPath("$.data.title").value("Test Presentation"))
-				.andExpect(jsonPath("$.data.presentation").isArray())
-				.andExpect(jsonPath("$.data.presentation[0].id").value("slide-1"))
-				.andExpect(jsonPath("$.data.presentation[0].elements").isArray())
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].type").value("text"))
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].id").value("element-1"))
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].content").value("Sample text"))
-				.andExpect(jsonPath("$.data.presentation[0].background.type").value("color"))
-				.andExpect(jsonPath("$.data.presentation[0].background.color").value("#ffffff"));
+				.andExpect(jsonPath("$.data.slides").isArray())
+				.andExpect(jsonPath("$.data.slides[0].id").value("slide-1"))
+				.andExpect(jsonPath("$.data.slides[0].elements").isArray())
+				.andExpect(jsonPath("$.data.slides[0].elements[0].type").value("text"))
+				.andExpect(jsonPath("$.data.slides[0].elements[0].id").value("element-1"))
+				.andExpect(jsonPath("$.data.slides[0].elements[0].content").value("Sample text"))
+				.andExpect(jsonPath("$.data.slides[0].background.type").value("color"))
+				.andExpect(jsonPath("$.data.slides[0].background.color").value("#ffffff"));
 	}
 
 	@Test
@@ -109,7 +108,7 @@ class PresentationControllerTest {
 				.build();
 		mockResponse = PresentationCreateResponseDto.builder()
 				.title("Test Presentation")
-				.presentation(Arrays.asList(request.getSlides().get(0), secondSlide))
+				.slides(Arrays.asList(request.getSlides().get(0), secondSlide))
 				.build();
 
 		when(presentationApi.createPresentation(any(PresentationCreateRequest.class))).thenReturn(mockResponse);
@@ -117,10 +116,10 @@ class PresentationControllerTest {
 		mockMvc.perform(post("/api/presentations").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.data.presentation").isArray())
-				.andExpect(jsonPath("$.data.presentation.length()").value(2))
-				.andExpect(jsonPath("$.data.presentation[0].id").value("slide-1"))
-				.andExpect(jsonPath("$.data.presentation[1].id").value("slide-2"));
+				.andExpect(jsonPath("$.data.slides").isArray())
+				.andExpect(jsonPath("$.data.slides.length()").value(2))
+				.andExpect(jsonPath("$.data.slides[0].id").value("slide-1"))
+				.andExpect(jsonPath("$.data.slides[1].id").value("slide-2"));
 	}
 
 	@Test
@@ -160,7 +159,7 @@ class PresentationControllerTest {
 		request = PresentationCreateRequest.builder().slides(List.of(slideWithComplexElement)).build();
 		mockResponse = PresentationCreateResponseDto.builder()
 				.title("Test Presentation")
-				.presentation(List.of(slideWithComplexElement))
+				.slides(List.of(slideWithComplexElement))
 				.build();
 
 		when(presentationApi.createPresentation(any(PresentationCreateRequest.class))).thenReturn(mockResponse);
@@ -168,29 +167,29 @@ class PresentationControllerTest {
 		mockMvc.perform(post("/api/presentations").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].type").value("text"))
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].id").value("complex-element"))
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].viewBox[0]").value(0.0))
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].viewBox[1]").value(0.0))
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].viewBox[2]").value(100.0))
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].viewBox[3]").value(100.0))
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].path").value("M10,10 L90,90"))
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].fill").value("#ff0000"))
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].fixedRatio").value(true))
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].opacity").value(0.8))
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].rotate").value(45.0))
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].flipV").value(false))
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].lineHeight").value(1.5))
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].start[0]").value(10.0))
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].start[1]").value(20.0))
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].end[0]").value(90.0))
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].end[1]").value(80.0))
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].points[0]").value("10,10"))
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].points[1]").value("50,50"))
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].points[2]").value("90,90"))
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].color").value("#00ff00"))
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].style").value("solid"))
-				.andExpect(jsonPath("$.data.presentation[0].elements[0].wordSpace").value(2.0));
+				.andExpect(jsonPath("$.data.slides[0].elements[0].type").value("text"))
+				.andExpect(jsonPath("$.data.slides[0].elements[0].id").value("complex-element"))
+				.andExpect(jsonPath("$.data.slides[0].elements[0].viewBox[0]").value(0.0))
+				.andExpect(jsonPath("$.data.slides[0].elements[0].viewBox[1]").value(0.0))
+				.andExpect(jsonPath("$.data.slides[0].elements[0].viewBox[2]").value(100.0))
+				.andExpect(jsonPath("$.data.slides[0].elements[0].viewBox[3]").value(100.0))
+				.andExpect(jsonPath("$.data.slides[0].elements[0].path").value("M10,10 L90,90"))
+				.andExpect(jsonPath("$.data.slides[0].elements[0].fill").value("#ff0000"))
+				.andExpect(jsonPath("$.data.slides[0].elements[0].fixedRatio").value(true))
+				.andExpect(jsonPath("$.data.slides[0].elements[0].opacity").value(0.8))
+				.andExpect(jsonPath("$.data.slides[0].elements[0].rotate").value(45.0))
+				.andExpect(jsonPath("$.data.slides[0].elements[0].flipV").value(false))
+				.andExpect(jsonPath("$.data.slides[0].elements[0].lineHeight").value(1.5))
+				.andExpect(jsonPath("$.data.slides[0].elements[0].start[0]").value(10.0))
+				.andExpect(jsonPath("$.data.slides[0].elements[0].start[1]").value(20.0))
+				.andExpect(jsonPath("$.data.slides[0].elements[0].end[0]").value(90.0))
+				.andExpect(jsonPath("$.data.slides[0].elements[0].end[1]").value(80.0))
+				.andExpect(jsonPath("$.data.slides[0].elements[0].points[0]").value("10,10"))
+				.andExpect(jsonPath("$.data.slides[0].elements[0].points[1]").value("50,50"))
+				.andExpect(jsonPath("$.data.slides[0].elements[0].points[2]").value("90,90"))
+				.andExpect(jsonPath("$.data.slides[0].elements[0].color").value("#00ff00"))
+				.andExpect(jsonPath("$.data.slides[0].elements[0].style").value("solid"))
+				.andExpect(jsonPath("$.data.slides[0].elements[0].wordSpace").value(2.0));
 	}
 
 	@Test

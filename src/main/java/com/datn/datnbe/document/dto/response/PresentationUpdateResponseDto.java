@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PresentationUpdateResponseDto {
-
+    private String id;
     private String title;
-    private List<SlideDto> presentation;
+    private List<SlideDto> slides;
 }
