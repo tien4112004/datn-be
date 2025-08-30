@@ -1,5 +1,7 @@
 package com.datn.datnbe.ai.management;
 
+import org.springframework.stereotype.Service;
+
 import com.datn.datnbe.ai.api.ContentGenerationApi;
 import com.datn.datnbe.ai.api.ModelSelectionApi;
 import com.datn.datnbe.ai.config.chatmodelconfiguration.SystemPromptConfig;
@@ -9,11 +11,11 @@ import com.datn.datnbe.ai.factory.ChatClientFactory;
 import com.datn.datnbe.ai.utils.MappingParamsUtils;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
 @Service
@@ -64,8 +66,8 @@ public class ContentGenerationManagement implements ContentGenerationApi {
                 .content()
                 .doOnNext(chunk -> completeResponse.append(chunk))
                 .doOnComplete(() -> {
-                    log.info("Streaming presentation generation completed");
-                    String cleanedJson = extractJsonFromResponse(completeResponse.toString());
+//                     log.info("Streaming presentation generation completed");
+//                     String cleanedJson = extractJsonFromResponse(completeResponse.toString());
 //                    try {
 //                        // Parse the complete JSON response
 //                        PresentationResponse slideResponse = objectMapper.readValue(cleanedJson,
@@ -83,7 +85,6 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     }
 
     private String extractJsonFromResponse(String response) {
-        // Remove markdown code blocks
         String cleaned = response.trim();
 
         cleaned = cleaned.replaceAll("(?m)^```json\\s*|^```\\s*", "").replaceAll("\n---", ",").replaceAll(",\\s*$", "");
