@@ -15,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SlideDto {
-    @NotBlank(message = "Slide ID cannot be blank")
+    //@NotBlank(message = "Slide ID cannot be blank")
     String id;
 
     @Valid
