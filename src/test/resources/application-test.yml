@@ -1,24 +1,26 @@
 spring:
   application:
-    name: document-service-test
+    name: datn-be-test
   # Single H2 in-memory database for tests
   datasource:
     url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
     username: sa
-    password:
+    password: sa
+    driver-class-name: org.h2.Driver
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: none
     show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
         format_sql: false
-  h2:
-    console:
-      enabled: false
+    database-platform: org.hibernate.dialect.H2Dialect
   ai:
+    model:
+      chat: none
+    chat:
+      client:
+        enabled: false
     openai:
       api-key: "test-key"
       base-url: "http://test-url"
@@ -38,6 +40,11 @@ server:
 app:
   init:
     enabled: false
+  gcloud:
+    project-id: test-project-id
+    location: us-central1
+    endpoint: us-central1-aiplatform.googleapis.com
+
   cors:
     allowed-origins: "http://localhost:3000,http://localhost:8080"
     allowed-origin-patterns: "http://localhost:3000,http://localhost:8080"

@@ -34,6 +34,10 @@ spring:
     mongodb:
       uri: ${MONGODB_URI:mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DATABASE}?authSource=${MONGODB_AUTH_DATABASE}}
 app:
+  gcloud:
+    project-id: ${VERTEX_PROJECT_ID}
+    location: ${VERTEX_LOCATION:us-central1}
+    endpoint: ${GOOGLE_CLOUD_ENDPOINT:us-central1-aiplatform.googleapis.com}
   models:
     configurations:
       openai:
