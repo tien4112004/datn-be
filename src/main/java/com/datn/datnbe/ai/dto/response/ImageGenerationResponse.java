@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
@@ -15,4 +17,5 @@ public class ImageGenerationResponse {
     String imageBase64;
     String mimeType;
     String prompt;
+    LocalDateTime created;
 }

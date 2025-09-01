@@ -38,6 +38,7 @@ public class ImageModelConfig {
 
     @Bean
     public EndpointName imageEndpointName() {
+        // Hardcode model for now
         return EndpointName.ofProjectLocationPublisherModelName(
                 projectId, location, "google", "imagen-3.0-generate-001");
     }
