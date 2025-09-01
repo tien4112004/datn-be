@@ -21,6 +21,10 @@ public enum ErrorCode {
 
     PRESENTATION_CREATION_FAILED("Failed to create presentation", 500),
     DATABASE_ERROR("Database operation failed", 500), VALIDATION_ERROR("Validation failed", 400),
+
+    UNSUPPORTED_MEDIA_TYPE("Unsupported media type", 415),
+    FILE_TOO_LARGE("File size exceeds the limit", 413),
+    FILE_UPLOAD_ERROR("File upload failed", 500)
     ;
 
     private final String defaultMessage;
