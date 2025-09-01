@@ -14,15 +14,22 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 public class ImageGenerationRequest {
     String prompt;
+
     @Builder.Default
     Integer sampleCount = 1;
+
     @Builder.Default
     String aspectRatio = "1:1";
+
     @Builder.Default
     String safetyFilterLevel = "block_some";
+
     @Builder.Default
     String personGeneration = "allow_adult";
+
     Integer seed;
+
     @Nullable
+    @Builder.Default
     Boolean addWatermark = null;
 }

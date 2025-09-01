@@ -34,6 +34,8 @@ spring:
     mongodb:
       uri: ${MONGODB_URI:mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DATABASE}?authSource=${MONGODB_AUTH_DATABASE}}
 app:
+  init:
+    enabled: true
   gcloud:
     project-id: ${VERTEX_PROJECT_ID}
     location: ${VERTEX_LOCATION:us-central1}

@@ -41,10 +41,10 @@ app:
   init:
     enabled: false
   gcloud:
+    enabled: false
     project-id: test-project-id
     location: us-central1
     endpoint: us-central1-aiplatform.googleapis.com
-
   cors:
     allowed-origins: "http://localhost:3000,http://localhost:8080"
     allowed-origin-patterns: "http://localhost:3000,http://localhost:8080"

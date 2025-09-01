@@ -5,13 +5,18 @@ import com.google.cloud.vertexai.api.PredictionServiceClient;
 import com.google.cloud.vertexai.api.PredictionServiceSettings;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import java.io.IOException;
 
 @Configuration
+@Profile("!test")
+@ConditionalOnProperty(prefix = "app.gcloud", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class ImageModelConfig {
 
     @Value("${app.gcloud.project-id}")
