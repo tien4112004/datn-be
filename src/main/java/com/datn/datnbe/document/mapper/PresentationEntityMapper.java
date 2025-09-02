@@ -50,7 +50,6 @@ public interface PresentationEntityMapper {
     @Mapping(target = "createdAt", source = "createdAt")
     @Mapping(target = "updatedAt", source = "updatedAt")
     @Mapping(target = "thumbnail", expression = "java(entity.getSlides() != null && !entity.getSlides().isEmpty() ? slideToSlideDto(entity.getSlides().get(0)) : null)")
-    @Mapping(target = "isParsed", ignore = true)
     PresentationListResponseDto toListResponseDto(Presentation entity);
 
     @Mapping(target = "slides", source = "slides", qualifiedByName = "toDtoList")

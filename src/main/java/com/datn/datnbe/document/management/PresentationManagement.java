@@ -136,7 +136,7 @@ public class PresentationManagement implements PresentationApi {
 
     @Override
     public PresentationDto getPresentation(String id) {
-        log.info("Fetching presentation with ID: {}", id);
+         log.info("Fetching presentation with ID: {}", id);
 
         Optional<Presentation> presentationOpt = presentationRepository.findById(id);
         validation.validatePresentationExists(presentationOpt, id);

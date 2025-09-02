@@ -6,11 +6,11 @@ import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-@Service
+@Component
 @RequiredArgsConstructor
 @Slf4j
 public class PresentationValidation {
@@ -19,7 +19,7 @@ public class PresentationValidation {
     public void validatePresentationExists(Optional<Presentation> presentation, String id) {
         if (presentation.isEmpty()) {
             log.error("Presentation not found with ID: {}", id);
-            throw new AppException(ErrorCode.PRESENTATION_NOT_FOUND, "Presentation with ID " + id + " does not exist.");
+            throw new AppException(ErrorCode.PRESENTATION_NOT_FOUND, "Presentation not found with ID: " +id);
         }
     }
 
