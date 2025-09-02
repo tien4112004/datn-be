@@ -1,6 +1,7 @@
 package com.datn.datnbe.document.management;
 
 import com.datn.datnbe.document.dto.response.PresentationDto;
+import com.datn.datnbe.document.management.validation.PresentationValidation;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
@@ -36,6 +37,7 @@ public class PresentationManagement implements PresentationApi {
 
     private final PresentationRepository presentationRepository;
     private final PresentationEntityMapper mapper;
+    private final PresentationValidation validation;
 
     @Override
     public PresentationCreateResponseDto createPresentation(PresentationCreateRequest request) {
@@ -101,16 +103,12 @@ public class PresentationManagement implements PresentationApi {
     public void updatePresentation(String id, PresentationUpdateRequest request) {
         log.info("Updating presentation with ID: {} and title: {}", id, request.getTitle());
 
-        Presentation existingPresentation = presentationRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.error("Presentation not found with ID: {}", id);
-                    return new AppException(ErrorCode.PRESENTATION_NOT_FOUND);
-                });
+        Optional<Presentation> presentation = presentationRepository.findById(id);
 
-        if (presentationRepository.existsByTitle(request.getTitle())) {
-            log.error("Presentation with title '{}' already exists", request.getTitle());
-            throw new AppException(ErrorCode.PRESENTATION_TITLE_ALREADY_EXISTS);
-        }
+        validation.validatePresentationExists(presentation, id);
+        validation.validateTitleUniqueness(request.getTitle());
+
+        Presentation existingPresentation = presentation.get();
 
         mapper.updateEntity(request, existingPresentation);
 
@@ -122,20 +120,17 @@ public class PresentationManagement implements PresentationApi {
     @Override
     public void updateTitlePresentation(String id, PresentationUpdateTitleRequest request) {
         log.info("Updating title of presentation with ID: {} to title: {}", id, request.getTitle());
-        Presentation existingPresentation = presentationRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.error("Presentation not found with ID: {}", id);
-                    return new AppException(ErrorCode.PRESENTATION_NOT_FOUND);
-                });
 
-        if (presentationRepository.existsByTitle(request.getTitle())) {
-            log.error("Presentation with title '{}' already exists", request.getTitle());
-            throw new AppException(ErrorCode.PRESENTATION_TITLE_ALREADY_EXISTS);
-        }
+        Optional<Presentation> presentation = presentationRepository.findById(id);
+
+        validation.validatePresentationExists(presentation, id);
+        validation.validateTitleUniqueness(request.getTitle());
+
+        Presentation existingPresentation = presentation.get();
 
         existingPresentation.setTitle(request.getTitle());
-        Presentation savedPresentation = presentationRepository.save(existingPresentation);
-        log.info("Presentation title updated with ID: {}", savedPresentation.getId());
+        presentationRepository.save(existingPresentation);
+        log.info("Presentation title updated with ID: {}", id);
     }
 
 
@@ -144,10 +139,7 @@ public class PresentationManagement implements PresentationApi {
         log.info("Fetching presentation with ID: {}", id);
 
         Optional<Presentation> presentationOpt = presentationRepository.findById(id);
-        if (presentationOpt.isEmpty()) {
-            log.warn("Presentation not found with ID: {}", id);
-            throw new ResourceNotFoundException("Presentation not found with ID: " + id);
-        }
+        validation.validatePresentationExists(presentationOpt, id);
 
         Presentation presentation = presentationOpt.get();
         log.info("Found presentation: {} with {} slides",
@@ -155,5 +147,15 @@ public class PresentationManagement implements PresentationApi {
                 presentation.getSlides() != null ? presentation.getSlides().size() : 0);
 
         return mapper.toDetailedDto(presentation);
+    }
+
+    @Override
+    public void updatePresentatonStatus(String id) {
+        Optional<Presentation> presentationOpt = presentationRepository.findById(id);
+        validation.validatePresentationExists(presentationOpt, id);
+
+        Presentation existingPresentation = presentationOpt.get();
+
+        existingPresentation.setIsParsed(!existingPresentation.getIsParsed());
     }
 }
