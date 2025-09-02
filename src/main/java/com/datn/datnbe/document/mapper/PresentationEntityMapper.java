@@ -29,12 +29,14 @@ public interface PresentationEntityMapper {
     @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "slides", source = "slides", qualifiedByName = "toEntityList")
+    @Mapping(target = "isParsed", expression = "java(false)")
     Presentation createRequestToEntity(PresentationCreateRequest request);
 
     @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "slides", source = "slides", qualifiedByName = "toEntityList")
+    @Mapping(target = "isParsed", ignore = true)
     void updateEntity(PresentationUpdateRequest request, @MappingTarget Presentation presentation);
 
     @Mapping(target = "slides", source = "slides")
@@ -48,6 +50,7 @@ public interface PresentationEntityMapper {
     @Mapping(target = "createdAt", source = "createdAt")
     @Mapping(target = "updatedAt", source = "updatedAt")
     @Mapping(target = "thumbnail", expression = "java(entity.getSlides() != null && !entity.getSlides().isEmpty() ? slideToSlideDto(entity.getSlides().get(0)) : null)")
+    @Mapping(target = "isParsed", ignore = true)
     PresentationListResponseDto toListResponseDto(Presentation entity);
 
     @Mapping(target = "slides", source = "slides", qualifiedByName = "toDtoList")

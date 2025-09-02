@@ -36,4 +36,7 @@ public class Presentation {
     @Field("updatedAt")
     @LastModifiedDate
     LocalDateTime updatedAt;
+
+    @Field("isParsed")
+    Boolean isParsed;
 }
