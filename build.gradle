@@ -8,6 +8,7 @@ ext {
     springAiVersion = "1.0.1"
     springModulithVersion = "1.4.1"
     testcontainersVersion = "1.20.4"
+    cloudflareAwsSdkVersion = '2.31.50'
 }
 
 group = 'com.datn'
@@ -46,6 +47,8 @@ dependencies {
     implementation 'org.springframework.modulith:spring-modulith-starter-jpa'
     implementation 'me.paulschwarz:spring-dotenv:4.0.0'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
+    implementation "software.amazon.awssdk:s3:$cloudflareAwsSdkVersion"
+    implementation "software.amazon.awssdk:apache-client:$cloudflareAwsSdkVersion"
     compileOnly 'org.projectlombok:lombok:1.18.38'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
