@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.stream.Stream;
 
 public enum SlideElementType {
-    TEXT("text"), IMAGE("image"), SHAPE("shape"), LINE("line"), CHART("chart"), TABLE("table"), LATEX("latex"),
-    VIDEO("video"), AUDIO("audio");
+    text("text"), image("image"), shape("shape"), line("line"), chart("chart"), table("table"), latex("latex"),
+    video("video"), audio("audio");
 
     private final String value;
 

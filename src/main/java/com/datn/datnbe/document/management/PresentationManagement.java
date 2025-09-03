@@ -101,7 +101,7 @@ public class PresentationManagement implements PresentationApi {
 
     @Override
     public void updatePresentation(String id, PresentationUpdateRequest request) {
-        log.info("Updating presentation with ID: {} and title: {}", id, request.getTitle());
+        log.info("Updating presentation with ID: {}", id);
 
         Optional<Presentation> presentation = presentationRepository.findById(id);
 
@@ -150,12 +150,12 @@ public class PresentationManagement implements PresentationApi {
     }
 
     @Override
-    public void updatePresentatonStatus(String id) {
+    public void updatePresentationParsingStatus(String id) {
         Optional<Presentation> presentationOpt = presentationRepository.findById(id);
         validation.validatePresentationExists(presentationOpt, id);
 
         Presentation existingPresentation = presentationOpt.get();
-
         existingPresentation.setIsParsed(!existingPresentation.getIsParsed());
+        presentationRepository.save(existingPresentation);
     }
 }

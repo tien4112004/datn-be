@@ -71,8 +71,8 @@ public class PresentationController {
     }
 
     @PatchMapping("/{id}/parse")
-    public ResponseEntity<AppResponseDto<Void>> updateParsePresentation(@PathVariable String id){
-        presentationApi.updatePresentatonStatus(id);
+    public ResponseEntity<AppResponseDto<Void>> updatePresentationParsingStatus(@PathVariable String id){
+        presentationApi.updatePresentationParsingStatus(id);
         return ResponseEntity.noContent().build();
     }
 
