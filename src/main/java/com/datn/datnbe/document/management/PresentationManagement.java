@@ -139,40 +139,6 @@ public class PresentationManagement implements PresentationApi {
     }
 
     @Override
-    public void upsertSlides(String id, SlidesUpsertRequest request) {
-        log.info("Upserting slides for presentation with ID: {}, number of slides: {}",
-                id,
-                request.getSlides() != null ? request.getSlides().size() : 0);
-
-        Presentation existingPresentation = presentationRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.error("Presentation not found with ID: {}", id);
-                    return new AppException(ErrorCode.PRESENTATION_NOT_FOUND);
-                });
-
-        var slides = slideMapper.toEntityList(request.getSlides());
-
-        for (var upsertSlide: slides) {
-            if (existingPresentation.getSlides().stream().anyMatch(slide -> {
-                return slide.getId().equals(upsertSlide.getId());
-            })) {
-                // Update existing slide
-                existingPresentation.getSlides().removeIf(slide -> slide.getId().equals(upsertSlide.getId()));
-                existingPresentation.getSlides().add(upsertSlide);
-                log.info("Updated slide with ID: {}", upsertSlide.getId());
-            } else {
-                // Add new slide
-                existingPresentation.getSlides().add(upsertSlide);
-                log.info("Added new slide with ID: {}", upsertSlide.getId());
-            }
-        }
-
-        Presentation savedPresentation = presentationRepository.save(existingPresentation);
-        log.info("Slides upserted for presentation with ID: {}", savedPresentation.getId());
-    }
-
-
-    @Override
     public PresentationDto getPresentation(String id) {
          log.info("Fetching presentation with ID: {}", id);
 

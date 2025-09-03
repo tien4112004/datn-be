@@ -19,8 +19,6 @@ public interface PresentationApi {
 
     void updateTitlePresentation(String id, PresentationUpdateTitleRequest request);
 
-    void upsertSlides(String id, SlidesUpsertRequest request);
-
     PresentationDto getPresentation(String id);
 
     void updatePresentationParsingStatus(String id);

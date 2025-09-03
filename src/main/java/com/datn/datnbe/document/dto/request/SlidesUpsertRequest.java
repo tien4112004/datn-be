@@ -1,11 +1,12 @@
 package com.datn.datnbe.document.dto.request;
 
-import com.datn.datnbe.document.dto.SlideDto;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 @Data
@@ -13,5 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SlidesUpsertRequest {
-    public List<SlideDto> slides;
+    @Valid
+    @NotNull
+    private List<SlideUpdateRequest> slides;
 }
