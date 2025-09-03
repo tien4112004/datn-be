@@ -1,15 +1,13 @@
 package com.datn.datnbe.document.management;
 
+import com.datn.datnbe.document.dto.request.*;
 import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.document.management.validation.PresentationValidation;
 import com.datn.datnbe.document.entity.valueobject.Slide;
+import com.datn.datnbe.document.mapper.SlideEntityMapper;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
-import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
-import com.datn.datnbe.document.dto.request.PresentationUpdateRequest;
-import com.datn.datnbe.document.dto.request.PresentationUpdateTitleRequest;
 import com.datn.datnbe.document.api.PresentationApi;
-import com.datn.datnbe.document.dto.request.PresentationCollectionRequest;
 import com.datn.datnbe.document.dto.response.PresentationCreateResponseDto;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
 import com.datn.datnbe.document.entity.Presentation;
@@ -39,6 +37,7 @@ public class PresentationManagement implements PresentationApi {
 
     private final PresentationRepository presentationRepository;
     private final PresentationEntityMapper mapper;
+    private final SlideEntityMapper slideMapper;
     private final PresentationValidation validation;
 
     @Override
@@ -137,6 +136,39 @@ public class PresentationManagement implements PresentationApi {
         existingPresentation.setTitle(request.getTitle());
         presentationRepository.save(existingPresentation);
         log.info("Presentation title updated with ID: {}", id);
+    }
+
+    @Override
+    public void upsertSlides(String id, SlidesUpsertRequest request) {
+        log.info("Upserting slides for presentation with ID: {}, number of slides: {}",
+                id,
+                request.getSlides() != null ? request.getSlides().size() : 0);
+
+        Presentation existingPresentation = presentationRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.error("Presentation not found with ID: {}", id);
+                    return new AppException(ErrorCode.PRESENTATION_NOT_FOUND);
+                });
+
+        var slides = slideMapper.toEntityList(request.getSlides());
+
+        for (var upsertSlide: slides) {
+            if (existingPresentation.getSlides().stream().anyMatch(slide -> {
+                return slide.getId().equals(upsertSlide.getId());
+            })) {
+                // Update existing slide
+                existingPresentation.getSlides().removeIf(slide -> slide.getId().equals(upsertSlide.getId()));
+                existingPresentation.getSlides().add(upsertSlide);
+                log.info("Updated slide with ID: {}", upsertSlide.getId());
+            } else {
+                // Add new slide
+                existingPresentation.getSlides().add(upsertSlide);
+                log.info("Added new slide with ID: {}", upsertSlide.getId());
+            }
+        }
+
+        Presentation savedPresentation = presentationRepository.save(existingPresentation);
+        log.info("Slides upserted for presentation with ID: {}", savedPresentation.getId());
     }
 
 

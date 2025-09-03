@@ -1,9 +1,6 @@
 package com.datn.datnbe.document.api;
 
-import com.datn.datnbe.document.dto.request.PresentationCollectionRequest;
-import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
-import com.datn.datnbe.document.dto.request.PresentationUpdateRequest;
-import com.datn.datnbe.document.dto.request.PresentationUpdateTitleRequest;
+import com.datn.datnbe.document.dto.request.*;
 import com.datn.datnbe.document.dto.response.PresentationCreateResponseDto;
 import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
@@ -21,6 +18,8 @@ public interface PresentationApi {
     void updatePresentation(String id, PresentationUpdateRequest request);
 
     void updateTitlePresentation(String id, PresentationUpdateTitleRequest request);
+
+    void upsertSlides(String id, SlidesUpsertRequest request);
 
     PresentationDto getPresentation(String id);
 

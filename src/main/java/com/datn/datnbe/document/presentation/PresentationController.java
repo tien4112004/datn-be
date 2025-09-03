@@ -1,10 +1,7 @@
 package com.datn.datnbe.document.presentation;
 
 import com.datn.datnbe.document.api.PresentationApi;
-import com.datn.datnbe.document.dto.request.PresentationCollectionRequest;
-import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
-import com.datn.datnbe.document.dto.request.PresentationUpdateRequest;
-import com.datn.datnbe.document.dto.request.PresentationUpdateTitleRequest;
+import com.datn.datnbe.document.dto.request.*;
 import com.datn.datnbe.document.dto.response.PresentationCreateResponseDto;
 import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
@@ -53,7 +50,13 @@ public class PresentationController {
             @PathVariable String id,
             @Valid @RequestBody PresentationUpdateRequest request) {
         presentationApi.updatePresentation(id, request);
-        return ResponseEntity.ok(AppResponseDto.success(null));
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/slides")
+    public ResponseEntity<AppResponseDto<Void>> upsertSlides(@PathVariable String id, @Valid @RequestBody SlidesUpsertRequest request) {
+        presentationApi.upsertSlides(id, request);
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/title")
@@ -61,7 +64,7 @@ public class PresentationController {
             @PathVariable String id,
             @Valid @RequestBody PresentationUpdateTitleRequest request) {
         presentationApi.updateTitlePresentation(id, request);
-        return ResponseEntity.ok(AppResponseDto.success(null));
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
