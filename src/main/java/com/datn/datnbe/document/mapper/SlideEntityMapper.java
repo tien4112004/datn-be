@@ -13,7 +13,7 @@ import java.util.List;
 @Named("SlideEntityMapper")
 public interface SlideEntityMapper {
 
-    @Mapping(target = "id", source = "id", qualifiedByName = "generateId")
+    @Mapping(target = "id", source = "id")
     @Mapping(target = "background", source = "background")
     @Mapping(target = "elements", source = "elements", qualifiedByName = "toEntityList")
     @Named("toEntity")
@@ -34,17 +34,12 @@ public interface SlideEntityMapper {
     List<Slide> toEntityList(List<SlideDto> slideDtos);
 
     @Mapping(target = "elements", source = "elements", qualifiedByName = "createRequestToEntityList")
-     @Mapping(target = "background", source = "background")
+    @Mapping(target = "background", source = "background")
     @Named("createRequestToEntityList")
     Slide createRequestToEntity(SlideCreateRequest request);
 
     @IterableMapping(qualifiedByName = "createRequestToEntityList")
     @Named("createRequestToEntityList")
     List<Slide> createRequestToEntityList(List<SlideCreateRequest> slideCreateRequests);
-
-    @Named("generateId")
-    default String generateId(String id) {
-        return id != null ? id : java.util.UUID.randomUUID().toString();
-    }
 
 }

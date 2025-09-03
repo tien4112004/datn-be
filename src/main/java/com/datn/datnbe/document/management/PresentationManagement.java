@@ -1,6 +1,7 @@
 package com.datn.datnbe.document.management;
 
 import com.datn.datnbe.document.dto.response.PresentationDto;
+import com.datn.datnbe.document.entity.valueobject.Slide;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
@@ -27,6 +28,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,6 +44,9 @@ public class PresentationManagement implements PresentationApi {
         log.info("Creating presentation with title: {}", request.getTitle());
 
         Presentation presentation = mapper.createRequestToEntity(request);
+        for(Slide slide : presentation.getSlides()) {
+            slide.setId(UUID.randomUUID().toString());
+        }
         Presentation savedPresentation = presentationRepository.save(presentation);
 
         log.info("Presentation saved with ID: {}", savedPresentation.getId());
@@ -107,10 +112,10 @@ public class PresentationManagement implements PresentationApi {
                     return new AppException(ErrorCode.PRESENTATION_NOT_FOUND);
                 });
 
-        if (presentationRepository.existsByTitle(request.getTitle())) {
-            log.error("Presentation with title '{}' already exists", request.getTitle());
-            throw new AppException(ErrorCode.PRESENTATION_TITLE_ALREADY_EXISTS);
-        }
+//        if (presentationRepository.existsByTitle(request.getTitle())) {
+//            log.error("Presentation with title '{}' already exists", request.getTitle());
+//            throw new AppException(ErrorCode.PRESENTATION_TITLE_ALREADY_EXISTS);
+//        }
 
         mapper.updateEntity(request, existingPresentation);
 
