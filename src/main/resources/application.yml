@@ -68,3 +68,4 @@ cloudflare:
     accessKey: ${S3_ACCESS_KEY_ID}
     secretKey: ${S3_SECRET_ACCESS_KEY}
     bucket:    ${R2_BUCKET_NAME}
+    public-url: ${R2_PUBLIC_URL_DEV}

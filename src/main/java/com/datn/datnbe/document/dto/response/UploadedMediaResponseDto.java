@@ -7,6 +7,8 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UploadedImageResponseDto {
-    private String imageUrl;
+public class UploadedMediaResponseDto {
+    private String cdnUrl;
+    private String mediaType;
+    private String extension;
 }
