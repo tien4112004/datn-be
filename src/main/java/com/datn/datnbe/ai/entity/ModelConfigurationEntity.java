@@ -15,13 +15,18 @@ public class ModelConfigurationEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     Integer modelId;
+
     @Column(name = "model_name", nullable = false, unique = true)
     String modelName;
+
     @Column(name = "display_name", nullable = false)
     String displayName;
+
     @Column(name = "is_enabled", nullable = false, columnDefinition = "boolean default true")
     boolean isEnabled;
+
     @Column(name = "is_default", nullable = false, columnDefinition = "boolean default false")
     boolean isDefault;
+
     String provider;
 }

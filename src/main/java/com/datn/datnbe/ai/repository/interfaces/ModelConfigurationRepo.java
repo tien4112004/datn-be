@@ -1,8 +1,6 @@
 package com.datn.datnbe.ai.repository.interfaces;
 
-
 import com.datn.datnbe.ai.entity.ModelConfigurationEntity;
-
 import java.util.List;
 
 public interface ModelConfigurationRepo {

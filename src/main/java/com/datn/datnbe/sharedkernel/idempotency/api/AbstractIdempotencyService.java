@@ -15,7 +15,7 @@ public abstract class AbstractIdempotencyService {
 
     /**
      * Checks if the given key is valid.
-     * 
+     *
      * @param key the idempotency key
      * @return true if the key is valid, false otherwise
      */
@@ -35,22 +35,18 @@ public abstract class AbstractIdempotencyService {
 
     /**
      * Initializes a new idempotency entry with the given key.
-     * 
+     *
      * @param key the idempotency key
      * @return a new IdempotencyKeyEntity instance
      */
     public IdempotencyKey initialize(String key) {
         log.info("Creating new idempotency entry for key: {}", key);
-        return IdempotencyKey.builder()
-                .key(key)
-                .retryCount(0)
-                .status(IdempotencyStatus.IN_PROGRESS)
-                .build();
+        return IdempotencyKey.builder().key(key).retryCount(0).status(IdempotencyStatus.IN_PROGRESS).build();
     }
 
     /**
      * Checks if the given entity can retry based on its retry count.
-     * 
+     *
      * @param entity the idempotency key entity
      * @return true if retries are allowed, false otherwise
      */
@@ -63,7 +59,7 @@ public abstract class AbstractIdempotencyService {
 
     /**
      * Increments the retry count for the given entity.
-     * 
+     *
      * @param entity the idempotency key entity
      */
     public void retry(IdempotencyKey entity) {
@@ -76,7 +72,7 @@ public abstract class AbstractIdempotencyService {
 
     /**
      * Marks the given entity as failed.
-     * 
+     *
      * @param entity the idempotency key entity
      */
     public void fail(IdempotencyKey entity) {
@@ -85,7 +81,7 @@ public abstract class AbstractIdempotencyService {
 
     /**
      * Checks if the given entity is marked as failed.
-     * 
+     *
      * @param entity the idempotency key entity
      * @return true if the entity is failed, false otherwise
      */
@@ -95,7 +91,7 @@ public abstract class AbstractIdempotencyService {
 
     /**
      * Marks the given entity as completed and sets the response data and status code.
-     * 
+     *
      * @param entity the idempotency key entity
      * @param result the response data
      * @param statusCode the HTTP status code
@@ -108,7 +104,7 @@ public abstract class AbstractIdempotencyService {
 
     /**
      * Checks if the given entity is marked as completed.
-     * 
+     *
      * @param entity the idempotency key entity
      * @return true if the entity is completed, false otherwise
      */
@@ -118,7 +114,7 @@ public abstract class AbstractIdempotencyService {
 
     /**
      * Checks if the given entity is in progress.
-     * 
+     *
      * @param entity the idempotency key entity
      * @return true if the entity is in progress, false otherwise
      */
@@ -128,7 +124,7 @@ public abstract class AbstractIdempotencyService {
 
     /**
      * Logs that the request with the given idempotency key is already in progress.
-     * 
+     *
      * @param entity the idempotency key entity
      */
     public void processing(IdempotencyKey entity) {

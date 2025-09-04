@@ -13,8 +13,7 @@ public class TestcontainersConfiguration {
     @Bean
     @ServiceConnection
     public PostgreSQLContainer<?> postgreSQLContainer() {
-        return new PostgreSQLContainer<>(DockerImageName.parse("postgres:15-alpine"))
-                .withDatabaseName("testdb")
+        return new PostgreSQLContainer<>(DockerImageName.parse("postgres:15-alpine")).withDatabaseName("testdb")
                 .withUsername("testuser")
                 .withPassword("testpass")
                 .withReuse(true);
@@ -23,7 +22,6 @@ public class TestcontainersConfiguration {
     @Bean
     @ServiceConnection
     public MongoDBContainer mongoDBContainer() {
-        return new MongoDBContainer(DockerImageName.parse("mongo:7.0"))
-                .withReuse(true);
+        return new MongoDBContainer(DockerImageName.parse("mongo:7.0")).withReuse(true);
     }
 }

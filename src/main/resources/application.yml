@@ -59,7 +59,7 @@ app:
     allowed-origins: ${ALLOWED_ORIGINS}
     allowed-origin-patterns: ${ALLOWED_ORIGINS}
     allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
-    allow-credentials: true
+    allow-credentials: false
     max-age: 3600
 
 cloudflare:

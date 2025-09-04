@@ -4,8 +4,8 @@ import com.datn.datnbe.document.dto.SlideDto;
 import com.datn.datnbe.document.dto.request.SlideCreateRequest;
 import com.datn.datnbe.document.dto.request.SlideUpdateRequest;
 import com.datn.datnbe.document.entity.valueobject.Slide;
-import org.mapstruct.*;
 import java.util.List;
+import org.mapstruct.*;
 
 @Mapper(componentModel = "spring", nullValueMappingStrategy = NullValueMappingStrategy.RETURN_NULL, collectionMappingStrategy = CollectionMappingStrategy.ADDER_PREFERRED, uses = {
         SlideElementMapper.class

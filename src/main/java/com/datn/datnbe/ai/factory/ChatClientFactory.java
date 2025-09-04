@@ -1,11 +1,10 @@
 package com.datn.datnbe.ai.factory;
 
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Component;
-
-import java.util.Map;
 
 @Component
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)

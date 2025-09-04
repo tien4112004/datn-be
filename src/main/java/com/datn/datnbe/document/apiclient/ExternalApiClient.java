@@ -2,9 +2,7 @@ package com.datn.datnbe.document.apiclient;
 
 import org.springframework.stereotype.Component;
 
-/**
- * API client for external service communication
- */
+/** API client for external service communication */
 @Component
 @Deprecated
 public class ExternalApiClient {

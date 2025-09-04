@@ -3,15 +3,18 @@ package com.datn.datnbe.document.management;
 import com.datn.datnbe.document.dto.request.*;
 import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.document.management.validation.PresentationValidation;
-import com.datn.datnbe.document.mapper.SlideEntityMapper;
 import com.datn.datnbe.document.api.PresentationApi;
 import com.datn.datnbe.document.dto.response.PresentationCreateResponseDto;
+import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
 import com.datn.datnbe.document.entity.Presentation;
 import com.datn.datnbe.document.mapper.PresentationEntityMapper;
 import com.datn.datnbe.document.repository.PresentationRepository;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -40,7 +43,8 @@ public class PresentationManagement implements PresentationApi {
         log.info("Creating presentation with title: {}", request.getTitle());
 
         Presentation presentation = mapper.createRequestToEntity(request);
-        presentation.getSlides().stream()
+        presentation.getSlides()
+                .stream()
                 .filter(slide -> slide.getId() == null)
                 .forEach(slide -> slide.setId(UUID.randomUUID().toString()));
 
@@ -135,7 +139,7 @@ public class PresentationManagement implements PresentationApi {
 
     @Override
     public PresentationDto getPresentation(String id) {
-         log.info("Fetching presentation with ID: {}", id);
+        log.info("Fetching presentation with ID: {}", id);
 
         Optional<Presentation> presentationOpt = presentationRepository.findById(id);
         validation.validatePresentationExists(presentationOpt, id);

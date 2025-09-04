@@ -1,7 +1,6 @@
 package com.datn.datnbe.ai.mapper;
 
 import com.datn.datnbe.ai.config.chatmodelconfiguration.ModelProperties;
-import com.datn.datnbe.ai.dto.response.ModelMinimalResponseDto;
 import com.datn.datnbe.ai.dto.response.ModelResponseDto;
 import com.datn.datnbe.ai.entity.ModelConfigurationEntity;
 import org.mapstruct.Mapper;

@@ -37,7 +37,7 @@ public class SlideUpdateRequest {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class SlideElementUpdateRequest {
         String id;
-        
+
         @NotNull(message = "Element type cannot be null")
         String type;
         Float left;

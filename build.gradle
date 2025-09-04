@@ -86,3 +86,14 @@ dependencyManagement {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+spotless {
+    java {
+//        googleJavaFormat() // Use Google Java Format
+        eclipse().configFile('./eclipse-formatter.xml')
+        // or palantirJavaFormat()
+        removeUnusedImports() // Remove unused imports
+        trimTrailingWhitespace() // Trim trailing whitespace
+        endWithNewline() // Ensure files end with a newline
+    }
+}

@@ -6,9 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-/**
- * Event for slide Generated operations
- */
+/** Event for slide Generated operations */
 public class SlideGeneratedEvent extends BaseEvent {
 
     private String presentationId;

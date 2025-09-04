@@ -1,6 +1,8 @@
 package com.datn.datnbe.ai.config.chatmodelconfiguration.openaimodel;
 
 import com.datn.datnbe.ai.config.chatmodelconfiguration.ModelProperties;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -10,9 +12,6 @@ import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 @Configuration

@@ -4,13 +4,12 @@ import com.datn.datnbe.document.dto.SlideDto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 @Data
 @Builder
@@ -33,6 +32,7 @@ public class SlideCreateRequest {
     public static class SlideElementCreateRequest {
         @NotNull(message = "Element type cannot be null")
         String type;
+
         Float left;
         Float top;
         Float width;
@@ -55,5 +55,4 @@ public class SlideCreateRequest {
         String style;
         Float wordSpace;
     }
-
 }

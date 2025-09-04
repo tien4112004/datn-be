@@ -1,8 +1,6 @@
 package com.datn.datnbe.document.command.commands;
 
-/**
- * Base command class for document operations
- */
+/** Base command class for document operations */
 @Deprecated
 public abstract class BaseCommand {
 

@@ -1,5 +1,10 @@
 package com.datn.datnbe.document.management;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+
 import com.datn.datnbe.document.dto.request.PresentationCollectionRequest;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
 import com.datn.datnbe.document.entity.Presentation;
@@ -7,24 +12,16 @@ import com.datn.datnbe.document.management.validation.PresentationValidation;
 import com.datn.datnbe.document.mapper.PresentationEntityMapper;
 import com.datn.datnbe.document.repository.PresentationRepository;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
-import com.datn.datnbe.sharedkernel.dto.PaginationDto;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
-
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class GetAllPresentationsTest {
@@ -96,18 +93,18 @@ class GetAllPresentationsTest {
         assertThat(result).containsExactly(responseDto1, responseDto2);
     }
 
-    @Test
-    void getAllPresentations_WithEmptyRepository_ShouldReturnEmptyList() {
-        // Given
-        when(presentationRepository.findAll()).thenReturn(List.of());
+  @Test
+  void getAllPresentations_WithEmptyRepository_ShouldReturnEmptyList() {
+    // Given
+    when(presentationRepository.findAll()).thenReturn(List.of());
 
-        // When
-        List<PresentationListResponseDto> result = presentationService.getAllPresentations();
+    // When
+    List<PresentationListResponseDto> result = presentationService.getAllPresentations();
 
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result).isEmpty();
-    }
+    // Then
+    assertThat(result).isNotNull();
+    assertThat(result).isEmpty();
+  }
 
     @Test
     void getAllPresentations_WithPagination_ShouldReturnPaginatedResponse() {
@@ -119,7 +116,7 @@ class GetAllPresentationsTest {
                 .build();
 
         List<Presentation> presentations = Arrays.asList(presentation1, presentation2);
-        Page<Presentation> presentationPage = new PageImpl<>(presentations, 
+        Page<Presentation> presentationPage = new PageImpl<>(presentations,
                 PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "createdAt")), 2);
 
         when(presentationRepository.findAll(any(Pageable.class))).thenReturn(presentationPage);
@@ -148,7 +145,7 @@ class GetAllPresentationsTest {
                 .build();
 
         List<Presentation> filteredPresentations = List.of(presentation1);
-        Page<Presentation> presentationPage = new PageImpl<>(filteredPresentations, 
+        Page<Presentation> presentationPage = new PageImpl<>(filteredPresentations,
                 PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt")), 1);
 
         when(presentationRepository.findByTitleContainingIgnoreCase(eq("First"), any(Pageable.class)))
@@ -174,7 +171,7 @@ class GetAllPresentationsTest {
                 .build();
 
         List<Presentation> presentations = Arrays.asList(presentation2, presentation1); // sorted desc by creation time
-        Page<Presentation> presentationPage = new PageImpl<>(presentations, 
+        Page<Presentation> presentationPage = new PageImpl<>(presentations,
                 PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt")), 2);
 
         when(presentationRepository.findAll(any(Pageable.class))).thenReturn(presentationPage);
@@ -199,7 +196,7 @@ class GetAllPresentationsTest {
                 .build();
 
         List<Presentation> presentations = Arrays.asList(presentation1, presentation2);
-        Page<Presentation> presentationPage = new PageImpl<>(presentations, 
+        Page<Presentation> presentationPage = new PageImpl<>(presentations,
                 PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "createdAt")), 2);
 
         when(presentationRepository.findAll(any(Pageable.class))).thenReturn(presentationPage);
@@ -223,7 +220,7 @@ class GetAllPresentationsTest {
                 .sort("asc")
                 .build();
 
-        Page<Presentation> emptyPage = new PageImpl<>(List.of(), 
+        Page<Presentation> emptyPage = new PageImpl<>(List.of(),
                 PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "createdAt")), 0);
 
         when(presentationRepository.findByTitleContainingIgnoreCase(eq("NonExistent"), any(Pageable.class)))
@@ -249,7 +246,7 @@ class GetAllPresentationsTest {
                 .build();
 
         List<Presentation> secondPagePresentations = List.of(presentation2);
-        Page<Presentation> presentationPage = new PageImpl<>(secondPagePresentations, 
+        Page<Presentation> presentationPage = new PageImpl<>(secondPagePresentations,
                 PageRequest.of(1, 1, Sort.by(Sort.Direction.ASC, "createdAt")), 2);
 
         when(presentationRepository.findAll(any(Pageable.class))).thenReturn(presentationPage);

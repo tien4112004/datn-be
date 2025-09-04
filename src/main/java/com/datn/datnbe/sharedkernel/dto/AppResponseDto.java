@@ -2,18 +2,13 @@ package com.datn.datnbe.sharedkernel.dto;
 
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.google.type.DateTime;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 
-import java.security.Timestamp;
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Date;
 
 @Data
 @Builder(toBuilder = true)
@@ -43,6 +38,7 @@ public class AppResponseDto<T> {
     public static <T> AppResponseDto<T> success(String message) {
         return AppResponseDto.<T>builder().message(message).data(null).build();
     }
+
     public static <T> AppResponseDto<T> success(T data, String message) {
         return AppResponseDto.<T>builder().message(message).data(data).build();
     }
