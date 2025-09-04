@@ -44,9 +44,10 @@ public class PresentationManagement implements PresentationApi {
         log.info("Creating presentation with title: {}", request.getTitle());
 
         Presentation presentation = mapper.createRequestToEntity(request);
-        for(Slide slide : presentation.getSlides()) {
-            slide.setId(UUID.randomUUID().toString());
-        }
+        presentation.getSlides().stream()
+                .filter(slide -> slide.getId() == null)
+                .forEach(slide -> slide.setId(UUID.randomUUID().toString()));
+
         Presentation savedPresentation = presentationRepository.save(presentation);
 
         log.info("Presentation saved with ID: {}", savedPresentation.getId());
@@ -112,10 +113,10 @@ public class PresentationManagement implements PresentationApi {
                     return new AppException(ErrorCode.PRESENTATION_NOT_FOUND);
                 });
 
-//        if (presentationRepository.existsByTitle(request.getTitle())) {
-//            log.error("Presentation with title '{}' already exists", request.getTitle());
-//            throw new AppException(ErrorCode.PRESENTATION_TITLE_ALREADY_EXISTS);
-//        }
+        if (presentationRepository.existsByTitle(request.getTitle())) {
+            log.error("Presentation with title '{}' already exists", request.getTitle());
+            throw new AppException(ErrorCode.PRESENTATION_TITLE_ALREADY_EXISTS);
+        }
 
         mapper.updateEntity(request, existingPresentation);
 
