@@ -17,8 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Optional;
-import java.util.UUID;
+import static com.datn.datnbe.ai.utils.MediaStorageUtils.*;
 
 @Service
 @RequiredArgsConstructor
@@ -53,7 +52,7 @@ public class MediaStorageManagement implements MediaStorageApi {
         Media media = Media.builder()
                 .originalFilename(originalFilename)
                 .storageKey(uploadedKey)
-                .cdnUrl(buildCdnUrl(uploadedKey))
+                .cdnUrl(buildCdnUrl(uploadedKey, cdnDomain))
                 .mediaType(mediaType)
                 .fileSize(file.getSize())
                 .contentType(contentType)
@@ -84,30 +83,5 @@ public class MediaStorageManagement implements MediaStorageApi {
         // Delete from database
         mediaRepository.delete(media);
         log.info("Successfully deleted media with ID: {}", mediaId);
-    }
-
-    private String getOriginalFilename(MultipartFile file) {
-        return Optional.ofNullable(file.getOriginalFilename())
-                .filter(name -> !name.trim().isEmpty())
-                .orElseThrow(() -> new AppException(ErrorCode.MISSING_REQUIRED_FIELD, "Original filename is required"));
-    }
-
-    private String getContentType(MultipartFile file) {
-        return Optional.ofNullable(file.getContentType())
-                .filter(type -> !type.trim().isEmpty())
-                .orElseThrow(
-                        () -> new AppException(ErrorCode.UNSUPPORTED_MEDIA_TYPE, "Content type cannot be determined"));
-    }
-
-    private String buildObjectKey(String folder, String filename) {
-        return String.format("%s/%s-%s", folder, UUID.randomUUID(), filename);
-    }
-
-    private String sanitizeFilename(String filename) {
-        return filename.replaceAll("[^a-zA-Z0-9._-]", "_");
-    }
-
-    private String buildCdnUrl(String storageKey) {
-        return cdnDomain.endsWith("/") ? cdnDomain + storageKey : cdnDomain + "/" + storageKey;
     }
 }
