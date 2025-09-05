@@ -3,6 +3,7 @@ package com.datn.datnbe.document.management;
 import com.datn.datnbe.document.dto.request.PresentationCollectionRequest;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
 import com.datn.datnbe.document.entity.Presentation;
+import com.datn.datnbe.document.management.validation.PresentationValidation;
 import com.datn.datnbe.document.mapper.PresentationEntityMapper;
 import com.datn.datnbe.document.repository.PresentationRepository;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
@@ -33,6 +34,8 @@ class GetAllPresentationsTest {
 
     private PresentationEntityMapper mapper;
 
+    private PresentationValidation validation;
+
     private PresentationManagement presentationService;
 
     private Presentation presentation1;
@@ -43,7 +46,7 @@ class GetAllPresentationsTest {
     @BeforeEach
     void setUp() {
         mapper = Mappers.getMapper(PresentationEntityMapper.class);
-        presentationService = new PresentationManagement(presentationRepository, mapper);
+        presentationService = new PresentationManagement(presentationRepository, mapper, validation);
 
         LocalDateTime now = LocalDateTime.now();
 

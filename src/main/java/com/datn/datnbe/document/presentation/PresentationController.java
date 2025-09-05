@@ -70,4 +70,10 @@ public class PresentationController {
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 
+    @PatchMapping("/{id}/parse")
+    public ResponseEntity<Void> updatePresentationParsingStatus(@PathVariable String id){
+        presentationApi.updatePresentationParsingStatus(id);
+        return ResponseEntity.noContent().build();
+    }
+
 }

@@ -4,16 +4,18 @@ import com.datn.datnbe.document.dto.SlideDto;
 import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.document.entity.Presentation;
 import com.datn.datnbe.document.entity.valueobject.Slide;
+import com.datn.datnbe.document.management.validation.PresentationValidation;
 import com.datn.datnbe.document.mapper.PresentationEntityMapper;
 import com.datn.datnbe.document.repository.PresentationRepository;
-import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
+import com.datn.datnbe.sharedkernel.exceptions.AppException;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,16 +25,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
+import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+
 @SpringBootTest(classes = {TestConfig.class,
-        PresentationManagement.class}, webEnvironment = SpringBootTest.WebEnvironment.NONE)
+        PresentationManagement.class,
+        PresentationValidation.class}, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ExtendWith(MockitoExtension.class)
 class GetPresentationTest {
 
-    @MockBean
+    @MockitoBean
     private PresentationRepository presentationRepository;
 
     @Autowired
     private PresentationEntityMapper presentationEntityMapper;
+
+    @Autowired
+    private PresentationValidation presentationValidation;
 
     private PresentationManagement presentationService;
 
@@ -42,7 +50,7 @@ class GetPresentationTest {
 
     @BeforeEach
     void setUp() {
-        presentationService = new PresentationManagement(presentationRepository, presentationEntityMapper);
+        presentationService = new PresentationManagement(presentationRepository, presentationEntityMapper, presentationValidation);
 
         backgroundDto = SlideDto.SlideBackgroundDto.builder().type("color").color("#ffffff").build();
 
@@ -93,7 +101,7 @@ class GetPresentationTest {
     }
 
     @Test
-    void getPresentation_WithNonExistentId_ShouldThrowResourceNotFoundException() {
+    void getPresentation_WithNonExistentId_ShouldThrowPRESENTATION_NOT_FOUND() {
         // Given
         String nonExistentId = "non-existent-id";
 
@@ -101,8 +109,12 @@ class GetPresentationTest {
 
         // When & Then
         assertThatThrownBy(() -> presentationService.getPresentation(nonExistentId))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("Presentation not found with ID: " + nonExistentId);
+                .isInstanceOf(AppException.class)
+                .hasMessageContaining("Presentation not found with ID: " + nonExistentId)
+                .satisfies(ex ->{
+                        AppException appEx = (AppException) ex;
+                        assertThat(appEx.getErrorCode()).isEqualTo(ErrorCode.PRESENTATION_NOT_FOUND);
+                });
     }
 
     @Test
@@ -143,7 +155,7 @@ class GetPresentationTest {
     }
 
     @Test
-    void getPresentation_WithNullId_ShouldThrowResourceNotFoundException() {
+    void getPresentation_WithNullId_ShouldThrowPRESENTATION_NOT_FOUND() {
         // Given
         String nullId = null;
 
@@ -151,12 +163,16 @@ class GetPresentationTest {
 
         // When & Then
         assertThatThrownBy(() -> presentationService.getPresentation(nullId))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("Presentation not found with ID: null");
+                .isInstanceOf(AppException.class)
+                .hasMessageContaining("Presentation not found with ID: null")
+                .satisfies(ex ->{
+                        AppException appEx = (AppException) ex;
+                        assertThat(appEx.getErrorCode()).isEqualTo(ErrorCode.PRESENTATION_NOT_FOUND);
+                });
     }
 
     @Test
-    void getPresentation_WithEmptyStringId_ShouldThrowResourceNotFoundException() {
+    void getPresentation_WithEmptyStringId_ShouldThrowPRESENTATION_NOT_FOUND() {
         // Given
         String emptyId = "";
 
@@ -164,8 +180,12 @@ class GetPresentationTest {
 
         // When & Then
         assertThatThrownBy(() -> presentationService.getPresentation(emptyId))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("Presentation not found with ID: ");
+                .isInstanceOf(AppException.class)
+                .hasMessageContaining("Presentation not found with ID: ")
+                .satisfies(ex ->{
+						AppException appEx = (AppException) ex;
+						assertThat(appEx.getErrorCode()).isEqualTo(ErrorCode.PRESENTATION_NOT_FOUND);
+				});
     }
 
     @Test

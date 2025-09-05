@@ -23,4 +23,6 @@ public interface PresentationApi {
     void updateTitlePresentation(String id, PresentationUpdateTitleRequest request);
 
     PresentationDto getPresentation(String id);
+
+    void updatePresentationParsingStatus(String id);
 }

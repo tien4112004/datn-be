@@ -24,4 +24,5 @@ public class PresentationDto {
     private List<SlideDto> slides;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private boolean isParsed;
 }
