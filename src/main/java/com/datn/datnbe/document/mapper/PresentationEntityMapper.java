@@ -16,6 +16,7 @@ import org.mapstruct.*;
 @Named("PresentationEntityMapper")
 public interface PresentationEntityMapper {
 
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "title", expression = "java((request.getTitle() == null || request.getTitle().isEmpty()) ? \"Untitled Presentation\" : request.getTitle())")
     @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")

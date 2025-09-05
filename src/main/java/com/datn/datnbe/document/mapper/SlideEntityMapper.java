@@ -34,6 +34,7 @@ public interface SlideEntityMapper {
     @Named("toEntityList")
     List<Slide> toEntityList(List<SlideDto> slideDtos);
 
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "elements", source = "elements", qualifiedByName = "createRequestToEntityList")
     @Mapping(target = "background", source = "background")
     @Named("createRequestToEntityList")

@@ -1,11 +1,10 @@
 package com.datn.datnbe.document.management;
 
-import com.datn.datnbe.document.dto.request.*;
+import com.datn.datnbe.document.api.PresentationApi;
+import com.datn.datnbe.document.dto.request.PresentationCollectionRequest;
 import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.document.management.validation.PresentationValidation;
-import com.datn.datnbe.document.api.PresentationApi;
 import com.datn.datnbe.document.dto.response.PresentationCreateResponseDto;
-import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
 import com.datn.datnbe.document.entity.Presentation;
 import com.datn.datnbe.document.mapper.PresentationEntityMapper;
@@ -24,10 +23,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

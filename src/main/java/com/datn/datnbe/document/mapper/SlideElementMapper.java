@@ -31,6 +31,7 @@ public interface SlideElementMapper {
 
     // Create request
     @Named("createRequestToEntity")
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "type", expression = "java(SlideElementType.fromValue(createRequest.getType()))")
     SlideElement createRequestToEntity(SlideElementCreateRequest createRequest);
 

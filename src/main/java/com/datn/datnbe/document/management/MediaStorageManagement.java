@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import static com.datn.datnbe.ai.utils.MediaStorageUtils.*;
+import static com.datn.datnbe.document.utils.MediaStorageUtils.*;
 
 @Service
 @RequiredArgsConstructor
