@@ -27,4 +27,6 @@ public class PresentationUpdateRequest {
     @NotEmpty(message = "Presentation must contain at least one slide")
     @Valid
     private List<SlideDto> slides;
+
+    private boolean isParsed;
 }
