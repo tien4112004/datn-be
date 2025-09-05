@@ -1,6 +1,7 @@
 package com.datn.datnbe.document.management;
 
 import com.datn.datnbe.document.dto.response.PresentationDto;
+import com.datn.datnbe.document.entity.valueobject.Slide;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
@@ -27,6 +28,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,6 +44,10 @@ public class PresentationManagement implements PresentationApi {
         log.info("Creating presentation with title: {}", request.getTitle());
 
         Presentation presentation = mapper.createRequestToEntity(request);
+        presentation.getSlides().stream()
+                .filter(slide -> slide.getId() == null)
+                .forEach(slide -> slide.setId(UUID.randomUUID().toString()));
+
         Presentation savedPresentation = presentationRepository.save(presentation);
 
         log.info("Presentation saved with ID: {}", savedPresentation.getId());
