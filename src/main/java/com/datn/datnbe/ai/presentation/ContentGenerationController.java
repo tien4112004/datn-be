@@ -2,6 +2,10 @@ package com.datn.datnbe.ai.presentation;
 
 import com.datn.datnbe.document.api.PresentationApi;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
+import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.bson.types.ObjectId;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -63,8 +67,8 @@ public class ContentGenerationController {
                     "Failed to generate slides: " + error.getMessage()));
     }
 
-    @PostMapping(value = "presentations/generate/batch", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> generateSlidesBatch(@RequestBody PresentationPromptRequest request) {
+    @PostMapping(value = "presentations/generate/batch", produces = "application/json")
+    public ResponseEntity<AppResponseDto<JsonNode>> generateSlidesBatch(@RequestBody PresentationPromptRequest request) {
         log.info("Received batch slide generation request: {}", request);
         String result;
         
@@ -90,11 +94,15 @@ public class ContentGenerationController {
                 .title("AI Generated Presentation")
                 .slides(new ArrayList<>())
                 .build();
+        var newPresentation = presentationApi.createPresentation(createRequest);
 
-        presentationApi.createPresentation(createRequest);
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode data = mapper.createObjectNode();
+        data.put("aiResult", result);
+        data.set("presentation", mapper.valueToTree(newPresentation));
 
         return ResponseEntity.ok()
                 .header("presentationId",presentationId)
-                .body(result);
+                .body(AppResponseDto.<JsonNode>builder().data(data).build());
     }
 }
