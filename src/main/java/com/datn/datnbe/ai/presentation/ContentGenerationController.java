@@ -1,6 +1,8 @@
 package com.datn.datnbe.ai.presentation;
 
+import org.bson.types.ObjectId;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -54,5 +56,30 @@ public class ContentGenerationController {
             })
             .onErrorMap(error -> new AppException(ErrorCode.GENERATION_ERROR,
                     "Failed to generate slides: " + error.getMessage()));
+    }
+
+    @PostMapping(value = "presentations/generate/batch", produces = MediaType.TEXT_PLAIN_VALUE)
+    public ResponseEntity<String> generateSlidesBatch(@RequestBody PresentationPromptRequest request) {
+        log.info("Received batch slide generation request: {}", request);
+        String result;
+        
+        try {
+            result = contentGenerationExternalApi.generateSlides(request)
+                    .doOnSubscribe(subscription -> log.info("Starting batch slide generation"))
+                    .collectList()
+                    .map(list -> String.join("", list))
+                    .block();
+            
+            log.info("Batch slide generation completed successfully");
+
+        } catch (Exception error) {
+            log.error("Error generating slides in batch mode", error);
+            throw new AppException(ErrorCode.GENERATION_ERROR,
+                    "Failed to generate slides in batch mode: " + error.getMessage());
+        }
+        String presentationId = (new ObjectId()).toString();
+        contentGenerationExternalApi.saveAIResult(result, presentationId);
+
+        return ResponseEntity.ok(result);
     }
 }

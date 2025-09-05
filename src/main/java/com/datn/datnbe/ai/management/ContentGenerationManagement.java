@@ -1,5 +1,7 @@
 package com.datn.datnbe.ai.management;
 
+import com.datn.datnbe.ai.entity.AIResult;
+import com.datn.datnbe.ai.repository.interfaces.AIResultRepo;
 import org.springframework.stereotype.Service;
 
 import com.datn.datnbe.ai.api.ContentGenerationApi;
@@ -26,6 +28,7 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     SystemPromptConfig systemPromptConfig;
     ModelSelectionApi modelSelectionApi;
     ChatClientFactory chatClientFactory;
+    AIResultRepo aiResultRepo;
 //    AIEventPublisher aiEventPublisher;
 
     @Override
@@ -65,23 +68,18 @@ public class ContentGenerationManagement implements ContentGenerationApi {
                 .stream()
                 .content()
                 .doOnNext(chunk -> completeResponse.append(chunk))
-                .doOnComplete(() -> {
-//                     log.info("Streaming presentation generation completed");
-//                     String cleanedJson = extractJsonFromResponse(completeResponse.toString());
-//                    try {
-//                        // Parse the complete JSON response
-//                        PresentationResponse slideResponse = objectMapper.readValue(cleanedJson,
-//                                PresentationResponse.class);
-//
-//                        // Publish event with actual slides
-//                        var event = new PresentationGeneratedEvent(slideResponse.getSlides());
-//                        aiEventPublisher.publishEvent(event);
-//                    } catch (JsonProcessingException e) {
-//                        log.error("Error parsing JSON response: {}", e.getMessage());
-//                        throw new AppException(ErrorCode.JSON_PARSING_ERROR);
-//                    }
-                })
                 .doOnError(error -> log.error("Error in streaming presentation generation: {}", error.getMessage()));
+    }
+
+    @Override
+    public String saveAIResult(String result, String presentationId) {
+        log.info("Saving AI result for presentation ID: {}", presentationId);
+        AIResult aiResult = new AIResult();
+        aiResult.setPresentationId(presentationId);
+        aiResult.setResult(result);
+        aiResultRepo.save(aiResult);
+
+        return "AI result saved successfully for presentation ID: " + presentationId;
     }
 
     private String extractJsonFromResponse(String response) {
