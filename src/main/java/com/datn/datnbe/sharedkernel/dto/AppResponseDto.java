@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 
 import java.security.Timestamp;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 
@@ -24,7 +25,7 @@ public class AppResponseDto<T> {
     @Builder.Default
     int code = HttpStatus.OK.value();
     @Builder.Default
-    Date timestamp = new Date();
+    LocalDate timestamp = LocalDate.now();
 
     T data;
     String message;

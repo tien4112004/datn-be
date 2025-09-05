@@ -1,5 +1,7 @@
 package com.datn.datnbe.ai.presentation;
 
+import com.datn.datnbe.document.api.PresentationApi;
+import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
 import org.bson.types.ObjectId;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 
+import java.util.ArrayList;
+
 @Slf4j
 @RestController
 @RequestMapping("api/")
@@ -27,6 +31,7 @@ import reactor.core.publisher.Flux;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class ContentGenerationController {
     ContentGenerationApi contentGenerationExternalApi;
+    PresentationApi presentationApi;
 
     @PostMapping(value = "presentations/outline-generate", produces = MediaType.TEXT_PLAIN_VALUE)
     public Flux<String> generateOutline(@RequestBody OutlinePromptRequest request) {
@@ -80,6 +85,16 @@ public class ContentGenerationController {
         String presentationId = (new ObjectId()).toString();
         contentGenerationExternalApi.saveAIResult(result, presentationId);
 
-        return ResponseEntity.ok(result);
+        PresentationCreateRequest createRequest = PresentationCreateRequest.builder()
+                .id(presentationId)
+                .title("AI Generated Presentation")
+                .slides(new ArrayList<>())
+                .build();
+
+        presentationApi.createPresentation(createRequest);
+
+        return ResponseEntity.ok()
+                .header("presentationId",presentationId)
+                .body(result);
     }
 }
