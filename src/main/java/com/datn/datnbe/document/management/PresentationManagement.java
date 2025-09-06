@@ -2,6 +2,9 @@ package com.datn.datnbe.document.management;
 
 import com.datn.datnbe.document.api.PresentationApi;
 import com.datn.datnbe.document.dto.request.PresentationCollectionRequest;
+import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
+import com.datn.datnbe.document.dto.request.PresentationUpdateRequest;
+import com.datn.datnbe.document.dto.request.PresentationUpdateTitleRequest;
 import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.document.management.validation.PresentationValidation;
 import com.datn.datnbe.document.dto.response.PresentationCreateResponseDto;
