@@ -198,12 +198,9 @@ class PresentationControllerTest {
 
 		mockMvc.perform(post("/api/presentations").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
-				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$.success").value(false))
-				.andExpect(jsonPath("$.code").value(400))
-				.andExpect(jsonPath("$.message").value("Validation failed"))
-				.andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"))
-				.andExpect(jsonPath("$.data.slides").exists());
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.success").value(true))
+				.andExpect(jsonPath("$.code").value(200));
 	}
 
 	@Test

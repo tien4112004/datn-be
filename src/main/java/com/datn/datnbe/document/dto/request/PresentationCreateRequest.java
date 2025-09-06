@@ -17,11 +17,12 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PresentationCreateRequest {
+    private String id;
+
     @Size(max = 255, message = "Title must not exceed 255 characters")
     private String title;
 
     @NotNull(message = "Slides cannot be null")
-    @NotEmpty(message = "Presentation must contain at least one slide")
     @Valid
     private List<SlideDto> slides;
 }
