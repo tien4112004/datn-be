@@ -1,6 +1,7 @@
 package com.datn.datnbe.sharedkernel.idempotency.internal;
 
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
+import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.idempotency.api.AbstractIdempotencyService;
 import com.datn.datnbe.sharedkernel.idempotency.api.IdempotencyKey;
 import com.datn.datnbe.sharedkernel.idempotency.api.IdempotencyStatus;
@@ -100,6 +101,7 @@ class IdempotencyAspectTest {
         doReturn(DefaultIdempotencyService.class).when(idempotent).serviceType();
         doReturn(idempotencyService).when(applicationContext).getBean(any(Class.class));
         when(idempotencyService.isValid(invalidKey)).thenReturn(false);
+        doThrow(new AppException(ErrorCode.IDEMPOTENCY_KEY_INVALID)).when(idempotencyService).invalidate(invalidKey);
         
         try (MockedStatic<RequestContextHolder> mockedStatic = mockStatic(RequestContextHolder.class)) {
             mockedStatic.when(RequestContextHolder::getRequestAttributes).thenReturn(requestAttributes);
@@ -107,8 +109,7 @@ class IdempotencyAspectTest {
             when(request.getHeader("idempotency-key")).thenReturn(invalidKey);
             
             assertThatThrownBy(() -> aspect.enforceIdempotency(joinPoint, idempotent))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("Idempotency key is invalid.");
+                    .isInstanceOf(AppException.class);
         }
     }
 

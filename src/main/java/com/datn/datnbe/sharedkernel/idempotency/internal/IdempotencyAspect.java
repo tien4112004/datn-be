@@ -47,7 +47,7 @@ public class IdempotencyAspect {
         }
 
         if (!service.isValid(key)) {
-            throw new IllegalArgumentException("Idempotency key is invalid.");
+            service.invalidate(key);
         }
 
         var existingEntity = repository.findById(key).orElse(null);

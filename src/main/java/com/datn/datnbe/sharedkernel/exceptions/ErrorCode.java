@@ -27,6 +27,7 @@ public enum ErrorCode {
     FILE_UPLOAD_ERROR("File upload failed", 500),
 
     IDEMPOTENCY_KEY_MISSING("Idempotency key is missing", 400),
+    IDEMPOTENCY_KEY_INVALID("Idempotency key is invalid", 400),
     ;
 
     private final String defaultMessage;

@@ -1,11 +1,13 @@
 package com.datn.datnbe.sharedkernel.idempotency.api;
 
+import com.google.type.DateTime;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Data
@@ -28,14 +30,14 @@ public class IdempotencyKey {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreatedDate
-    Date createdAt;
+    LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     IdempotencyStatus status;
 
     @Column(name = "expired_at", nullable = true)
-    Date expiredAt;
+    LocalDateTime expiredAt;
 
     @Builder.Default
     @Column(name = "retry_count", nullable = true)

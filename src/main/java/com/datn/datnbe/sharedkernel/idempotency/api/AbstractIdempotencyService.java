@@ -1,5 +1,7 @@
 package com.datn.datnbe.sharedkernel.idempotency.api;
 
+import com.datn.datnbe.sharedkernel.exceptions.AppException;
+import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -19,6 +21,16 @@ public abstract class AbstractIdempotencyService {
      */
     public boolean isValid(String key) {
         return key != null && !key.trim().isEmpty();
+    }
+
+    /**
+     * Invalidates the given key.
+     *
+     * @param key the idempotency key
+     * @throws AppException always
+     */
+    public void invalidate(String key) {
+        throw new AppException(ErrorCode.IDEMPOTENCY_KEY_INVALID);
     }
 
     /**
