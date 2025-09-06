@@ -34,7 +34,8 @@ public class IdempotencyAspect {
     private final ObjectMapper objectMapper;
 
     @Pointcut("@annotation(com.datn.datnbe.sharedkernel.idempotency.api.Idempotent) && @within(org.springframework.web.bind.annotation.RestController)")
-    public void idempotentMethods() {}
+    public void idempotentMethods() {
+    }
 
     @Transactional
     @Around("idempotentMethods() && @annotation(idempotent)")
@@ -43,7 +44,8 @@ public class IdempotencyAspect {
         String key = getKeyFromRequest();
 
         if (key == null) {
-            throw new AppException(ErrorCode.IDEMPOTENCY_KEY_MISSING, "Idempotency key is required in the 'idempotency-key' header.");
+            throw new AppException(ErrorCode.IDEMPOTENCY_KEY_MISSING,
+                    "Idempotency key is required in the 'idempotency-key' header.");
         }
 
         if (!service.isValid(key)) {
@@ -57,15 +59,12 @@ public class IdempotencyAspect {
             if (existingEntity == null) {
                 existingEntity = service.initialize(key);
                 repository.save(existingEntity);
-            }
-            else if (service.isInProgress(existingEntity)) {
+            } else if (service.isInProgress(existingEntity)) {
                 service.processing(existingEntity);
-            }
-            else if (service.isFailed(existingEntity) && service.canRetry(existingEntity)) {
+            } else if (service.isFailed(existingEntity) && service.canRetry(existingEntity)) {
                 service.retry(existingEntity);
                 repository.save(existingEntity);
-            }
-            else if (service.isCompleted(existingEntity)) {
+            } else if (service.isCompleted(existingEntity)) {
                 return createCachedResponse(existingEntity, joinPoint);
             }
 
@@ -93,20 +92,21 @@ public class IdempotencyAspect {
 
         //  https://www.baeldung.com/java-deserialize-generic-type-with-jackson
         // Extract generic type from ResponseEntity<T>
-        Type returnType = ((org.aspectj.lang.reflect.MethodSignature) joinPoint.getSignature()).getMethod().getGenericReturnType();
+        Type returnType = ((org.aspectj.lang.reflect.MethodSignature) joinPoint.getSignature()).getMethod()
+                .getGenericReturnType();
         JavaType responseEntityType;
         if (returnType instanceof ParameterizedType parameterizedType) {
-            responseEntityType = objectMapper.getTypeFactory().constructType(parameterizedType.getActualTypeArguments()[0]);
-        }
-        else responseEntityType = objectMapper.getTypeFactory().constructType(Object.class);
+            responseEntityType = objectMapper.getTypeFactory()
+                    .constructType(parameterizedType.getActualTypeArguments()[0]);
+        } else
+            responseEntityType = objectMapper.getTypeFactory().constructType(Object.class);
 
         Object body = objectMapper.readValue(responseData, responseEntityType);
         return ResponseEntity.status(statusCode != null ? statusCode : 200).body(body);
     }
 
     private String getKeyFromRequest() {
-        ServletRequestAttributes attrs =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         if (attrs != null) {
             HttpServletRequest request = attrs.getRequest();
             return request.getHeader("idempotency-key");

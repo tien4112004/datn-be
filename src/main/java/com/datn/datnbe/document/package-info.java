@@ -1,4 +1,3 @@
-
 @ApplicationModule(allowedDependencies = {"ai :: AiApi", "sharedkernel",})
 package com.datn.datnbe.document;
 

@@ -1,9 +1,7 @@
 package com.datn.datnbe.ai.utils;
 
-
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
-
 import java.util.Map;
 
 public class MappingParamsUtils {

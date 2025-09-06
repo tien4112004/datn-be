@@ -3,7 +3,6 @@ package com.datn.datnbe.ai.api;
 import com.datn.datnbe.ai.config.chatmodelconfiguration.ModelProperties;
 import com.datn.datnbe.ai.dto.request.UpdateModelStatusRequest;
 import com.datn.datnbe.ai.dto.response.ModelResponseDto;
-
 import java.util.List;
 
 public interface ModelSelectionApi {
@@ -11,8 +10,7 @@ public interface ModelSelectionApi {
     /**
      * Retrieves the minimal configuration of a model by its ID.
      *
-     * @return a list of ModelResponseDto containing the minimal
-     * configuration of the model
+     * @return a list of ModelResponseDto containing the minimal configuration of the model
      */
     List<ModelResponseDto> getModelConfigurations();
 

@@ -1,9 +1,6 @@
 package com.datn.datnbe.sharedkernel.exceptions;
 
-
-/**
- * Exception thrown when validation fails
- */
+/** Exception thrown when validation fails */
 public class ValidationException extends AppException {
 
     public ValidationException() {

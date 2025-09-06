@@ -48,15 +48,12 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
     void setUp() throws Exception {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
         idempotencyRepository.deleteAll();
-        
+
         presentationId = createTestPresentation();
     }
 
     private String createTestPresentation() throws Exception {
-        SlideBackgroundDto background = SlideBackgroundDto.builder()
-                .type("color")
-                .color("#ffffff")
-                .build();
+        SlideBackgroundDto background = SlideBackgroundDto.builder().type("color").color("#ffffff").build();
 
         SlideDto.SlideElementDto element = SlideDto.SlideElementDto.builder()
                 .type("text")
@@ -76,13 +73,11 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
                 .background(background)
                 .build();
 
-        PresentationCreateRequest createRequest = PresentationCreateRequest.builder()
-                .slides(List.of(slide))
-                .build();
+        PresentationCreateRequest createRequest = PresentationCreateRequest.builder().slides(List.of(slide)).build();
 
-        MvcResult result = mockMvc.perform(post("/api/presentations")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(createRequest)))
+        MvcResult result = mockMvc
+                .perform(post("/api/presentations").contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createRequest)))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -120,16 +115,12 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
                 .background(newBackground)
                 .build();
 
-        SlidesUpsertRequest request = SlidesUpsertRequest.builder()
-                .slides(List.of(newSlide))
-                .build();
+        SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(List.of(newSlide)).build();
 
         // When & Then - First request
-        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
-                .contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId).contentType(MediaType.APPLICATION_JSON)
                 .header("idempotency-key", idempotencyKey)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNoContent());
+                .content(objectMapper.writeValueAsString(request))).andExpect(status().isNoContent());
 
         // Verify idempotency record was created
         Optional<IdempotencyKey> idempotencyRecord = idempotencyRepository.findById(idempotencyKey);
@@ -137,17 +128,13 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
         assertThat(idempotencyRecord.get().getStatus()).isEqualTo(IdempotencyStatus.COMPLETED);
 
         // When & Then - Second request with same idempotency key (should be idempotent)
-        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
-                .contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId).contentType(MediaType.APPLICATION_JSON)
                 .header("idempotency-key", idempotencyKey)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNoContent());
+                .content(objectMapper.writeValueAsString(request))).andExpect(status().isNoContent());
 
         // Verify only one record exists with same key
         List<IdempotencyKey> records = idempotencyRepository.findAll();
-        long matchingRecords = records.stream()
-                .filter(record -> idempotencyKey.equals(record.getKey()))
-                .count();
+        long matchingRecords = records.stream().filter(record -> idempotencyKey.equals(record.getKey())).count();
         assertThat(matchingRecords).isEqualTo(1);
     }
 
@@ -156,7 +143,7 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
     void upsertSlides_WithMultipleSlides_ShouldProcessAll() throws Exception {
         // Given
         String idempotencyKey = "integration-test-multiple-slides";
-        
+
         SlideElementUpdateRequest element1 = SlideElementUpdateRequest.builder()
                 .type("text")
                 .id("multi-element-1")
@@ -180,16 +167,12 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
                 .elements(List.of(element2))
                 .build();
 
-        SlidesUpsertRequest request = SlidesUpsertRequest.builder()
-                .slides(Arrays.asList(slide1, slide2))
-                .build();
+        SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(Arrays.asList(slide1, slide2)).build();
 
         // When & Then
-        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
-                .contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId).contentType(MediaType.APPLICATION_JSON)
                 .header("idempotency-key", idempotencyKey)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNoContent());
+                .content(objectMapper.writeValueAsString(request))).andExpect(status().isNoContent());
 
         // Verify idempotency record
         Optional<IdempotencyKey> record = idempotencyRepository.findById(idempotencyKey);
@@ -202,7 +185,7 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
     void upsertSlides_WithComplexElements_ShouldPreserveAllData() throws Exception {
         // Given
         String idempotencyKey = "integration-test-complex-elements";
-        
+
         SlideElementUpdateRequest complexElement = SlideElementUpdateRequest.builder()
                 .type("vector")
                 .id("complex-element-integration")
@@ -240,16 +223,12 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
                 .background(complexBackground)
                 .build();
 
-        SlidesUpsertRequest request = SlidesUpsertRequest.builder()
-                .slides(List.of(complexSlide))
-                .build();
+        SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(List.of(complexSlide)).build();
 
         // When & Then
-        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
-                .contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId).contentType(MediaType.APPLICATION_JSON)
                 .header("idempotency-key", idempotencyKey)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNoContent());
+                .content(objectMapper.writeValueAsString(request))).andExpect(status().isNoContent());
 
         // Verify processing completed
         Optional<IdempotencyKey> record = idempotencyRepository.findById(idempotencyKey);
@@ -266,15 +245,11 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
                 .elements(List.of())
                 .build();
 
-        SlidesUpsertRequest request = SlidesUpsertRequest.builder()
-                .slides(List.of(slide))
-                .build();
+        SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(List.of(slide)).build();
 
         // When & Then
-        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId).contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))).andExpect(status().isBadRequest());
     }
 
     @Test
@@ -287,13 +262,10 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
                 .elements(List.of())
                 .build();
 
-        SlidesUpsertRequest request = SlidesUpsertRequest.builder()
-                .slides(List.of(invalidSlide))
-                .build();
+        SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(List.of(invalidSlide)).build();
 
         // When & Then
-        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
-                .contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId).contentType(MediaType.APPLICATION_JSON)
                 .header("idempotency-key", idempotencyKey)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -312,16 +284,12 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
     void upsertSlides_WithEmptySlidesList_ShouldSucceed() throws Exception {
         // Given
         String idempotencyKey = "integration-test-empty-slides";
-        SlidesUpsertRequest request = SlidesUpsertRequest.builder()
-                .slides(List.of())
-                .build();
+        SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(List.of()).build();
 
         // When & Then
-        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
-                .contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId).contentType(MediaType.APPLICATION_JSON)
                 .header("idempotency-key", idempotencyKey)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNoContent());
+                .content(objectMapper.writeValueAsString(request))).andExpect(status().isNoContent());
 
         // Verify idempotency record was created
         Optional<IdempotencyKey> record = idempotencyRepository.findById(idempotencyKey);
@@ -346,31 +314,23 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
                 .elements(List.of())
                 .build();
 
-        SlidesUpsertRequest request1 = SlidesUpsertRequest.builder()
-                .slides(List.of(slide1))
-                .build();
+        SlidesUpsertRequest request1 = SlidesUpsertRequest.builder().slides(List.of(slide1)).build();
 
-        SlidesUpsertRequest request2 = SlidesUpsertRequest.builder()
-                .slides(List.of(slide2))
-                .build();
+        SlidesUpsertRequest request2 = SlidesUpsertRequest.builder().slides(List.of(slide2)).build();
 
         // When & Then - Process both requests
-        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
-                .contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId).contentType(MediaType.APPLICATION_JSON)
                 .header("idempotency-key", idempotencyKey1)
-                .content(objectMapper.writeValueAsString(request1)))
-                .andExpect(status().isNoContent());
+                .content(objectMapper.writeValueAsString(request1))).andExpect(status().isNoContent());
 
-        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
-                .contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId).contentType(MediaType.APPLICATION_JSON)
                 .header("idempotency-key", idempotencyKey2)
-                .content(objectMapper.writeValueAsString(request2)))
-                .andExpect(status().isNoContent());
+                .content(objectMapper.writeValueAsString(request2))).andExpect(status().isNoContent());
 
         // Verify both idempotency records were created
         Optional<IdempotencyKey> record1 = idempotencyRepository.findById(idempotencyKey1);
         Optional<IdempotencyKey> record2 = idempotencyRepository.findById(idempotencyKey2);
-        
+
         assertThat(record1).isPresent();
         assertThat(record2).isPresent();
         assertThat(record1.get().getStatus()).isEqualTo(IdempotencyStatus.COMPLETED);
@@ -385,11 +345,9 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
         String malformedJson = "{\"slides\": [\"id\": \"broken-json\"}";
 
         // When & Then
-        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
-                .contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId).contentType(MediaType.APPLICATION_JSON)
                 .header("idempotency-key", idempotencyKey)
-                .content(malformedJson))
-                .andExpect(status().is4xxClientError());
+                .content(malformedJson)).andExpect(status().is4xxClientError());
     }
 
     @Test
@@ -400,10 +358,9 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
         String nullSlidesJson = "{\"slides\": null}";
 
         // When & Then
-        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .header("idempotency-key", idempotencyKey)
-                        .content(nullSlidesJson))
+        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId).contentType(MediaType.APPLICATION_JSON)
+                .header("idempotency-key", idempotencyKey)
+                .content(nullSlidesJson))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value(400));

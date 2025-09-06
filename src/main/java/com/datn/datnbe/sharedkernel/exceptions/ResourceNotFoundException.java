@@ -1,9 +1,6 @@
 package com.datn.datnbe.sharedkernel.exceptions;
 
-
-/**
- * Exception thrown when a requested resource is not found
- */
+/** Exception thrown when a requested resource is not found */
 public class ResourceNotFoundException extends AppException {
 
     public ResourceNotFoundException() {

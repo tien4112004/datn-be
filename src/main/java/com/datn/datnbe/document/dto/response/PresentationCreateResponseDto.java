@@ -2,13 +2,11 @@ package com.datn.datnbe.document.dto.response;
 
 import com.datn.datnbe.document.dto.SlideDto;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Date;
-import java.util.List;
 
 @Data
 @Builder

@@ -3,11 +3,9 @@ package com.datn.datnbe.document.config;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
-import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
@@ -21,24 +19,23 @@ import org.springframework.stereotype.Component;
 public class DocumentMongoConfig {
 
     @Bean
-    public MongoTemplate mongoTemplate(
-            MongoDatabaseFactory mongoDatabaseFactory,
-            MappingMongoConverter mappingMongoConverter
-    ) {
+    public MongoTemplate mongoTemplate(MongoDatabaseFactory mongoDatabaseFactory,
+            MappingMongoConverter mappingMongoConverter) {
         return new MongoTemplate(mongoDatabaseFactory, mappingMongoConverter);
     }
 
-//    @Bean(name = "mongoTransactionManager")
-//    @ConditionalOnProperty(
-//            prefix = "spring.data.mongodb.transactions",
-//            name = "enabled",
-//            havingValue = "true",
-//            matchIfMissing = true
-//    )
-//    public MongoTransactionManager mongoTransactionManager(MongoDatabaseFactory mongoDatabaseFactory) {
-//        return new MongoTransactionManager(mongoDatabaseFactory);
-//    }
-//
+    // @Bean(name = "mongoTransactionManager")
+    // @ConditionalOnProperty(
+    // prefix = "spring.data.mongodb.transactions",
+    // name = "enabled",
+    // havingValue = "true",
+    // matchIfMissing = true
+    // )
+    // public MongoTransactionManager mongoTransactionManager(MongoDatabaseFactory
+    // mongoDatabaseFactory) {
+    // return new MongoTransactionManager(mongoDatabaseFactory);
+    // }
+    //
     @Bean
     public MongoCustomConversions customConversions() {
         List<Converter<?, ?>> converters = new ArrayList<>();

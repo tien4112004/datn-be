@@ -1,8 +1,5 @@
 package com.datn.datnbe.document.mapper;
 
-import com.datn.datnbe.document.dto.SlideDto;
-import com.datn.datnbe.document.dto.SlideDto.SlideBackgroundDto;
-import com.datn.datnbe.document.dto.SlideDto.SlideElementDto;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
 import com.datn.datnbe.document.dto.request.PresentationUpdateRequest;
 import com.datn.datnbe.document.dto.response.PresentationCreateResponseDto;
@@ -10,21 +7,16 @@ import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
 import com.datn.datnbe.document.dto.response.PresentationUpdateResponseDto;
 import com.datn.datnbe.document.entity.Presentation;
-import com.datn.datnbe.document.entity.valueobject.Slide;
-import com.datn.datnbe.document.entity.valueobject.SlideBackground;
-import com.datn.datnbe.document.entity.valueobject.SlideElement;
-import com.datn.datnbe.document.enums.SlideElementType;
-import org.mapstruct.*;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.mapstruct.*;
 
-@Mapper(componentModel = "spring", nullValueMappingStrategy = NullValueMappingStrategy.RETURN_NULL,
-        collectionMappingStrategy = CollectionMappingStrategy.ADDER_PREFERRED, uses = {
+@Mapper(componentModel = "spring", nullValueMappingStrategy = NullValueMappingStrategy.RETURN_NULL, collectionMappingStrategy = CollectionMappingStrategy.ADDER_PREFERRED, uses = {
         SlideEntityMapper.class})
 @Named("PresentationEntityMapper")
 public interface PresentationEntityMapper {
 
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "title", expression = "java((request.getTitle() == null || request.getTitle().isEmpty()) ? \"Untitled Presentation\" : request.getTitle())")
     @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
@@ -59,5 +51,4 @@ public interface PresentationEntityMapper {
     default <T> List<T> safeList(List<T> list) {
         return list == null ? new ArrayList<>() : list;
     }
-
 }

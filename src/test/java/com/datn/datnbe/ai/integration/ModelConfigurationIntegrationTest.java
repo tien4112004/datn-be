@@ -1,8 +1,11 @@
 package com.datn.datnbe.ai.integration;
 
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.datn.datnbe.ai.entity.ModelConfigurationEntity;
+import com.datn.datnbe.ai.repository.interfaces.ModelConfigurationRepo;
+import com.datn.datnbe.testcontainers.BaseIntegrationTest;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,10 +13,6 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.testcontainers.containers.PostgreSQLContainer;
-
-import com.datn.datnbe.ai.entity.ModelConfigurationEntity;
-import com.datn.datnbe.ai.repository.interfaces.ModelConfigurationRepo;
-import com.datn.datnbe.testcontainers.BaseIntegrationTest;
 
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class ModelConfigurationIntegrationTest extends BaseIntegrationTest {
@@ -60,7 +59,7 @@ class ModelConfigurationIntegrationTest extends BaseIntegrationTest {
         assertThat(postgreSQLContainer.getDatabaseName()).isEqualTo("testdb");
         assertThat(postgreSQLContainer.getUsername()).isEqualTo("testuser");
         assertThat(postgreSQLContainer.getPassword()).isEqualTo("testpass");
-        
+
         String expectedJdbcUrl = postgreSQLContainer.getJdbcUrl();
         assertThat(expectedJdbcUrl).contains("testdb");
     }
@@ -131,7 +130,7 @@ class ModelConfigurationIntegrationTest extends BaseIntegrationTest {
         // Given
         modelConfigurationRepo.save(testModel1);
         modelConfigurationRepo.save(testModel2);
-        
+
         ModelConfigurationEntity model1 = modelConfigurationRepo.getModelByName("gpt-4-test");
         ModelConfigurationEntity model2 = modelConfigurationRepo.getModelByName("gemini-pro-test");
 
@@ -154,9 +153,8 @@ class ModelConfigurationIntegrationTest extends BaseIntegrationTest {
 
         // Then
         assertThat(models).hasSize(2);
-        assertThat(models)
-            .extracting(ModelConfigurationEntity::getModelName)
-            .containsExactlyInAnyOrder("gpt-4-test", "gemini-pro-test");
+        assertThat(models).extracting(ModelConfigurationEntity::getModelName)
+                .containsExactlyInAnyOrder("gpt-4-test", "gemini-pro-test");
     }
 
     @Test
@@ -174,7 +172,7 @@ class ModelConfigurationIntegrationTest extends BaseIntegrationTest {
     //     modelConfigurationRepo.save(testModel1);
     //     String url = "http://localhost:" + port + "/api/models";
 
-    //     // When 
+    //     // When
     //     ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
 
     //     // Then
@@ -183,8 +181,8 @@ class ModelConfigurationIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void testContainerReuse_ShouldUseSameContainerInstance() {
-        
-        // Given 
+
+        // Given
         String containerId = postgreSQLContainer.getContainerId();
         String jdbcUrl = postgreSQLContainer.getJdbcUrl();
 

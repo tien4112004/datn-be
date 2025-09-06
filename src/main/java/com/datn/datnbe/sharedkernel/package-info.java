@@ -1,4 +1,3 @@
-
 @ApplicationModule(displayName = "Shared Kernel", type = ApplicationModule.Type.OPEN)
 package com.datn.datnbe.sharedkernel;
 

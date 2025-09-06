@@ -1,13 +1,10 @@
 package com.datn.datnbe.document.dto;
 
-import com.datn.datnbe.document.enums.SlideElementType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
-
 import java.util.List;
+import lombok.*;
 
 @Data
 @Builder
@@ -31,6 +28,7 @@ public class SlideDto {
     public static class SlideElementDto {
         @NotNull(message = "Element type cannot be null")
         String type;
+
         String id;
         Float left;
         Float top;

@@ -1,8 +1,6 @@
 package com.datn.datnbe.document.command.commands;
 
-/**
- * Command for creating a document
- */
+/** Command for creating a document */
 @Deprecated
 public class CreatePresentationCommand extends BaseCommand {
 

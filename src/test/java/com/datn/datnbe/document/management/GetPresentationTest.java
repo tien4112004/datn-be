@@ -1,5 +1,9 @@
 package com.datn.datnbe.document.management;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.when;
+
 import com.datn.datnbe.document.dto.SlideDto;
 import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.document.entity.Presentation;
@@ -27,8 +31,7 @@ import static org.mockito.Mockito.when;
 
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 
-@SpringBootTest(classes = {TestConfig.class,
-        PresentationManagement.class,
+@SpringBootTest(classes = {TestConfig.class, PresentationManagement.class,
         PresentationValidation.class}, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ExtendWith(MockitoExtension.class)
 class GetPresentationTest {
@@ -50,7 +53,8 @@ class GetPresentationTest {
 
     @BeforeEach
     void setUp() {
-        presentationService = new PresentationManagement(presentationRepository, presentationEntityMapper, presentationValidation);
+        presentationService = new PresentationManagement(presentationRepository, presentationEntityMapper,
+                presentationValidation);
 
         backgroundDto = SlideDto.SlideBackgroundDto.builder().type("color").color("#ffffff").build();
 
@@ -65,8 +69,7 @@ class GetPresentationTest {
                 .defaultColor("#000000")
                 .build();
 
-        slideDto = SlideDto.builder().id("slide-1").elements(List.of(elementDto)).background(backgroundDto)
-                .build();
+        slideDto = SlideDto.builder().id("slide-1").elements(List.of(elementDto)).background(backgroundDto).build();
     }
 
     @Test
@@ -108,12 +111,11 @@ class GetPresentationTest {
         when(presentationRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
         // When & Then
-        assertThatThrownBy(() -> presentationService.getPresentation(nonExistentId))
-                .isInstanceOf(AppException.class)
+        assertThatThrownBy(() -> presentationService.getPresentation(nonExistentId)).isInstanceOf(AppException.class)
                 .hasMessageContaining("Presentation not found with ID: " + nonExistentId)
-                .satisfies(ex ->{
-                        AppException appEx = (AppException) ex;
-                        assertThat(appEx.getErrorCode()).isEqualTo(ErrorCode.PRESENTATION_NOT_FOUND);
+                .satisfies(ex -> {
+                    AppException appEx = (AppException) ex;
+                    assertThat(appEx.getErrorCode()).isEqualTo(ErrorCode.PRESENTATION_NOT_FOUND);
                 });
     }
 
@@ -162,12 +164,11 @@ class GetPresentationTest {
         when(presentationRepository.findById(nullId)).thenReturn(Optional.empty());
 
         // When & Then
-        assertThatThrownBy(() -> presentationService.getPresentation(nullId))
-                .isInstanceOf(AppException.class)
+        assertThatThrownBy(() -> presentationService.getPresentation(nullId)).isInstanceOf(AppException.class)
                 .hasMessageContaining("Presentation not found with ID: null")
-                .satisfies(ex ->{
-                        AppException appEx = (AppException) ex;
-                        assertThat(appEx.getErrorCode()).isEqualTo(ErrorCode.PRESENTATION_NOT_FOUND);
+                .satisfies(ex -> {
+                    AppException appEx = (AppException) ex;
+                    assertThat(appEx.getErrorCode()).isEqualTo(ErrorCode.PRESENTATION_NOT_FOUND);
                 });
     }
 
@@ -179,13 +180,12 @@ class GetPresentationTest {
         when(presentationRepository.findById(emptyId)).thenReturn(Optional.empty());
 
         // When & Then
-        assertThatThrownBy(() -> presentationService.getPresentation(emptyId))
-                .isInstanceOf(AppException.class)
+        assertThatThrownBy(() -> presentationService.getPresentation(emptyId)).isInstanceOf(AppException.class)
                 .hasMessageContaining("Presentation not found with ID: ")
-                .satisfies(ex ->{
-						AppException appEx = (AppException) ex;
-						assertThat(appEx.getErrorCode()).isEqualTo(ErrorCode.PRESENTATION_NOT_FOUND);
-				});
+                .satisfies(ex -> {
+                    AppException appEx = (AppException) ex;
+                    assertThat(appEx.getErrorCode()).isEqualTo(ErrorCode.PRESENTATION_NOT_FOUND);
+                });
     }
 
     @Test

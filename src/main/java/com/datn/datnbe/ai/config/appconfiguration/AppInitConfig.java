@@ -1,9 +1,9 @@
 package com.datn.datnbe.ai.config.appconfiguration;
 
-
 import com.datn.datnbe.ai.api.ModelSelectionApi;
 import com.datn.datnbe.ai.config.chatmodelconfiguration.ModelProperties;
 import com.datn.datnbe.ai.dto.response.ModelResponseDto;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -12,8 +12,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.stream.Collectors;
 
 @Slf4j
 @Configuration

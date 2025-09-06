@@ -13,11 +13,11 @@ import com.datn.datnbe.ai.factory.ChatClientFactory;
 import com.datn.datnbe.ai.utils.MappingParamsUtils;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
-
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
 @Service
@@ -29,7 +29,7 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     ModelSelectionApi modelSelectionApi;
     ChatClientFactory chatClientFactory;
     AIResultRepo aiResultRepo;
-//    AIEventPublisher aiEventPublisher;
+    // AIEventPublisher aiEventPublisher;
 
     @Override
     public Flux<String> generateOutline(OutlinePromptRequest request) {

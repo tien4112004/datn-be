@@ -4,13 +4,12 @@ import com.datn.datnbe.ai.api.ModelSelectionApi;
 import com.datn.datnbe.ai.dto.request.UpdateModelStatusRequest;
 import com.datn.datnbe.ai.dto.response.ModelResponseDto;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @Slf4j
 @RestController
@@ -40,8 +39,7 @@ public class ModelConfigurationController {
      * @return ResponseEntity indicating the result of the operation.
      */
     @PatchMapping(value = "/{id}")
-    public ResponseEntity<AppResponseDto<ModelResponseDto>> updateModelStatus(
-            @PathVariable Integer id,
+    public ResponseEntity<AppResponseDto<ModelResponseDto>> updateModelStatus(@PathVariable Integer id,
             @RequestBody UpdateModelStatusRequest request) {
         log.info("Enabling model with ID: {}", id);
         var updatedModel = modelSelectionApi.setModelStatus(id, request);

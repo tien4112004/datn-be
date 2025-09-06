@@ -1,10 +1,8 @@
 package com.datn.datnbe.document.dto.response;
 
-import java.util.List;
-
 import com.datn.datnbe.document.dto.SlideDto;
 import com.fasterxml.jackson.annotation.JsonInclude;
-
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

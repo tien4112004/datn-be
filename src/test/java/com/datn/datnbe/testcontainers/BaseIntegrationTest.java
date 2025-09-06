@@ -23,30 +23,30 @@ public abstract class BaseIntegrationTest {
 
     @Autowired
     JdbcTemplate jdbc;
+
     @Autowired(required = false)
     MongoTemplate mongo;
 
     @BeforeEach
     void cleanDatabases() {
 
-            jdbc.execute(
+        jdbc.execute(
                 """
-                DO $$
-                DECLARE
-                    stm text;
-                BEGIN
-                    SELECT 'TRUNCATE TABLE ' || string_agg(format('%I.%I', schemaname, tablename), ', ') || ' RESTART IDENTITY CASCADE'
-                    INTO stm
-                    FROM pg_tables
-                    WHERE schemaname = 'public'
-                      AND tablename <> 'flyway_schema_history'; -- nếu bạn dùng Flyway, tránh xóa lịch sử
+                        DO $$
+                        DECLARE
+                            stm text;
+                        BEGIN
+                            SELECT 'TRUNCATE TABLE ' || string_agg(format('%I.%I', schemaname, tablename), ', ') || ' RESTART IDENTITY CASCADE'
+                            INTO stm
+                            FROM pg_tables
+                            WHERE schemaname = 'public'
+                              AND tablename <> 'flyway_schema_history'; -- nếu bạn dùng Flyway, tránh xóa lịch sử
 
-                    IF stm IS NOT NULL THEN
-                        EXECUTE stm;
-                    END IF;
-                END $$;
-                """
-            );
+                            IF stm IS NOT NULL THEN
+                                EXECUTE stm;
+                            END IF;
+                        END $$;
+                        """);
 
         if (mongo != null) {
             mongo.getDb().drop();

@@ -20,10 +20,14 @@ import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
 import com.datn.datnbe.ai.utils.StreamingResponseUtils;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
-
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
@@ -56,29 +60,30 @@ public class ContentGenerationController {
     @PostMapping(value = "presentations/generate", produces = MediaType.TEXT_PLAIN_VALUE)
     public Flux<String> generateSlides(@RequestBody PresentationPromptRequest request) {
         return StreamingResponseUtils
-            .streamByJsonObject(StreamingResponseUtils.HIGH_DELAY,
-                    contentGenerationExternalApi.generateSlides(request)
+                .streamByJsonObject(StreamingResponseUtils.HIGH_DELAY,
+                        contentGenerationExternalApi.generateSlides(request)
                                 .doOnSubscribe(subscription -> log.info("Starting slide generation stream")))
-            .doOnError(error -> {
-                log.error("Error generating slides", error);
-                throw new AppException(ErrorCode.GENERATION_ERROR, "Failed to generate slides");
-            })
-            .onErrorMap(error -> new AppException(ErrorCode.GENERATION_ERROR,
-                    "Failed to generate slides: " + error.getMessage()));
+                .doOnError(error -> {
+                    log.error("Error generating slides", error);
+                    throw new AppException(ErrorCode.GENERATION_ERROR, "Failed to generate slides");
+                })
+                .onErrorMap(error -> new AppException(ErrorCode.GENERATION_ERROR,
+                        "Failed to generate slides: " + error.getMessage()));
     }
 
     @PostMapping(value = "presentations/generate/batch", produces = "application/json")
-    public ResponseEntity<AppResponseDto<JsonNode>> generateSlidesBatch(@RequestBody PresentationPromptRequest request) {
+    public ResponseEntity<AppResponseDto<JsonNode>> generateSlidesBatch(
+            @RequestBody PresentationPromptRequest request) {
         log.info("Received batch slide generation request: {}", request);
         String result;
-        
+
         try {
             result = contentGenerationExternalApi.generateSlides(request)
                     .doOnSubscribe(subscription -> log.info("Starting batch slide generation"))
                     .collectList()
                     .map(list -> String.join("", list))
                     .block();
-            
+
             log.info("Batch slide generation completed successfully");
 
         } catch (Exception error) {
@@ -102,7 +107,7 @@ public class ContentGenerationController {
         data.set("presentation", mapper.valueToTree(newPresentation));
 
         return ResponseEntity.ok()
-                .header("presentationId",presentationId)
+                .header("presentationId", presentationId)
                 .body(AppResponseDto.<JsonNode>builder().data(data).build());
     }
 }

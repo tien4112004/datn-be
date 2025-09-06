@@ -1,5 +1,9 @@
 package com.datn.datnbe.ai.management;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 import com.datn.datnbe.ai.config.chatmodelconfiguration.ModelProperties;
 import com.datn.datnbe.ai.dto.request.UpdateModelStatusRequest;
 import com.datn.datnbe.ai.dto.response.ModelResponseDto;
@@ -8,6 +12,8 @@ import com.datn.datnbe.ai.mapper.ModelDataMapper;
 import com.datn.datnbe.ai.repository.interfaces.ModelConfigurationRepo;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,13 +21,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Arrays;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ModelSelectionManagementTest {
@@ -206,20 +205,20 @@ class ModelSelectionManagementTest {
         assertEquals("gpt-4", result.get(2).getModelName());
     }
 
-    @Test
-    @DisplayName("Should return empty list when no models exist")
-    void getModelConfigurations_EmptyList() {
-        // Given
-        when(modelConfigurationRepo.getModels()).thenReturn(Arrays.asList());
+  @Test
+  @DisplayName("Should return empty list when no models exist")
+  void getModelConfigurations_EmptyList() {
+    // Given
+    when(modelConfigurationRepo.getModels()).thenReturn(Arrays.asList());
 
-        // When
-        List<ModelResponseDto> result = modelSelectionService.getModelConfigurations();
+    // When
+    List<ModelResponseDto> result = modelSelectionService.getModelConfigurations();
 
-        // Then
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-        verify(modelConfigurationRepo).getModels();
-    }
+    // Then
+    assertNotNull(result);
+    assertTrue(result.isEmpty());
+    verify(modelConfigurationRepo).getModels();
+  }
 
     // ===============================
     // Tests for setModelStatus
@@ -406,34 +405,35 @@ class ModelSelectionManagementTest {
     // Additional edge case tests
     // ===============================
 
-    @Test
-    @DisplayName("Should handle repository exception during model configuration retrieval")
-    void getModelConfigurations_RepositoryException_ThrowsException() {
-        // Given
-        when(modelConfigurationRepo.getModels()).thenThrow(new RuntimeException("Database connection error"));
+  @Test
+  @DisplayName("Should handle repository exception during model configuration retrieval")
+  void getModelConfigurations_RepositoryException_ThrowsException() {
+    // Given
+    when(modelConfigurationRepo.getModels())
+        .thenThrow(new RuntimeException("Database connection error"));
 
-        // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> modelSelectionService.getModelConfigurations());
+    // When & Then
+    RuntimeException exception =
+        assertThrows(RuntimeException.class, () -> modelSelectionService.getModelConfigurations());
 
-        assertEquals("Database connection error", exception.getMessage());
-        verify(modelConfigurationRepo).getModels();
-    }
+    assertEquals("Database connection error", exception.getMessage());
+    verify(modelConfigurationRepo).getModels();
+  }
 
-    @Test
-    @DisplayName("Should handle repository exception during model save")
-    void saveModelInfo_RepositoryException_ThrowsException() {
-        // Given
-        when(modelConfigurationRepo.save(any(ModelConfigurationEntity.class)))
-                .thenThrow(new RuntimeException("Database save error"));
+  @Test
+  @DisplayName("Should handle repository exception during model save")
+  void saveModelInfo_RepositoryException_ThrowsException() {
+    // Given
+    when(modelConfigurationRepo.save(any(ModelConfigurationEntity.class)))
+        .thenThrow(new RuntimeException("Database save error"));
 
-        // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> modelSelectionService.saveModelInfo(modelInfo));
+    // When & Then
+    RuntimeException exception =
+        assertThrows(RuntimeException.class, () -> modelSelectionService.saveModelInfo(modelInfo));
 
-        assertEquals("Database save error", exception.getMessage());
-        verify(modelConfigurationRepo).save(any(ModelConfigurationEntity.class));
-    }
+    assertEquals("Database save error", exception.getMessage());
+    verify(modelConfigurationRepo).save(any(ModelConfigurationEntity.class));
+  }
 
     @Test
     @DisplayName("Should disable model successfully when enabled is false and default is null")

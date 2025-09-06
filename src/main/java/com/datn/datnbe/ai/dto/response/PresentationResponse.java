@@ -1,11 +1,10 @@
 package com.datn.datnbe.ai.dto.response;
 
 import com.datn.datnbe.ai.entity.BaseSlide;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
 
 @Builder
 @Data

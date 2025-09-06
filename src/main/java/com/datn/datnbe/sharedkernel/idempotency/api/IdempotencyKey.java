@@ -1,6 +1,5 @@
 package com.datn.datnbe.sharedkernel.idempotency.api;
 
-import com.google.type.DateTime;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -8,7 +7,6 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Data
 @Entity(name = "idempotency_key")

@@ -4,7 +4,6 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
-
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 
@@ -51,20 +50,19 @@ public class StreamingResponseUtils {
     public static Flux<String> streamByJsonObject(int delayMillis, Flux<String> source) {
         AtomicReference<String> buffer = new AtomicReference<>("");
 
-        return source.concatMap(chunk -> formatChunkByDelimiter(chunk, buffer))
-                .concatWith(Flux.defer(() -> {
-                    String remaining = buffer.get().trim();
-                    if (remaining.isEmpty()) {
-                        return Flux.empty();
-                    }
-                    return Flux.just(remaining);
-                })).delayElements(Duration.ofMillis(delayMillis));
+        return source.concatMap(chunk -> formatChunkByDelimiter(chunk, buffer)).concatWith(Flux.defer(() -> {
+            String remaining = buffer.get().trim();
+            if (remaining.isEmpty()) {
+                return Flux.empty();
+            }
+            return Flux.just(remaining);
+        })).delayElements(Duration.ofMillis(delayMillis));
     }
 
     public static Flux<String> formatChunkByDelimiter(String chunk, AtomicReference<String> buffer) {
         // Add the new chunk to our buffer
         String currentBuffer = buffer.updateAndGet(existing -> existing + chunk);
-        
+
         // Find all delimiter positions
         String[] parts = DELIM.split(currentBuffer, -1);
         if (parts.length <= 1) {
@@ -76,9 +74,8 @@ public class StreamingResponseUtils {
         // Keep the remaining part in buffer
         String newBuffer = parts[parts.length - 1];
         buffer.set(newBuffer);
-        
+
         // Emit all complete parts
-        return Flux.fromArray(Arrays.copyOf(parts, parts.length - 1))
-                .filter(s -> !s.isEmpty());
+        return Flux.fromArray(Arrays.copyOf(parts, parts.length - 1)).filter(s -> !s.isEmpty());
     }
 }
