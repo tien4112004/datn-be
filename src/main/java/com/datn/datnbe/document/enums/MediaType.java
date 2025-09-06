@@ -28,10 +28,6 @@ public enum MediaType {
                 .findFirst();
     }
 
-    public static String getFolderByExtension(String extension) {
-        return getByExtension(extension).map(MediaType::getFolder).orElse(null);
-    }
-
     public static String getFileExtension(String filename) {
         if (filename == null || filename.trim().isEmpty()) {
             throw new IllegalArgumentException("Filename cannot be null or empty");
@@ -42,9 +38,5 @@ public enum MediaType {
             throw new IllegalArgumentException("Invalid file extension in filename: " + filename);
         }
         return filename.substring(idx + 1);
-    }
-
-    public boolean isImage() {
-        return this == IMAGE;
     }
 }

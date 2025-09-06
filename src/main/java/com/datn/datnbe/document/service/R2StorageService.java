@@ -39,7 +39,7 @@ public class R2StorageService {
             return key;
         } catch (IOException e) {
             log.error("Failed to upload file to R2: {}", e.getMessage(), e);
-            throw new AppException(ErrorCode.FILE_UPLOAD_ERROR, "Failed to upload file: " + e.getMessage());
+            throw new AppException(ErrorCode.FILE_UPLOAD_ERROR, "Failed to upload file");
         }
     }
 
@@ -54,7 +54,7 @@ public class R2StorageService {
             log.info("Successfully deleted file with key: {}", key);
         } catch (Exception e) {
             log.error("Failed to delete file from R2: {}", e.getMessage(), e);
-            throw new AppException(ErrorCode.FILE_UPLOAD_ERROR, "Failed to delete file: " + e.getMessage());
+            throw new AppException(ErrorCode.FILE_UPLOAD_ERROR, "Failed to delete file");
         }
     }
 }

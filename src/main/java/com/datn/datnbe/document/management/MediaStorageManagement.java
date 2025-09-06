@@ -4,6 +4,7 @@ import com.datn.datnbe.document.api.MediaStorageApi;
 import com.datn.datnbe.document.dto.response.UploadedMediaResponseDto;
 import com.datn.datnbe.document.entity.Media;
 import com.datn.datnbe.document.enums.MediaType;
+import com.datn.datnbe.document.management.validation.MediaValidation;
 import com.datn.datnbe.document.repository.MediaRepository;
 import com.datn.datnbe.document.service.R2StorageService;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
@@ -34,19 +35,14 @@ public class MediaStorageManagement implements MediaStorageApi {
     @Override
     @Transactional
     public UploadedMediaResponseDto upload(MultipartFile file) {
-        MediaValidation.validateFile(file);
+        var mediaType = MediaValidation.getValidatedMediaType(file);
 
         String originalFilename = getOriginalFilename(file);
         String contentType = getContentType(file);
         String extension = MediaType.getFileExtension(originalFilename);
-
-        MediaType mediaType = MediaType.getByExtension(extension)
-                .orElseThrow(() -> new AppException(ErrorCode.UNSUPPORTED_MEDIA_TYPE,
-                        "Unsupported file extension: " + extension));
-
         String sanitizedFilename = sanitizeFilename(originalFilename);
-        String storageKey = buildObjectKey(mediaType.getFolder(), sanitizedFilename);
 
+        String storageKey = buildObjectKey(mediaType.getFolder(), sanitizedFilename);
         String uploadedKey = r2StorageService.uploadFile(file, storageKey, contentType);
 
         Media media = Media.builder()
