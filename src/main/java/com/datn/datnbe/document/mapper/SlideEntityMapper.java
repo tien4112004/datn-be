@@ -2,6 +2,7 @@ package com.datn.datnbe.document.mapper;
 
 import com.datn.datnbe.document.dto.SlideDto;
 import com.datn.datnbe.document.dto.request.SlideCreateRequest;
+import com.datn.datnbe.document.dto.request.SlideUpdateRequest;
 import com.datn.datnbe.document.entity.valueobject.Slide;
 import org.mapstruct.*;
 import java.util.List;
@@ -41,5 +42,15 @@ public interface SlideEntityMapper {
     @IterableMapping(qualifiedByName = "createRequestToEntityList")
     @Named("createRequestToEntityList")
     List<Slide> createRequestToEntityList(List<SlideCreateRequest> slideCreateRequests);
+
+    @Mapping(target = "id", source = "slideId")
+    @Mapping(target = "elements", source = "elements", qualifiedByName = "updateRequestToEntityList")
+    @Mapping(target = "background", source = "background")
+    @Named("updateRequestToEntity")
+    Slide updateRequestToEntity(SlideUpdateRequest request);
+
+    @IterableMapping(qualifiedByName = "updateRequestToEntity")
+    @Named("updateRequestToEntityList")
+    List<Slide> updateRequestToEntityList(List<SlideUpdateRequest> slideUpdateRequests);
 
 }
