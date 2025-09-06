@@ -1,11 +1,9 @@
-
 package com.datn.datnbe.document.entity.valueobject;
 
+import java.util.List;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.mongodb.core.mapping.Field;
-
-import java.util.List;
 
 @Data
 @Builder

@@ -5,9 +5,8 @@ import com.datn.datnbe.document.dto.request.SlideCreateRequest.SlideElementCreat
 import com.datn.datnbe.document.dto.request.SlideUpdateRequest.SlideElementUpdateRequest;
 import com.datn.datnbe.document.entity.valueobject.SlideElement;
 import com.datn.datnbe.document.enums.SlideElementType;
-import org.mapstruct.*;
-
 import java.util.List;
+import org.mapstruct.*;
 
 @Mapper(componentModel = "spring", nullValueMappingStrategy = NullValueMappingStrategy.RETURN_NULL, imports = {
         SlideElementType.class})
@@ -32,6 +31,7 @@ public interface SlideElementMapper {
 
     // Create request
     @Named("createRequestToEntity")
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "type", expression = "java(SlideElementType.fromValue(createRequest.getType()))")
     SlideElement createRequestToEntity(SlideElementCreateRequest createRequest);
 
@@ -48,16 +48,16 @@ public interface SlideElementMapper {
     @Named("updateRequestToEntityList")
     List<SlideElement> updateRequestToEntityList(List<SlideElementUpdateRequest> elementDtos);
 
-//    default SlideElementType convertToSlideElementType(String type) {
-//        if (type == null) {
-//            return null;
-//        }
-//
-//        try {
-//            return SlideElementType.valueOf(type.toUpperCase());
-//        } catch (IllegalArgumentException e) {
-//            return null;
-//        }
-//    }
+    // default SlideElementType convertToSlideElementType(String type) {
+    // if (type == null) {
+    // return null;
+    // }
+    //
+    // try {
+    // return SlideElementType.valueOf(type.toUpperCase());
+    // } catch (IllegalArgumentException e) {
+    // return null;
+    // }
+    // }
 
 }

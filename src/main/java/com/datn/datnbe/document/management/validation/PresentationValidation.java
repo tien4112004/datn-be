@@ -19,7 +19,7 @@ public class PresentationValidation {
     public void validatePresentationExists(Optional<Presentation> presentation, String id) {
         if (presentation.isEmpty()) {
             log.error("Presentation not found with ID: {}", id);
-            throw new AppException(ErrorCode.PRESENTATION_NOT_FOUND, "Presentation not found with ID: " +id);
+            throw new AppException(ErrorCode.PRESENTATION_NOT_FOUND, "Presentation not found with ID: " + id);
         }
     }
 
@@ -29,6 +29,5 @@ public class PresentationValidation {
             throw new AppException(ErrorCode.PRESENTATION_TITLE_ALREADY_EXISTS);
         }
     }
-
 
 }

@@ -1,12 +1,11 @@
 package com.datn.datnbe.ai.config.chatmodelconfiguration;
 
+import java.util.List;
+import java.util.Map;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
-import java.util.Map;
 
 @Data
 @ConfigurationProperties(prefix = "app.models")
@@ -28,9 +27,6 @@ public class ModelProperties {
     }
 
     public List<String> getModelNames() {
-        return configurations.values().stream()
-                .flatMap(List::stream)
-                .map(ModelInfo::getModelName)
-                .toList();
+        return configurations.values().stream().flatMap(List::stream).map(ModelInfo::getModelName).toList();
     }
- }
+}

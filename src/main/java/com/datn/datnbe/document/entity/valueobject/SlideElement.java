@@ -1,12 +1,10 @@
 package com.datn.datnbe.document.entity.valueobject;
 
-import com.datn.datnbe.document.dto.SlideDto;
 import com.datn.datnbe.document.enums.SlideElementType;
+import java.util.List;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.mongodb.core.mapping.Field;
-
-import java.util.List;
 
 @Data
 @Builder

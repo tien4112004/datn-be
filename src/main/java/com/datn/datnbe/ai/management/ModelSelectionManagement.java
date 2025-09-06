@@ -10,13 +10,12 @@ import com.datn.datnbe.ai.repository.interfaces.ModelConfigurationRepo;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import jakarta.transaction.Transactional;
+import java.util.Comparator;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.util.Comparator;
-import java.util.List;
 
 @Slf4j
 @Service
@@ -28,7 +27,8 @@ public class ModelSelectionManagement implements ModelSelectionApi {
 
     @Override
     public List<ModelResponseDto> getModelConfigurations() {
-        var models = modelConfigurationRepo.getModels().stream()
+        var models = modelConfigurationRepo.getModels()
+                .stream()
                 .sorted(Comparator.comparing(ModelConfigurationEntity::getProvider))
                 .toList();
 
@@ -46,7 +46,8 @@ public class ModelSelectionManagement implements ModelSelectionApi {
 
         // If both isEnabled and isDefault are null, throw an exception
         if (isEnabled == null && isDefault == null) {
-            throw new AppException(ErrorCode.INVALID_MODEL_STATUS, "At least one of isEnabled or isDefault must be provided");
+            throw new AppException(ErrorCode.INVALID_MODEL_STATUS,
+                    "At least one of isEnabled or isDefault must be provided");
         }
 
         // If only isDefault is provided, update the model default status

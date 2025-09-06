@@ -1,16 +1,12 @@
 package com.datn.datnbe.sharedkernel.event;
 
+import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-
 @Getter
 @Setter
-/**
- * Base event class with common metadata
- */
+/** Base event class with common metadata */
 public abstract class BaseEvent {
 
     private String eventId;

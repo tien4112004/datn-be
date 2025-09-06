@@ -6,7 +6,6 @@ import com.datn.datnbe.sharedkernel.idempotency.api.AbstractIdempotencyService;
 import com.datn.datnbe.sharedkernel.idempotency.api.IdempotencyKey;
 import com.datn.datnbe.sharedkernel.idempotency.api.IdempotencyStatus;
 import com.datn.datnbe.sharedkernel.idempotency.api.Idempotent;
-import com.datn.datnbe.sharedkernel.idempotency.internal.DefaultIdempotencyService;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
@@ -32,7 +31,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -42,36 +40,36 @@ class IdempotencyAspectTest {
 
     @Mock
     private ApplicationContext applicationContext;
-    
+
     @Mock
     private IdempotencyRepository repository;
-    
+
     @Mock
     private ObjectMapper objectMapper;
-    
+
     @Mock
     private AbstractIdempotencyService idempotencyService;
-    
+
     @Mock
     private ProceedingJoinPoint joinPoint;
-    
+
     @Mock
     private Idempotent idempotent;
-    
+
     @Mock
     private ServletRequestAttributes requestAttributes;
-    
+
     @Mock
     private HttpServletRequest request;
-    
+
     @Mock
     private MethodSignature methodSignature;
-    
+
     @Mock
     private TypeFactory typeFactory;
-    
+
     private IdempotencyAspect aspect;
-    
+
     @BeforeEach
     void setUp() {
         aspect = new IdempotencyAspect(applicationContext, repository, objectMapper);
@@ -82,14 +80,13 @@ class IdempotencyAspectTest {
     void enforceIdempotency_MissingIdempotencyKey_ThrowsException() throws Throwable {
         doReturn(DefaultIdempotencyService.class).when(idempotent).serviceType();
         doReturn(idempotencyService).when(applicationContext).getBean(any(Class.class));
-        
+
         try (MockedStatic<RequestContextHolder> mockedStatic = mockStatic(RequestContextHolder.class)) {
             mockedStatic.when(RequestContextHolder::getRequestAttributes).thenReturn(requestAttributes);
             when(requestAttributes.getRequest()).thenReturn(request);
             when(request.getHeader("idempotency-key")).thenReturn(null);
-            
-            assertThatThrownBy(() -> aspect.enforceIdempotency(joinPoint, idempotent))
-                    .isInstanceOf(AppException.class)
+
+            assertThatThrownBy(() -> aspect.enforceIdempotency(joinPoint, idempotent)).isInstanceOf(AppException.class)
                     .hasMessage("Idempotency key is required in the 'idempotency-key' header.");
         }
     }
@@ -102,14 +99,13 @@ class IdempotencyAspectTest {
         doReturn(idempotencyService).when(applicationContext).getBean(any(Class.class));
         when(idempotencyService.isValid(invalidKey)).thenReturn(false);
         doThrow(new AppException(ErrorCode.IDEMPOTENCY_KEY_INVALID)).when(idempotencyService).invalidate(invalidKey);
-        
+
         try (MockedStatic<RequestContextHolder> mockedStatic = mockStatic(RequestContextHolder.class)) {
             mockedStatic.when(RequestContextHolder::getRequestAttributes).thenReturn(requestAttributes);
             when(requestAttributes.getRequest()).thenReturn(request);
             when(request.getHeader("idempotency-key")).thenReturn(invalidKey);
-            
-            assertThatThrownBy(() -> aspect.enforceIdempotency(joinPoint, idempotent))
-                    .isInstanceOf(AppException.class);
+
+            assertThatThrownBy(() -> aspect.enforceIdempotency(joinPoint, idempotent)).isInstanceOf(AppException.class);
         }
     }
 
@@ -124,18 +120,18 @@ class IdempotencyAspectTest {
                 .status(IdempotencyStatus.IN_PROGRESS)
                 .retryCount(0)
                 .build();
-        
+
         setupMocks(key);
         when(repository.findById(key)).thenReturn(Optional.empty());
         when(idempotencyService.initialize(key)).thenReturn(newEntity);
         when(joinPoint.proceed()).thenReturn(response);
         when(objectMapper.writeValueAsString(responseBody)).thenReturn(responseBody);
-        
+
         try (MockedStatic<RequestContextHolder> mockedStatic = mockStatic(RequestContextHolder.class)) {
             setupRequestMocks(key, mockedStatic);
-            
+
             Object result = aspect.enforceIdempotency(joinPoint, idempotent);
-            
+
             assertThat(result).isEqualTo(response);
             verify(repository, times(2)).save(newEntity);
             verify(idempotencyService).complete(newEntity, responseBody, 200);
@@ -153,12 +149,12 @@ class IdempotencyAspectTest {
                 .responseData(cachedResponse)
                 .statusCode(201)
                 .build();
-        
+
         setupMocks(key);
         when(repository.findById(key)).thenReturn(Optional.of(completedEntity));
         when(idempotencyService.isCompleted(completedEntity)).thenReturn(true);
         when(joinPoint.getSignature()).thenReturn(methodSignature);
-        
+
         Method mockMethod = TestController.class.getMethod("testMethod");
         when(methodSignature.getMethod()).thenReturn(mockMethod);
         when(objectMapper.getTypeFactory()).thenReturn(TypeFactory.defaultInstance());
@@ -166,9 +162,9 @@ class IdempotencyAspectTest {
 
         try (MockedStatic<RequestContextHolder> mockedStatic = mockStatic(RequestContextHolder.class)) {
             setupRequestMocks(key, mockedStatic);
-            
+
             Object result = aspect.enforceIdempotency(joinPoint, idempotent);
-            
+
             assertThat(result).isInstanceOf(ResponseEntity.class);
             ResponseEntity<?> responseEntity = (ResponseEntity<?>) result;
             assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -187,19 +183,19 @@ class IdempotencyAspectTest {
                 .status(IdempotencyStatus.FAILED)
                 .retryCount(2)
                 .build();
-        
+
         setupMocks(key);
         when(repository.findById(key)).thenReturn(Optional.of(failedEntity));
         when(idempotencyService.isFailed(failedEntity)).thenReturn(true);
         when(idempotencyService.canRetry(failedEntity)).thenReturn(true);
         when(joinPoint.proceed()).thenReturn(response);
         when(objectMapper.writeValueAsString(responseBody)).thenReturn(responseBody);
-        
+
         try (MockedStatic<RequestContextHolder> mockedStatic = mockStatic(RequestContextHolder.class)) {
             setupRequestMocks(key, mockedStatic);
-            
+
             Object result = aspect.enforceIdempotency(joinPoint, idempotent);
-            
+
             assertThat(result).isEqualTo(response);
             verify(idempotencyService).retry(failedEntity);
             verify(idempotencyService).complete(failedEntity, responseBody, 200);
@@ -218,18 +214,18 @@ class IdempotencyAspectTest {
                 .status(IdempotencyStatus.IN_PROGRESS)
                 .retryCount(0)
                 .build();
-        
+
         setupMocks(key);
         when(repository.findById(key)).thenReturn(Optional.of(inProgressEntity));
         when(idempotencyService.isInProgress(inProgressEntity)).thenReturn(true);
         when(joinPoint.proceed()).thenReturn(response);
         when(objectMapper.writeValueAsString(responseBody)).thenReturn(responseBody);
-        
+
         try (MockedStatic<RequestContextHolder> mockedStatic = mockStatic(RequestContextHolder.class)) {
             setupRequestMocks(key, mockedStatic);
-            
+
             Object result = aspect.enforceIdempotency(joinPoint, idempotent);
-            
+
             assertThat(result).isEqualTo(response);
             verify(idempotencyService).processing(inProgressEntity);
             verify(idempotencyService).complete(inProgressEntity, responseBody, 200);
@@ -247,18 +243,17 @@ class IdempotencyAspectTest {
                 .status(IdempotencyStatus.IN_PROGRESS)
                 .retryCount(0)
                 .build();
-        
+
         setupMocks(key);
         when(repository.findById(key)).thenReturn(Optional.of(entity));
         when(idempotencyService.isInProgress(entity)).thenReturn(true);
         when(joinPoint.proceed()).thenThrow(exception);
-        
+
         try (MockedStatic<RequestContextHolder> mockedStatic = mockStatic(RequestContextHolder.class)) {
             setupRequestMocks(key, mockedStatic);
-            
-            assertThatThrownBy(() -> aspect.enforceIdempotency(joinPoint, idempotent))
-                    .isEqualTo(exception);
-            
+
+            assertThatThrownBy(() -> aspect.enforceIdempotency(joinPoint, idempotent)).isEqualTo(exception);
+
             verify(idempotencyService).fail(entity);
             verify(repository, atLeast(1)).save(entity);
         }

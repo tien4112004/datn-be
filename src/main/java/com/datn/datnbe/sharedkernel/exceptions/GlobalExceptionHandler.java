@@ -1,6 +1,8 @@
 package com.datn.datnbe.sharedkernel.exceptions;
 
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,9 +11,6 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 @ControllerAdvice
@@ -27,7 +26,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<AppResponseDto<Object>> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+    public ResponseEntity<AppResponseDto<Object>> handleHttpMessageNotReadableException(
+            HttpMessageNotReadableException ex) {
         log.error("Malformed JSON request: {}", ex.getMessage(), ex);
 
         AppException appException = new AppException(ErrorCode.VALIDATION_ERROR);
@@ -66,7 +66,6 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
-
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<AppResponseDto<Object>> handleGenericException(Exception ex) {

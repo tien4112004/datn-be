@@ -22,13 +22,11 @@ public enum ErrorCode {
     PRESENTATION_CREATION_FAILED("Failed to create presentation", 500),
     DATABASE_ERROR("Database operation failed", 500), VALIDATION_ERROR("Validation failed", 400),
 
-    UNSUPPORTED_MEDIA_TYPE("Unsupported media type", 415),
-    FILE_TOO_LARGE("File size exceeds the limit", 413),
-    FILE_UPLOAD_ERROR("File upload failed", 500),
+    UNSUPPORTED_MEDIA_TYPE("Unsupported media type", 415), FILE_TOO_LARGE("File size exceeds the limit", 413),
+    FILE_UPLOAD_ERROR("File upload failed", 500), MEDIA_NOT_FOUND("Media not found", 404),
 
     IDEMPOTENCY_KEY_MISSING("Idempotency key is missing", 400),
-    IDEMPOTENCY_KEY_INVALID("Idempotency key is invalid", 400),
-    ;
+    IDEMPOTENCY_KEY_INVALID("Idempotency key is invalid", 400),;
 
     private final String defaultMessage;
     private final Integer statusCode;

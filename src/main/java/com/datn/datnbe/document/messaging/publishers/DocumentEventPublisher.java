@@ -2,9 +2,7 @@ package com.datn.datnbe.document.messaging.publishers;
 
 import org.springframework.stereotype.Component;
 
-/**
- * Event publisher for document operations
- */
+/** Event publisher for document operations */
 @Component
 @Deprecated
 public class DocumentEventPublisher {

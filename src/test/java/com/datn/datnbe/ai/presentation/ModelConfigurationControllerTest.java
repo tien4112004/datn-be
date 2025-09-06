@@ -1,11 +1,21 @@
 package com.datn.datnbe.ai.presentation;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import com.datn.datnbe.ai.api.ModelSelectionApi;
 import com.datn.datnbe.ai.dto.request.UpdateModelStatusRequest;
 import com.datn.datnbe.ai.dto.response.ModelResponseDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,17 +24,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ModelConfigurationController.class)
 class ModelConfigurationControllerTest {
@@ -77,75 +76,75 @@ class ModelConfigurationControllerTest {
     // Tests for GET /api/models
     // ===============================
 
-    @Test
-    @DisplayName("Should return list of all models successfully")
-    void getAllModels_WithValidData_ShouldReturnSuccessResponse() throws Exception {
-        // Given
-        when(modelSelectionApi.getModelConfigurations()).thenReturn(mockModels);
+  @Test
+  @DisplayName("Should return list of all models successfully")
+  void getAllModels_WithValidData_ShouldReturnSuccessResponse() throws Exception {
+    // Given
+    when(modelSelectionApi.getModelConfigurations()).thenReturn(mockModels);
 
-        // When & Then
-        mockMvc.perform(get("/api/models")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data.length()").value(3))
-                .andExpect(jsonPath("$.data[0].modelId").value("1"))
-                .andExpect(jsonPath("$.data[0].modelName").value("gpt-4"))
-                .andExpect(jsonPath("$.data[0].displayName").value("GPT-4"))
-                .andExpect(jsonPath("$.data[0].provider").value("openai"))
-                .andExpect(jsonPath("$.data[0].enabled").value(true))
-                .andExpect(jsonPath("$.data[0].default").value(false))
-                .andExpect(jsonPath("$.data[1].modelId").value("2"))
-                .andExpect(jsonPath("$.data[1].modelName").value("claude-3"))
-                .andExpect(jsonPath("$.data[1].displayName").value("Claude 3"))
-                .andExpect(jsonPath("$.data[1].provider").value("anthropic"))
-                .andExpect(jsonPath("$.data[1].enabled").value(false))
-                .andExpect(jsonPath("$.data[1].default").value(true))
-                .andExpect(jsonPath("$.data[2].modelId").value("3"))
-                .andExpect(jsonPath("$.data[2].modelName").value("gemini-pro"))
-                .andExpect(jsonPath("$.data[2].displayName").value("Gemini Pro"))
-                .andExpect(jsonPath("$.data[2].provider").value("google"))
-                .andExpect(jsonPath("$.data[2].enabled").value(true))
-                .andExpect(jsonPath("$.data[2].default").value(false));
-    }
+    // When & Then
+    mockMvc
+        .perform(get("/api/models").contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(jsonPath("$.code").value(200))
+        .andExpect(jsonPath("$.data").isArray())
+        .andExpect(jsonPath("$.data.length()").value(3))
+        .andExpect(jsonPath("$.data[0].modelId").value("1"))
+        .andExpect(jsonPath("$.data[0].modelName").value("gpt-4"))
+        .andExpect(jsonPath("$.data[0].displayName").value("GPT-4"))
+        .andExpect(jsonPath("$.data[0].provider").value("openai"))
+        .andExpect(jsonPath("$.data[0].enabled").value(true))
+        .andExpect(jsonPath("$.data[0].default").value(false))
+        .andExpect(jsonPath("$.data[1].modelId").value("2"))
+        .andExpect(jsonPath("$.data[1].modelName").value("claude-3"))
+        .andExpect(jsonPath("$.data[1].displayName").value("Claude 3"))
+        .andExpect(jsonPath("$.data[1].provider").value("anthropic"))
+        .andExpect(jsonPath("$.data[1].enabled").value(false))
+        .andExpect(jsonPath("$.data[1].default").value(true))
+        .andExpect(jsonPath("$.data[2].modelId").value("3"))
+        .andExpect(jsonPath("$.data[2].modelName").value("gemini-pro"))
+        .andExpect(jsonPath("$.data[2].displayName").value("Gemini Pro"))
+        .andExpect(jsonPath("$.data[2].provider").value("google"))
+        .andExpect(jsonPath("$.data[2].enabled").value(true))
+        .andExpect(jsonPath("$.data[2].default").value(false));
+  }
 
-    @Test
-    @DisplayName("Should return empty list when no models exist")
-    void getAllModels_WithEmptyData_ShouldReturnEmptyListResponse() throws Exception {
-        // Given
-        when(modelSelectionApi.getModelConfigurations()).thenReturn(Collections.emptyList());
+  @Test
+  @DisplayName("Should return empty list when no models exist")
+  void getAllModels_WithEmptyData_ShouldReturnEmptyListResponse() throws Exception {
+    // Given
+    when(modelSelectionApi.getModelConfigurations()).thenReturn(Collections.emptyList());
 
-        // When & Then
-        mockMvc.perform(get("/api/models")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data.length()").value(0));
-    }
+    // When & Then
+    mockMvc
+        .perform(get("/api/models").contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(jsonPath("$.code").value(200))
+        .andExpect(jsonPath("$.data").isArray())
+        .andExpect(jsonPath("$.data.length()").value(0));
+  }
 
-    @Test
-    @DisplayName("Should handle service exception when getting models")
-    void getAllModels_WithServiceException_ShouldReturnErrorResponse() throws Exception {
-        // Given
-        when(modelSelectionApi.getModelConfigurations())
-                .thenThrow(new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Database connection failed"));
+  @Test
+  @DisplayName("Should handle service exception when getting models")
+  void getAllModels_WithServiceException_ShouldReturnErrorResponse() throws Exception {
+    // Given
+    when(modelSelectionApi.getModelConfigurations())
+        .thenThrow(new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Database connection failed"));
 
-        // When & Then
-        mockMvc.perform(get("/api/models")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isInternalServerError())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.code").value(500))
-                .andExpect(jsonPath("$.message").value("Database connection failed"))
-                .andExpect(jsonPath("$.errorCode").value("UNCATEGORIZED_ERROR"));
-    }
+    // When & Then
+    mockMvc
+        .perform(get("/api/models").contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isInternalServerError())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.success").value(false))
+        .andExpect(jsonPath("$.code").value(500))
+        .andExpect(jsonPath("$.message").value("Database connection failed"))
+        .andExpect(jsonPath("$.errorCode").value("UNCATEGORIZED_ERROR"));
+  }
 
     // ===============================
     // Tests for PATCH /api/models/{id}
@@ -170,8 +169,7 @@ class ModelConfigurationControllerTest {
                 .thenReturn(updatedModel);
 
         // When & Then
-        mockMvc.perform(patch("/api/models/{id}", modelId)
-                .contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(patch("/api/models/{id}", modelId).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -202,8 +200,7 @@ class ModelConfigurationControllerTest {
                 .thenReturn(updatedModel);
 
         // When & Then
-        mockMvc.perform(patch("/api/models/{id}", modelId)
-                .contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(patch("/api/models/{id}", modelId).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -233,8 +230,7 @@ class ModelConfigurationControllerTest {
                 .thenReturn(updatedModel);
 
         // When & Then
-        mockMvc.perform(patch("/api/models/{id}", modelId)
-                .contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(patch("/api/models/{id}", modelId).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -256,8 +252,7 @@ class ModelConfigurationControllerTest {
                 .thenThrow(new AppException(ErrorCode.MODEL_NOT_FOUND, "Model not found"));
 
         // When & Then
-        mockMvc.perform(patch("/api/models/{id}", modelId)
-                .contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(patch("/api/models/{id}", modelId).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -274,13 +269,11 @@ class ModelConfigurationControllerTest {
         Integer modelId = 1;
         UpdateModelStatusRequest request = new UpdateModelStatusRequest(false, true); // Disabled but default
 
-        when(modelSelectionApi.setModelStatus(eq(modelId), any(UpdateModelStatusRequest.class)))
-                .thenThrow(new AppException(ErrorCode.INVALID_MODEL_STATUS,
-                        "A model cannot be default if it is disabled"));
+        when(modelSelectionApi.setModelStatus(eq(modelId), any(UpdateModelStatusRequest.class))).thenThrow(
+                new AppException(ErrorCode.INVALID_MODEL_STATUS, "A model cannot be default if it is disabled"));
 
         // When & Then
-        mockMvc.perform(patch("/api/models/{id}", modelId)
-                .contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(patch("/api/models/{id}", modelId).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -302,8 +295,7 @@ class ModelConfigurationControllerTest {
                         "At least one of isEnabled or isDefault must be provided"));
 
         // When & Then
-        mockMvc.perform(patch("/api/models/{id}", modelId)
-                .contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(patch("/api/models/{id}", modelId).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -321,9 +313,8 @@ class ModelConfigurationControllerTest {
         String malformedJson = "{ invalid json }";
 
         // When & Then
-        mockMvc.perform(patch("/api/models/{id}", modelId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(malformedJson))
+        mockMvc.perform(
+                patch("/api/models/{id}", modelId).contentType(MediaType.APPLICATION_JSON).content(malformedJson))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(false))
@@ -338,8 +329,7 @@ class ModelConfigurationControllerTest {
         Integer modelId = 1;
 
         // When & Then
-        mockMvc.perform(patch("/api/models/{id}", modelId)
-                .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(patch("/api/models/{id}", modelId).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
 
@@ -354,8 +344,7 @@ class ModelConfigurationControllerTest {
                 .thenThrow(new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Internal server error"));
 
         // When & Then
-        mockMvc.perform(patch("/api/models/{id}", modelId)
-                .contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(patch("/api/models/{id}", modelId).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -380,8 +369,7 @@ class ModelConfigurationControllerTest {
                 .thenThrow(new AppException(ErrorCode.MODEL_NOT_FOUND, "Model not found"));
 
         // When & Then
-        mockMvc.perform(patch("/api/models/{id}", modelId)
-                .contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(patch("/api/models/{id}", modelId).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -400,8 +388,7 @@ class ModelConfigurationControllerTest {
                 .thenThrow(new AppException(ErrorCode.MODEL_NOT_FOUND, "Model not found"));
 
         // When & Then
-        mockMvc.perform(patch("/api/models/{id}", modelId)
-                .contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(patch("/api/models/{id}", modelId).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))

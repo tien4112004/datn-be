@@ -1,5 +1,6 @@
 package com.datn.datnbe.document.config;
 
+import java.net.URI;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -11,8 +12,6 @@ import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
-
-import java.net.URI;
 
 @Configuration
 @ConfigurationProperties(prefix = "cloudflare.r2")
@@ -35,8 +34,7 @@ public class CloudflareConfig {
                 .httpClientBuilder(ApacheHttpClient.builder())
                 .region(Region.of("auto"))
                 .endpointOverride(URI.create(endpoint))
-                .credentialsProvider(StaticCredentialsProvider.create(
-                        AwsBasicCredentials.create(accessKey, secretKey)))
+                .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey)))
                 .serviceConfiguration(serviceConfig)
                 .build();
     }
