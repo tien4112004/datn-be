@@ -10,4 +10,6 @@ public interface ContentGenerationApi {
     Flux<String> generateOutline(OutlinePromptRequest request);
 
     Flux<String> generateSlides(PresentationPromptRequest request);
+
+    String saveAIResult(String result, String presentationId);
 }

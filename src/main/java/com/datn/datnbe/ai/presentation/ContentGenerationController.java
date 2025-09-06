@@ -1,6 +1,14 @@
 package com.datn.datnbe.ai.presentation;
 
+import com.datn.datnbe.document.api.PresentationApi;
+import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
+import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.bson.types.ObjectId;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,6 +26,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 
+import java.util.ArrayList;
+
 @Slf4j
 @RestController
 @RequestMapping("api/")
@@ -25,6 +35,7 @@ import reactor.core.publisher.Flux;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class ContentGenerationController {
     ContentGenerationApi contentGenerationExternalApi;
+    PresentationApi presentationApi;
 
     @PostMapping(value = "presentations/outline-generate", produces = MediaType.TEXT_PLAIN_VALUE)
     public Flux<String> generateOutline(@RequestBody OutlinePromptRequest request) {
@@ -54,5 +65,44 @@ public class ContentGenerationController {
             })
             .onErrorMap(error -> new AppException(ErrorCode.GENERATION_ERROR,
                     "Failed to generate slides: " + error.getMessage()));
+    }
+
+    @PostMapping(value = "presentations/generate/batch", produces = "application/json")
+    public ResponseEntity<AppResponseDto<JsonNode>> generateSlidesBatch(@RequestBody PresentationPromptRequest request) {
+        log.info("Received batch slide generation request: {}", request);
+        String result;
+        
+        try {
+            result = contentGenerationExternalApi.generateSlides(request)
+                    .doOnSubscribe(subscription -> log.info("Starting batch slide generation"))
+                    .collectList()
+                    .map(list -> String.join("", list))
+                    .block();
+            
+            log.info("Batch slide generation completed successfully");
+
+        } catch (Exception error) {
+            log.error("Error generating slides in batch mode", error);
+            throw new AppException(ErrorCode.GENERATION_ERROR,
+                    "Failed to generate slides in batch mode: " + error.getMessage());
+        }
+        String presentationId = (new ObjectId()).toString();
+        contentGenerationExternalApi.saveAIResult(result, presentationId);
+
+        PresentationCreateRequest createRequest = PresentationCreateRequest.builder()
+                .id(presentationId)
+                .title("AI Generated Presentation")
+                .slides(new ArrayList<>())
+                .build();
+        var newPresentation = presentationApi.createPresentation(createRequest);
+
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode data = mapper.createObjectNode();
+        data.put("aiResult", result);
+        data.set("presentation", mapper.valueToTree(newPresentation));
+
+        return ResponseEntity.ok()
+                .header("presentationId",presentationId)
+                .body(AppResponseDto.<JsonNode>builder().data(data).build());
     }
 }
