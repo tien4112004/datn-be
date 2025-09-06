@@ -1,17 +1,18 @@
 package com.datn.datnbe.document.presentation;
 
 import com.datn.datnbe.document.api.PresentationApi;
-import com.datn.datnbe.document.dto.request.PresentationCollectionRequest;
-import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
-import com.datn.datnbe.document.dto.request.PresentationUpdateRequest;
-import com.datn.datnbe.document.dto.request.PresentationUpdateTitleRequest;
+import com.datn.datnbe.document.api.SlidesApi;
+import com.datn.datnbe.document.dto.request.*;
 import com.datn.datnbe.document.dto.response.PresentationCreateResponseDto;
 import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
+import com.datn.datnbe.document.management.PresentationIdempotencyService;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
+import com.datn.datnbe.sharedkernel.idempotency.api.Idempotent;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,9 +21,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/presentations")
 @RequiredArgsConstructor
+@Slf4j
 public class PresentationController {
 
     private final PresentationApi presentationApi;
+    private final SlidesApi slidesApi;
 
     @PostMapping({"", "/"})
     public ResponseEntity<AppResponseDto<PresentationCreateResponseDto>> createPresentation(
@@ -53,7 +56,25 @@ public class PresentationController {
             @PathVariable String id,
             @Valid @RequestBody PresentationUpdateRequest request) {
         presentationApi.updatePresentation(id, request);
-        return ResponseEntity.ok(AppResponseDto.success(null));
+        return ResponseEntity.noContent().build();
+    }
+
+    @Idempotent
+    @PutMapping("/{id}/slides")
+    public ResponseEntity<AppResponseDto<Void>> upsertSlides(
+            @PathVariable String id,
+             @Valid @RequestBody SlidesUpsertRequest request) {
+        slidesApi.upsertSlides(id, request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Idempotent(serviceType = PresentationIdempotencyService.class)
+    @PutMapping("/{id}/slides/error")
+    public ResponseEntity<AppResponseDto<Void>> testErrorIdempotency(
+            @PathVariable String id,
+            @Valid @RequestBody SlidesUpsertRequest request) {
+        slidesApi.upsertSlides(id, request);
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/title")
@@ -61,7 +82,7 @@ public class PresentationController {
             @PathVariable String id,
             @Valid @RequestBody PresentationUpdateTitleRequest request) {
         presentationApi.updateTitlePresentation(id, request);
-        return ResponseEntity.ok(AppResponseDto.success(null));
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")

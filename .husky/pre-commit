@@ -8,12 +8,25 @@ git diff --name-only > /tmp/unstaged_changes.txt
 git diff --cached --name-only > /tmp/staged_changes.txt
 
 # Run formatter on all Java files in the project using Spotless
-gradle spotlessApply
+./gradlew spotlessApply
 
 echo "File formatter applied to all Java files."
 
 # Restage the files that were staged before formatting
 if [ -s /tmp/staged_changes.txt ]; then
     echo "Restaging previously staged files..."
-    xargs git add < /tmp/staged_changes.txt
+
+    # Process each file individually to handle deleted files
+    while IFS= read -r file; do
+        if [ -f "$file" ]; then
+            # File exists, add it normally
+            git add "$file"
+        else
+            # File was deleted, add the deletion
+            git add "$file" 2>/dev/null || git rm "$file" 2>/dev/null || true
+        fi
+    done < /tmp/staged_changes.txt
 fi
+
+# Clean up temporary files
+rm -f /tmp/unstaged_changes.txt /tmp/staged_changes.txt

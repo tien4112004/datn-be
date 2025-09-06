@@ -1,9 +1,12 @@
 package com.datn.datnbe.document.controller;
 
 import com.datn.datnbe.document.api.PresentationApi;
+import com.datn.datnbe.document.api.SlidesApi;
 import com.datn.datnbe.document.dto.SlideDto;
-import com.datn.datnbe.document.dto.SlideDto.SlideElementDto;
+import com.datn.datnbe.document.dto.request.SlideUpdateRequest;
+import com.datn.datnbe.document.dto.request.SlideUpdateRequest.SlideElementUpdateRequest;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
+import com.datn.datnbe.document.dto.request.SlidesUpsertRequest;
 import com.datn.datnbe.document.dto.response.PresentationCreateResponseDto;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
 import com.datn.datnbe.document.presentation.PresentationController;
@@ -23,9 +26,13 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(PresentationController.class)
@@ -36,6 +43,9 @@ class PresentationControllerTest {
 
 	@MockBean
 	private PresentationApi presentationApi;
+
+	@MockBean
+	private SlidesApi slidesApi;
 
 	@Autowired
 	private ObjectMapper objectMapper;
@@ -48,7 +58,7 @@ class PresentationControllerTest {
 		SlideDto.SlideBackgroundDto background = SlideDto.SlideBackgroundDto.builder().type("color")
 				.color("#ffffff").build();
 
-		SlideElementDto element = SlideElementDto.builder()
+		SlideDto.SlideElementDto element = SlideDto.SlideElementDto.builder()
 				.type("text")
 				.id("element-1")
 				.left(100.0f)
@@ -77,8 +87,8 @@ class PresentationControllerTest {
 				.thenReturn(mockResponse);
 
 		mockMvc.perform(post("/api/presentations")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(request)))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true))
@@ -114,7 +124,7 @@ class PresentationControllerTest {
 		when(presentationApi.createPresentation(any(PresentationCreateRequest.class))).thenReturn(mockResponse);
 
 		mockMvc.perform(post("/api/presentations").contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(request)))
+						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.data.slides").isArray())
 				.andExpect(jsonPath("$.data.slides.length()").value(2))
@@ -124,7 +134,7 @@ class PresentationControllerTest {
 
 	@Test
 	void createPresentation_WithComplexElements_ShouldPreserveAllProperties() throws Exception {
-		SlideElementDto complexElement = SlideElementDto.builder()
+		SlideDto.SlideElementDto complexElement = SlideDto.SlideElementDto.builder()
 				.type("text")
 				.id("complex-element")
 				.left(50.0f)
@@ -165,7 +175,7 @@ class PresentationControllerTest {
 		when(presentationApi.createPresentation(any(PresentationCreateRequest.class))).thenReturn(mockResponse);
 
 		mockMvc.perform(post("/api/presentations").contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(request)))
+						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.data.slides[0].elements[0].type").value("text"))
 				.andExpect(jsonPath("$.data.slides[0].elements[0].id").value("complex-element"))
@@ -206,7 +216,7 @@ class PresentationControllerTest {
 	@Test
 	void createPresentation_WithInvalidJson_ShouldReturnError() throws Exception {
 		mockMvc.perform(post("/api/presentations").contentType(MediaType.APPLICATION_JSON)
-				.content("{\"invalid\": \"json\"}"))
+						.content("{\"invalid\": \"json\"}"))
 				.andExpect(status().is4xxClientError());
 	}
 
@@ -253,7 +263,7 @@ class PresentationControllerTest {
 
 		// When & Then
 		mockMvc.perform(get("/api/presentations/all")
-				.contentType(MediaType.APPLICATION_JSON))
+						.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true))
@@ -281,9 +291,9 @@ class PresentationControllerTest {
 
 		// When & Then
 		mockMvc.perform(get("/api/presentations").param("page", "1")
-				.param("pageSize", "10")
-				.param("sort", "asc")
-				.contentType(MediaType.APPLICATION_JSON))
+						.param("pageSize", "10")
+						.param("sort", "asc")
+						.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true))
@@ -319,10 +329,10 @@ class PresentationControllerTest {
 
 		// When & Then
 		mockMvc.perform(get("/api/presentations").param("page", "1")
-				.param("pageSize", "10")
-				.param("sort", "desc")
-				.param("filter", "Filtered")
-				.contentType(MediaType.APPLICATION_JSON))
+						.param("pageSize", "10")
+						.param("sort", "desc")
+						.param("filter", "Filtered")
+						.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.data[0].title").value("Filtered Presentation"));
 	}
@@ -364,13 +374,245 @@ class PresentationControllerTest {
 
 		// When & Then
 		mockMvc.perform(get("/api/presentations").param("page", "1")
-				.param("pageSize", "10")
-				.param("filter", "NonExistent")
-				.contentType(MediaType.APPLICATION_JSON))
+						.param("pageSize", "10")
+						.param("filter", "NonExistent")
+						.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.data").isArray())
 				.andExpect(jsonPath("$.data.length()").value(0))
 				.andExpect(jsonPath("$.pagination.totalItems").value(0))
 				.andExpect(jsonPath("$.pagination.totalPages").value(0));
+	}
+
+	// PUT /presentations/{id}/slides tests
+	@Test
+	void upsertSlides_WithValidRequest_ShouldReturnNoContent() throws Exception {
+		// Given
+		String presentationId = "test-presentation-id";
+		SlideElementUpdateRequest element = SlideElementUpdateRequest.builder()
+				.type("text")
+				.id("element-1")
+				.left(100.0f)
+				.top(200.0f)
+				.width(300.0f)
+				.height(50.0f)
+				.content("Sample text")
+				.build();
+
+		SlideDto.SlideBackgroundDto background = SlideDto.SlideBackgroundDto.builder()
+				.type("color")
+				.color("#ffffff")
+				.build();
+
+		SlideUpdateRequest slide = SlideUpdateRequest.builder()
+				.slideId("slide-1")
+				.elements(List.of(element))
+				.background(background)
+				.build();
+
+		SlidesUpsertRequest request = SlidesUpsertRequest.builder()
+				.slides(List.of(slide))
+				.build();
+
+		doNothing().when(slidesApi).upsertSlides(eq(presentationId), any(SlidesUpsertRequest.class));
+
+		// When & Then
+		mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
+						.contentType(MediaType.APPLICATION_JSON)
+						.header("idempotency-key", "test-idempotency-key")
+						.content(objectMapper.writeValueAsString(request)))
+				.andExpect(status().isNoContent());
+
+		verify(slidesApi).upsertSlides(eq(presentationId), any(SlidesUpsertRequest.class));
+	}
+
+	@Test
+	void upsertSlides_WithMultipleSlides_ShouldProcessAllSlides() throws Exception {
+		// Given
+		String presentationId = "test-presentation-id";
+		SlideElementUpdateRequest element1 = SlideElementUpdateRequest.builder()
+				.type("text")
+				.id("element-1")
+				.content("First slide text")
+				.build();
+
+		SlideElementUpdateRequest element2 = SlideElementUpdateRequest.builder()
+				.type("text")
+				.id("element-2")
+				.content("Second slide text")
+				.build();
+
+		SlideUpdateRequest slide1 = SlideUpdateRequest.builder()
+				.slideId("slide-1")
+				.elements(List.of(element1))
+				.build();
+
+		SlideUpdateRequest slide2 = SlideUpdateRequest.builder()
+				.slideId("slide-2")
+				.elements(List.of(element2))
+				.build();
+
+		SlidesUpsertRequest request = SlidesUpsertRequest.builder()
+				.slides(Arrays.asList(slide1, slide2))
+				.build();
+
+		doNothing().when(slidesApi).upsertSlides(eq(presentationId), any(SlidesUpsertRequest.class));
+
+		// When & Then
+		mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
+						.contentType(MediaType.APPLICATION_JSON)
+						.header("idempotency-key", "test-key-multiple-slides")
+						.content(objectMapper.writeValueAsString(request)))
+				.andExpect(status().isNoContent());
+
+		verify(slidesApi).upsertSlides(eq(presentationId), any(SlidesUpsertRequest.class));
+	}
+
+	@Test
+	void upsertSlides_WithComplexSlideElements_ShouldPreserveAllProperties() throws Exception {
+		// Given
+		String presentationId = "test-presentation-id";
+		SlideElementUpdateRequest complexElement = SlideElementUpdateRequest.builder()
+				.type("shape")
+				.id("complex-element")
+				.left(50.0f)
+				.top(75.0f)
+				.width(200.0f)
+				.height(150.0f)
+				.viewBox(Arrays.asList(0.0f, 0.0f, 100.0f, 100.0f))
+				.path("M10,10 L90,90")
+				.fill("#ff0000")
+				.fixedRatio(true)
+				.opacity(0.8f)
+				.rotate(45.0f)
+				.flipV(false)
+				.lineHeight(1.5f)
+				.defaultFontName("Arial")
+				.defaultColor("#000000")
+				.start(Arrays.asList(10.0f, 20.0f))
+				.end(Arrays.asList(90.0f, 80.0f))
+				.points(Arrays.asList("10,10", "50,50", "90,90"))
+				.color("#00ff00")
+				.style("solid")
+				.wordSpace(2.0f)
+				.build();
+
+		SlideDto.SlideBackgroundDto background = SlideDto.SlideBackgroundDto.builder()
+				.type("gradient")
+				.color("#ffffff")
+				.build();
+
+		SlideUpdateRequest slide = SlideUpdateRequest.builder()
+				.slideId("complex-slide")
+				.elements(List.of(complexElement))
+				.background(background)
+				.build();
+
+		SlidesUpsertRequest request = SlidesUpsertRequest.builder()
+				.slides(List.of(slide))
+				.build();
+
+		doNothing().when(slidesApi).upsertSlides(eq(presentationId), any(SlidesUpsertRequest.class));
+
+		// When & Then
+		mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
+						.contentType(MediaType.APPLICATION_JSON)
+						.header("idempotency-key", "test-key-complex-elements")
+						.content(objectMapper.writeValueAsString(request)))
+				.andExpect(status().isNoContent());
+
+		verify(slidesApi).upsertSlides(eq(presentationId), any(SlidesUpsertRequest.class));
+	}
+
+	@Test
+	void upsertSlides_WithEmptySlidesList_ShouldStillProcess() throws Exception {
+		// Given
+		String presentationId = "test-presentation-id";
+		SlidesUpsertRequest request = SlidesUpsertRequest.builder()
+				.slides(List.of())
+				.build();
+
+		doNothing().when(slidesApi).upsertSlides(eq(presentationId), any(SlidesUpsertRequest.class));
+
+		// When & Then
+		mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
+						.contentType(MediaType.APPLICATION_JSON)
+						.header("idempotency-key", "test-key-empty-slides")
+						.content(objectMapper.writeValueAsString(request)))
+				.andExpect(status().isNoContent());
+
+		verify(slidesApi).upsertSlides(eq(presentationId), any(SlidesUpsertRequest.class));
+	}
+
+	@Test
+	void upsertSlides_WithInvalidSlideId_ShouldReturnBadRequest() throws Exception {
+		// Given
+		String presentationId = "test-presentation-id";
+		SlideUpdateRequest slideWithoutId = SlideUpdateRequest.builder()
+				.slideId("") // Invalid: blank ID
+				.elements(List.of())
+				.build();
+
+		SlidesUpsertRequest request = SlidesUpsertRequest.builder()
+				.slides(List.of(slideWithoutId))
+				.build();
+
+		// When & Then
+		mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
+						.contentType(MediaType.APPLICATION_JSON)
+						.header("idempotency-key", "test-key-invalid-slide-id")
+						.content(objectMapper.writeValueAsString(request)))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.success").value(false))
+				.andExpect(jsonPath("$.code").value(400))
+				.andExpect(jsonPath("$.message").value("Validation failed"))
+				.andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
+	}
+
+	@Test
+	void upsertSlides_WithInvalidElementType_ShouldReturnBadRequest() throws Exception {
+		// Given
+		String presentationId = "test-presentation-id";
+		SlideElementUpdateRequest elementWithoutType = SlideElementUpdateRequest.builder()
+				.type(null) // Invalid: null type
+				.id("element-1")
+				.content("Sample text")
+				.build();
+
+		SlideUpdateRequest slide = SlideUpdateRequest.builder()
+				.slideId("slide-1")
+				.elements(List.of(elementWithoutType))
+				.build();
+
+		SlidesUpsertRequest request = SlidesUpsertRequest.builder()
+				.slides(List.of(slide))
+				.build();
+
+		// When & Then
+		mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
+						.contentType(MediaType.APPLICATION_JSON)
+						.header("idempotency-key", "test-key-invalid-element-type")
+						.content(objectMapper.writeValueAsString(request)))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.success").value(false))
+				.andExpect(jsonPath("$.code").value(400))
+				.andExpect(jsonPath("$.message").value("Validation failed"))
+				.andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
+	}
+
+	@Test
+	void upsertSlides_WithNullSlides_ShouldReturnBadRequest() throws Exception {
+		// Given
+		String presentationId = "test-presentation-id";
+		SlidesUpsertRequest request = SlidesUpsertRequest.builder()
+				.slides(null)
+				.build();
+
+		// When & Then
+		mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
+						.contentType(MediaType.APPLICATION_JSON)
+						.header("idempotency-key", "test-key-null-slides")
+						.content(objectMapper.writeValueAsString(request)))
+				.andExpect(status().isBadRequest());
 	}
 }

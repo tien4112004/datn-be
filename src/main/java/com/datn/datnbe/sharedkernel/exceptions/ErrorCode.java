@@ -24,7 +24,10 @@ public enum ErrorCode {
 
     UNSUPPORTED_MEDIA_TYPE("Unsupported media type", 415),
     FILE_TOO_LARGE("File size exceeds the limit", 413),
-    FILE_UPLOAD_ERROR("File upload failed", 500)
+    FILE_UPLOAD_ERROR("File upload failed", 500),
+
+    IDEMPOTENCY_KEY_MISSING("Idempotency key is missing", 400),
+    IDEMPOTENCY_KEY_INVALID("Idempotency key is invalid", 400),
     ;
 
     private final String defaultMessage;
