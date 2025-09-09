@@ -2,8 +2,10 @@ package com.datn.datnbe.ai.repository.interfaces;
 
 import com.datn.datnbe.ai.entity.AIResult;
 
+import java.util.Optional;
+
 public interface AIResultRepo {
-    AIResult findByPresentationId(String presentationId);
+    Optional<AIResult> findByPresentationId(String presentationId);
 
     AIResult save(AIResult aiResult);
 }

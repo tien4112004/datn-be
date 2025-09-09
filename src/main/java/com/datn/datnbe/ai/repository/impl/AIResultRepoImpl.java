@@ -9,6 +9,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -17,8 +19,8 @@ public class AIResultRepoImpl implements AIResultRepo {
     AIResultJPARepo AIResultJPARepo;
 
     @Override
-    public AIResult findByPresentationId(String presentationId) {
-        return AIResultJPARepo.findByPresentationId(presentationId);
+    public Optional<AIResult> findByPresentationId(String presentationId) {
+        return Optional.ofNullable(AIResultJPARepo.findByPresentationId(presentationId));
     }
 
     @Override

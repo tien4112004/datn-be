@@ -1,5 +1,7 @@
 package com.datn.datnbe.ai.presentation;
 
+import com.datn.datnbe.ai.api.AIResultApi;
+import com.datn.datnbe.ai.dto.response.AIResultResponseDto;
 import com.datn.datnbe.document.api.PresentationApi;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
@@ -40,6 +42,7 @@ import java.util.ArrayList;
 public class ContentGenerationController {
     ContentGenerationApi contentGenerationExternalApi;
     PresentationApi presentationApi;
+    AIResultApi aiResultApi;
 
     @PostMapping(value = "presentations/outline-generate", produces = MediaType.TEXT_PLAIN_VALUE)
     public Flux<String> generateOutline(@RequestBody OutlinePromptRequest request) {
@@ -92,10 +95,10 @@ public class ContentGenerationController {
                     "Failed to generate slides in batch mode: " + error.getMessage());
         }
         String presentationId = (new ObjectId()).toString();
-        contentGenerationExternalApi.saveAIResult(result, presentationId);
+        AIResultResponseDto saveAIResult = aiResultApi.saveAIResult(result, presentationId);
 
         PresentationCreateRequest createRequest = PresentationCreateRequest.builder()
-                .id(presentationId)
+                .id(saveAIResult.getPresentationId())
                 .title("AI Generated Presentation")
                 .slides(new ArrayList<>())
                 .build();

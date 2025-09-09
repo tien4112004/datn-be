@@ -26,7 +26,9 @@ public enum ErrorCode {
     FILE_UPLOAD_ERROR("File upload failed", 500), MEDIA_NOT_FOUND("Media not found", 404),
 
     IDEMPOTENCY_KEY_MISSING("Idempotency key is missing", 400),
-    IDEMPOTENCY_KEY_INVALID("Idempotency key is invalid", 400),;
+    IDEMPOTENCY_KEY_INVALID("Idempotency key is invalid", 400),
+
+    AI_RESULT_NOT_FOUND("AI Result not found", 404);
 
     private final String defaultMessage;
     private final Integer statusCode;
