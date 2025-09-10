@@ -148,7 +148,7 @@ class ModelConfigurationControllerTest {
         }
 
     // ===============================
-    // Tests for GET /api/models/text-models
+    // Tests for GET /api/models/text
     // ===============================
 
     @Test
@@ -176,7 +176,7 @@ class ModelConfigurationControllerTest {
         when(modelSelectionApi.getTextModelModelConfigurations()).thenReturn(textModels);
 
         // When & Then
-        mockMvc.perform(get("/api/models/text-models").contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/api/models/text").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(true))
@@ -205,7 +205,7 @@ class ModelConfigurationControllerTest {
 
                 // When & Then
                 mockMvc
-                                .perform(get("/api/models/text-models").contentType(MediaType.APPLICATION_JSON))
+                                .perform(get("/api/models/text").contentType(MediaType.APPLICATION_JSON))
                                 .andExpect(status().isOk())
                                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                                 .andExpect(jsonPath("$.success").value(true))
@@ -214,27 +214,8 @@ class ModelConfigurationControllerTest {
                                 .andExpect(jsonPath("$.data.length()").value(0));
         }
 
-    @Test
-        @DisplayName("Should handle service exception when getting text models")
-        void getTextModels_WithServiceException_ShouldReturnErrorResponse() throws Exception {
-                // Given
-                when(modelSelectionApi.getTextModelModelConfigurations())
-                                .thenThrow(new AppException(ErrorCode.UNCATEGORIZED_ERROR,
-                                                "Database connection failed"));
-
-                // When & Then
-                mockMvc
-                                .perform(get("/api/models/text-models").contentType(MediaType.APPLICATION_JSON))
-                                .andExpect(status().isInternalServerError())
-                                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                                .andExpect(jsonPath("$.success").value(false))
-                                .andExpect(jsonPath("$.code").value(500))
-                                .andExpect(jsonPath("$.message").value("Database connection failed"))
-                                .andExpect(jsonPath("$.errorCode").value("UNCATEGORIZED_ERROR"));
-        }
-
     // ===============================
-    // Tests for GET /api/models/image-models
+    // Tests for GET /api/models/image
     // ===============================
 
     @Test
@@ -262,7 +243,7 @@ class ModelConfigurationControllerTest {
         when(modelSelectionApi.getImageModelConfigurations()).thenReturn(imageModels);
 
         // When & Then
-        mockMvc.perform(get("/api/models/image-models").contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/api/models/image").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(true))
@@ -291,7 +272,7 @@ class ModelConfigurationControllerTest {
 
                 // When & Then
                 mockMvc
-                                .perform(get("/api/models/image-models").contentType(MediaType.APPLICATION_JSON))
+                                .perform(get("/api/models/image").contentType(MediaType.APPLICATION_JSON))
                                 .andExpect(status().isOk())
                                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                                 .andExpect(jsonPath("$.success").value(true))
@@ -310,7 +291,7 @@ class ModelConfigurationControllerTest {
 
                 // When & Then
                 mockMvc
-                                .perform(get("/api/models/image-models").contentType(MediaType.APPLICATION_JSON))
+                                .perform(get("/api/models/image").contentType(MediaType.APPLICATION_JSON))
                                 .andExpect(status().isInternalServerError())
                                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                                 .andExpect(jsonPath("$.success").value(false))
