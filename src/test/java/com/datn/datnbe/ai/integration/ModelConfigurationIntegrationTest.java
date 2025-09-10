@@ -110,7 +110,8 @@ class ModelConfigurationIntegrationTest extends BaseIntegrationTest {
 
         // When
         List<ModelConfigurationEntity> models = modelConfigurationRepo.getModels();
-        ModelConfigurationEntity retrievedModel = modelConfigurationRepo.getModelByTextName("gpt-4-test");
+        ModelConfigurationEntity retrievedModel = modelConfigurationRepo.getModelByNameAndType("gpt-4-test",
+                ModelType.TEXT);
 
         // Then
         assertThat(models).isNotEmpty();
@@ -140,7 +141,8 @@ class ModelConfigurationIntegrationTest extends BaseIntegrationTest {
     void isModelEnabled_WithEnabledModel_ShouldReturnTrue() {
         // Given
         modelConfigurationRepo.save(testTextModel1);
-        ModelConfigurationEntity savedModel = modelConfigurationRepo.getModelByTextName("gpt-4-test");
+        ModelConfigurationEntity savedModel = modelConfigurationRepo.getModelByNameAndType("gpt-4-test",
+                ModelType.TEXT);
 
         // When
         boolean isEnabled = modelConfigurationRepo.isModelEnabled(savedModel.getModelId());
@@ -156,7 +158,8 @@ class ModelConfigurationIntegrationTest extends BaseIntegrationTest {
         testTextModel2.setDefault(false);
         modelConfigurationRepo.save(testTextModel1);
         modelConfigurationRepo.save(testTextModel2);
-        ModelConfigurationEntity savedModel = modelConfigurationRepo.getModelByTextName("gpt-4-test");
+        ModelConfigurationEntity savedModel = modelConfigurationRepo.getModelByNameAndType("gpt-4-test",
+                ModelType.TEXT);
 
         // When
         modelConfigurationRepo.setEnabled(savedModel.getModelId(), false);
@@ -172,8 +175,9 @@ class ModelConfigurationIntegrationTest extends BaseIntegrationTest {
         modelConfigurationRepo.save(testTextModel1);
         modelConfigurationRepo.save(testTextModel2);
 
-        ModelConfigurationEntity model1 = modelConfigurationRepo.getModelByTextName("gpt-4-test");
-        ModelConfigurationEntity model2 = modelConfigurationRepo.getModelByTextName("gemini-pro-test");
+        ModelConfigurationEntity model1 = modelConfigurationRepo.getModelByNameAndType("gpt-4-test", ModelType.TEXT);
+        ModelConfigurationEntity model2 = modelConfigurationRepo.getModelByNameAndType("gemini-pro-test",
+                ModelType.TEXT);
 
         // When - Set model2 as default
         modelConfigurationRepo.setDefault(model2.getModelId(), true);
@@ -218,7 +222,8 @@ class ModelConfigurationIntegrationTest extends BaseIntegrationTest {
         modelConfigurationRepo.save(testImageModel1); // default = true
         modelConfigurationRepo.save(testImageModel2); // default = false
 
-        ModelConfigurationEntity savedTextModel2 = modelConfigurationRepo.getModelByTextName("gemini-pro-test");
+        ModelConfigurationEntity savedTextModel2 = modelConfigurationRepo.getModelByNameAndType("gemini-pro-test",
+                ModelType.TEXT);
 
         // When - Set textModel2 as default (should unset textModel1 but not affect
         // image models)
@@ -229,9 +234,12 @@ class ModelConfigurationIntegrationTest extends BaseIntegrationTest {
         entityManager.clear();
 
         // Then
-        ModelConfigurationEntity updatedTextModel1 = modelConfigurationRepo.getModelByTextName("gpt-4-test");
-        ModelConfigurationEntity updatedTextModel2 = modelConfigurationRepo.getModelByTextName("gemini-pro-test");
-        ModelConfigurationEntity updatedImageModel1 = modelConfigurationRepo.getModelByImageName("dall-e-test");
+        ModelConfigurationEntity updatedTextModel1 = modelConfigurationRepo.getModelByNameAndType("gpt-4-test",
+                ModelType.TEXT);
+        ModelConfigurationEntity updatedTextModel2 = modelConfigurationRepo.getModelByNameAndType("gemini-pro-test",
+                ModelType.TEXT);
+        ModelConfigurationEntity updatedImageModel1 = modelConfigurationRepo.getModelByNameAndType("dall-e-test",
+                ModelType.IMAGE);
 
         // Text models: only textModel2 should be default
         assertThat(updatedTextModel1.isDefault()).isFalse();
@@ -250,7 +258,7 @@ class ModelConfigurationIntegrationTest extends BaseIntegrationTest {
         modelConfigurationRepo.save(testImageModel2);
 
         // When
-        List<ModelConfigurationEntity> textModels = modelConfigurationRepo.getTextModels();
+        List<ModelConfigurationEntity> textModels = modelConfigurationRepo.getModelsByType(ModelType.TEXT);
 
         // Then
         assertThat(textModels).hasSize(2);
@@ -268,7 +276,7 @@ class ModelConfigurationIntegrationTest extends BaseIntegrationTest {
         modelConfigurationRepo.save(testImageModel2);
 
         // When
-        List<ModelConfigurationEntity> imageModels = modelConfigurationRepo.getImageModels();
+        List<ModelConfigurationEntity> imageModels = modelConfigurationRepo.getModelsByType(ModelType.IMAGE);
 
         // Then
         assertThat(imageModels).hasSize(2);
@@ -326,7 +334,8 @@ class ModelConfigurationIntegrationTest extends BaseIntegrationTest {
         // Given
         testTextModel1.setDefault(true);
         modelConfigurationRepo.save(testTextModel1);
-        ModelConfigurationEntity savedModel = modelConfigurationRepo.getModelByTextName("gpt-4-test");
+        ModelConfigurationEntity savedModel = modelConfigurationRepo.getModelByNameAndType("gpt-4-test",
+                ModelType.TEXT);
 
         // When & Then
         assertThat(savedModel.isDefault()).isTrue();
@@ -343,7 +352,8 @@ class ModelConfigurationIntegrationTest extends BaseIntegrationTest {
         testTextModel1.setEnabled(false);
         testTextModel1.setDefault(false);
         modelConfigurationRepo.save(testTextModel1);
-        ModelConfigurationEntity savedModel = modelConfigurationRepo.getModelByTextName("gpt-4-test");
+        ModelConfigurationEntity savedModel = modelConfigurationRepo.getModelByNameAndType("gpt-4-test",
+                ModelType.TEXT);
 
         // When & Then
         assertThrows(AppException.class, () -> {

@@ -5,6 +5,7 @@ import com.datn.datnbe.ai.config.chatmodelconfiguration.ModelProperties;
 import com.datn.datnbe.ai.dto.request.UpdateModelStatusRequest;
 import com.datn.datnbe.ai.dto.response.ModelResponseDto;
 import com.datn.datnbe.ai.entity.ModelConfigurationEntity;
+import com.datn.datnbe.ai.enums.ModelType;
 import com.datn.datnbe.ai.mapper.ModelDataMapper;
 import com.datn.datnbe.ai.repository.interfaces.ModelConfigurationRepo;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
@@ -37,7 +38,7 @@ public class ModelSelectionManagement implements ModelSelectionApi {
 
     @Override
     public List<ModelResponseDto> getTextModelConfigurations() {
-        var models = modelConfigurationRepo.getTextModels()
+        var models = modelConfigurationRepo.getModelsByType(ModelType.TEXT)
                 .stream()
                 .sorted(Comparator.comparing(ModelConfigurationEntity::getProvider))
                 .toList();
@@ -47,7 +48,7 @@ public class ModelSelectionManagement implements ModelSelectionApi {
 
     @Override
     public List<ModelResponseDto> getImageModelConfigurations() {
-        var models = modelConfigurationRepo.getImageModels()
+        var models = modelConfigurationRepo.getModelsByType(ModelType.IMAGE)
                 .stream()
                 .sorted(Comparator.comparing(ModelConfigurationEntity::getProvider))
                 .toList();
@@ -61,38 +62,38 @@ public class ModelSelectionManagement implements ModelSelectionApi {
             throw new AppException(ErrorCode.MODEL_NOT_FOUND, "Model with ID " + modelId + " does not exist");
         }
 
-        Boolean isEnabled = request.getIsEnable();
-        Boolean isDefault = request.getIsDefault();
+        final Boolean isEnabled = request.getIsEnable();
+        final Boolean isDefault = request.getIsDefault();
 
-        // If both fields are null, throw an exception
+        // Nothing to update
         if (isEnabled == null && isDefault == null) {
             throw new AppException(ErrorCode.INVALID_MODEL_STATUS,
                     "At least one of isEnabled or isDefault must be provided");
         }
 
-        // If both are provided, ensure that a model cannot be default if it is disabled
-        if (isEnabled != null && isDefault != null) {
-            if (!isEnabled && isDefault) {
+        // If setting default=true, ensure effective enabled state is true
+        if (Boolean.TRUE.equals(isDefault)) {
+            boolean effectiveEnabled = (isEnabled != null) ? isEnabled : modelConfigurationRepo.isModelEnabled(modelId);
+            if (!effectiveEnabled) {
                 throw new AppException(ErrorCode.INVALID_MODEL_STATUS, "A model cannot be default if it is disabled");
             }
-
-            modelConfigurationRepo.setEnabled(modelId, isEnabled);
         }
 
-        // Update default status if provided
-        // Use the new method that only affects models of the same type
+        // Apply updates (each independently if present)
+        if (isEnabled != null) {
+            modelConfigurationRepo.setEnabled(modelId, isEnabled);
+        }
         if (isDefault != null) {
             modelConfigurationRepo.setDefault(modelId, isDefault);
         }
 
         var modelEntity = modelConfigurationRepo.getModelById(modelId);
-
         return modelDataMapper.toModelResponseDto(modelEntity);
     }
 
     @Override
     public boolean isModelEnabled(String modelName) {
-        var modelEntity = modelConfigurationRepo.getModelByTextName(modelName);
+        var modelEntity = modelConfigurationRepo.getModelByName(modelName);
 
         return modelConfigurationRepo.isModelEnabled(modelEntity.getModelId());
     }

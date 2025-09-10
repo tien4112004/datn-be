@@ -38,17 +38,10 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
     }
 
     @Override
-    public ModelConfigurationEntity getModelByTextName(String modelName) {
-        return modelConfigurationJPARepo.findByModelNameAndModelType(modelName, ModelType.TEXT)
-                .orElseThrow(
-                        () -> new AppException(ErrorCode.MODEL_NOT_FOUND, "Model not found with name: " + modelName));
-    }
-
-    @Override
-    public ModelConfigurationEntity getModelByImageName(String modelName) {
-        return modelConfigurationJPARepo.findByModelNameAndModelType(modelName, ModelType.IMAGE)
+    public ModelConfigurationEntity getModelByNameAndType(String modelName, ModelType modelType) {
+        return modelConfigurationJPARepo.findByModelNameAndModelType(modelName, modelType)
                 .orElseThrow(() -> new AppException(ErrorCode.MODEL_NOT_FOUND,
-                        "Image model not found with name: " + modelName));
+                        "Model not found with name: " + modelName + " and type: " + modelType));
     }
 
     @Override
@@ -109,6 +102,13 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
     }
 
     @Override
+    public ModelConfigurationEntity getModelByName(String modelName) {
+        return modelConfigurationJPARepo.findByModelName(modelName)
+                .orElseThrow(
+                        () -> new AppException(ErrorCode.MODEL_NOT_FOUND, "Model not found with name: " + modelName));
+    }
+
+    @Override
     public boolean existsByModelNameAndType(String modelName, String modelType) {
         return modelConfigurationJPARepo.existsByModelNameAndModelType(modelName, ModelType.valueOf(modelType));
     }
@@ -141,12 +141,7 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
     }
 
     @Override
-    public List<ModelConfigurationEntity> getTextModels() {
-        return modelConfigurationJPARepo.findAllByModelType(ModelType.TEXT);
-    }
-
-    @Override
-    public List<ModelConfigurationEntity> getImageModels() {
-        return modelConfigurationJPARepo.findAllByModelType(ModelType.IMAGE);
+    public List<ModelConfigurationEntity> getModelsByType(ModelType modelType) {
+        return modelConfigurationJPARepo.findAllByModelType(modelType);
     }
 }

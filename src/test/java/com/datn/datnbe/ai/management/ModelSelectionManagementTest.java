@@ -130,7 +130,7 @@ class ModelSelectionManagementTest {
     void isModelEnabled_ModelEnabled() {
         // Given
         String modelName = "gpt-4";
-        when(modelConfigurationRepo.getModelByTextName(modelName)).thenReturn(modelEntity1);
+        when(modelConfigurationRepo.getModelByName(modelName)).thenReturn(modelEntity1);
         when(modelConfigurationRepo.isModelEnabled(modelEntity1.getModelId())).thenReturn(true);
 
         // When
@@ -138,7 +138,7 @@ class ModelSelectionManagementTest {
 
         // Then
         assertTrue(result);
-        verify(modelConfigurationRepo).getModelByTextName(modelName);
+        verify(modelConfigurationRepo).getModelByName(modelName);
         verify(modelConfigurationRepo).isModelEnabled(modelEntity1.getModelId());
     }
 
@@ -147,7 +147,7 @@ class ModelSelectionManagementTest {
     void isModelEnabled_ModelDisabled() {
         // Given
         String modelName = "claude-3";
-        when(modelConfigurationRepo.getModelByTextName(modelName)).thenReturn(modelEntity2);
+        when(modelConfigurationRepo.getModelByName(modelName)).thenReturn(modelEntity2);
         when(modelConfigurationRepo.isModelEnabled(modelEntity2.getModelId())).thenReturn(false);
 
         // When
@@ -155,7 +155,7 @@ class ModelSelectionManagementTest {
 
         // Then
         assertFalse(result);
-        verify(modelConfigurationRepo).getModelByTextName(modelName);
+        verify(modelConfigurationRepo).getModelByName(modelName);
         verify(modelConfigurationRepo).isModelEnabled(modelEntity2.getModelId());
     }
 
@@ -164,8 +164,7 @@ class ModelSelectionManagementTest {
     void isModelEnabled_ModelNotFound() {
         // Given
         String modelName = "non-existent-model";
-        when(modelConfigurationRepo.getModelByTextName(modelName))
-                .thenThrow(new AppException(ErrorCode.MODEL_NOT_FOUND));
+        when(modelConfigurationRepo.getModelByName(modelName)).thenThrow(new AppException(ErrorCode.MODEL_NOT_FOUND));
 
         // When & Then
         AppException exception = assertThrows(AppException.class,
@@ -312,7 +311,7 @@ class ModelSelectionManagementTest {
     void getTextModelConfigurations_WithValidData_ShouldReturnSortedList() {
         // Given
         List<ModelConfigurationEntity> textModels = Arrays.asList(textModel1, textModel2);
-        when(modelConfigurationRepo.getTextModels()).thenReturn(textModels);
+        when(modelConfigurationRepo.getModelsByType(any())).thenReturn(textModels);
 
         // When
         List<ModelResponseDto> result = modelSelectionService.getTextModelConfigurations();
@@ -339,7 +338,7 @@ class ModelSelectionManagementTest {
     @DisplayName("Should return empty list when no text models exist")
     void getTextModelModelConfigurations_WithNoTextModels_ShouldReturnEmptyList() {
         // Given
-        when(modelConfigurationRepo.getTextModels()).thenReturn(Arrays.asList());
+        when(modelConfigurationRepo.getModelsByType(any())).thenReturn(Arrays.asList());
 
         // When
         List<ModelResponseDto> result = modelSelectionService.getTextModelConfigurations();
@@ -354,7 +353,7 @@ class ModelSelectionManagementTest {
     void getTextModelModelConfigurations_WithSingleTextModel_ShouldReturnSingleItem() {
         // Given
         List<ModelConfigurationEntity> textModels = Arrays.asList(textModel1);
-        when(modelConfigurationRepo.getTextModels()).thenReturn(textModels);
+        when(modelConfigurationRepo.getModelsByType(any())).thenReturn(textModels);
 
         // When
         List<ModelResponseDto> result = modelSelectionService.getTextModelConfigurations();
@@ -373,7 +372,7 @@ class ModelSelectionManagementTest {
     @DisplayName("Should handle repository exception for text models")
     void getTextModelConfigurations_WithRepositoryException_ShouldThrowException() {
         // Given
-        when(modelConfigurationRepo.getTextModels()).thenThrow(new RuntimeException("Database connection failed"));
+        when(modelConfigurationRepo.getModelsByType(any())).thenThrow(new RuntimeException("Database connection failed"));
 
         // When & Then
         RuntimeException exception = assertThrows(RuntimeException.class,
@@ -390,7 +389,7 @@ class ModelSelectionManagementTest {
     void getImageModelConfigurations_WithValidData_ShouldReturnSortedList() {
         // Given
         List<ModelConfigurationEntity> imageModels = Arrays.asList(imageModel1, imageModel2);
-        when(modelConfigurationRepo.getImageModels()).thenReturn(imageModels);
+        when(modelConfigurationRepo.getModelsByType(any())).thenReturn(imageModels);
 
         // When
         List<ModelResponseDto> result = modelSelectionService.getImageModelConfigurations();
@@ -417,7 +416,7 @@ class ModelSelectionManagementTest {
     @DisplayName("Should return empty list when no image models exist")
     void getImageModelConfigurations_WithNoImageModels_ShouldReturnEmptyList() {
         // Given
-        when(modelConfigurationRepo.getImageModels()).thenReturn(Arrays.asList());
+        when(modelConfigurationRepo.getModelsByType(any())).thenReturn(Arrays.asList());
 
         // When
         List<ModelResponseDto> result = modelSelectionService.getImageModelConfigurations();
@@ -432,7 +431,7 @@ class ModelSelectionManagementTest {
     void getImageModelConfigurations_WithSingleImageModel_ShouldReturnSingleItem() {
         // Given
         List<ModelConfigurationEntity> imageModels = Arrays.asList(imageModel1);
-        when(modelConfigurationRepo.getImageModels()).thenReturn(imageModels);
+        when(modelConfigurationRepo.getModelsByType(any())).thenReturn(imageModels);
 
         // When
         List<ModelResponseDto> result = modelSelectionService.getImageModelConfigurations();
@@ -452,7 +451,7 @@ class ModelSelectionManagementTest {
     void getImageModelConfigurations_WithDisabledModels_ShouldIncludeDisabledModels() {
         // Given
         List<ModelConfigurationEntity> imageModels = Arrays.asList(imageModel2); // imageModel2 is disabled
-        when(modelConfigurationRepo.getImageModels()).thenReturn(imageModels);
+        when(modelConfigurationRepo.getModelsByType(any())).thenReturn(imageModels);
 
         // When
         List<ModelResponseDto> result = modelSelectionService.getImageModelConfigurations();
@@ -469,7 +468,7 @@ class ModelSelectionManagementTest {
     @DisplayName("Should handle repository exception for image models")
     void getImageModelConfigurations_WithRepositoryException_ShouldThrowException() {
         // Given
-        when(modelConfigurationRepo.getImageModels()).thenThrow(new RuntimeException("Database connection failed"));
+        when(modelConfigurationRepo.getModelsByType(any())).thenThrow(new RuntimeException("Database connection failed"));
 
         // When & Then
         RuntimeException exception = assertThrows(RuntimeException.class,
@@ -488,8 +487,8 @@ class ModelSelectionManagementTest {
         List<ModelConfigurationEntity> textModels = Arrays.asList(textModel1, textModel2);
         List<ModelConfigurationEntity> imageModels = Arrays.asList(imageModel1, imageModel2);
 
-        when(modelConfigurationRepo.getTextModels()).thenReturn(textModels);
-        when(modelConfigurationRepo.getImageModels()).thenReturn(imageModels);
+        when(modelConfigurationRepo.getModelsByType(ModelType.TEXT)).thenReturn(textModels);
+        when(modelConfigurationRepo.getModelsByType(ModelType.IMAGE)).thenReturn(imageModels);
 
         // When
         List<ModelResponseDto> textResult = modelSelectionService.getTextModelConfigurations();
