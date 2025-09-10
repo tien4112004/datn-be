@@ -59,13 +59,15 @@ public class ModelConfigurationController {
     /**
      * Endpoint to update status of a model by its ID.
      *
-     * @param id The ID of the model to disable.
+     * @param id      The ID of the model to update.
+     * @param request The update request containing isEnabled and/or isDefault
+     *                status.
      * @return ResponseEntity indicating the result of the operation.
      */
     @PatchMapping(value = "/{id}")
     public ResponseEntity<AppResponseDto<ModelResponseDto>> updateModelStatus(@PathVariable Integer id,
             @RequestBody UpdateModelStatusRequest request) {
-        log.info("Enabling model with ID: {}", id);
+        log.info("Updating model status with ID: {}", id);
         var updatedModel = modelSelectionApi.setModelStatus(id, request);
 
         return ResponseEntity.ok(AppResponseDto.success(updatedModel));

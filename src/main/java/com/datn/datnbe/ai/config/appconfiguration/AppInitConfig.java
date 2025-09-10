@@ -36,7 +36,7 @@ public class AppInitConfig {
 
             // Synchronize configured models with existing models
             configuredModels.forEach(model -> {
-                if (!modelSelectionApi.existByName(model.getModelName())) {
+                if (!modelSelectionApi.existByNameAndType(model.getModelName(), model.getModelType().name())) {
                     log.info("Adding new model: {}", model.getModelName());
                     modelSelectionApi.saveModelInfo(model);
                 } else {

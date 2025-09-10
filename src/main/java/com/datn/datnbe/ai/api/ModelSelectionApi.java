@@ -44,6 +44,7 @@ public interface ModelSelectionApi {
      * Checks if a model is enabled by its ID.
      *
      * @param modelName the ID of the model to check
+     *
      * @return true if the model is enabled, false otherwise
      */
     boolean isModelEnabled(String modelName);
@@ -63,6 +64,15 @@ public interface ModelSelectionApi {
      * @return true if the model exists, false otherwise
      */
     boolean existByName(String modelName);
+
+    /**
+     * Checks if a model exists by its name and type.
+     *
+     * @param modelName the name of the model to check
+     * @param modelType the type of the model to check
+     * @return true if the model exists, false otherwise
+     */
+    boolean existByNameAndType(String modelName, String modelType);
 
     /**
      * Removes a model by its name. This method is only used internally

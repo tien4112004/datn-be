@@ -11,7 +11,9 @@ public interface ModelConfigurationRepo {
 
     ModelConfigurationEntity getModelById(Integer modelId);
 
-    ModelConfigurationEntity getModelByName(String modelName);
+    ModelConfigurationEntity getModelByTextName(String modelName);
+
+    ModelConfigurationEntity getModelByImageName(String modelName);
 
     boolean isModelEnabled(Integer modelId);
 
@@ -28,4 +30,6 @@ public interface ModelConfigurationRepo {
     void setEnabled(Integer modelId, boolean isEnabled);
 
     void setDefault(Integer modelId, boolean isDefault);
+
+    boolean existsByModelNameAndType(String modelName, String modelType);
 }

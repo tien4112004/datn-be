@@ -64,20 +64,10 @@ public class ModelSelectionManagement implements ModelSelectionApi {
         Boolean isEnabled = request.getIsEnable();
         Boolean isDefault = request.getIsDefault();
 
-        // If both isEnabled and isDefault are null, throw an exception
+        // If both fields are null, throw an exception
         if (isEnabled == null && isDefault == null) {
             throw new AppException(ErrorCode.INVALID_MODEL_STATUS,
                     "At least one of isEnabled or isDefault must be provided");
-        }
-
-        // If only isDefault is provided, update the model default status
-        if (isEnabled != null && isDefault == null) {
-            modelConfigurationRepo.setEnabled(modelId, isEnabled);
-        }
-
-        // If only isEnabled is provided, update the model enabled status
-        if (isDefault != null && isEnabled == null) {
-            modelConfigurationRepo.setDefault(modelId, isDefault);
         }
 
         // If both are provided, ensure that a model cannot be default if it is disabled
@@ -87,6 +77,11 @@ public class ModelSelectionManagement implements ModelSelectionApi {
             }
 
             modelConfigurationRepo.setEnabled(modelId, isEnabled);
+        }
+
+        // Update default status if provided
+        // Use the new method that only affects models of the same type
+        if (isDefault != null) {
             modelConfigurationRepo.setDefault(modelId, isDefault);
         }
 
@@ -97,7 +92,7 @@ public class ModelSelectionManagement implements ModelSelectionApi {
 
     @Override
     public boolean isModelEnabled(String modelName) {
-        var modelEntity = modelConfigurationRepo.getModelByName(modelName);
+        var modelEntity = modelConfigurationRepo.getModelByTextName(modelName);
 
         return modelConfigurationRepo.isModelEnabled(modelEntity.getModelId());
     }
@@ -115,6 +110,11 @@ public class ModelSelectionManagement implements ModelSelectionApi {
     @Override
     public boolean existByName(String modelName) {
         return modelConfigurationRepo.existsByModelName(modelName);
+    }
+
+    @Override
+    public boolean existByNameAndType(String modelName, String modelType) {
+        return modelConfigurationRepo.existsByModelNameAndType(modelName, modelType);
     }
 
     @Override

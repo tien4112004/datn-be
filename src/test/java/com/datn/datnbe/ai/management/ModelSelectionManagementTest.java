@@ -8,6 +8,7 @@ import com.datn.datnbe.ai.config.chatmodelconfiguration.ModelProperties;
 import com.datn.datnbe.ai.dto.request.UpdateModelStatusRequest;
 import com.datn.datnbe.ai.dto.response.ModelResponseDto;
 import com.datn.datnbe.ai.entity.ModelConfigurationEntity;
+import com.datn.datnbe.ai.enums.ModelType;
 import com.datn.datnbe.ai.mapper.ModelDataMapper;
 import com.datn.datnbe.ai.repository.interfaces.ModelConfigurationRepo;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
@@ -34,9 +35,11 @@ class ModelSelectionManagementTest {
     private ModelConfigurationEntity modelEntity1;
     private ModelConfigurationEntity modelEntity2;
     private ModelConfigurationEntity modelEntity3;
-    private ModelResponseDto responseDto;
+    private ModelConfigurationEntity textModel1;
+    private ModelConfigurationEntity textModel2;
+    private ModelConfigurationEntity imageModel1;
+    private ModelConfigurationEntity imageModel2;
     private ModelProperties.ModelInfo modelInfo;
-    private UpdateModelStatusRequest updateModelStatusRequest;
 
     @BeforeEach
     void setUp() {
@@ -50,6 +53,7 @@ class ModelSelectionManagementTest {
         modelEntity1.setDisplayName("GPT-4");
         modelEntity1.setEnabled(true);
         modelEntity1.setDefault(false);
+        modelEntity1.setModelType(ModelType.TEXT);
         modelEntity1.setProvider("openai");
 
         modelEntity2 = new ModelConfigurationEntity();
@@ -58,6 +62,7 @@ class ModelSelectionManagementTest {
         modelEntity2.setDisplayName("Claude 3");
         modelEntity2.setEnabled(false);
         modelEntity2.setDefault(true);
+        modelEntity2.setModelType(ModelType.TEXT);
         modelEntity2.setProvider("anthropic");
 
         modelEntity3 = new ModelConfigurationEntity();
@@ -66,15 +71,8 @@ class ModelSelectionManagementTest {
         modelEntity3.setDisplayName("Gemini Pro");
         modelEntity3.setEnabled(true);
         modelEntity3.setDefault(false);
+        modelEntity3.setModelType(ModelType.TEXT);
         modelEntity3.setProvider("google");
-
-        responseDto = ModelResponseDto.builder()
-                .modelId("1")
-                .modelName("gpt-4")
-                .displayName("GPT-4")
-                .isEnabled(true)
-                .isDefault(false)
-                .build();
 
         // Setup test ModelInfo
         modelInfo = new ModelProperties.ModelInfo();
@@ -83,9 +81,43 @@ class ModelSelectionManagementTest {
         modelInfo.setProvider("test-provider");
         modelInfo.setDefaultModel(true);
 
-        // Setup UpdateModelStatusRequest - using reflection or helper method since
-        // fields are final
-        updateModelStatusRequest = createUpdateModelStatusRequest(true, false);
+        // Setup text models for text/image specific tests
+        textModel1 = new ModelConfigurationEntity();
+        textModel1.setModelId(10);
+        textModel1.setModelName("gpt-4-text");
+        textModel1.setDisplayName("GPT-4 Text");
+        textModel1.setProvider("openai");
+        textModel1.setEnabled(true);
+        textModel1.setDefault(true);
+        textModel1.setModelType(ModelType.TEXT);
+
+        textModel2 = new ModelConfigurationEntity();
+        textModel2.setModelId(11);
+        textModel2.setModelName("claude-3-text");
+        textModel2.setDisplayName("Claude 3 Text");
+        textModel2.setProvider("anthropic");
+        textModel2.setEnabled(true);
+        textModel2.setDefault(false);
+        textModel2.setModelType(ModelType.TEXT);
+
+        // Setup image models for text/image specific tests
+        imageModel1 = new ModelConfigurationEntity();
+        imageModel1.setModelId(20);
+        imageModel1.setModelName("dall-e-3");
+        imageModel1.setDisplayName("DALL-E 3");
+        imageModel1.setProvider("openai");
+        imageModel1.setEnabled(true);
+        imageModel1.setDefault(true);
+        imageModel1.setModelType(ModelType.IMAGE);
+
+        imageModel2 = new ModelConfigurationEntity();
+        imageModel2.setModelId(21);
+        imageModel2.setModelName("midjourney");
+        imageModel2.setDisplayName("Midjourney");
+        imageModel2.setProvider("midjourney");
+        imageModel2.setEnabled(false);
+        imageModel2.setDefault(false);
+        imageModel2.setModelType(ModelType.IMAGE);
     }
 
     // Helper method to create UpdateModelStatusRequest instances
@@ -98,7 +130,7 @@ class ModelSelectionManagementTest {
     void isModelEnabled_ModelEnabled() {
         // Given
         String modelName = "gpt-4";
-        when(modelConfigurationRepo.getModelByName(modelName)).thenReturn(modelEntity1);
+        when(modelConfigurationRepo.getModelByTextName(modelName)).thenReturn(modelEntity1);
         when(modelConfigurationRepo.isModelEnabled(modelEntity1.getModelId())).thenReturn(true);
 
         // When
@@ -106,7 +138,7 @@ class ModelSelectionManagementTest {
 
         // Then
         assertTrue(result);
-        verify(modelConfigurationRepo).getModelByName(modelName);
+        verify(modelConfigurationRepo).getModelByTextName(modelName);
         verify(modelConfigurationRepo).isModelEnabled(modelEntity1.getModelId());
     }
 
@@ -115,7 +147,7 @@ class ModelSelectionManagementTest {
     void isModelEnabled_ModelDisabled() {
         // Given
         String modelName = "claude-3";
-        when(modelConfigurationRepo.getModelByName(modelName)).thenReturn(modelEntity2);
+        when(modelConfigurationRepo.getModelByTextName(modelName)).thenReturn(modelEntity2);
         when(modelConfigurationRepo.isModelEnabled(modelEntity2.getModelId())).thenReturn(false);
 
         // When
@@ -123,7 +155,7 @@ class ModelSelectionManagementTest {
 
         // Then
         assertFalse(result);
-        verify(modelConfigurationRepo).getModelByName(modelName);
+        verify(modelConfigurationRepo).getModelByTextName(modelName);
         verify(modelConfigurationRepo).isModelEnabled(modelEntity2.getModelId());
     }
 
@@ -132,7 +164,8 @@ class ModelSelectionManagementTest {
     void isModelEnabled_ModelNotFound() {
         // Given
         String modelName = "non-existent-model";
-        when(modelConfigurationRepo.getModelByName(modelName)).thenThrow(new AppException(ErrorCode.MODEL_NOT_FOUND));
+        when(modelConfigurationRepo.getModelByTextName(modelName))
+                .thenThrow(new AppException(ErrorCode.MODEL_NOT_FOUND));
 
         // When & Then
         AppException exception = assertThrows(AppException.class,
@@ -140,43 +173,6 @@ class ModelSelectionManagementTest {
 
         assertEquals(ErrorCode.MODEL_NOT_FOUND, exception.getErrorCode());
         verify(modelConfigurationRepo, never()).isModelEnabled(anyInt());
-    }
-
-    @Test
-    @DisplayName("Should save model info successfully")
-    void saveModelInfo_Success() {
-
-        // Given
-        ModelConfigurationEntity mappedEntity = new ModelConfigurationEntity();
-        mappedEntity.setModelName(modelInfo.getModelName());
-        mappedEntity.setDisplayName(modelInfo.getDisplayName());
-        mappedEntity.setProvider(modelInfo.getProvider());
-
-        // When
-        assertDoesNotThrow(() -> modelSelectionService.saveModelInfo(modelInfo));
-
-        // Then
-        verify(modelConfigurationRepo)
-                .save(argThat(entity -> entity.isEnabled() && entity.isDefault() == modelInfo.isDefaultModel()
-                        && entity.getModelName().equals(modelInfo.getModelName())));
-    }
-
-    @Test
-    @DisplayName("Should save model info with correct default setting")
-    void saveModelInfo_WithNonDefaultModel() {
-        // Given
-        modelInfo.setDefaultModel(false);
-        ModelConfigurationEntity mappedEntity = new ModelConfigurationEntity();
-        mappedEntity.setModelName(modelInfo.getModelName());
-        mappedEntity.setDisplayName(modelInfo.getDisplayName());
-        mappedEntity.setProvider(modelInfo.getProvider());
-
-        // When
-        assertDoesNotThrow(() -> modelSelectionService.saveModelInfo(modelInfo));
-
-        // Then
-        verify(modelConfigurationRepo).save(argThat(entity -> entity.isEnabled() && !entity.isDefault()
-                && entity.getModelName().equals(modelInfo.getModelName())));
     }
 
     // ===============================
@@ -205,132 +201,19 @@ class ModelSelectionManagementTest {
         assertEquals("gpt-4", result.get(2).getModelName());
     }
 
-  @Test
-  @DisplayName("Should return empty list when no models exist")
-  void getModelConfigurations_EmptyList() {
-    // Given
-    when(modelConfigurationRepo.getModels()).thenReturn(Arrays.asList());
-
-    // When
-    List<ModelResponseDto> result = modelSelectionService.getModelConfigurations();
-
-    // Then
-    assertNotNull(result);
-    assertTrue(result.isEmpty());
-    verify(modelConfigurationRepo).getModels();
-  }
-
-    // ===============================
-    // Tests for setModelStatus
-    // ===============================
-
     @Test
-    @DisplayName("Should update model enabled status when only isEnabled is provided")
-    void setModelStatus_OnlyEnabledProvided_Success() {
+    @DisplayName("Should return empty list when no models exist")
+    void getModelConfigurations_EmptyList() {
         // Given
-        Integer modelId = 1;
-        UpdateModelStatusRequest request = createUpdateModelStatusRequest(true, null);
-        when(modelConfigurationRepo.existsByModelId(modelId)).thenReturn(true);
-        when(modelConfigurationRepo.getModelById(modelId)).thenReturn(modelEntity1);
+        when(modelConfigurationRepo.getModels()).thenReturn(Arrays.asList());
 
         // When
-        ModelResponseDto result = modelSelectionService.setModelStatus(modelId, request);
+        List<ModelResponseDto> result = modelSelectionService.getModelConfigurations();
 
         // Then
         assertNotNull(result);
-        verify(modelConfigurationRepo).setEnabled(modelId, true);
-        verify(modelConfigurationRepo, never()).setDefault(anyInt(), any(Boolean.class));
-        verify(modelConfigurationRepo).getModelById(modelId);
-    }
-
-    @Test
-    @DisplayName("Should update model default status when only isDefault is provided")
-    void setModelStatus_OnlyDefaultProvided_Success() {
-        // Given
-        Integer modelId = 1;
-        UpdateModelStatusRequest request = createUpdateModelStatusRequest(null, true);
-        when(modelConfigurationRepo.existsByModelId(modelId)).thenReturn(true);
-        when(modelConfigurationRepo.getModelById(modelId)).thenReturn(modelEntity1);
-
-        // When
-        ModelResponseDto result = modelSelectionService.setModelStatus(modelId, request);
-
-        // Then
-        assertNotNull(result);
-        verify(modelConfigurationRepo).setDefault(modelId, true);
-        verify(modelConfigurationRepo, never()).setEnabled(anyInt(), any(Boolean.class));
-        verify(modelConfigurationRepo).getModelById(modelId);
-    }
-
-    @Test
-    @DisplayName("Should update both enabled and default status when both are provided")
-    void setModelStatus_BothProvided_Success() {
-        // Given
-        Integer modelId = 1;
-        UpdateModelStatusRequest request = createUpdateModelStatusRequest(true, true);
-
-        when(modelConfigurationRepo.getModelById(modelId)).thenReturn(modelEntity1);
-        when(modelConfigurationRepo.existsByModelId(modelId)).thenReturn(true);
-
-        // When
-        ModelResponseDto result = modelSelectionService.setModelStatus(modelId, request);
-
-        // Then
-        assertNotNull(result);
-        verify(modelConfigurationRepo).setEnabled(modelId, true);
-        verify(modelConfigurationRepo).setDefault(modelId, true);
-        verify(modelConfigurationRepo).getModelById(modelId);
-    }
-
-    @Test
-    @DisplayName("Should throw exception when trying to set disabled model as default")
-    void setModelStatus_DisabledAndDefault_ThrowsException() {
-        // Given
-        Integer modelId = 1;
-        UpdateModelStatusRequest request = createUpdateModelStatusRequest(false, true);
-        when(modelConfigurationRepo.existsByModelId(modelId)).thenReturn(true);
-
-        // When & Then
-        AppException exception = assertThrows(AppException.class,
-                () -> modelSelectionService.setModelStatus(modelId, request));
-
-        assertEquals(ErrorCode.INVALID_MODEL_STATUS, exception.getErrorCode());
-        assertEquals("A model cannot be default if it is disabled", exception.getMessage());
-        verify(modelConfigurationRepo, never()).setEnabled(anyInt(), any(Boolean.class));
-        verify(modelConfigurationRepo, never()).setDefault(anyInt(), any(Boolean.class));
-    }
-
-    @Test
-    @DisplayName("Should throw exception when both isEnabled and isDefault are null")
-    void setModelStatus_BothNull_ThrowsException() {
-        // Given
-        Integer modelId = 1;
-        UpdateModelStatusRequest request = createUpdateModelStatusRequest(null, null);
-        when(modelConfigurationRepo.existsByModelId(modelId)).thenReturn(true);
-
-        // When & Then
-        AppException exception = assertThrows(AppException.class,
-                () -> modelSelectionService.setModelStatus(modelId, request));
-
-        assertEquals(ErrorCode.INVALID_MODEL_STATUS, exception.getErrorCode());
-        assertEquals("At least one of isEnabled or isDefault must be provided", exception.getMessage());
-        verify(modelConfigurationRepo, never()).setEnabled(anyInt(), any(Boolean.class));
-        verify(modelConfigurationRepo, never()).setDefault(anyInt(), any(Boolean.class));
-    }
-
-    @Test
-    @DisplayName("Should handle model not found in setModelStatus")
-    void setModelStatus_ModelNotFound_ThrowsException() {
-        // Given
-        Integer modelId = 999;
-        UpdateModelStatusRequest request = createUpdateModelStatusRequest(true, false);
-        when(modelConfigurationRepo.existsByModelId(modelId)).thenReturn(false);
-
-        // When & Then
-        AppException exception = assertThrows(AppException.class,
-                () -> modelSelectionService.setModelStatus(modelId, request));
-
-        assertEquals(ErrorCode.MODEL_NOT_FOUND, exception.getErrorCode());
+        assertTrue(result.isEmpty());
+        verify(modelConfigurationRepo).getModels();
     }
 
     // ===============================
@@ -405,71 +288,227 @@ class ModelSelectionManagementTest {
     // Additional edge case tests
     // ===============================
 
-  @Test
-  @DisplayName("Should handle repository exception during model configuration retrieval")
-  void getModelConfigurations_RepositoryException_ThrowsException() {
-    // Given
-    when(modelConfigurationRepo.getModels())
-        .thenThrow(new RuntimeException("Database connection error"));
+    @Test
+    @DisplayName("Should handle repository exception during model configuration retrieval")
+    void getModelConfigurations_RepositoryException_ThrowsException() {
+        // Given
+        when(modelConfigurationRepo.getModels())
+                .thenThrow(new RuntimeException("Database connection error"));
 
-    // When & Then
-    RuntimeException exception =
-        assertThrows(RuntimeException.class, () -> modelSelectionService.getModelConfigurations());
+        // When & Then
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> modelSelectionService.getModelConfigurations());
 
-    assertEquals("Database connection error", exception.getMessage());
-    verify(modelConfigurationRepo).getModels();
-  }
+        assertEquals("Database connection error", exception.getMessage());
+        verify(modelConfigurationRepo).getModels();
+    }
 
-  @Test
-  @DisplayName("Should handle repository exception during model save")
-  void saveModelInfo_RepositoryException_ThrowsException() {
-    // Given
-    when(modelConfigurationRepo.save(any(ModelConfigurationEntity.class)))
-        .thenThrow(new RuntimeException("Database save error"));
-
-    // When & Then
-    RuntimeException exception =
-        assertThrows(RuntimeException.class, () -> modelSelectionService.saveModelInfo(modelInfo));
-
-    assertEquals("Database save error", exception.getMessage());
-    verify(modelConfigurationRepo).save(any(ModelConfigurationEntity.class));
-  }
+    // ===============================
+    // Tests for getTextModelModelConfigurations
+    // ===============================
 
     @Test
-    @DisplayName("Should disable model successfully when enabled is false and default is null")
-    void setModelStatus_DisableModel_Success() {
+    @DisplayName("Should return sorted list of text model configurations")
+    void getTextModelModelConfigurations_WithValidData_ShouldReturnSortedList() {
         // Given
-        Integer modelId = 1;
-        UpdateModelStatusRequest request = createUpdateModelStatusRequest(false, null);
-        when(modelConfigurationRepo.existsByModelId(modelId)).thenReturn(true);
-        when(modelConfigurationRepo.getModelById(modelId)).thenReturn(modelEntity1);
+        List<ModelConfigurationEntity> textModels = Arrays.asList(textModel1, textModel2);
+        when(modelConfigurationRepo.getTextModels()).thenReturn(textModels);
 
         // When
-        ModelResponseDto result = modelSelectionService.setModelStatus(modelId, request);
+        List<ModelResponseDto> result = modelSelectionService.getTextModelModelConfigurations();
 
         // Then
         assertNotNull(result);
-        verify(modelConfigurationRepo).setEnabled(modelId, false);
-        verify(modelConfigurationRepo, never()).setDefault(anyInt(), any(Boolean.class));
-        verify(modelConfigurationRepo).getModelById(modelId);
+        assertEquals(2, result.size());
+
+        // Verify sorting by provider (anthropic comes before openai)
+        assertEquals("anthropic", result.get(0).getProvider());
+        assertEquals("claude-3-text", result.get(0).getModelName());
+        assertEquals("Claude 3 Text", result.get(0).getDisplayName());
+        assertTrue(result.get(0).isEnabled());
+        assertFalse(result.get(0).isDefault());
+
+        assertEquals("openai", result.get(1).getProvider());
+        assertEquals("gpt-4-text", result.get(1).getModelName());
+        assertEquals("GPT-4 Text", result.get(1).getDisplayName());
+        assertTrue(result.get(1).isEnabled());
+        assertTrue(result.get(1).isDefault());
     }
 
     @Test
-    @DisplayName("Should set model as non-default successfully when default is false and enabled is null")
-    void setModelStatus_SetNonDefault_Success() {
+    @DisplayName("Should return empty list when no text models exist")
+    void getTextModelModelConfigurations_WithNoTextModels_ShouldReturnEmptyList() {
         // Given
-        Integer modelId = 1;
-        UpdateModelStatusRequest request = createUpdateModelStatusRequest(null, false);
-        when(modelConfigurationRepo.existsByModelId(modelId)).thenReturn(true);
-        when(modelConfigurationRepo.getModelById(modelId)).thenReturn(modelEntity1);
+        when(modelConfigurationRepo.getTextModels()).thenReturn(Arrays.asList());
 
         // When
-        ModelResponseDto result = modelSelectionService.setModelStatus(modelId, request);
+        List<ModelResponseDto> result = modelSelectionService.getTextModelModelConfigurations();
 
         // Then
         assertNotNull(result);
-        verify(modelConfigurationRepo).setDefault(modelId, false);
-        verify(modelConfigurationRepo, never()).setEnabled(anyInt(), any(Boolean.class));
-        verify(modelConfigurationRepo).getModelById(modelId);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Should return single text model configuration")
+    void getTextModelModelConfigurations_WithSingleTextModel_ShouldReturnSingleItem() {
+        // Given
+        List<ModelConfigurationEntity> textModels = Arrays.asList(textModel1);
+        when(modelConfigurationRepo.getTextModels()).thenReturn(textModels);
+
+        // When
+        List<ModelResponseDto> result = modelSelectionService.getTextModelModelConfigurations();
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("gpt-4-text", result.get(0).getModelName());
+        assertEquals("GPT-4 Text", result.get(0).getDisplayName());
+        assertEquals("openai", result.get(0).getProvider());
+        assertTrue(result.get(0).isEnabled());
+        assertTrue(result.get(0).isDefault());
+    }
+
+    @Test
+    @DisplayName("Should handle repository exception for text models")
+    void getTextModelModelConfigurations_WithRepositoryException_ShouldThrowException() {
+        // Given
+        when(modelConfigurationRepo.getTextModels()).thenThrow(new RuntimeException("Database connection failed"));
+
+        // When & Then
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> modelSelectionService.getTextModelModelConfigurations());
+        assertEquals("Database connection failed", exception.getMessage());
+    }
+
+    // ===============================
+    // Tests for getImageModelConfigurations
+    // ===============================
+
+    @Test
+    @DisplayName("Should return sorted list of image model configurations")
+    void getImageModelConfigurations_WithValidData_ShouldReturnSortedList() {
+        // Given
+        List<ModelConfigurationEntity> imageModels = Arrays.asList(imageModel1, imageModel2);
+        when(modelConfigurationRepo.getImageModels()).thenReturn(imageModels);
+
+        // When
+        List<ModelResponseDto> result = modelSelectionService.getImageModelConfigurations();
+
+        // Then
+        assertNotNull(result);
+        assertEquals(2, result.size());
+
+        // Verify sorting by provider (midjourney comes before openai)
+        assertEquals("midjourney", result.get(0).getProvider());
+        assertEquals("midjourney", result.get(0).getModelName());
+        assertEquals("Midjourney", result.get(0).getDisplayName());
+        assertFalse(result.get(0).isEnabled());
+        assertFalse(result.get(0).isDefault());
+
+        assertEquals("openai", result.get(1).getProvider());
+        assertEquals("dall-e-3", result.get(1).getModelName());
+        assertEquals("DALL-E 3", result.get(1).getDisplayName());
+        assertTrue(result.get(1).isEnabled());
+        assertTrue(result.get(1).isDefault());
+    }
+
+    @Test
+    @DisplayName("Should return empty list when no image models exist")
+    void getImageModelConfigurations_WithNoImageModels_ShouldReturnEmptyList() {
+        // Given
+        when(modelConfigurationRepo.getImageModels()).thenReturn(Arrays.asList());
+
+        // When
+        List<ModelResponseDto> result = modelSelectionService.getImageModelConfigurations();
+
+        // Then
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Should return single image model configuration")
+    void getImageModelConfigurations_WithSingleImageModel_ShouldReturnSingleItem() {
+        // Given
+        List<ModelConfigurationEntity> imageModels = Arrays.asList(imageModel1);
+        when(modelConfigurationRepo.getImageModels()).thenReturn(imageModels);
+
+        // When
+        List<ModelResponseDto> result = modelSelectionService.getImageModelConfigurations();
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("dall-e-3", result.get(0).getModelName());
+        assertEquals("DALL-E 3", result.get(0).getDisplayName());
+        assertEquals("openai", result.get(0).getProvider());
+        assertTrue(result.get(0).isEnabled());
+        assertTrue(result.get(0).isDefault());
+    }
+
+    @Test
+    @DisplayName("Should handle disabled image models")
+    void getImageModelConfigurations_WithDisabledModels_ShouldIncludeDisabledModels() {
+        // Given
+        List<ModelConfigurationEntity> imageModels = Arrays.asList(imageModel2); // imageModel2 is disabled
+        when(modelConfigurationRepo.getImageModels()).thenReturn(imageModels);
+
+        // When
+        List<ModelResponseDto> result = modelSelectionService.getImageModelConfigurations();
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("midjourney", result.get(0).getModelName());
+        assertFalse(result.get(0).isEnabled());
+        assertFalse(result.get(0).isDefault());
+    }
+
+    @Test
+    @DisplayName("Should handle repository exception for image models")
+    void getImageModelConfigurations_WithRepositoryException_ShouldThrowException() {
+        // Given
+        when(modelConfigurationRepo.getImageModels()).thenThrow(new RuntimeException("Database connection failed"));
+
+        // When & Then
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> modelSelectionService.getImageModelConfigurations());
+        assertEquals("Database connection failed", exception.getMessage());
+    }
+
+    // ===============================
+    // Integration tests between text and image
+    // ===============================
+
+    @Test
+    @DisplayName("Should return different results for text vs image models")
+    void getModelConfigurations_TextVsImage_ShouldReturnDifferentResults() {
+        // Given
+        List<ModelConfigurationEntity> textModels = Arrays.asList(textModel1, textModel2);
+        List<ModelConfigurationEntity> imageModels = Arrays.asList(imageModel1, imageModel2);
+
+        when(modelConfigurationRepo.getTextModels()).thenReturn(textModels);
+        when(modelConfigurationRepo.getImageModels()).thenReturn(imageModels);
+
+        // When
+        List<ModelResponseDto> textResult = modelSelectionService.getTextModelModelConfigurations();
+        List<ModelResponseDto> imageResult = modelSelectionService.getImageModelConfigurations();
+
+        // Then
+        assertEquals(2, textResult.size());
+        assertEquals(2, imageResult.size());
+
+        // Verify they contain different models
+        List<String> textModelNames = textResult.stream().map(ModelResponseDto::getModelName).toList();
+        List<String> imageModelNames = imageResult.stream().map(ModelResponseDto::getModelName).toList();
+
+        assertTrue(textModelNames.contains("gpt-4-text"));
+        assertTrue(textModelNames.contains("claude-3-text"));
+        assertTrue(imageModelNames.contains("dall-e-3"));
+        assertTrue(imageModelNames.contains("midjourney"));
+
+        // Ensure no overlap
+        textModelNames.forEach(name -> assertFalse(imageModelNames.contains(name)));
     }
 }

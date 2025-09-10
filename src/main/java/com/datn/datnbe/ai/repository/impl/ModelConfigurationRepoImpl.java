@@ -1,6 +1,7 @@
 package com.datn.datnbe.ai.repository.impl;
 
 import com.datn.datnbe.ai.entity.ModelConfigurationEntity;
+import com.datn.datnbe.ai.enums.ModelType;
 import com.datn.datnbe.ai.repository.impl.jpa.ModelConfigurationJPARepo;
 import com.datn.datnbe.ai.repository.interfaces.ModelConfigurationRepo;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
@@ -37,10 +38,17 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
     }
 
     @Override
-    public ModelConfigurationEntity getModelByName(String modelName) {
-        return modelConfigurationJPARepo.findByModelName(modelName)
+    public ModelConfigurationEntity getModelByTextName(String modelName) {
+        return modelConfigurationJPARepo.findByModelNameAndModelType(modelName, ModelType.TEXT)
                 .orElseThrow(
                         () -> new AppException(ErrorCode.MODEL_NOT_FOUND, "Model not found with name: " + modelName));
+    }
+
+    @Override
+    public ModelConfigurationEntity getModelByImageName(String modelName) {
+        return modelConfigurationJPARepo.findByModelNameAndModelType(modelName, ModelType.IMAGE)
+                .orElseThrow(() -> new AppException(ErrorCode.MODEL_NOT_FOUND,
+                        "Image model not found with name: " + modelName));
     }
 
     @Override
@@ -66,7 +74,15 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
 
         if (!isEnabled && existingModel.isDefault()) {
             throw new AppException(ErrorCode.INVALID_MODEL_STATUS,
-                    "Cannot disable the default model. Please set another model as default first.");
+                    "Cannot disable a default model, please set another model as default first");
+        }
+
+        var modelType = existingModel.getModelType().name();
+        var countEnabledModelsOfType = modelConfigurationJPARepo.countEnabledModelsByType(modelType);
+
+        if (!isEnabled && countEnabledModelsOfType <= 1) {
+            throw new AppException(ErrorCode.INVALID_MODEL_STATUS,
+                    "Cannot disable the last enabled model of type: " + modelType);
         }
 
         existingModel.setEnabled(isEnabled);
@@ -75,20 +91,26 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
 
     @Override
     public void setDefault(Integer modelId, boolean isDefault) {
-        var existingModel = modelConfigurationJPARepo.findById(modelId)
-                .orElseThrow(() -> new AppException(ErrorCode.MODEL_NOT_FOUND));
+        ModelConfigurationEntity model = getModelById(modelId);
 
-        if (isDefault && !existingModel.isEnabled()) {
-            throw new AppException(ErrorCode.INVALID_MODEL_STATUS, "A model cannot be default if it is disabled");
+        if (isDefault && model.isEnabled()) {
+            // First disable all other default models of the same type
+            modelConfigurationJPARepo.disableDefaultModelsExcept(model.getModelType().name(), modelId);
+
+            // Then set this model as default
+            model.setDefault(true);
+            modelConfigurationJPARepo.save(model);
+        } else if (!isDefault) {
+            model.setDefault(false);
+            modelConfigurationJPARepo.save(model);
+        } else {
+            throw new AppException(ErrorCode.INVALID_MODEL_STATUS, "Cannot set a disabled model as default.");
         }
+    }
 
-        // Set others models to not default
-        if (isDefault) {
-            modelConfigurationJPARepo.disableDefaultModelsExcept(modelId);
-        }
-
-        existingModel.setDefault(isDefault);
-        modelConfigurationJPARepo.save(existingModel);
+    @Override
+    public boolean existsByModelNameAndType(String modelName, String modelType) {
+        return modelConfigurationJPARepo.existsByModelNameAndModelType(modelName, ModelType.valueOf(modelType));
     }
 
     @Override
@@ -120,11 +142,11 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
 
     @Override
     public List<ModelConfigurationEntity> getTextModels() {
-        return modelConfigurationJPARepo.findAllByTextCapable(true);
+        return modelConfigurationJPARepo.findAllByModelType(ModelType.TEXT);
     }
 
     @Override
     public List<ModelConfigurationEntity> getImageModels() {
-        return modelConfigurationJPARepo.findAllByImageCapable(true);
+        return modelConfigurationJPARepo.findAllByModelType(ModelType.IMAGE);
     }
 }
