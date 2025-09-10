@@ -21,7 +21,7 @@ public interface ModelSelectionApi {
      * @return a list of ModelResponseDto containing the minimal configuration of
      *         text models
      */
-    List<ModelResponseDto> getTextModelModelConfigurations();
+    List<ModelResponseDto> getTextModelConfigurations();
 
     /**
      * Retrieves the minimal configuration of image models.

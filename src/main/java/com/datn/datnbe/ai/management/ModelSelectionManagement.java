@@ -36,7 +36,7 @@ public class ModelSelectionManagement implements ModelSelectionApi {
     }
 
     @Override
-    public List<ModelResponseDto> getTextModelModelConfigurations() {
+    public List<ModelResponseDto> getTextModelConfigurations() {
         var models = modelConfigurationRepo.getTextModels()
                 .stream()
                 .sorted(Comparator.comparing(ModelConfigurationEntity::getProvider))

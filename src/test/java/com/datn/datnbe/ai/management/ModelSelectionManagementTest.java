@@ -309,13 +309,13 @@ class ModelSelectionManagementTest {
 
     @Test
     @DisplayName("Should return sorted list of text model configurations")
-    void getTextModelModelConfigurations_WithValidData_ShouldReturnSortedList() {
+    void getTextModelConfigurations_WithValidData_ShouldReturnSortedList() {
         // Given
         List<ModelConfigurationEntity> textModels = Arrays.asList(textModel1, textModel2);
         when(modelConfigurationRepo.getTextModels()).thenReturn(textModels);
 
         // When
-        List<ModelResponseDto> result = modelSelectionService.getTextModelModelConfigurations();
+        List<ModelResponseDto> result = modelSelectionService.getTextModelConfigurations();
 
         // Then
         assertNotNull(result);
@@ -342,7 +342,7 @@ class ModelSelectionManagementTest {
         when(modelConfigurationRepo.getTextModels()).thenReturn(Arrays.asList());
 
         // When
-        List<ModelResponseDto> result = modelSelectionService.getTextModelModelConfigurations();
+        List<ModelResponseDto> result = modelSelectionService.getTextModelConfigurations();
 
         // Then
         assertNotNull(result);
@@ -357,7 +357,7 @@ class ModelSelectionManagementTest {
         when(modelConfigurationRepo.getTextModels()).thenReturn(textModels);
 
         // When
-        List<ModelResponseDto> result = modelSelectionService.getTextModelModelConfigurations();
+        List<ModelResponseDto> result = modelSelectionService.getTextModelConfigurations();
 
         // Then
         assertNotNull(result);
@@ -371,13 +371,13 @@ class ModelSelectionManagementTest {
 
     @Test
     @DisplayName("Should handle repository exception for text models")
-    void getTextModelModelConfigurations_WithRepositoryException_ShouldThrowException() {
+    void getTextModelConfigurations_WithRepositoryException_ShouldThrowException() {
         // Given
         when(modelConfigurationRepo.getTextModels()).thenThrow(new RuntimeException("Database connection failed"));
 
         // When & Then
         RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> modelSelectionService.getTextModelModelConfigurations());
+                () -> modelSelectionService.getTextModelConfigurations());
         assertEquals("Database connection failed", exception.getMessage());
     }
 
@@ -492,7 +492,7 @@ class ModelSelectionManagementTest {
         when(modelConfigurationRepo.getImageModels()).thenReturn(imageModels);
 
         // When
-        List<ModelResponseDto> textResult = modelSelectionService.getTextModelModelConfigurations();
+        List<ModelResponseDto> textResult = modelSelectionService.getTextModelConfigurations();
         List<ModelResponseDto> imageResult = modelSelectionService.getImageModelConfigurations();
 
         // Then

@@ -173,7 +173,7 @@ class ModelConfigurationControllerTest {
                         .isDefault(false)
                         .build());
 
-        when(modelSelectionApi.getTextModelModelConfigurations()).thenReturn(textModels);
+        when(modelSelectionApi.getTextModelConfigurations()).thenReturn(textModels);
 
         // When & Then
         mockMvc.perform(get("/api/models/text").contentType(MediaType.APPLICATION_JSON))
@@ -201,7 +201,7 @@ class ModelConfigurationControllerTest {
         @DisplayName("Should return empty list when no text models exist")
         void getTextModels_WithEmptyData_ShouldReturnEmptyListResponse() throws Exception {
                 // Given
-                when(modelSelectionApi.getTextModelModelConfigurations()).thenReturn(Collections.emptyList());
+                when(modelSelectionApi.getTextModelConfigurations()).thenReturn(Collections.emptyList());
 
                 // When & Then
                 mockMvc

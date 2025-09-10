@@ -40,7 +40,7 @@ public class ModelConfigurationController {
     @GetMapping("/text")
     public ResponseEntity<AppResponseDto<List<ModelResponseDto>>> getTextModels() {
         log.info("Fetching text models");
-        var models = modelSelectionApi.getTextModelModelConfigurations();
+        var models = modelSelectionApi.getTextModelConfigurations();
         return ResponseEntity.ok(AppResponseDto.success(models));
     }
 
