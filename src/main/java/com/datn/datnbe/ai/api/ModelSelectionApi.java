@@ -10,9 +10,26 @@ public interface ModelSelectionApi {
     /**
      * Retrieves the minimal configuration of a model by its ID.
      *
-     * @return a list of ModelResponseDto containing the minimal configuration of the model
+     * @return a list of ModelResponseDto containing the minimal configuration of
+     *         the model
      */
     List<ModelResponseDto> getModelConfigurations();
+
+    /**
+     * Retrieves the minimal configuration of text models.
+     *
+     * @return a list of ModelResponseDto containing the minimal configuration of
+     *         text models
+     */
+    List<ModelResponseDto> getTextModelModelConfigurations();
+
+    /**
+     * Retrieves the minimal configuration of image models.
+     *
+     * @return a list of ModelResponseDto containing the minimal configuration of
+     *         image models
+     */
+    List<ModelResponseDto> getImageModelConfigurations();
 
     /**
      * Enables a model by its ID.
@@ -34,7 +51,8 @@ public interface ModelSelectionApi {
     /**
      * Saves the model information.
      *
-     * @param modelInfo the ModelProperties.ModelInfo object containing the model information to save
+     * @param modelInfo the ModelProperties.ModelInfo object containing the model
+     *                  information to save
      */
     void saveModelInfo(ModelProperties.ModelInfo modelInfo);
 

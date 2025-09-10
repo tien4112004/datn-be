@@ -45,7 +45,7 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
 
     @Override
     public boolean isModelEnabled(Integer modelId) {
-        return modelConfigurationJPARepo.findById(modelId).map(ModelConfigurationEntity::isEnabled).orElse(false); // Default to false if model not found
+        return modelConfigurationJPARepo.findById(modelId).map(ModelConfigurationEntity::isEnabled).orElse(false);
     }
 
     @Override
@@ -116,5 +116,15 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
                     modelConfigurationJPARepo.save(newDefaultModel);
                     log.info("Set model '{}' as the new default.", newDefaultModel.getModelName());
                 }, () -> log.warn("Could not find an enabled model to set as the new default after deletion."));
+    }
+
+    @Override
+    public List<ModelConfigurationEntity> getTextModels() {
+        return modelConfigurationJPARepo.findAllByTextCapable(true);
+    }
+
+    @Override
+    public List<ModelConfigurationEntity> getImageModels() {
+        return modelConfigurationJPARepo.findAllByImageCapable(true);
     }
 }

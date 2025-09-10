@@ -17,6 +17,10 @@ public interface ModelConfigurationRepo {
 
     List<ModelConfigurationEntity> getModels();
 
+    List<ModelConfigurationEntity> getTextModels();
+
+    List<ModelConfigurationEntity> getImageModels();
+
     ModelConfigurationEntity save(ModelConfigurationEntity modelEntity);
 
     void deleteByModelName(String modelName);

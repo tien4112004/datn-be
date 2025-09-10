@@ -1,6 +1,8 @@
 package com.datn.datnbe.ai.repository.impl.jpa;
 
 import com.datn.datnbe.ai.entity.ModelConfigurationEntity;
+
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -22,4 +24,8 @@ public interface ModelConfigurationJPARepo extends JpaRepository<ModelConfigurat
                     WHERE m.is_enabled = true AND m.id != :modelId
             """, nativeQuery = true)
     void disableDefaultModelsExcept(Integer modelId);
+
+    List<ModelConfigurationEntity> findAllByTextCapable(boolean textCapable);
+
+    List<ModelConfigurationEntity> findAllByImageCapable(boolean imageCapable);
 }

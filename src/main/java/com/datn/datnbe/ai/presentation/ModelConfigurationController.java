@@ -33,6 +33,30 @@ public class ModelConfigurationController {
     }
 
     /**
+     * Endpoint to get the list of text models.
+     *
+     * @return ResponseEntity containing the list of text models.
+     */
+    @GetMapping("/text")
+    public ResponseEntity<AppResponseDto<List<ModelResponseDto>>> getTextModels() {
+        log.info("Fetching text models");
+        var models = modelSelectionApi.getTextModelModelConfigurations();
+        return ResponseEntity.ok(AppResponseDto.success(models));
+    }
+
+    /**
+     * Endpoint to get the list of image models.
+     *
+     * @return ResponseEntity containing the list of image models.
+     */
+    @GetMapping("/image")
+    public ResponseEntity<AppResponseDto<List<ModelResponseDto>>> getImageModels() {
+        log.info("Fetching image models");
+        var models = modelSelectionApi.getImageModelConfigurations();
+        return ResponseEntity.ok(AppResponseDto.success(models));
+    }
+
+    /**
      * Endpoint to update status of a model by its ID.
      *
      * @param id The ID of the model to disable.

@@ -20,6 +20,9 @@ public class ModelProperties {
         String displayName;
         String provider;
         boolean defaultModel;
+        boolean textCapable;
+        boolean imageCapable;
+        boolean videoCapable;
     }
 
     public List<ModelInfo> getModels() {

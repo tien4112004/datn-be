@@ -28,5 +28,15 @@ public class ModelConfigurationEntity {
     @Column(name = "is_default", nullable = false, columnDefinition = "boolean default false")
     boolean isDefault;
 
+    @Column(name = "text_capable", nullable = false, columnDefinition = "boolean default false")
+    boolean textCapable;
+
+    @Column(name = "image_capable", nullable = false, columnDefinition = "boolean default false")
+    boolean imageCapable;
+
+    @Column(name = "video_capable", nullable = false, columnDefinition = "boolean default false")
+    boolean videoCapable;
+
+    @Column(name = "provider", nullable = false)
     String provider;
 }

@@ -41,20 +41,32 @@ app:
           display-name: "GPT-4 Optimized"
           provider: "OpenAI"
           default-model: false
+          text-capable: true
+          image-capable: false
+          video-capable: false
         - model-name: "gpt-4.1-nano-2025-04-14"
           display-name: "GPT-4.1 Nano"
           provider: "OpenAI"
           default-model: false
-      # --- GEMINI MODELS ---
+          text-capable: true
+          image-capable: false
+          video-capable: false
+            # --- GEMINI MODELS ---
       gemini:
         - model-name: "gemini-2.5-flash"
           display-name: "Gemini 2.5 Flash"
           provider: "Google"
-          default-model: false
+          default-model: true
+          text-capable: true
+          image-capable: false
+          video-capable: false
         - model-name: "gemini-2.5-flash-lite"
           display-name: "Gemini 2.5 Flash Lite"
           provider: "Google"
           default-model: false
+          text-capable: true
+          image-capable: false
+          video-capable: false
   cors:
     allowed-origins: ${ALLOWED_ORIGINS}
     allowed-origin-patterns: ${ALLOWED_ORIGINS}
