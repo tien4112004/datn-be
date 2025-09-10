@@ -3,8 +3,10 @@ package com.datn.datnbe.ai.presentation;
 import com.datn.datnbe.ai.api.ModelSelectionApi;
 import com.datn.datnbe.ai.dto.request.UpdateModelStatusRequest;
 import com.datn.datnbe.ai.dto.response.ModelResponseDto;
+import com.datn.datnbe.ai.enums.ModelType;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -25,34 +27,11 @@ public class ModelConfigurationController {
      * @return ResponseEntity containing the list of models.
      */
     @GetMapping
-    public ResponseEntity<AppResponseDto<List<ModelResponseDto>>> getAllModels() {
+    public ResponseEntity<AppResponseDto<List<ModelResponseDto>>> getAllModels(
+            @RequestParam(name = "modelType", required = false) ModelType modelType) {
         log.info("Fetching all models");
-        var models = modelSelectionApi.getModelConfigurations();
+        var models = modelSelectionApi.getModelConfigurations(modelType);
 
-        return ResponseEntity.ok(AppResponseDto.success(models));
-    }
-
-    /**
-     * Endpoint to get the list of text models.
-     *
-     * @return ResponseEntity containing the list of text models.
-     */
-    @GetMapping("/text")
-    public ResponseEntity<AppResponseDto<List<ModelResponseDto>>> getTextModels() {
-        log.info("Fetching text models");
-        var models = modelSelectionApi.getTextModelConfigurations();
-        return ResponseEntity.ok(AppResponseDto.success(models));
-    }
-
-    /**
-     * Endpoint to get the list of image models.
-     *
-     * @return ResponseEntity containing the list of image models.
-     */
-    @GetMapping("/image")
-    public ResponseEntity<AppResponseDto<List<ModelResponseDto>>> getImageModels() {
-        log.info("Fetching image models");
-        var models = modelSelectionApi.getImageModelConfigurations();
         return ResponseEntity.ok(AppResponseDto.success(models));
     }
 

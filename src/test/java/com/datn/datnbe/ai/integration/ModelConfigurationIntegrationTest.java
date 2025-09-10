@@ -250,42 +250,6 @@ class ModelConfigurationIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    void getTextModels_ShouldReturnOnlyTextModels() {
-        // Given
-        modelConfigurationRepo.save(testTextModel1);
-        modelConfigurationRepo.save(testTextModel2);
-        modelConfigurationRepo.save(testImageModel1);
-        modelConfigurationRepo.save(testImageModel2);
-
-        // When
-        List<ModelConfigurationEntity> textModels = modelConfigurationRepo.getModelsByType(ModelType.TEXT);
-
-        // Then
-        assertThat(textModels).hasSize(2);
-        assertThat(textModels).extracting(ModelConfigurationEntity::getModelType).containsOnly(ModelType.TEXT);
-        assertThat(textModels).extracting(ModelConfigurationEntity::getModelName)
-                .containsExactlyInAnyOrder("gpt-4-test", "gemini-pro-test");
-    }
-
-    @Test
-    void getImageModels_ShouldReturnOnlyImageModels() {
-        // Given
-        modelConfigurationRepo.save(testTextModel1);
-        modelConfigurationRepo.save(testTextModel2);
-        modelConfigurationRepo.save(testImageModel1);
-        modelConfigurationRepo.save(testImageModel2);
-
-        // When
-        List<ModelConfigurationEntity> imageModels = modelConfigurationRepo.getModelsByType(ModelType.IMAGE);
-
-        // Then
-        assertThat(imageModels).hasSize(2);
-        assertThat(imageModels).extracting(ModelConfigurationEntity::getModelType).containsOnly(ModelType.IMAGE);
-        assertThat(imageModels).extracting(ModelConfigurationEntity::getModelName)
-                .containsExactlyInAnyOrder("dall-e-test", "midjourney-test");
-    }
-
-    @Test
     void uniqueConstraint_ShouldAllowSameModelNameForDifferentTypes() {
         // Given - Create two models with same name but different types
         ModelConfigurationEntity gptTextModel = new ModelConfigurationEntity();

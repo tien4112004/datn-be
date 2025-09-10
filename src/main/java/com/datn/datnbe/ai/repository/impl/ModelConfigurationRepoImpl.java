@@ -142,6 +142,10 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
 
     @Override
     public List<ModelConfigurationEntity> getModelsByType(ModelType modelType) {
+        if (modelType == null) {
+            return modelConfigurationJPARepo.findAll();
+        }
+
         return modelConfigurationJPARepo.findAllByModelType(modelType);
     }
 }

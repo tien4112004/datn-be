@@ -27,8 +27,6 @@ public interface ModelConfigurationJPARepo extends JpaRepository<ModelConfigurat
             """, nativeQuery = true)
     void disableDefaultModelsExcept(@Param("modelType") String modelType, @Param("modelId") Integer modelId);
 
-    List<ModelConfigurationEntity> findAllByModelType(ModelType modelType);
-
     @Query(value = """
                     SELECT count(*)
                     FROM model_configuration AS m
@@ -39,4 +37,6 @@ public interface ModelConfigurationJPARepo extends JpaRepository<ModelConfigurat
     boolean existsByModelNameAndModelType(String modelName, ModelType modelType);
 
     Optional<ModelConfigurationEntity> findByModelNameAndModelType(String modelName, ModelType modelType);
+
+    List<ModelConfigurationEntity> findAllByModelType(ModelType modelType);
 }

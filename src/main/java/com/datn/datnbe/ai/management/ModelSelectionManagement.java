@@ -11,12 +11,13 @@ import com.datn.datnbe.ai.repository.interfaces.ModelConfigurationRepo;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import jakarta.transaction.Transactional;
-import java.util.Comparator;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.Comparator;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -28,32 +29,21 @@ public class ModelSelectionManagement implements ModelSelectionApi {
 
     @Override
     public List<ModelResponseDto> getModelConfigurations() {
-        var models = modelConfigurationRepo.getModels()
+        return modelConfigurationRepo.getModels()
                 .stream()
-                .sorted(Comparator.comparing(ModelConfigurationEntity::getProvider))
+                .sorted(Comparator.comparing(ModelConfigurationEntity::getModelName))
+                .map(modelDataMapper::toModelResponseDto)
                 .toList();
-
-        return models.stream().map(modelDataMapper::toModelResponseDto).toList();
     }
 
     @Override
-    public List<ModelResponseDto> getTextModelConfigurations() {
-        var models = modelConfigurationRepo.getModelsByType(ModelType.TEXT)
+    public List<ModelResponseDto> getModelConfigurations(ModelType modelType) {
+
+        return modelConfigurationRepo.getModelsByType(modelType)
                 .stream()
-                .sorted(Comparator.comparing(ModelConfigurationEntity::getProvider))
+                .sorted(Comparator.comparing(ModelConfigurationEntity::getModelName))
+                .map(modelDataMapper::toModelResponseDto)
                 .toList();
-
-        return models.stream().map(modelDataMapper::toModelResponseDto).toList();
-    }
-
-    @Override
-    public List<ModelResponseDto> getImageModelConfigurations() {
-        var models = modelConfigurationRepo.getModelsByType(ModelType.IMAGE)
-                .stream()
-                .sorted(Comparator.comparing(ModelConfigurationEntity::getProvider))
-                .toList();
-
-        return models.stream().map(modelDataMapper::toModelResponseDto).toList();
     }
 
     @Override

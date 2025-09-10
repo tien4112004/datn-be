@@ -3,6 +3,8 @@ package com.datn.datnbe.ai.api;
 import com.datn.datnbe.ai.config.chatmodelconfiguration.ModelProperties;
 import com.datn.datnbe.ai.dto.request.UpdateModelStatusRequest;
 import com.datn.datnbe.ai.dto.response.ModelResponseDto;
+import com.datn.datnbe.ai.enums.ModelType;
+
 import java.util.List;
 
 public interface ModelSelectionApi {
@@ -16,20 +18,13 @@ public interface ModelSelectionApi {
     List<ModelResponseDto> getModelConfigurations();
 
     /**
-     * Retrieves the minimal configuration of text models.
+     * Retrieves the minimal configuration of a model by its ID.
      *
+     * @param modelType the type of the model to retrieve
      * @return a list of ModelResponseDto containing the minimal configuration of
-     *         text models
+     *         the model
      */
-    List<ModelResponseDto> getTextModelConfigurations();
-
-    /**
-     * Retrieves the minimal configuration of image models.
-     *
-     * @return a list of ModelResponseDto containing the minimal configuration of
-     *         image models
-     */
-    List<ModelResponseDto> getImageModelConfigurations();
+    List<ModelResponseDto> getModelConfigurations(ModelType modelType);
 
     /**
      * Enables a model by its ID.

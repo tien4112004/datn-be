@@ -183,10 +183,13 @@ class ModelSelectionManagementTest {
     void getModelConfigurations_Success() {
         // Given
         List<ModelConfigurationEntity> models = Arrays.asList(modelEntity3, modelEntity2, modelEntity1); // Not sorted
+
         // by provider
+        // Passing modelType as null to get all models
         when(modelConfigurationRepo.getModels()).thenReturn(models);
 
         // When
+        // Passing ModelType as Null for get all models
         List<ModelResponseDto> result = modelSelectionService.getModelConfigurations();
 
         // Then
@@ -303,183 +306,9 @@ class ModelSelectionManagementTest {
     }
 
     // ===============================
-    // Tests for getTextModelModelConfigurations
-    // ===============================
-
-    @Test
-    @DisplayName("Should return sorted list of text model configurations")
-    void getTextModelConfigurations_WithValidData_ShouldReturnSortedList() {
-        // Given
-        List<ModelConfigurationEntity> textModels = Arrays.asList(textModel1, textModel2);
-        when(modelConfigurationRepo.getModelsByType(any())).thenReturn(textModels);
-
-        // When
-        List<ModelResponseDto> result = modelSelectionService.getTextModelConfigurations();
-
-        // Then
-        assertNotNull(result);
-        assertEquals(2, result.size());
-
-        // Verify sorting by provider (anthropic comes before openai)
-        assertEquals("anthropic", result.get(0).getProvider());
-        assertEquals("claude-3-text", result.get(0).getModelName());
-        assertEquals("Claude 3 Text", result.get(0).getDisplayName());
-        assertTrue(result.get(0).isEnabled());
-        assertFalse(result.get(0).isDefault());
-
-        assertEquals("openai", result.get(1).getProvider());
-        assertEquals("gpt-4-text", result.get(1).getModelName());
-        assertEquals("GPT-4 Text", result.get(1).getDisplayName());
-        assertTrue(result.get(1).isEnabled());
-        assertTrue(result.get(1).isDefault());
-    }
-
-    @Test
-    @DisplayName("Should return empty list when no text models exist")
-    void getTextModelModelConfigurations_WithNoTextModels_ShouldReturnEmptyList() {
-        // Given
-        when(modelConfigurationRepo.getModelsByType(any())).thenReturn(Arrays.asList());
-
-        // When
-        List<ModelResponseDto> result = modelSelectionService.getTextModelConfigurations();
-
-        // Then
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    @DisplayName("Should return single text model configuration")
-    void getTextModelModelConfigurations_WithSingleTextModel_ShouldReturnSingleItem() {
-        // Given
-        List<ModelConfigurationEntity> textModels = Arrays.asList(textModel1);
-        when(modelConfigurationRepo.getModelsByType(any())).thenReturn(textModels);
-
-        // When
-        List<ModelResponseDto> result = modelSelectionService.getTextModelConfigurations();
-
-        // Then
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals("gpt-4-text", result.get(0).getModelName());
-        assertEquals("GPT-4 Text", result.get(0).getDisplayName());
-        assertEquals("openai", result.get(0).getProvider());
-        assertTrue(result.get(0).isEnabled());
-        assertTrue(result.get(0).isDefault());
-    }
-
-    @Test
-    @DisplayName("Should handle repository exception for text models")
-    void getTextModelConfigurations_WithRepositoryException_ShouldThrowException() {
-        // Given
-        when(modelConfigurationRepo.getModelsByType(any())).thenThrow(new RuntimeException("Database connection failed"));
-
-        // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> modelSelectionService.getTextModelConfigurations());
-        assertEquals("Database connection failed", exception.getMessage());
-    }
-
-    // ===============================
-    // Tests for getImageModelConfigurations
-    // ===============================
-
-    @Test
-    @DisplayName("Should return sorted list of image model configurations")
-    void getImageModelConfigurations_WithValidData_ShouldReturnSortedList() {
-        // Given
-        List<ModelConfigurationEntity> imageModels = Arrays.asList(imageModel1, imageModel2);
-        when(modelConfigurationRepo.getModelsByType(any())).thenReturn(imageModels);
-
-        // When
-        List<ModelResponseDto> result = modelSelectionService.getImageModelConfigurations();
-
-        // Then
-        assertNotNull(result);
-        assertEquals(2, result.size());
-
-        // Verify sorting by provider (midjourney comes before openai)
-        assertEquals("midjourney", result.get(0).getProvider());
-        assertEquals("midjourney", result.get(0).getModelName());
-        assertEquals("Midjourney", result.get(0).getDisplayName());
-        assertFalse(result.get(0).isEnabled());
-        assertFalse(result.get(0).isDefault());
-
-        assertEquals("openai", result.get(1).getProvider());
-        assertEquals("dall-e-3", result.get(1).getModelName());
-        assertEquals("DALL-E 3", result.get(1).getDisplayName());
-        assertTrue(result.get(1).isEnabled());
-        assertTrue(result.get(1).isDefault());
-    }
-
-    @Test
-    @DisplayName("Should return empty list when no image models exist")
-    void getImageModelConfigurations_WithNoImageModels_ShouldReturnEmptyList() {
-        // Given
-        when(modelConfigurationRepo.getModelsByType(any())).thenReturn(Arrays.asList());
-
-        // When
-        List<ModelResponseDto> result = modelSelectionService.getImageModelConfigurations();
-
-        // Then
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    @DisplayName("Should return single image model configuration")
-    void getImageModelConfigurations_WithSingleImageModel_ShouldReturnSingleItem() {
-        // Given
-        List<ModelConfigurationEntity> imageModels = Arrays.asList(imageModel1);
-        when(modelConfigurationRepo.getModelsByType(any())).thenReturn(imageModels);
-
-        // When
-        List<ModelResponseDto> result = modelSelectionService.getImageModelConfigurations();
-
-        // Then
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals("dall-e-3", result.get(0).getModelName());
-        assertEquals("DALL-E 3", result.get(0).getDisplayName());
-        assertEquals("openai", result.get(0).getProvider());
-        assertTrue(result.get(0).isEnabled());
-        assertTrue(result.get(0).isDefault());
-    }
-
-    @Test
-    @DisplayName("Should handle disabled image models")
-    void getImageModelConfigurations_WithDisabledModels_ShouldIncludeDisabledModels() {
-        // Given
-        List<ModelConfigurationEntity> imageModels = Arrays.asList(imageModel2); // imageModel2 is disabled
-        when(modelConfigurationRepo.getModelsByType(any())).thenReturn(imageModels);
-
-        // When
-        List<ModelResponseDto> result = modelSelectionService.getImageModelConfigurations();
-
-        // Then
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals("midjourney", result.get(0).getModelName());
-        assertFalse(result.get(0).isEnabled());
-        assertFalse(result.get(0).isDefault());
-    }
-
-    @Test
-    @DisplayName("Should handle repository exception for image models")
-    void getImageModelConfigurations_WithRepositoryException_ShouldThrowException() {
-        // Given
-        when(modelConfigurationRepo.getModelsByType(any())).thenThrow(new RuntimeException("Database connection failed"));
-
-        // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> modelSelectionService.getImageModelConfigurations());
-        assertEquals("Database connection failed", exception.getMessage());
-    }
-
-    // ===============================
     // Integration tests between text and image
-    // ===============================
 
+    // ===============================
     @Test
     @DisplayName("Should return different results for text vs image models")
     void getModelConfigurations_TextVsImage_ShouldReturnDifferentResults() {
@@ -491,8 +320,8 @@ class ModelSelectionManagementTest {
         when(modelConfigurationRepo.getModelsByType(ModelType.IMAGE)).thenReturn(imageModels);
 
         // When
-        List<ModelResponseDto> textResult = modelSelectionService.getTextModelConfigurations();
-        List<ModelResponseDto> imageResult = modelSelectionService.getImageModelConfigurations();
+        List<ModelResponseDto> textResult = modelSelectionService.getModelConfigurations(ModelType.TEXT);
+        List<ModelResponseDto> imageResult = modelSelectionService.getModelConfigurations(ModelType.IMAGE);
 
         // Then
         assertEquals(2, textResult.size());

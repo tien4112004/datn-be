@@ -65,14 +65,6 @@ public interface ModelConfigurationRepo {
     List<ModelConfigurationEntity> getModels();
 
     /**
-     * Retrieves all models of a specific type.
-     *
-     * @param modelType the type of models to retrieve
-     * @return a list of ModelConfigurationEntity of the specified type
-     */
-    List<ModelConfigurationEntity> getModelsByType(ModelType modelType);
-
-    /**
      * Saves a model entity.
      *
      * @param modelEntity the ModelConfigurationEntity to save
@@ -104,5 +96,19 @@ public interface ModelConfigurationRepo {
      */
     void setDefault(Integer modelId, boolean isDefault);
 
+    /**
+     * Retrieves a model by its name.
+     *
+     * @param modelName the name of the model to retrieve
+     * @return the ModelConfigurationEntity with the given name
+     */
     ModelConfigurationEntity getModelByName(String modelName);
+
+    /**
+     * Retrieves all models of a specific type.
+     *
+     * @param modelType the type of models to retrieve
+     * @return a list of ModelConfigurationEntity of the specified type
+     */
+    List<ModelConfigurationEntity> getModelsByType(ModelType modelType);
 }
