@@ -1,7 +1,13 @@
 package com.datn.datnbe.document.entity.valueobject;
 
 import com.datn.datnbe.document.enums.SlideElementType;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -80,4 +86,16 @@ public class SlideElement {
 
     @Field("wordSpace")
     Float wordSpace;
+
+    Map<String, Object> extraFields = new HashMap<>();
+
+    @JsonAnySetter
+    public void setExtraField(String key, Object value) {
+        extraFields.put(key, value);
+    }
+
+    @JsonAnyGetter
+    public Map<String, Object> getExtraFields() {
+        return extraFields;
+    }
 }

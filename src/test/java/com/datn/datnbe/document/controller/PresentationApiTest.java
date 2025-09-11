@@ -26,34 +26,28 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(PresentationController.class)
-class PresentationControllerTest {
+class PresentationApiTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private PresentationApi presentationApi;
 
-    @MockBean
+    @MockitoBean
     private SlidesApi slidesApi;
 
     @Autowired
@@ -144,6 +138,11 @@ class PresentationControllerTest {
 
     @Test
     void createPresentation_WithComplexElements_ShouldPreserveAllProperties() throws Exception {
+        var extraFields = new java.util.HashMap<String, Object>();
+        extraFields.put("customProperty", "customValue");
+        extraFields.put("isTest", true);
+        extraFields.put("testNumber", 42);
+
         SlideDto.SlideElementDto complexElement = SlideDto.SlideElementDto.builder()
                 .type("text")
                 .id("complex-element")
@@ -168,6 +167,7 @@ class PresentationControllerTest {
                 .color("#00ff00")
                 .style("solid")
                 .wordSpace(2.0f)
+                .extraFields(extraFields)
                 .build();
 
         SlideDto slideWithComplexElement = SlideDto.builder()
@@ -209,7 +209,11 @@ class PresentationControllerTest {
                 .andExpect(jsonPath("$.data.slides[0].elements[0].points[2]").value("90,90"))
                 .andExpect(jsonPath("$.data.slides[0].elements[0].color").value("#00ff00"))
                 .andExpect(jsonPath("$.data.slides[0].elements[0].style").value("solid"))
-                .andExpect(jsonPath("$.data.slides[0].elements[0].wordSpace").value(2.0));
+                .andExpect(jsonPath("$.data.slides[0].elements[0].wordSpace").value(2.0))
+                // Extra fields
+                .andExpect(jsonPath("$.data.slides[0].elements[0].customProperty").value("customValue"))
+                .andExpect(jsonPath("$.data.slides[0].elements[0].isTest").value(true))
+                .andExpect(jsonPath("$.data.slides[0].elements[0].testNumber").value(42));
     }
 
     @Test

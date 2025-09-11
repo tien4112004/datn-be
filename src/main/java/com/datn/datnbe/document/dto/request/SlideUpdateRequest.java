@@ -12,6 +12,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -61,6 +62,17 @@ public class SlideUpdateRequest {
         String color;
         String style;
         Float wordSpace;
+        Map<String, Object> extraFields = new java.util.HashMap<>();
+
+        @com.fasterxml.jackson.annotation.JsonAnySetter
+        public void setExtraField(String key, Object value) {
+            extraFields.put(key, value);
+        }
+
+        @com.fasterxml.jackson.annotation.JsonAnyGetter
+        public java.util.Map<String, Object> getExtraFields() {
+            return extraFields;
+        }
     }
 
 }

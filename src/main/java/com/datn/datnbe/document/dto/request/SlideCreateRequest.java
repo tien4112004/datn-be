@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Map;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -54,5 +55,16 @@ public class SlideCreateRequest {
         String color;
         String style;
         Float wordSpace;
+        Map<String, Object> extraFields = new java.util.HashMap<>();
+
+        @com.fasterxml.jackson.annotation.JsonAnySetter
+        public void setExtraField(String key, Object value) {
+            extraFields.put(key, value);
+        }
+
+        @com.fasterxml.jackson.annotation.JsonAnyGetter
+        public java.util.Map<String, Object> getExtraFields() {
+            return extraFields;
+        }
     }
 }
