@@ -217,8 +217,8 @@ class PresentationApiTest {
                 .andExpect(jsonPath("$.data.slides[0].elements[0].style").value("solid"))
                 .andExpect(jsonPath("$.data.slides[0].elements[0].wordSpace").value(2.0))
                 // Extra fields
-                .andExpect(jsonPath("$.data.slides[0].elements[0].extraFields.nestedLevel1.level2.level3.deepKey")
-                        .value("deepValue"))
+                .andExpect(
+                        jsonPath("$.data.slides[0].elements[0].nestedLevel1.level2.level3.deepKey").value("deepValue"))
                 .andExpect(jsonPath("$.data.slides[0].elements[0].customProperty").value("customValue"))
                 .andExpect(jsonPath("$.data.slides[0].elements[0].isTest").value(true))
                 .andExpect(jsonPath("$.data.slides[0].elements[0].testNumber").value(42));
