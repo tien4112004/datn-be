@@ -21,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.datn.datnbe.ai.dto.response.AIResultResponseDto;
 import com.datn.datnbe.ai.entity.AIResult;
+import com.datn.datnbe.ai.mapper.AIResultMapper;
 import com.datn.datnbe.ai.repository.interfaces.AIResultRepo;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
@@ -31,6 +32,9 @@ class AIResultManagementTest {
     @Mock
     private AIResultRepo aiResultRepo;
 
+    @Mock
+    private AIResultMapper aiResultMapper;
+
     private AIResultManagement aiResultManagement;
 
     private AIResult mockAIResult;
@@ -40,7 +44,7 @@ class AIResultManagementTest {
 
     @BeforeEach
     void setUp() {
-        aiResultManagement = new AIResultManagement(aiResultRepo);
+        aiResultManagement = new AIResultManagement(aiResultRepo, aiResultMapper);
 
         // Setup test data
         testPresentationId = "presentation-123";
@@ -59,7 +63,15 @@ class AIResultManagementTest {
     @DisplayName("Should save AI result successfully")
     void testSaveAIResult_Success() {
         // Arrange
+        AIResultResponseDto expectedResponse = AIResultResponseDto.builder()
+                .id(1)
+                .result(testAIResultContent)
+                .presentationId(testPresentationId)
+                .createdAt(testCreatedAt.toString())
+                .build();
+
         when(aiResultRepo.save(any(AIResult.class))).thenReturn(mockAIResult);
+        when(aiResultMapper.toResponseDto(mockAIResult)).thenReturn(expectedResponse);
 
         // Act
         AIResultResponseDto result = aiResultManagement.saveAIResult(testAIResultContent, testPresentationId);
@@ -72,11 +84,10 @@ class AIResultManagementTest {
         assertEquals(testCreatedAt.toString(), result.getCreatedAt());
 
         // Verify repository interaction
-        verify(aiResultRepo, times(1)).save(argThat(entity ->
-            entity.getResult().equals(testAIResultContent) &&
-            entity.getPresentationId().equals(testPresentationId) &&
-            entity.getId() == null // Should be null before saving
+        verify(aiResultRepo, times(1)).save(argThat(entity -> entity.getResult().equals(testAIResultContent)
+                && entity.getPresentationId().equals(testPresentationId) && entity.getId() == null // Should be null before saving
         ));
+        verify(aiResultMapper, times(1)).toResponseDto(mockAIResult);
     }
 
     @Test
@@ -91,7 +102,15 @@ class AIResultManagementTest {
                 .createdAt(testCreatedAt)
                 .build();
 
+        AIResultResponseDto expectedResponse = AIResultResponseDto.builder()
+                .id(1)
+                .result(nullContent)
+                .presentationId(testPresentationId)
+                .createdAt(testCreatedAt.toString())
+                .build();
+
         when(aiResultRepo.save(any(AIResult.class))).thenReturn(savedEntity);
+        when(aiResultMapper.toResponseDto(savedEntity)).thenReturn(expectedResponse);
 
         // Act
         AIResultResponseDto result = aiResultManagement.saveAIResult(nullContent, testPresentationId);
@@ -104,6 +123,7 @@ class AIResultManagementTest {
         assertEquals(testCreatedAt.toString(), result.getCreatedAt());
 
         verify(aiResultRepo, times(1)).save(any(AIResult.class));
+        verify(aiResultMapper, times(1)).toResponseDto(savedEntity);
     }
 
     @Test
@@ -118,7 +138,15 @@ class AIResultManagementTest {
                 .createdAt(testCreatedAt)
                 .build();
 
+        AIResultResponseDto expectedResponse = AIResultResponseDto.builder()
+                .id(1)
+                .result(emptyContent)
+                .presentationId(testPresentationId)
+                .createdAt(testCreatedAt.toString())
+                .build();
+
         when(aiResultRepo.save(any(AIResult.class))).thenReturn(savedEntity);
+        when(aiResultMapper.toResponseDto(savedEntity)).thenReturn(expectedResponse);
 
         // Act
         AIResultResponseDto result = aiResultManagement.saveAIResult(emptyContent, testPresentationId);
@@ -130,6 +158,7 @@ class AIResultManagementTest {
         assertEquals(testPresentationId, result.getPresentationId());
 
         verify(aiResultRepo, times(1)).save(any(AIResult.class));
+        verify(aiResultMapper, times(1)).toResponseDto(savedEntity);
     }
 
     @Test

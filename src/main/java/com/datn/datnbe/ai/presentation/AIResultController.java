@@ -24,9 +24,7 @@ public class AIResultController {
     public ResponseEntity<AppResponseDto<AIResultResponseDto>> getAIResultByPresentationId(
             @PathVariable String presentationId) {
         AIResultResponseDto aiResultResponseDto = aiResultApi.getAIResultByPresentationId(presentationId);
-        AppResponseDto<AIResultResponseDto> responseDto = AppResponseDto.<AIResultResponseDto>builder()
-                .data(aiResultResponseDto)
-                .build();
+        AppResponseDto<AIResultResponseDto> responseDto = AppResponseDto.success(aiResultResponseDto);
         return ResponseEntity.ok(responseDto);
     }
 }

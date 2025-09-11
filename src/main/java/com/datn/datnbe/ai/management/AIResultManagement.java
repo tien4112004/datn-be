@@ -3,6 +3,7 @@ package com.datn.datnbe.ai.management;
 import com.datn.datnbe.ai.api.AIResultApi;
 import com.datn.datnbe.ai.dto.response.AIResultResponseDto;
 import com.datn.datnbe.ai.entity.AIResult;
+import com.datn.datnbe.ai.mapper.AIResultMapper;
 import com.datn.datnbe.ai.repository.interfaces.AIResultRepo;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
@@ -20,6 +21,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AIResultManagement implements AIResultApi {
     AIResultRepo aiResultRepo;
+    AIResultMapper aiResultMapper;
 
     @Override
     public AIResultResponseDto saveAIResult(String aiResult, String presentationId) {
@@ -27,12 +29,7 @@ public class AIResultManagement implements AIResultApi {
 
         AIResult savedEntity = aiResultRepo.save(aiResultEntity);
 
-        return AIResultResponseDto.builder()
-                .id(savedEntity.getId())
-                .result(savedEntity.getResult())
-                .createdAt(savedEntity.getCreatedAt().toString())
-                .presentationId(savedEntity.getPresentationId())
-                .build();
+        return aiResultMapper.toResponseDto(savedEntity);
     }
 
     @Override
