@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.datn.datnbe.ai.entity.ModelConfigurationEntity;
 import com.datn.datnbe.ai.enums.ModelType;
 import com.datn.datnbe.ai.repository.interfaces.ModelConfigurationRepo;
-import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.testcontainers.BaseIntegrationTest;
 import java.util.List;
 
@@ -307,21 +306,6 @@ class ModelConfigurationIntegrationTest extends BaseIntegrationTest {
         // Attempting to disable a default model should throw an exception
         assertThrows(Exception.class, () -> {
             modelConfigurationRepo.setEnabled(savedModel.getModelId(), false);
-        });
-    }
-
-    @Test
-    void setDefaultForModelType_WithDisabledModel_ShouldThrowException() {
-        // Given
-        testTextModel1.setEnabled(false);
-        testTextModel1.setDefault(false);
-        modelConfigurationRepo.save(testTextModel1);
-        ModelConfigurationEntity savedModel = modelConfigurationRepo.getModelByNameAndType("gpt-4-test",
-                ModelType.TEXT);
-
-        // When & Then
-        assertThrows(AppException.class, () -> {
-            modelConfigurationRepo.setDefault(savedModel.getModelId(), true);
         });
     }
 

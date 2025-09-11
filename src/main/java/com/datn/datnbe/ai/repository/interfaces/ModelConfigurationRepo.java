@@ -41,6 +41,14 @@ public interface ModelConfigurationRepo {
     boolean isModelEnabled(Integer modelId);
 
     /**
+     * Checks if a model with the given ID is default.
+     *
+     * @param modelId the ID of the model to check
+     * @return true if the model is default, false otherwise
+     */
+    boolean isModelDefault(Integer modelId);
+
+    /**
      * Retrieves a model by its ID.
      *
      * @param modelId the ID of the model to retrieve

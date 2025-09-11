@@ -50,6 +50,11 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
     }
 
     @Override
+    public boolean isModelDefault(Integer modelId) {
+        return modelConfigurationJPARepo.findById(modelId).map(ModelConfigurationEntity::isDefault).orElse(false);
+    }
+
+    @Override
     public List<ModelConfigurationEntity> getModels() {
         return modelConfigurationJPARepo.findAll();
     }
@@ -64,11 +69,6 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
     public void setEnabled(Integer modelId, boolean isEnabled) {
         var existingModel = modelConfigurationJPARepo.findById(modelId)
                 .orElseThrow(() -> new AppException(ErrorCode.MODEL_NOT_FOUND));
-
-        if (!isEnabled && existingModel.isDefault()) {
-            throw new AppException(ErrorCode.INVALID_MODEL_STATUS,
-                    "Cannot disable a default model, please set another model as default first");
-        }
 
         var modelType = existingModel.getModelType().name();
         var countEnabledModelsOfType = modelConfigurationJPARepo.countEnabledModelsByType(modelType);
@@ -85,20 +85,16 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
     @Override
     public void setDefault(Integer modelId, boolean isDefault) {
         ModelConfigurationEntity model = getModelById(modelId);
-
-        if (isDefault && model.isEnabled()) {
-            // First disable all other default models of the same type
-            modelConfigurationJPARepo.disableDefaultModelsExcept(model.getModelType().name(), modelId);
-
-            // Then set this model as default
-            model.setDefault(true);
-            modelConfigurationJPARepo.save(model);
-        } else if (!isDefault) {
-            model.setDefault(false);
-            modelConfigurationJPARepo.save(model);
-        } else {
-            throw new AppException(ErrorCode.INVALID_MODEL_STATUS, "Cannot set a disabled model as default.");
+        if (!isDefault) {
+            throw new AppException(ErrorCode.INVALID_MODEL_STATUS, "\"Cannot remove default status from model.");
         }
+
+        // First disable all other default models of the same type
+        modelConfigurationJPARepo.disableDefaultModelsExcept(model.getModelType().name(), modelId);
+
+        // Then set this model as default
+        model.setDefault(true);
+        modelConfigurationJPARepo.save(model);
     }
 
     @Override
@@ -142,10 +138,6 @@ public class ModelConfigurationRepoImpl implements ModelConfigurationRepo {
 
     @Override
     public List<ModelConfigurationEntity> getModelsByType(ModelType modelType) {
-        if (modelType == null) {
-            return modelConfigurationJPARepo.findAll();
-        }
-
         return modelConfigurationJPARepo.findAllByModelType(modelType);
     }
 }

@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -31,26 +32,27 @@ public class ModelSelectionManagement implements ModelSelectionApi {
     public List<ModelResponseDto> getModelConfigurations() {
         return modelConfigurationRepo.getModels()
                 .stream()
-                .sorted(Comparator.comparing(ModelConfigurationEntity::getModelName))
+                .sorted(Comparator.comparing(ModelConfigurationEntity::getProvider))
                 .map(modelDataMapper::toModelResponseDto)
                 .toList();
     }
 
     @Override
     public List<ModelResponseDto> getModelConfigurations(ModelType modelType) {
-
-        return modelConfigurationRepo.getModelsByType(modelType)
-                .stream()
-                .sorted(Comparator.comparing(ModelConfigurationEntity::getModelName))
-                .map(modelDataMapper::toModelResponseDto)
-                .toList();
+        if (Objects.isNull(modelType)) {
+            return getModelConfigurations();
+        } else {
+            return modelConfigurationRepo.getModelsByType(modelType)
+                    .stream()
+                    .sorted(Comparator.comparing(ModelConfigurationEntity::getProvider))
+                    .map(modelDataMapper::toModelResponseDto)
+                    .toList();
+        }
     }
 
     @Override
     public ModelResponseDto setModelStatus(Integer modelId, UpdateModelStatusRequest request) {
-        if (!modelConfigurationRepo.existsByModelId(modelId)) {
-            throw new AppException(ErrorCode.MODEL_NOT_FOUND, "Model with ID " + modelId + " does not exist");
-        }
+        var existingModel = modelConfigurationRepo.getModelById(modelId);
 
         final Boolean isEnabled = request.getIsEnable();
         final Boolean isDefault = request.getIsDefault();
@@ -66,6 +68,14 @@ public class ModelSelectionManagement implements ModelSelectionApi {
             boolean effectiveEnabled = (isEnabled != null) ? isEnabled : modelConfigurationRepo.isModelEnabled(modelId);
             if (!effectiveEnabled) {
                 throw new AppException(ErrorCode.INVALID_MODEL_STATUS, "A model cannot be default if it is disabled");
+            }
+        }
+
+        // If the model currently is default, ensure that it cannot be disabled
+        if (Boolean.FALSE.equals(isEnabled)) {
+            boolean effectiveDefault = (isDefault != null) ? isDefault : modelConfigurationRepo.isModelDefault(modelId);
+            if (effectiveDefault) {
+                throw new AppException(ErrorCode.INVALID_MODEL_STATUS, "Cannot disable the default model");
             }
         }
 
