@@ -1,5 +1,7 @@
 package com.datn.datnbe.document.dto;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -55,12 +57,12 @@ public class SlideDto {
 
         Map<String, Object> extraFields = new java.util.HashMap<>();
 
-        @com.fasterxml.jackson.annotation.JsonAnySetter
+        @JsonAnySetter
         public void setExtraField(String key, Object value) {
             extraFields.put(key, value);
         }
 
-        @com.fasterxml.jackson.annotation.JsonAnyGetter
+        @JsonAnyGetter
         public java.util.Map<String, Object> getExtraFields() {
             return extraFields;
         }
