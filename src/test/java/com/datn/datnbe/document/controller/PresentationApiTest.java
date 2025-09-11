@@ -22,6 +22,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -138,10 +140,14 @@ class PresentationApiTest {
 
     @Test
     void createPresentation_WithComplexElements_ShouldPreserveAllProperties() throws Exception {
-        var extraFields = new java.util.HashMap<String, Object>();
-        extraFields.put("customProperty", "customValue");
-        extraFields.put("isTest", true);
-        extraFields.put("testNumber", 42);
+        var extraFields = Map.of("customProperty",
+                "customValue",
+                "isTest",
+                true,
+                "testNumber",
+                42,
+                "nestedLevel1",
+                Map.of("level2", Map.of("level3", Map.of("deepKey", "deepValue"))));
 
         SlideDto.SlideElementDto complexElement = SlideDto.SlideElementDto.builder()
                 .type("text")
@@ -211,6 +217,8 @@ class PresentationApiTest {
                 .andExpect(jsonPath("$.data.slides[0].elements[0].style").value("solid"))
                 .andExpect(jsonPath("$.data.slides[0].elements[0].wordSpace").value(2.0))
                 // Extra fields
+                .andExpect(jsonPath("$.data.slides[0].elements[0].extraFields.nestedLevel1.level2.level3.deepKey")
+                        .value("deepValue"))
                 .andExpect(jsonPath("$.data.slides[0].elements[0].customProperty").value("customValue"))
                 .andExpect(jsonPath("$.data.slides[0].elements[0].isTest").value(true))
                 .andExpect(jsonPath("$.data.slides[0].elements[0].testNumber").value(42));
