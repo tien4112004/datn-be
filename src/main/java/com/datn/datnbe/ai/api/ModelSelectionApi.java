@@ -3,6 +3,8 @@ package com.datn.datnbe.ai.api;
 import com.datn.datnbe.ai.config.chatmodelconfiguration.ModelProperties;
 import com.datn.datnbe.ai.dto.request.UpdateModelStatusRequest;
 import com.datn.datnbe.ai.dto.response.ModelResponseDto;
+import com.datn.datnbe.ai.enums.ModelType;
+
 import java.util.List;
 
 public interface ModelSelectionApi {
@@ -10,9 +12,19 @@ public interface ModelSelectionApi {
     /**
      * Retrieves the minimal configuration of a model by its ID.
      *
-     * @return a list of ModelResponseDto containing the minimal configuration of the model
+     * @return a list of ModelResponseDto containing the minimal configuration of
+     *         the model
      */
     List<ModelResponseDto> getModelConfigurations();
+
+    /**
+     * Retrieves the minimal configuration of a model by its ID.
+     *
+     * @param modelType the type of the model to retrieve
+     * @return a list of ModelResponseDto containing the minimal configuration of
+     *         the model
+     */
+    List<ModelResponseDto> getModelConfigurations(ModelType modelType);
 
     /**
      * Enables a model by its ID.
@@ -27,6 +39,7 @@ public interface ModelSelectionApi {
      * Checks if a model is enabled by its ID.
      *
      * @param modelName the ID of the model to check
+     *
      * @return true if the model is enabled, false otherwise
      */
     boolean isModelEnabled(String modelName);
@@ -34,7 +47,8 @@ public interface ModelSelectionApi {
     /**
      * Saves the model information.
      *
-     * @param modelInfo the ModelProperties.ModelInfo object containing the model information to save
+     * @param modelInfo the ModelProperties.ModelInfo object containing the model
+     *                  information to save
      */
     void saveModelInfo(ModelProperties.ModelInfo modelInfo);
 
@@ -45,6 +59,15 @@ public interface ModelSelectionApi {
      * @return true if the model exists, false otherwise
      */
     boolean existByName(String modelName);
+
+    /**
+     * Checks if a model exists by its name and type.
+     *
+     * @param modelName the name of the model to check
+     * @param modelType the type of the model to check
+     * @return true if the model exists, false otherwise
+     */
+    boolean existByNameAndType(String modelName, String modelType);
 
     /**
      * Removes a model by its name. This method is only used internally
