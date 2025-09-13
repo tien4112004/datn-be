@@ -1,11 +1,7 @@
 package com.datn.datnbe.ai.presentation;
 
-import com.datn.datnbe.document.api.PresentationApi;
-import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
-import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.util.ArrayList;
+
 import org.bson.types.ObjectId;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -14,23 +10,24 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.datn.datnbe.ai.api.AIResultApi;
 import com.datn.datnbe.ai.api.ContentGenerationApi;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
 import com.datn.datnbe.ai.utils.StreamingResponseUtils;
+import com.datn.datnbe.document.api.PresentationApi;
+import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
+import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
-
-import java.util.ArrayList;
 
 @Slf4j
 @RestController
@@ -40,6 +37,7 @@ import java.util.ArrayList;
 public class ContentGenerationController {
     ContentGenerationApi contentGenerationExternalApi;
     PresentationApi presentationApi;
+    AIResultApi aiResultApi;
 
     @PostMapping(value = "presentations/outline-generate", produces = MediaType.TEXT_PLAIN_VALUE)
     public Flux<String> generateOutline(@RequestBody OutlinePromptRequest request) {
@@ -92,7 +90,7 @@ public class ContentGenerationController {
                     "Failed to generate slides in batch mode: " + error.getMessage());
         }
         String presentationId = (new ObjectId()).toString();
-        contentGenerationExternalApi.saveAIResult(result, presentationId);
+        aiResultApi.saveAIResult(result, presentationId);
 
         PresentationCreateRequest createRequest = PresentationCreateRequest.builder()
                 .id(presentationId)
