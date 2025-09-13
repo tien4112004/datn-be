@@ -20,6 +20,20 @@ A Spring Boot modular monolith backend for the DATN project, built with Spring M
 - [Database Configuration](#database-configuration)
   - [1. Fully Docker Setup (Recommended)](#1-fully-docker-setup-recommended)
   - [2. Local Database Setup](#2-local-database-setup)
+- [Testing](#testing)
+  - [Test Structure](#test-structure)
+  - [Running Tests](#running-tests)
+    - [Run All Tests](#run-all-tests)
+    - [Run Tests by Module](#run-tests-by-module)
+    - [Run Specific Test Classes](#run-specific-test-classes)
+    - [Run Specific Test Methods](#run-specific-test-methods)
+    - [Run Tests by Pattern](#run-tests-by-pattern)
+    - [Test Execution Options](#test-execution-options)
+    - [Test Reports and Output](#test-reports-and-output)
+    - [Environment-Specific Testing](#environment-specific-testing)
+    - [Common Test Scenarios](#common-test-scenarios)
+  - [Test Best Practices](#test-best-practices)
+  - [Debugging Tests](#debugging-tests)
 - [Modules](#modules)
 - [Scripts](#scripts)
   - [`install.sh`](#installsh)
@@ -303,6 +317,183 @@ After updating `.env`, reload environment variables:
 source .env
 # or run the installer again
 ./scripts/install.sh
+```
+
+---
+
+## Testing
+
+The project includes comprehensive unit and integration tests using **JUnit 5**, **Mockito**, and **Spring Boot Test**. Tests are organized by module and follow best practices for testing Spring Boot applications.
+
+### Test Structure
+
+- **Unit Tests**: Test individual components in isolation using mocks
+- **Integration Tests**: Test module interactions and database operations
+- **Web Layer Tests**: Test REST controllers using `@WebMvcTest`
+- **Service Layer Tests**: Test business logic with mocked dependencies
+
+### Running Tests
+
+#### Run All Tests
+
+```bash
+# Run all tests in the project
+./gradlew test
+
+# Run tests with detailed output
+./gradlew test --info
+
+# Run tests and generate coverage report
+./gradlew test jacocoTestReport
+```
+
+#### Run Tests by Module
+
+```bash
+# Run all tests in the AI module
+./gradlew test --tests "com.datn.datnbe.ai.*"
+
+# Run all tests in the Auth module
+./gradlew test --tests "com.datn.datnbe.auth.*"
+
+# Run all tests in the Document module
+./gradlew test --tests "com.datn.datnbe.document.*"
+
+# Run all tests in the Shared Kernel module
+./gradlew test --tests "com.datn.datnbe.sharedkernel.*"
+```
+
+#### Run Specific Test Classes
+
+```bash
+# Run a specific test class
+./gradlew test --tests "ModelConfigurationControllerTest"
+
+# Run multiple specific test classes
+./gradlew test --tests "ModelConfigurationControllerTest" --tests "ModelSelectionManagementTest"
+
+# Run test class with full package name
+./gradlew test --tests "com.datn.datnbe.ai.presentation.ModelConfigurationControllerTest"
+```
+
+#### Run Specific Test Methods
+
+```bash
+# Run a specific test method
+./gradlew test --tests "ModelConfigurationControllerTest.getTextModels_WithValidData_ShouldReturnSuccessResponse"
+
+# Run multiple test methods from the same class
+./gradlew test --tests "ModelConfigurationControllerTest.getTextModels*"
+
+# Run all text model tests in ModelConfigurationController
+./gradlew test --tests "ModelConfigurationControllerTest.getTextModels*" --tests "ModelConfigurationControllerTest.getImageModels*"
+```
+
+#### Run Tests by Pattern
+
+```bash
+# Run all controller tests
+./gradlew test --tests "*Controller*"
+
+# Run all service tests
+./gradlew test --tests "*Service*" --tests "*Management*"
+
+# Run all tests containing "Model" in the name
+./gradlew test --tests "*Model*"
+
+# Run all integration tests (assuming they end with IntegrationTest)
+./gradlew test --tests "*IntegrationTest"
+```
+
+#### Test Execution Options
+
+```bash
+# Run tests in parallel (faster execution)
+./gradlew test --parallel
+
+# Run tests with maximum parallel workers
+./gradlew test --max-workers=4
+
+# Continue running tests even if some fail
+./gradlew test --continue
+
+# Run tests without build cache
+./gradlew test --no-build-cache
+
+# Run only failed tests from previous run
+./gradlew test --rerun-tasks
+```
+
+#### Test Reports and Output
+
+```bash
+# Generate and open test report in browser (Linux/macOS)
+./gradlew test && open build/reports/tests/test/index.html
+
+# View test results in terminal with details
+./gradlew test --info --stacktrace
+
+# Run tests with debug information
+./gradlew test --debug-jvm
+
+# Generate test coverage report
+./gradlew test jacocoTestReport
+# Coverage report will be available at: build/reports/jacoco/test/html/index.html
+```
+
+#### Environment-Specific Testing
+
+```bash
+# Run tests with test profile
+./gradlew test -Dspring.profiles.active=test
+
+# Run tests with specific environment variables
+./gradlew test -DTEST_DATABASE_URL=jdbc:h2:mem:testdb
+
+# Run integration tests with Docker database
+docker-compose -f docker-compose.db.yml up -d
+./gradlew test --tests "*IntegrationTest"
+```
+
+#### Common Test Scenarios
+
+```bash
+# Quick smoke test (run fastest tests first)
+./gradlew test --tests "*Unit*" --fail-fast
+
+# Run only tests that changed since last commit
+./gradlew test --continuous
+
+# Test specific functionality
+./gradlew test --tests "*ModelConfiguration*" --tests "*ModelSelection*"
+
+# Run tests for a specific feature
+./gradlew test --tests "*Auth*" --tests "*Login*" --tests "*Token*"
+
+# Pre-commit testing (fast feedback loop)
+./gradlew test --tests "*Unit*" --parallel --continue
+```
+
+### Test Best Practices
+
+- **Test Naming**: Use descriptive names following the pattern `methodName_condition_expectedResult`
+- **Test Organization**: Group tests by functionality using nested classes or clear section comments
+- **Mock Usage**: Use `@MockBean` for Spring components and `@Mock` for regular objects
+- **Test Data**: Use builders or factory methods for creating test data consistently
+- **Assertions**: Use AssertJ for fluent and readable assertions
+- **Coverage**: Aim for high test coverage but focus on critical business logic
+
+### Debugging Tests
+
+```bash
+# Run a single test with debugging enabled
+./gradlew test --tests "YourTestClass.yourTestMethod" --debug-jvm
+
+# Run tests with verbose logging
+./gradlew test --tests "YourTestClass" --info --stacktrace
+
+# Run tests with specific log level
+./gradlew test -Dlogging.level.com.datn.datnbe=DEBUG
 ```
 
 ---

@@ -2,6 +2,8 @@ package com.datn.datnbe.ai.config.chatmodelconfiguration;
 
 import java.util.List;
 import java.util.Map;
+
+import com.datn.datnbe.ai.enums.ModelType;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -20,6 +22,7 @@ public class ModelProperties {
         String displayName;
         String provider;
         boolean defaultModel;
+        ModelType modelType;
     }
 
     public List<ModelInfo> getModels() {
