@@ -3,10 +3,7 @@ package com.datn.datnbe.ai.entity;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 @Entity(name = "ai_result")
@@ -14,6 +11,7 @@ import org.hibernate.annotations.CreationTimestamp;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class AIResult {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

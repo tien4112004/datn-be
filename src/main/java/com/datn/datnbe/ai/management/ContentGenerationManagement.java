@@ -1,7 +1,6 @@
 package com.datn.datnbe.ai.management;
 
-import com.datn.datnbe.ai.entity.AIResult;
-import com.datn.datnbe.ai.repository.interfaces.AIResultRepo;
+import com.datn.datnbe.ai.api.AIResultApi;
 import org.springframework.stereotype.Service;
 
 import com.datn.datnbe.ai.api.ContentGenerationApi;
@@ -28,7 +27,7 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     SystemPromptConfig systemPromptConfig;
     ModelSelectionApi modelSelectionApi;
     ChatClientFactory chatClientFactory;
-    AIResultRepo aiResultRepo;
+    AIResultApi aiResultApi;
     // AIEventPublisher aiEventPublisher;
 
     @Override
@@ -69,17 +68,6 @@ public class ContentGenerationManagement implements ContentGenerationApi {
                 .content()
                 .doOnNext(chunk -> completeResponse.append(chunk))
                 .doOnError(error -> log.error("Error in streaming presentation generation: {}", error.getMessage()));
-    }
-
-    @Override
-    public String saveAIResult(String result, String presentationId) {
-        log.info("Saving AI result for presentation ID: {}", presentationId);
-        AIResult aiResult = new AIResult();
-        aiResult.setPresentationId(presentationId);
-        aiResult.setResult(result);
-        aiResultRepo.save(aiResult);
-
-        return "AI result saved successfully for presentation ID: " + presentationId;
     }
 
     private String extractJsonFromResponse(String response) {

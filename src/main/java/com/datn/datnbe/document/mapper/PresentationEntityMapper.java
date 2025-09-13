@@ -16,7 +16,7 @@ import org.mapstruct.*;
 @Named("PresentationEntityMapper")
 public interface PresentationEntityMapper {
 
-    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "id", source = "id", qualifiedByName = "createIdForPresentation")
     @Mapping(target = "title", expression = "java((request.getTitle() == null || request.getTitle().isEmpty()) ? \"Untitled Presentation\" : request.getTitle())")
     @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
@@ -50,5 +50,10 @@ public interface PresentationEntityMapper {
     // Helper methods for null safety
     default <T> List<T> safeList(List<T> list) {
         return list == null ? new ArrayList<>() : list;
+    }
+
+    @Named("createIdForPresentation")
+    default String createIdForPresentation(String id) {
+        return (id == null || id.isEmpty()) ? java.util.UUID.randomUUID().toString() : id;
     }
 }
