@@ -21,7 +21,7 @@ public interface PresentationEntityMapper {
     @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "slides", source = "slides", qualifiedByName = "toEntityList")
-    @Mapping(target = "isParsed", expression = "java(false)")
+    @Mapping(target = "isParsed", source = "isParsed", defaultValue = "true")
     Presentation createRequestToEntity(PresentationCreateRequest request);
 
     @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
@@ -54,6 +54,6 @@ public interface PresentationEntityMapper {
 
     @Named("createIdForPresentation")
     default String createIdForPresentation(String id) {
-        return (id == null || id.isEmpty()) ? java.util.UUID.randomUUID().toString() : id;
+        return (id == null || id.isEmpty()) ? null : id;
     }
 }
