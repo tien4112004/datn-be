@@ -96,6 +96,7 @@ public class ContentGenerationController {
                 .id(presentationId)
                 .title("AI Generated Presentation")
                 .slides(new ArrayList<>())
+                .isParsed(false)
                 .build();
         var newPresentation = presentationApi.createPresentation(createRequest);
 
