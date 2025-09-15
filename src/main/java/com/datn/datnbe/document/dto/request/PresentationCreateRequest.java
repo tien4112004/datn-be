@@ -23,4 +23,6 @@ public class PresentationCreateRequest {
     @NotNull(message = "Slides cannot be null")
     @Valid
     private List<SlideDto> slides;
+
+    Boolean isParsed;
 }
