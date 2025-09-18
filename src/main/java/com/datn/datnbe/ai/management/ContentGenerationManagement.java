@@ -42,8 +42,12 @@ public class ContentGenerationManagement implements ContentGenerationApi {
         var chatClient = chatClientFactory.getChatClient(request.getModel());
 
         log.info("Calling AI to stream outline generation");
-        var result = aiApiClient.postSse("/api/outline/generate/mock", request, String.class);
-        log.info(result.toString());
+        var result = aiApiClient.postSse("/api/outline/generate/stream/mock", request);
+        result.doOnSubscribe(sub -> log.info("Subscribed to SSE"))
+                .doOnNext(chunk -> log.info("Received chunk: {}", chunk))
+                .doOnError(err -> log.error("Stream error", err))
+                .doOnComplete(() -> log.info("Stream completed"))
+                .subscribe();
 
         return result;
     }
