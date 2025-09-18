@@ -15,6 +15,12 @@ spring:
         gemini:
           project-id: ${VERTEX_PROJECT_ID}
           location: ${VERTEX_LOCATION}
+  # HTTP CLIENT CONFIGURATION - Disable auto-configuration
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.http.client.HttpClientAutoConfiguration
+      - org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration
+      - org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration
   datasource:
     url: ${POSTGRES_DB_URL:jdbc:postgresql://localhost:5432/datn_monolith_db}
     username: ${POSTGRES_DB_USERNAME:postgres}
@@ -66,13 +72,20 @@ app:
           default-model: false
           model-type: text
   cors:
-    allowed-origins: ${ALLOWED_ORIGINS}
+    allowed-origins: "*"
     allowed-origin-patterns: ${ALLOWED_ORIGINS}
     allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
     allow-credentials: false
     max-age: 3600
   media:
     file-size-limit: 10485760 # 10MB
+
+ai:
+  api:
+    base-url: http://localhost:8081
+    timeout: 30000 
+
+
 cloudflare:
   r2:
     endpoint:  https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com
