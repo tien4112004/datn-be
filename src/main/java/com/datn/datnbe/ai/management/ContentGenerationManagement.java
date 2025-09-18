@@ -1,10 +1,11 @@
 package com.datn.datnbe.ai.management;
 
-import com.datn.datnbe.ai.api.AIResultApi;
 import org.springframework.stereotype.Service;
 
+import com.datn.datnbe.ai.api.AIResultApi;
 import com.datn.datnbe.ai.api.ContentGenerationApi;
 import com.datn.datnbe.ai.api.ModelSelectionApi;
+import com.datn.datnbe.ai.apiclient.AIApiClient;
 import com.datn.datnbe.ai.config.chatmodelconfiguration.SystemPromptConfig;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
@@ -12,11 +13,11 @@ import com.datn.datnbe.ai.factory.ChatClientFactory;
 import com.datn.datnbe.ai.utils.MappingParamsUtils;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
 @Service
@@ -28,6 +29,7 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     ModelSelectionApi modelSelectionApi;
     ChatClientFactory chatClientFactory;
     AIResultApi aiResultApi;
+    AIApiClient aiApiClient;
     // AIEventPublisher aiEventPublisher;
 
     @Override
@@ -39,11 +41,11 @@ public class ContentGenerationManagement implements ContentGenerationApi {
         }
         var chatClient = chatClientFactory.getChatClient(request.getModel());
 
-        return chatClient.prompt()
-                .user(prompt -> prompt.text(systemPromptConfig.getOutlinePrompt())
-                        .params(MappingParamsUtils.constructParams(request)))
-                .stream()
-                .content();
+        log.info("Calling AI to stream outline generation");
+        var result = aiApiClient.postSse("/api/outline/generate/mock", request, String.class);
+        log.info(result.toString());
+
+        return result;
     }
 
     @Override
@@ -68,14 +70,5 @@ public class ContentGenerationManagement implements ContentGenerationApi {
                 .content()
                 .doOnNext(chunk -> completeResponse.append(chunk))
                 .doOnError(error -> log.error("Error in streaming presentation generation: {}", error.getMessage()));
-    }
-
-    private String extractJsonFromResponse(String response) {
-        String cleaned = response.trim();
-
-        cleaned = cleaned.replaceAll("(?m)^```json\\s*|^```\\s*", "").replaceAll("\n---", ",").replaceAll(",\\s*$", "");
-
-        cleaned = "{\"slides\":[" + cleaned + "]}";
-        return cleaned;
     }
 }
