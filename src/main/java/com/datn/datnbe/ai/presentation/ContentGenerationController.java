@@ -3,11 +3,13 @@ package com.datn.datnbe.ai.presentation;
 import java.time.Duration;
 import java.util.ArrayList;
 
-import com.datn.datnbe.sharedkernel.utils.JsonUtils;
 import org.bson.types.ObjectId;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.datn.datnbe.ai.api.AIResultApi;
 import com.datn.datnbe.ai.api.ContentGenerationApi;
@@ -19,6 +21,7 @@ import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+import com.datn.datnbe.sharedkernel.utils.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -27,8 +30,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
-
-import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
 
 @Slf4j
 @RestController
@@ -57,16 +58,16 @@ public class ContentGenerationController {
                         "Failed to generate outline: " + error.getMessage()));
     }
 
-    @PostMapping(value = "presentations/generate", produces = TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(value = "presentations/generate", produces = MediaType.TEXT_PLAIN_VALUE)
     public Flux<String> generateSlidesV2(@RequestBody PresentationPromptRequest request) {
         return contentGenerationExternalApi.generateSlides(request)
-                .doOnNext(response -> log.info("Received response chunk"))
-                // Thử parse từng chunk ngay
+                .doOnNext(response -> log.info("Received response chunk: {}", response))
                 .flatMap(this::tryParseSlideFromChunk)
                 .map(JsonUtils::toPrettyJsonSafe)
+                .map(slide -> slide + "\n\n")
                 .delayElements(Duration.ofMillis(800))
                 .doOnSubscribe(s -> log.info("Starting slide generation stream"))
-                .doOnNext(slide -> log.info("Streaming slide"))
+                .doOnNext(slide -> log.info("Streaming slide: {}", slide))
                 .doOnComplete(() -> log.info("Completed streaming all slides"))
                 .onErrorMap(err -> {
                     log.error("Error generating slides", err);
@@ -77,23 +78,51 @@ public class ContentGenerationController {
 
     private Flux<String> tryParseSlideFromChunk(String chunk) {
         try {
-            // Nếu chunk chứa complete JSON object của 1 slide
-            JsonNode node = objectMapper.readTree(chunk);
+            log.debug("Processing chunk length: {}", chunk.length());
+
+            String workingChunk = chunk;
+            if (chunk.startsWith("\"") && chunk.endsWith("\"")) {
+                try {
+                    workingChunk = objectMapper.readValue(chunk, String.class);
+                    log.debug("Extracted from JSON string, new length: {}", workingChunk.length());
+                } catch (Exception e) {
+                    log.warn("Failed to parse as JSON string: {}", e.getMessage());
+                }
+            }
+
+            String cleanedChunk = JsonUtils.stripFence(workingChunk).trim();
+            log.debug("Cleaned chunk length: {}", cleanedChunk.length());
+
+            JsonNode node = objectMapper.readTree(cleanedChunk);
+
             if (node.isObject() && node.has("type") && node.has("data")) {
+                log.debug("Found single slide with type and data");
                 return Flux.just(objectMapper.writeValueAsString(node));
             }
 
-            // Nếu chunk chứa array slides hoàn chỉnh
             if (node.isObject() && node.has("slides")) {
-                return JsonUtils.splitSlidesAsFlux(chunk);
+                log.debug("Found slides container, splitting into individual slides");
+                return JsonUtils.splitSlidesAsFlux(cleanedChunk)
+                        .doOnNext(slide -> log.debug("Emitting individual slide from array"));
             }
 
-            // Skip chunk này nếu không parse được
+            if (node.isArray()) {
+                log.debug("Found slides array, splitting");
+                return JsonUtils.splitSlidesAsFlux(cleanedChunk)
+                        .doOnNext(slide -> log.debug("Emitting individual slide from direct array"));
+            }
+
+            if (node.isObject()) {
+                log.debug("Found generic JSON object, treating as slide");
+                return Flux.just(objectMapper.writeValueAsString(node));
+            }
+
+            log.debug("Chunk doesn't match expected JSON structure, skipping");
             return Flux.empty();
 
         } catch (Exception e) {
-            log.debug("Could not parse chunk as JSON, skipping: {}", chunk);
-            return Flux.empty();
+            log.warn("Could not parse chunk as JSON, passing through as-is - Error: {}", e.getMessage());
+            return Flux.just(chunk);
         }
     }
 

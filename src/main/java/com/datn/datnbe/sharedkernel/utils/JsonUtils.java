@@ -1,12 +1,15 @@
 package com.datn.datnbe.sharedkernel.utils;
 
+import java.util.stream.StreamSupport;
+
 import com.fasterxml.jackson.core.json.JsonWriteFeature;
-import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
-
-import java.util.stream.StreamSupport;
 
 @Slf4j
 public final class JsonUtils {
@@ -17,7 +20,6 @@ public final class JsonUtils {
     private JsonUtils() {
     }
 
-    // In đẹp một object/array JSON; nếu không parse được thì trả nguyên văn (để debug)
     public static String toPrettyJsonSafe(String raw) {
         if (raw == null)
             return null;
@@ -30,7 +32,6 @@ public final class JsonUtils {
         }
     }
 
-    // Trả Flux<String>, mỗi phần tử là 1 slide JSON (string)
     public static Flux<String> splitSlidesAsFlux(String raw) {
         if (raw == null || raw.isBlank()) {
             return Flux.empty();
@@ -41,12 +42,10 @@ public final class JsonUtils {
         try {
             JsonNode root = M.readTree(cleanedJson);
 
-            // TH1: Đã là 1 slide object riêng lẻ
             if (root.isObject() && root.has("type") && root.has("data")) {
                 return Flux.just(M.writeValueAsString(root));
             }
 
-            // TH2: Object chứa slides array: { "slides": [...] }
             if (root.isObject() && root.has("slides")) {
                 JsonNode slidesNode = root.get("slides");
                 if (slidesNode.isArray()) {
@@ -60,7 +59,6 @@ public final class JsonUtils {
                 }
             }
 
-            // TH3: Array thuần: [{slide1}, {slide2}, ...]
             if (root.isArray()) {
                 return Flux.fromStream(StreamSupport.stream(root.spliterator(), false).map(slide -> {
                     try {
@@ -71,11 +69,9 @@ public final class JsonUtils {
                 }));
             }
 
-            // Fallback: trả về nguyên văn
             return Flux.just(cleanedJson);
 
         } catch (Exception e) {
-            // Nếu không parse được JSON, trả về nguyên văn
             return Flux.just(cleanedJson);
         }
     }
@@ -86,11 +82,15 @@ public final class JsonUtils {
         String s = t.trim();
         if (s.startsWith("```")) {
             int firstNl = s.indexOf('\n');
-            if (firstNl >= 0)
+            if (firstNl >= 0) {
                 s = s.substring(firstNl + 1);
+            } else {
+                s = s.substring(3);
+            }
             int lastFence = s.lastIndexOf("```");
-            if (lastFence >= 0)
+            if (lastFence >= 0) {
                 s = s.substring(0, lastFence);
+            }
             s = s.trim();
         }
         return s;

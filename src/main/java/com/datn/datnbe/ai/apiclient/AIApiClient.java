@@ -12,8 +12,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 
+@Slf4j
 @Component
 public class AIApiClient {
 
@@ -77,6 +79,7 @@ public class AIApiClient {
 
     public <R> Flux<String> postSse(String endpoint, R requestBody, Map<String, String> headers) {
         String url = buildUrl(endpoint);
+        log.info("Making SSE request to: {}", url);
 
         WebClient.RequestBodySpec spec = webClient.post().uri(url).contentType(MediaType.APPLICATION_JSON);
 
@@ -84,12 +87,14 @@ public class AIApiClient {
         if (headers != null)
             headers.forEach(req::header);
 
-        // Nhận trực tiếp phần data của SSE dưới dạng String
         return req.accept(MediaType.TEXT_EVENT_STREAM)
                 .retrieve()
-                .bodyToFlux(String.class)                // <-- KHÔNG dùng ServerSentEvent ở đây
+                .bodyToFlux(String.class)
+                .doOnNext(chunk -> log.info("Raw SSE chunk received: {}", chunk))
                 .filter(s -> s != null && !s.isBlank())
-                .map(String::trim);
+                .map(String::trim)
+                .doOnComplete(() -> log.info("SSE stream completed"))
+                .doOnError(error -> log.error("SSE stream error", error));
     }
 
 }
