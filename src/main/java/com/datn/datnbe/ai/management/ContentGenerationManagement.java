@@ -1,15 +1,15 @@
 package com.datn.datnbe.ai.management;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
 import org.springframework.stereotype.Service;
 
-import com.datn.datnbe.ai.api.AIResultApi;
 import com.datn.datnbe.ai.api.ContentGenerationApi;
 import com.datn.datnbe.ai.api.ModelSelectionApi;
 import com.datn.datnbe.ai.apiclient.AIApiClient;
-import com.datn.datnbe.ai.config.chatmodelconfiguration.SystemPromptConfig;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
-import com.datn.datnbe.ai.factory.ChatClientFactory;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 
@@ -19,19 +19,15 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-
 @Service
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 public class ContentGenerationManagement implements ContentGenerationApi {
-    SystemPromptConfig systemPromptConfig;
     ModelSelectionApi modelSelectionApi;
-    ChatClientFactory chatClientFactory;
-    AIResultApi aiResultApi;
     AIApiClient aiApiClient;
+    static final String OUTLINE_API_ENDPOINT = "/api/outline/generate/stream/mock";
+    static final String PRESENTATION_API_ENDPOINT = "/api/presentations/generate/mock";
     // AIEventPublisher aiEventPublisher;
 
     @Override
@@ -43,7 +39,7 @@ public class ContentGenerationManagement implements ContentGenerationApi {
         }
 
         log.info("Calling AI to stream outline generation");
-        return aiApiClient.postSse("/api/outline/generate/stream/mock", request)
+        return aiApiClient.postSse(OUTLINE_API_ENDPOINT, request)
                 .map(chunk -> new String(Base64.getDecoder().decode(chunk), StandardCharsets.UTF_8));
     }
 
@@ -58,6 +54,6 @@ public class ContentGenerationManagement implements ContentGenerationApi {
 
         log.info("Calling AI to stream presentation slides");
 
-        return aiApiClient.postSse("/api/presentations/generate/mock", request);
+        return aiApiClient.postSse(PRESENTATION_API_ENDPOINT, request);
     }
 }
