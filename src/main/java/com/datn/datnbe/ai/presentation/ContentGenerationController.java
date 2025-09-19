@@ -1,7 +1,9 @@
 package com.datn.datnbe.ai.presentation;
 
+import java.time.Duration;
 import java.util.ArrayList;
 
+import com.datn.datnbe.sharedkernel.utils.JsonUtils;
 import org.bson.types.ObjectId;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +28,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 
+import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
+
 @Slf4j
 @RestController
 @RequestMapping("api/")
@@ -35,13 +39,14 @@ public class ContentGenerationController {
     ContentGenerationApi contentGenerationExternalApi;
     PresentationApi presentationApi;
     AIResultApi aiResultApi;
+    ObjectMapper objectMapper;
 
     @PostMapping(value = "presentations/outline-generate", produces = MediaType.TEXT_PLAIN_VALUE)
     public Flux<String> generateOutline(@RequestBody OutlinePromptRequest request) {
         log.info("Received outline generation request: {}", request);
 
         return StreamingResponseUtils
-                .streamWordByWordWithSpaces(StreamingResponseUtils.X_DELAY,
+                .streamWordByWordWithSpaces(10,
                         contentGenerationExternalApi.generateOutline(request)
                                 .doOnSubscribe(subscription -> log.info("Starting outline generation stream")))
                 .doOnError(error -> {
@@ -52,18 +57,44 @@ public class ContentGenerationController {
                         "Failed to generate outline: " + error.getMessage()));
     }
 
-    @PostMapping(value = "presentations/generate", produces = MediaType.TEXT_PLAIN_VALUE)
-    public Flux<String> generateSlides(@RequestBody PresentationPromptRequest request) {
-        return StreamingResponseUtils
-                .streamByJsonObject(StreamingResponseUtils.HIGH_DELAY,
-                        contentGenerationExternalApi.generateSlides(request)
-                                .doOnSubscribe(subscription -> log.info("Starting slide generation stream")))
-                .doOnError(error -> {
-                    log.error("Error generating slides", error);
-                    throw new AppException(ErrorCode.GENERATION_ERROR, "Failed to generate slides");
-                })
-                .onErrorMap(error -> new AppException(ErrorCode.GENERATION_ERROR,
-                        "Failed to generate slides: " + error.getMessage()));
+    @PostMapping(value = "presentations/generate", produces = TEXT_EVENT_STREAM_VALUE)
+    public Flux<String> generateSlidesV2(@RequestBody PresentationPromptRequest request) {
+        return contentGenerationExternalApi.generateSlides(request)
+                .doOnNext(response -> log.info("Received response chunk"))
+                // Thử parse từng chunk ngay
+                .flatMap(this::tryParseSlideFromChunk)
+                .map(JsonUtils::toPrettyJsonSafe)
+                .delayElements(Duration.ofMillis(800))
+                .doOnSubscribe(s -> log.info("Starting slide generation stream"))
+                .doOnNext(slide -> log.info("Streaming slide"))
+                .doOnComplete(() -> log.info("Completed streaming all slides"))
+                .onErrorMap(err -> {
+                    log.error("Error generating slides", err);
+                    return new AppException(ErrorCode.GENERATION_ERROR,
+                            "Failed to generate slides: " + err.getMessage());
+                });
+    }
+
+    private Flux<String> tryParseSlideFromChunk(String chunk) {
+        try {
+            // Nếu chunk chứa complete JSON object của 1 slide
+            JsonNode node = objectMapper.readTree(chunk);
+            if (node.isObject() && node.has("type") && node.has("data")) {
+                return Flux.just(objectMapper.writeValueAsString(node));
+            }
+
+            // Nếu chunk chứa array slides hoàn chỉnh
+            if (node.isObject() && node.has("slides")) {
+                return JsonUtils.splitSlidesAsFlux(chunk);
+            }
+
+            // Skip chunk này nếu không parse được
+            return Flux.empty();
+
+        } catch (Exception e) {
+            log.debug("Could not parse chunk as JSON, skipping: {}", chunk);
+            return Flux.empty();
+        }
     }
 
     @PostMapping(value = "presentations/generate/batch", produces = "application/json")
