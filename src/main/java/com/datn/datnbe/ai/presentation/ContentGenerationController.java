@@ -60,6 +60,17 @@ public class ContentGenerationController {
 
     @PostMapping(value = "presentations/generate", produces = MediaType.TEXT_PLAIN_VALUE)
     public Flux<String> generateSlidesV2(@RequestBody PresentationPromptRequest request) {
+        String presentationId = (new ObjectId()).toString();
+        StringBuilder result = new StringBuilder();
+
+        PresentationCreateRequest createRequest = PresentationCreateRequest.builder()
+                .id(presentationId)
+                .title("AI Generated Presentation")
+                .slides(new ArrayList<>())
+                .isParsed(false)
+                .build();
+        presentationApi.createPresentation(createRequest);
+
         return contentGenerationExternalApi.generateSlides(request)
                 .doOnNext(response -> log.info("Received response chunk: {}", response))
                 .flatMap(this::tryParseSlideFromChunk)
@@ -67,8 +78,11 @@ public class ContentGenerationController {
                 .map(slide -> slide + "\n\n")
                 .delayElements(Duration.ofMillis(800))
                 .doOnSubscribe(s -> log.info("Starting slide generation stream"))
-                .doOnNext(slide -> log.info("Streaming slide: {}", slide))
-                .doOnComplete(() -> log.info("Completed streaming all slides"))
+                .doOnNext(slide -> result.append(slide))
+                .doOnComplete(() -> {
+                    aiResultApi.saveAIResult(result.toString(), presentationId);
+                    log.info("Slide generation completed, result saved with ID: {}", presentationId);
+                })
                 .onErrorMap(err -> {
                     log.error("Error generating slides", err);
                     return new AppException(ErrorCode.GENERATION_ERROR,
