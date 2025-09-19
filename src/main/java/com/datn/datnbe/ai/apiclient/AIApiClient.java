@@ -3,13 +3,11 @@ package com.datn.datnbe.ai.apiclient;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -79,15 +77,19 @@ public class AIApiClient {
 
     public <R> Flux<String> postSse(String endpoint, R requestBody, Map<String, String> headers) {
         String url = buildUrl(endpoint);
-        WebClient.RequestHeadersSpec<?> spec = webClient.post().uri(url).bodyValue(requestBody);
-        if (headers != null)
-            headers.forEach(spec::header);
 
-        return spec.accept(MediaType.TEXT_EVENT_STREAM)
+        WebClient.RequestBodySpec spec = webClient.post().uri(url).contentType(MediaType.APPLICATION_JSON);
+
+        WebClient.RequestHeadersSpec<?> req = spec.bodyValue(requestBody);
+        if (headers != null)
+            headers.forEach(req::header);
+
+        // Nhận trực tiếp phần data của SSE dưới dạng String
+        return req.accept(MediaType.TEXT_EVENT_STREAM)
                 .retrieve()
-                .bodyToFlux(new ParameterizedTypeReference<ServerSentEvent<String>>() {
-                })
-                .mapNotNull(ServerSentEvent::data);   // tự bỏ qua null
+                .bodyToFlux(String.class)                // <-- KHÔNG dùng ServerSentEvent ở đây
+                .filter(s -> s != null && !s.isBlank())
+                .map(String::trim);
     }
 
 }

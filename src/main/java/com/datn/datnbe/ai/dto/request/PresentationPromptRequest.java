@@ -1,5 +1,6 @@
 package com.datn.datnbe.ai.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -21,7 +22,12 @@ public class PresentationPromptRequest {
 
     String model;
     String language;
+    @JsonProperty("slide_count")
     String slideCount;
+    @JsonProperty("learning_objective")
     String learningObjective;
+    @JsonProperty("target_age")
     String targetAge;
+
+    String provider;
 }

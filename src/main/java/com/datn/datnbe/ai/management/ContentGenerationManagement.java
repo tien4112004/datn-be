@@ -10,7 +10,6 @@ import com.datn.datnbe.ai.config.chatmodelconfiguration.SystemPromptConfig;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
 import com.datn.datnbe.ai.factory.ChatClientFactory;
-import com.datn.datnbe.ai.utils.MappingParamsUtils;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 
@@ -19,6 +18,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 @Service
 @Slf4j
@@ -39,17 +41,10 @@ public class ContentGenerationManagement implements ContentGenerationApi {
             log.error("Model {} is not enabled for outline generation", request.getModel());
             return Flux.error(new AppException(ErrorCode.MODEL_NOT_ENABLED));
         }
-        var chatClient = chatClientFactory.getChatClient(request.getModel());
 
         log.info("Calling AI to stream outline generation");
-        var result = aiApiClient.postSse("/api/outline/generate/stream/mock", request);
-        result.doOnSubscribe(sub -> log.info("Subscribed to SSE"))
-                .doOnNext(chunk -> log.info("Received chunk: {}", chunk))
-                .doOnError(err -> log.error("Stream error", err))
-                .doOnComplete(() -> log.info("Stream completed"))
-                .subscribe();
-
-        return result;
+        return aiApiClient.postSse("/api/outline/generate/stream/mock", request)
+                .map(chunk -> new String(Base64.getDecoder().decode(chunk), StandardCharsets.UTF_8));
     }
 
     @Override
@@ -61,18 +56,8 @@ public class ContentGenerationManagement implements ContentGenerationApi {
             return Flux.error(new AppException(ErrorCode.MODEL_NOT_ENABLED));
         }
 
-        var chatClient = chatClientFactory.getChatClient(request.getModel());
-
         log.info("Calling AI to stream presentation slides");
 
-        StringBuilder completeResponse = new StringBuilder();
-
-        return chatClient.prompt()
-                .user(promptSys -> promptSys.text(systemPromptConfig.getSlidePrompt())
-                        .params(MappingParamsUtils.constructParams(request)))
-                .stream()
-                .content()
-                .doOnNext(chunk -> completeResponse.append(chunk))
-                .doOnError(error -> log.error("Error in streaming presentation generation: {}", error.getMessage()));
+        return aiApiClient.postSse("/api/presentations/generate/mock", request);
     }
 }
