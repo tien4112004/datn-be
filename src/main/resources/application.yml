@@ -33,6 +33,13 @@ spring:
   data:
     mongodb:
       uri: ${MONGODB_URI:mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DATABASE}?authSource=${MONGODB_AUTH_DATABASE}}
+
+server:
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 app:
   models:
     configurations:

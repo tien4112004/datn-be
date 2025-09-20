@@ -87,7 +87,7 @@ class ModelConfigurationControllerTest {
 		mockMvc
 				.perform(get("/api/models").contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true))
 				.andExpect(jsonPath("$.code").value(200))
 				.andExpect(jsonPath("$.data").isArray())
@@ -122,7 +122,7 @@ class ModelConfigurationControllerTest {
 		mockMvc
 				.perform(get("/api/models").contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true))
 				.andExpect(jsonPath("$.code").value(200))
 				.andExpect(jsonPath("$.data").isArray())
@@ -142,7 +142,7 @@ class ModelConfigurationControllerTest {
 		mockMvc
 				.perform(get("/api/models").contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isInternalServerError())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(false))
 				.andExpect(jsonPath("$.code").value(500))
 				.andExpect(jsonPath("$.message").value("Database connection failed"))
@@ -180,7 +180,7 @@ class ModelConfigurationControllerTest {
         // When & Then
         mockMvc.perform(get("/api/models?modelType=TEXT").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data").isArray())
@@ -209,7 +209,7 @@ class ModelConfigurationControllerTest {
 		mockMvc
 				.perform(get("/api/models?modelType=TEXT").contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true))
 				.andExpect(jsonPath("$.code").value(200))
 				.andExpect(jsonPath("$.data").isArray())
@@ -247,7 +247,7 @@ class ModelConfigurationControllerTest {
         // When & Then
         mockMvc.perform(get("/api/models?modelType=IMAGE").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data").isArray())
@@ -276,7 +276,7 @@ class ModelConfigurationControllerTest {
 		mockMvc
 				.perform(get("/api/models?modelType=IMAGE").contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true))
 				.andExpect(jsonPath("$.code").value(200))
 				.andExpect(jsonPath("$.data").isArray())
@@ -295,7 +295,7 @@ class ModelConfigurationControllerTest {
 		mockMvc
 				.perform(get("/api/models?modelType=IMAGE").contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isInternalServerError())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(false))
 				.andExpect(jsonPath("$.code").value(500))
 				.andExpect(jsonPath("$.message").value("Database connection failed"))
@@ -328,7 +328,7 @@ class ModelConfigurationControllerTest {
         mockMvc.perform(patch("/api/models/{id}", modelId).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.modelId").value("1"))
@@ -359,7 +359,7 @@ class ModelConfigurationControllerTest {
         mockMvc.perform(patch("/api/models/{id}", modelId).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.modelId").value("1"))
@@ -389,7 +389,7 @@ class ModelConfigurationControllerTest {
         mockMvc.perform(patch("/api/models/{id}", modelId).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.modelId").value("1"))
@@ -411,7 +411,7 @@ class ModelConfigurationControllerTest {
         mockMvc.perform(patch("/api/models/{id}", modelId).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value(404))
                 .andExpect(jsonPath("$.message").value("Model not found"))
@@ -432,7 +432,7 @@ class ModelConfigurationControllerTest {
         mockMvc.perform(patch("/api/models/{id}", modelId).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value(403))
                 .andExpect(jsonPath("$.message").value("A model cannot be default if it is disabled"))
@@ -454,7 +454,7 @@ class ModelConfigurationControllerTest {
         mockMvc.perform(patch("/api/models/{id}", modelId).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value(403))
                 .andExpect(jsonPath("$.message").value("At least one of isEnabled or isDefault must be provided"))
@@ -472,7 +472,7 @@ class ModelConfigurationControllerTest {
         mockMvc.perform(
                 patch("/api/models/{id}", modelId).contentType(MediaType.APPLICATION_JSON).content(malformedJson))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value(400))
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
@@ -503,7 +503,7 @@ class ModelConfigurationControllerTest {
         mockMvc.perform(patch("/api/models/{id}", modelId).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value(500))
                 .andExpect(jsonPath("$.message").value("Internal server error"))
@@ -528,7 +528,7 @@ class ModelConfigurationControllerTest {
         mockMvc.perform(patch("/api/models/{id}", modelId).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.errorCode").value("MODEL_NOT_FOUND"));
     }
@@ -547,7 +547,7 @@ class ModelConfigurationControllerTest {
         mockMvc.perform(patch("/api/models/{id}", modelId).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.errorCode").value("MODEL_NOT_FOUND"));
     }

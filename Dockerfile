@@ -6,6 +6,7 @@ WORKDIR /application
 COPY gradlew gradlew.bat ./
 COPY gradle/ gradle/
 COPY gradle.properties build.gradle settings.gradle ./
+COPY eclipse-formatter.xml ./
 
 # Use cache mount for Gradle cache directory
 RUN --mount=type=cache,target=/root/.gradle \
