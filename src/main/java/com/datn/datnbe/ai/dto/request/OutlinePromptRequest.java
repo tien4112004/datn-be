@@ -1,5 +1,6 @@
 package com.datn.datnbe.ai.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,7 +16,11 @@ public class OutlinePromptRequest {
     String topic;
     String language;
     String model;
+    @JsonProperty("slide_count")
     int slideCount;
+    @JsonProperty("learning_objective")
     String learningObjective;
+    @JsonProperty("target_age")
     String targetAge;
+    String provider;
 }
