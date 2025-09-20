@@ -90,7 +90,6 @@ public class AIApiClient {
         return req.accept(MediaType.TEXT_EVENT_STREAM)
                 .retrieve()
                 .bodyToFlux(String.class)
-                .doOnNext(chunk -> log.info("Raw SSE chunk received: {}", chunk))
                 .filter(s -> s != null && !s.isBlank())
                 .map(String::trim)
                 .doOnComplete(() -> log.info("SSE stream completed"))
