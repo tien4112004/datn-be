@@ -55,6 +55,7 @@ dependencies {
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
+    testImplementation 'org.apache.httpcomponents.client5:httpclient5:5.2.1'
     testCompileOnly 'org.projectlombok:lombok:1.18.38'
     
     // Testcontainers dependencies
