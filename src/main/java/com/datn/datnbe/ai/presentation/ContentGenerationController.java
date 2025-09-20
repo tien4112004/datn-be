@@ -59,7 +59,7 @@ public class ContentGenerationController {
     }
 
     @PostMapping(value = "presentations/generate", produces = MediaType.TEXT_PLAIN_VALUE)
-    public Flux<String> generateSlidesV2(@RequestBody PresentationPromptRequest request) {
+    public Flux<String> generateSlides(@RequestBody PresentationPromptRequest request) {
         String presentationId = (new ObjectId()).toString();
         StringBuilder result = new StringBuilder();
 
@@ -92,9 +92,10 @@ public class ContentGenerationController {
 
     private Flux<String> tryParseSlideFromChunk(String chunk) {
         try {
-            log.debug("Processing chunk length: {}", chunk.length());
-
             String workingChunk = chunk;
+            if (chunk.startsWith("data: ")) {
+                workingChunk = workingChunk.substring("data: ".length());
+            }
             if (chunk.startsWith("\"") && chunk.endsWith("\"")) {
                 try {
                     workingChunk = objectMapper.readValue(chunk, String.class);
