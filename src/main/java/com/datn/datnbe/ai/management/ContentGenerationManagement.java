@@ -3,6 +3,8 @@ package com.datn.datnbe.ai.management;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
+import lombok.experimental.NonFinal;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.datn.datnbe.ai.api.ContentGenerationApi;
@@ -26,8 +28,14 @@ import reactor.core.publisher.Flux;
 public class ContentGenerationManagement implements ContentGenerationApi {
     ModelSelectionApi modelSelectionApi;
     AIApiClient aiApiClient;
-    static final String OUTLINE_API_ENDPOINT = "/api/outline/generate/stream/mock";
-    static final String PRESENTATION_API_ENDPOINT = "/api/presentations/generate/mock";
+
+    @Value("${ai.api.outline-endpoint}")
+    @NonFinal
+    String OUTLINE_API_ENDPOINT;
+
+    @Value("${ai.api.presentation-endpoint}")
+    @NonFinal
+    String PRESENTATION_API_ENDPOINT;
     // AIEventPublisher aiEventPublisher;
 
     @Override
