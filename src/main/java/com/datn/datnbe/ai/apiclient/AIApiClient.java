@@ -2,17 +2,16 @@ package com.datn.datnbe.ai.apiclient;
 
 import java.util.Map;
 
+import com.datn.datnbe.sharedkernel.exceptions.AppException;
+import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import reactor.core.publisher.Flux;
 
 @Slf4j
@@ -89,11 +88,26 @@ public class AIApiClient {
 
         return req.accept(MediaType.TEXT_EVENT_STREAM)
                 .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError,
+                        resp -> resp.bodyToMono(String.class)
+                                .defaultIfEmpty("")
+                                .map(body -> new AppException(ErrorCode.AI_WORKER_UNPROCESSABLE_ENTITY, body)))
+                .onStatus(HttpStatusCode::is5xxServerError,
+                        resp -> resp.bodyToMono(String.class)
+                                .defaultIfEmpty("")
+                                .map(body -> new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, body)))
                 .bodyToFlux(String.class)
+                .onErrorMap(WebClientRequestException.class, ex -> {
+                    if (ex.getCause() instanceof java.net.ConnectException
+                            || ex.getCause() instanceof java.nio.channels.ClosedChannelException) {
+                        return new AppException(ErrorCode.AI_WORKER_UNAVAILABLE, "AI worker is unreachable", ex);
+                    }
+                    return ex;
+                })
                 .filter(s -> s != null && !s.isBlank())
                 .map(String::trim)
                 .doOnComplete(() -> log.info("SSE stream completed"))
-                .doOnError(error -> log.error("SSE stream error", error));
+                .doOnError(err -> log.error("SSE stream error", err));
     }
 
 }

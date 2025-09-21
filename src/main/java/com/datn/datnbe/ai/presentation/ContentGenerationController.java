@@ -45,27 +45,13 @@ public class ContentGenerationController {
     public Flux<String> generateOutline(@RequestBody OutlinePromptRequest request) {
         log.info("Received outline generation request: {}", request);
 
-        //        return StreamingResponseUtils
-        //                .streamWordByWordWithSpaces(10,
-        //                        contentGenerationExternalApi.generateOutline(request)
-        //                                .doOnSubscribe(subscription -> log.info("Starting outline generation stream")))
-        //                .doOnError(error -> {
-        //                    log.error("Error generating outline", error);
-        //                    throw new AppException(ErrorCode.GENERATION_ERROR, "Failed to generate outline");
-        //                })
-        //                .onErrorMap(error -> new AppException(ErrorCode.GENERATION_ERROR,
-        //                        "Failed to generate outline: " + error.getMessage()));
-
         return contentGenerationExternalApi.generateOutline(request)
                 .delayElements(Duration.ofMillis(OUTLINE_DELAY))
                 .doOnNext(chunk -> log.info("Received outline chunk: {}", chunk))
                 .doOnSubscribe(subscription -> log.info("Starting outline generation stream"))
-                .doOnError(error -> {
-                    log.error("Error generating outline", error);
-                    throw new AppException(ErrorCode.GENERATION_ERROR, "Failed to generate outline");
-                })
-                .onErrorMap(error -> new AppException(ErrorCode.GENERATION_ERROR,
-                        "Failed to generate outline: " + error.getMessage()));
+                .onErrorResume(AppException.class, ex -> {
+                    throw ex;
+                });
     }
 
     @PostMapping(value = "presentations/generate", produces = MediaType.TEXT_PLAIN_VALUE)

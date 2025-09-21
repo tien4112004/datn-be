@@ -28,7 +28,11 @@ public enum ErrorCode {
     IDEMPOTENCY_KEY_MISSING("Idempotency key is missing", 400),
     IDEMPOTENCY_KEY_INVALID("Idempotency key is invalid", 400),
 
-    AI_RESULT_NOT_FOUND("AI Result not found", 404);
+    AI_RESULT_NOT_FOUND("AI Result not found", 404),
+
+    AI_WORKER_UNPROCESSABLE_ENTITY("AI Worker cannot process the request", 422),
+    AI_WORKER_SERVER_ERROR("AI Worker encountered an error", 500),
+    AI_WORKER_UNAVAILABLE("AI Worker is unavailable", 503);
 
     private final String defaultMessage;
     private final Integer statusCode;
