@@ -21,4 +21,6 @@ public interface PresentationApi {
     PresentationDto getPresentation(String id);
 
     void updatePresentationParsingStatus(String id);
+
+    void deletePresentation(String id);
 }

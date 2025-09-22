@@ -160,4 +160,12 @@ public class PresentationManagement implements PresentationApi {
         existingPresentation.setIsParsed(!existingPresentation.getIsParsed());
         presentationRepository.save(existingPresentation);
     }
+
+    @Override
+    public void deletePresentation(String id) {
+        log.info("Deleting presentation with ID: {}", id);
+        Optional<Presentation> presentationOpt = presentationRepository.findById(id);
+        validation.validatePresentationExists(presentationOpt, id);
+        presentationRepository.deleteById(id);
+    }
 }
