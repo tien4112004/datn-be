@@ -63,16 +63,20 @@ public class ContentGenerationController {
                 .id(presentationId)
                 .title("AI Generated Presentation")
                 .slides(new ArrayList<>())
+                .metaData(request.getMetaData())
                 .isParsed(false)
                 .build();
         presentationApi.createPresentation(createRequest);
 
-        var something = contentGenerationExternalApi.generateSlides(request)
+        var slideSse = contentGenerationExternalApi.generateSlides(request)
                 .doOnNext(response -> log.info("Received response chunk: {}", response))
-                .map(slide -> slide.substring("data: ".length()) + "\n\n")
+                .map(slide -> slide + "\n\n")
                 .delayElements(Duration.ofMillis(SLIDE_DELAY))
                 .doOnSubscribe(s -> log.info("Starting slide generation stream"))
-                .doOnNext(slide -> result.append(slide.substring("data: ".length())))
+                .doOnNext(slide -> {
+                    result.append(slide.substring("data: ".length()));
+                    log.info("send slide to FE: {}", slide);
+                })
                 .doOnComplete(() -> {
                     aiResultApi.saveAIResult(result.toString(), presentationId);
                     log.info("Slide generation completed, result saved with ID: {}", presentationId);
@@ -83,7 +87,7 @@ public class ContentGenerationController {
                             "Failed to generate slides: " + err.getMessage());
                 });
 
-        return ResponseEntity.ok().header("presentationId", presentationId).body(something);
+        return ResponseEntity.ok().header("presentationId", presentationId).body(slideSse);
     }
 
     @PostMapping(value = "presentations/generate/batch", produces = "application/json")

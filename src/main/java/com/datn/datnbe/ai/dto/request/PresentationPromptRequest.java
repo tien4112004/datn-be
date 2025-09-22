@@ -19,11 +19,13 @@ public class PresentationPromptRequest {
     @NotBlank(message = "Outline cannot be blank")
     @Size(min = 1, message = "Outline must have at least 1 character")
     String outline;
-
     String model;
     String language;
-    @JsonProperty("slide_count")
-    String slideCount;
 
+    @JsonProperty("slide_count")
+    Integer slideCount;
     String provider;
+
+    @JsonProperty("meta_data")
+    private Object metaData;
 }

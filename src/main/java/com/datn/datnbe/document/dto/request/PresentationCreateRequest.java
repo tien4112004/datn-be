@@ -1,6 +1,7 @@
 package com.datn.datnbe.document.dto.request;
 
 import com.datn.datnbe.document.dto.SlideDto;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -23,6 +24,9 @@ public class PresentationCreateRequest {
     @NotNull(message = "Slides cannot be null")
     @Valid
     private List<SlideDto> slides;
+
+    @JsonProperty("meta_data")
+    private Object metaData;
 
     Boolean isParsed;
 }

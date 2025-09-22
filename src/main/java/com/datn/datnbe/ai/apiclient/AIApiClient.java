@@ -6,6 +6,7 @@ import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -13,6 +14,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import reactor.core.publisher.Flux;
+import reactor.netty.http.HttpProtocol;
+import reactor.netty.http.client.HttpClient;
 
 @Slf4j
 @Component
@@ -29,7 +32,9 @@ public class AIApiClient {
 
     public AIApiClient(RestTemplate restTemplate, WebClient.Builder webClientBuilder) {
         this.restTemplate = restTemplate;
-        this.webClient = webClientBuilder
+        HttpClient httpClient = HttpClient.create().protocol(HttpProtocol.HTTP11);
+
+        this.webClient = webClientBuilder.clientConnector(new ReactorClientHttpConnector(httpClient))
                 .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(10 * 1024 * 1024))
                 .build();
     }
