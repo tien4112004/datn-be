@@ -11,11 +11,7 @@ public class MappingParamsUtils {
                 "topic",
                 request.getTopic(),
                 "slide_count",
-                request.getSlideCount(),
-                "learning_objective",
-                request.getLearningObjective(),
-                "target_age",
-                request.getTargetAge());
+                request.getSlideCount());
     }
 
     public static Map<String, Object> constructParams(PresentationPromptRequest request) {
@@ -24,10 +20,6 @@ public class MappingParamsUtils {
                 "language",
                 request.getLanguage(),
                 "slide_count",
-                request.getSlideCount(),
-                "learning_objective",
-                request.getLearningObjective(),
-                "target_age",
-                request.getTargetAge());
+                request.getSlideCount());
     }
 }

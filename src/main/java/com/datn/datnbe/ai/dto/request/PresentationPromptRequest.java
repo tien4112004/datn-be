@@ -24,10 +24,6 @@ public class PresentationPromptRequest {
     String language;
     @JsonProperty("slide_count")
     String slideCount;
-    @JsonProperty("learning_objective")
-    String learningObjective;
-    @JsonProperty("target_age")
-    String targetAge;
 
     String provider;
 }

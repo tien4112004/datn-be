@@ -18,9 +18,5 @@ public class OutlinePromptRequest {
     String model;
     @JsonProperty("slide_count")
     int slideCount;
-    @JsonProperty("learning_objective")
-    String learningObjective;
-    @JsonProperty("target_age")
-    String targetAge;
     String provider;
 }

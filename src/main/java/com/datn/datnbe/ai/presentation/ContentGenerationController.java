@@ -55,7 +55,7 @@ public class ContentGenerationController {
     }
 
     @PostMapping(value = "presentations/generate", produces = MediaType.TEXT_PLAIN_VALUE)
-    public Flux<String> generateSlides(@RequestBody PresentationPromptRequest request) {
+    public ResponseEntity<Flux<String>> generateSlides(@RequestBody PresentationPromptRequest request) {
         String presentationId = (new ObjectId()).toString();
         StringBuilder result = new StringBuilder();
 
@@ -67,9 +67,9 @@ public class ContentGenerationController {
                 .build();
         presentationApi.createPresentation(createRequest);
 
-        return contentGenerationExternalApi.generateSlides(request)
+        var something = contentGenerationExternalApi.generateSlides(request)
                 .doOnNext(response -> log.info("Received response chunk: {}", response))
-                .map(slide -> "```json" + slide.substring("data: ".length()) + "```\n\n")
+                .map(slide -> slide.substring("data: ".length()) + "\n\n")
                 .delayElements(Duration.ofMillis(SLIDE_DELAY))
                 .doOnSubscribe(s -> log.info("Starting slide generation stream"))
                 .doOnNext(slide -> result.append(slide.substring("data: ".length())))
@@ -82,6 +82,8 @@ public class ContentGenerationController {
                     return new AppException(ErrorCode.GENERATION_ERROR,
                             "Failed to generate slides: " + err.getMessage());
                 });
+
+        return ResponseEntity.ok().header("presentationId", presentationId).body(something);
     }
 
     @PostMapping(value = "presentations/generate/batch", produces = "application/json")
