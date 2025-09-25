@@ -1,11 +1,13 @@
 package com.datn.datnbe.document.dto.response;
 
 import com.datn.datnbe.document.dto.SlideDto;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,10 +22,19 @@ import lombok.NoArgsConstructor;
 public class PresentationDto {
     private String id;
     private String title;
-    @JsonProperty("meta_data")
-    private Object metaData;
+    private Map<String, Object> metaData = new java.util.HashMap<>();
     private List<SlideDto> slides;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private boolean isParsed;
+
+    @JsonAnySetter
+    public void setMetaData(String key, Object value) {
+        metaData.put(key, value);
+    }
+
+    @JsonAnyGetter
+    public Map<String, Object> getMetaData() {
+        return metaData;
+    }
 }

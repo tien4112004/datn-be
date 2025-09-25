@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.datn.datnbe.document.dto.SlideDto;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.AllArgsConstructor;
@@ -20,7 +21,16 @@ import lombok.NoArgsConstructor;
 public class PresentationCreateResponseDto {
     private String id;
     private String title;
-    @JsonAnyGetter
     private Map<String, Object> metaData;
     private List<SlideDto> slides;
+
+    @JsonAnySetter
+    public void setMetaData(String key, Object value) {
+        metaData.put(key, value);
+    }
+
+    @JsonAnyGetter
+    public Map<String, Object> getMetaData() {
+        return metaData;
+    }
 }

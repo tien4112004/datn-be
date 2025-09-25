@@ -9,7 +9,6 @@ import com.datn.datnbe.document.dto.response.PresentationUpdateResponseDto;
 import com.datn.datnbe.document.entity.Presentation;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.mapstruct.*;
 
@@ -34,7 +33,6 @@ public interface PresentationEntityMapper {
     void updateEntity(PresentationUpdateRequest request, @MappingTarget Presentation presentation);
 
     @Mapping(target = "slides", source = "slides")
-    @Mapping(target = "metaData", source = "metaData", qualifiedByName = "objectToMap")
     PresentationCreateResponseDto toResponseDto(Presentation entity);
 
     @Mapping(target = "slides", source = "slides")
@@ -58,17 +56,5 @@ public interface PresentationEntityMapper {
     @Named("createIdForPresentation")
     default String createIdForPresentation(String id) {
         return (id == null || id.isEmpty()) ? null : id;
-    }
-
-    @Named("objectToMap")
-    default Map<String, Object> objectToMap(Object value) {
-        if (value == null) {
-            return null;
-        }
-        if (value instanceof Map) {
-            return (Map<String, Object>) value;
-        }
-        // If it's not a Map, you might want to convert it or return empty map
-        return new java.util.HashMap<>();
     }
 }

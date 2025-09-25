@@ -1,6 +1,8 @@
 package com.datn.datnbe.document.entity;
 
 import com.datn.datnbe.document.entity.valueobject.Slide;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.Id;
@@ -11,6 +13,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -42,8 +45,18 @@ public class Presentation {
     Boolean isParsed;
 
     @Field("meta_data")
-    Object metaData;
+    private Map<String, Object> metaData = new java.util.HashMap<>();
 
     @Field(name = "deleted_at")
     LocalDate deletedAt;
+
+    @JsonAnySetter
+    public void setMetaData(String key, Object value) {
+        metaData.put(key, value);
+    }
+
+    @JsonAnyGetter
+    public java.util.Map<String, Object> getMetaData() {
+        return metaData;
+    }
 }
