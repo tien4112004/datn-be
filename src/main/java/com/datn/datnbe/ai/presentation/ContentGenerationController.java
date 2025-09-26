@@ -70,7 +70,7 @@ public class ContentGenerationController {
 
         var slideSse = contentGenerationExternalApi.generateSlides(request)
                 .doOnNext(response -> log.info("Received response chunk: {}", response))
-                .map(slide -> slide + "\n\n")
+                .map(slide -> slide.substring("data: ".length()) + "\n\n")
                 .delayElements(Duration.ofMillis(SLIDE_DELAY))
                 .doOnSubscribe(s -> log.info("Starting slide generation stream"))
                 .doOnNext(slide -> {
