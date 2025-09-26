@@ -74,7 +74,7 @@ public class ContentGenerationController {
                 .delayElements(Duration.ofMillis(SLIDE_DELAY))
                 .doOnSubscribe(s -> log.info("Starting slide generation stream"))
                 .doOnNext(slide -> {
-                    result.append(slide.substring("data: ".length()));
+                    result.append(slide);
                     log.info("send slide to FE: {}", slide);
                 })
                 .doOnComplete(() -> {

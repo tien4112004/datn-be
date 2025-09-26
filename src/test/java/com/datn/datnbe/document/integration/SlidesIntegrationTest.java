@@ -248,10 +248,7 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
     @DisplayName("Should reject request without idempotency key")
     void upsertSlides_WithoutIdempotencyKey_ShouldReturnBadRequest() throws Exception {
         // Given
-        SlideUpdateRequest slide = SlideUpdateRequest.builder()
-                .id("slide-without-key")
-                .elements(List.of())
-                .build();
+        SlideUpdateRequest slide = SlideUpdateRequest.builder().id("slide-without-key").elements(List.of()).build();
 
         SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(List.of(slide)).build();
 
@@ -312,15 +309,9 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
         String idempotencyKey1 = "concurrent-test-key-1";
         String idempotencyKey2 = "concurrent-test-key-2";
 
-        SlideUpdateRequest slide1 = SlideUpdateRequest.builder()
-                .id("concurrent-slide-1")
-                .elements(List.of())
-                .build();
+        SlideUpdateRequest slide1 = SlideUpdateRequest.builder().id("concurrent-slide-1").elements(List.of()).build();
 
-        SlideUpdateRequest slide2 = SlideUpdateRequest.builder()
-                .id("concurrent-slide-2")
-                .elements(List.of())
-                .build();
+        SlideUpdateRequest slide2 = SlideUpdateRequest.builder().id("concurrent-slide-2").elements(List.of()).build();
 
         SlidesUpsertRequest request1 = SlidesUpsertRequest.builder().slides(List.of(slide1)).build();
 
