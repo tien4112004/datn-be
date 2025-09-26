@@ -12,6 +12,7 @@ import com.datn.datnbe.ai.api.ModelSelectionApi;
 import com.datn.datnbe.ai.apiclient.AIApiClient;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
+import com.datn.datnbe.ai.utils.MappingParamsUtils;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 
@@ -47,7 +48,7 @@ public class ContentGenerationManagement implements ContentGenerationApi {
         }
 
         log.info("Calling AI to stream outline generation");
-        return aiApiClient.postSse(OUTLINE_API_ENDPOINT, request)
+        return aiApiClient.postSse(OUTLINE_API_ENDPOINT, MappingParamsUtils.constructParams(request))
                 .map(chunk -> new String(Base64.getDecoder().decode(chunk), StandardCharsets.UTF_8));
     }
 

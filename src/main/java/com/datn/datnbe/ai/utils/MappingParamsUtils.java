@@ -11,7 +11,9 @@ public class MappingParamsUtils {
                 "topic",
                 request.getTopic(),
                 "slide_count",
-                request.getSlideCount());
+                request.getSlideCount(),
+                "model", request.getModel(),
+                "provider", request.getProvider());
     }
 
     public static Map<String, Object> constructParams(PresentationPromptRequest request) {
