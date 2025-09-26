@@ -118,7 +118,7 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
                 .build();
 
         SlideUpdateRequest newSlide = SlideUpdateRequest.builder()
-                .slideId("integration-slide-1")
+                .id("integration-slide-1")
                 .elements(List.of(newElement))
                 .background(newBackground)
                 .build();
@@ -166,12 +166,12 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
                 .build();
 
         SlideUpdateRequest slide1 = SlideUpdateRequest.builder()
-                .slideId("multi-slide-1")
+                .id("multi-slide-1")
                 .elements(List.of(element1))
                 .build();
 
         SlideUpdateRequest slide2 = SlideUpdateRequest.builder()
-                .slideId("multi-slide-2")
+                .id("multi-slide-2")
                 .elements(List.of(element2))
                 .build();
 
@@ -226,7 +226,7 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
                 .build();
 
         SlideUpdateRequest complexSlide = SlideUpdateRequest.builder()
-                .slideId("complex-integration-slide")
+                .id("complex-integration-slide")
                 .elements(List.of(complexElement))
                 .background(complexBackground)
                 .build();
@@ -249,7 +249,7 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
     void upsertSlides_WithoutIdempotencyKey_ShouldReturnBadRequest() throws Exception {
         // Given
         SlideUpdateRequest slide = SlideUpdateRequest.builder()
-                .slideId("slide-without-key")
+                .id("slide-without-key")
                 .elements(List.of())
                 .build();
 
@@ -266,7 +266,7 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
         // Given - Slide with blank ID (violates @NotBlank constraint)
         String idempotencyKey = "integration-test-validation-error";
         SlideUpdateRequest invalidSlide = SlideUpdateRequest.builder()
-                .slideId("")  // Invalid: blank ID
+                .id("")  // Invalid: blank ID
                 .elements(List.of())
                 .build();
 
@@ -313,12 +313,12 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
         String idempotencyKey2 = "concurrent-test-key-2";
 
         SlideUpdateRequest slide1 = SlideUpdateRequest.builder()
-                .slideId("concurrent-slide-1")
+                .id("concurrent-slide-1")
                 .elements(List.of())
                 .build();
 
         SlideUpdateRequest slide2 = SlideUpdateRequest.builder()
-                .slideId("concurrent-slide-2")
+                .id("concurrent-slide-2")
                 .elements(List.of())
                 .build();
 

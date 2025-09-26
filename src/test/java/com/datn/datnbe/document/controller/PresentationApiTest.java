@@ -426,7 +426,7 @@ class PresentationApiTest {
                 .build();
 
         SlideUpdateRequest slide = SlideUpdateRequest.builder()
-                .slideId("slide-1")
+                .id("slide-1")
                 .elements(List.of(element))
                 .background(background)
                 .build();
@@ -459,9 +459,9 @@ class PresentationApiTest {
                 .content("Second slide text")
                 .build();
 
-        SlideUpdateRequest slide1 = SlideUpdateRequest.builder().slideId("slide-1").elements(List.of(element1)).build();
+        SlideUpdateRequest slide1 = SlideUpdateRequest.builder().id("slide-1").elements(List.of(element1)).build();
 
-        SlideUpdateRequest slide2 = SlideUpdateRequest.builder().slideId("slide-2").elements(List.of(element2)).build();
+        SlideUpdateRequest slide2 = SlideUpdateRequest.builder().id("slide-2").elements(List.of(element2)).build();
 
         SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(Arrays.asList(slide1, slide2)).build();
 
@@ -510,7 +510,7 @@ class PresentationApiTest {
                 .build();
 
         SlideUpdateRequest slide = SlideUpdateRequest.builder()
-                .slideId("complex-slide")
+                .id("complex-slide")
                 .elements(List.of(complexElement))
                 .background(background)
                 .build();
@@ -548,7 +548,7 @@ class PresentationApiTest {
         // Given
         String presentationId = "test-presentation-id";
         SlideUpdateRequest slideWithoutId = SlideUpdateRequest.builder()
-                .slideId("") // Invalid: blank ID
+                .id("") // Invalid: blank ID
                 .elements(List.of())
                 .build();
 
@@ -576,7 +576,7 @@ class PresentationApiTest {
                 .build();
 
         SlideUpdateRequest slide = SlideUpdateRequest.builder()
-                .slideId("slide-1")
+                .id("slide-1")
                 .elements(List.of(elementWithoutType))
                 .build();
 
