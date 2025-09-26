@@ -44,19 +44,19 @@ public class Presentation {
     @Field("isParsed")
     Boolean isParsed;
 
-    @Field("meta_data")
-    private Map<String, Object> metaData = new java.util.HashMap<>();
+    @Field("metadata")
+    private Map<String, Object> metadata = new java.util.HashMap<>();
 
     @Field(name = "deleted_at")
     LocalDate deletedAt;
 
     @JsonAnySetter
-    public void setMetaData(String key, Object value) {
-        metaData.put(key, value);
+    public void setMetadata(String key, Object value) {
+        metadata.put(key, value);
     }
 
     @JsonAnyGetter
-    public java.util.Map<String, Object> getMetaData() {
-        return metaData;
+    public java.util.Map<String, Object> getMetadata() {
+        return metadata;
     }
 }

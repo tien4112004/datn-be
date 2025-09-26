@@ -2,6 +2,7 @@ package com.datn.datnbe.ai.presentation;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Map;
 
 import org.bson.types.ObjectId;
 import org.springframework.http.MediaType;
@@ -63,7 +64,7 @@ public class ContentGenerationController {
                 .id(presentationId)
                 .title("AI Generated Presentation")
                 .slides(new ArrayList<>())
-                .metaData(request.getMetaData())
+                .metadata(convertToMap(request.getPresentation()))
                 .isParsed(false)
                 .build();
         presentationApi.createPresentation(createRequest);
@@ -129,5 +130,10 @@ public class ContentGenerationController {
         return ResponseEntity.ok()
                 .header("X-Presentation", presentationId)
                 .body(AppResponseDto.<JsonNode>builder().data(data).build());
+    }
+
+    private Map<String, Object> convertToMap(Object object) {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.convertValue(object, Map.class);
     }
 }

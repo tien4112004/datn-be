@@ -62,7 +62,7 @@ public class ContentGenerationManagement implements ContentGenerationApi {
         }
 
         log.info("Calling AI to stream presentation slides");
-        request.setMetaData(null);
+        request.setPresentation(null);
 
         return aiApiClient.postSse(PRESENTATION_API_ENDPOINT, MappingParamsUtils.constructParams(request));
     }

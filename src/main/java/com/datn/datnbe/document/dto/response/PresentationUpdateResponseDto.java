@@ -21,15 +21,15 @@ public class PresentationUpdateResponseDto {
     private String id;
     private String title;
     private List<SlideDto> slides;
-    private Map<String, Object> metaData = new java.util.HashMap<>();
+    private Map<String, Object> metadata = new java.util.HashMap<>();
 
     @JsonAnySetter
-    public void setMetaData(String key, Object value) {
-        metaData.put(key, value);
+    public void setMetadata(String key, Object value) {
+        metadata.put(key, value);
     }
 
     @JsonAnyGetter
-    public Map<String, Object> getMetaData() {
-        return metaData;
+    public Map<String, Object> getMetadata() {
+        return metadata;
     }
 }

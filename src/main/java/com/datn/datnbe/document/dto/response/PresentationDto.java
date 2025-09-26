@@ -22,19 +22,19 @@ import lombok.NoArgsConstructor;
 public class PresentationDto {
     private String id;
     private String title;
-    private Map<String, Object> metaData = new java.util.HashMap<>();
+    private Map<String, Object> metadata = new java.util.HashMap<>();
     private List<SlideDto> slides;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private boolean isParsed;
 
     @JsonAnySetter
-    public void setMetaData(String key, Object value) {
-        metaData.put(key, value);
+    public void setMetadata(String key, Object value) {
+        metadata.put(key, value);
     }
 
     @JsonAnyGetter
-    public Map<String, Object> getMetaData() {
-        return metaData;
+    public Map<String, Object> getMetadata() {
+        return metadata;
     }
 }

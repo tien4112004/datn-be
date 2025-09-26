@@ -21,16 +21,16 @@ import lombok.NoArgsConstructor;
 public class PresentationCreateResponseDto {
     private String id;
     private String title;
-    private Map<String, Object> metaData;
+    private Map<String, Object> metadata;
     private List<SlideDto> slides;
 
     @JsonAnySetter
-    public void setMetaData(String key, Object value) {
-        metaData.put(key, value);
+    public void setMetadata(String key, Object value) {
+        metadata.put(key, value);
     }
 
     @JsonAnyGetter
-    public Map<String, Object> getMetaData() {
-        return metaData;
+    public Map<String, Object> getMetadata() {
+        return metadata;
     }
 }
