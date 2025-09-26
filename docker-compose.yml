@@ -12,19 +12,19 @@ services:
       - POSTGRES_DB_URL=jdbc:postgresql://postgres:5432/datn_monolith_db
       - POSTGRES_DB_USERNAME=postgres
       - POSTGRES_DB_PASSWORD=postgres
-      
+
       # MongoDB connection for document persistence
       - MONGODB_URI=mongodb://mongouser:mongopassword@mongo:27017/presentation_db?authSource=admin
-      
+
       # AI services configuration
       - OPENAI_KEY=${OPENAI_KEY}
       - VERTEX_PROJECT_ID=${VERTEX_PROJECT_ID}
       - VERTEX_LOCATION=${VERTEX_LOCATION}
       - GOOGLE_APPLICATION_CREDENTIALS=/secrets/key.json
-      
+
       # CORS configuration
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
-      
+
       # RabbitMQ configuration (if needed)
       - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
       - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
@@ -38,6 +38,11 @@ services:
       - CLOUD_FLARE_API_TOKEN=${CLOUD_FLARE_API_TOKEN}
       - S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID}
       - S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY}
+
+      # AI Settings
+      - AI_API_BASE_URL
+      - AI_API_PRESENTATION_ENDPOINT
+      - AI_API_OUTLINE_ENDPOINT
 
       # Spring profile
       - SPRING_PROFILES_ACTIVE=docker

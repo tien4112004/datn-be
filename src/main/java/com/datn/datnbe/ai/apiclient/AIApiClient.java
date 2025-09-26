@@ -24,7 +24,7 @@ public class AIApiClient {
     private final RestTemplate restTemplate;
     private final WebClient webClient;
 
-    @Value("${ai.api.base-url:}")
+    @Value("${ai.api.base-url}")
     private String baseUrl;
 
     @Value("${ai.api.timeout:30000}")

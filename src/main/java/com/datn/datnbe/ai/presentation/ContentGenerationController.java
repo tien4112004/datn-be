@@ -87,7 +87,7 @@ public class ContentGenerationController {
                             "Failed to generate slides: " + err.getMessage());
                 });
 
-        return ResponseEntity.ok().header("presentationId", presentationId).body(slideSse);
+        return ResponseEntity.ok().header("X-Presentation", presentationId).body(slideSse);
     }
 
     @PostMapping(value = "presentations/generate/batch", produces = "application/json")
@@ -127,7 +127,7 @@ public class ContentGenerationController {
         data.set("presentation", mapper.valueToTree(newPresentation));
 
         return ResponseEntity.ok()
-                .header("presentationId", presentationId)
+                .header("X-Presentation", presentationId)
                 .body(AppResponseDto.<JsonNode>builder().data(data).build());
     }
 }

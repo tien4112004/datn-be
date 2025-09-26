@@ -77,16 +77,16 @@ app:
     allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
     allow-credentials: false
     max-age: 3600
+    exposed-headers: X-Presentation
   media:
     file-size-limit: 10485760 # 10MB
 
 ai:
   api:
-    base-url: http://localhost:8081
-    timeout: 30000
-    outline-endpoint: /api/outline/generate/stream
-    presentation-endpoint: /api/presentations/generate/stream
-
+    base-url: ${AI_API_BASE_URL:http://ai-worker:8081}
+    timeout: ${AI_API_TIMEOUT:30000}
+    outline-endpoint: ${AI_API_OUTLINE_ENDPOINT:/api/outline/generate/stream/mock}
+    presentation-endpoint: ${AI_API_PRESENTATION_ENDPOINT:/api/presentations/generate/stream/mock}
 
 cloudflare:
   r2:

@@ -12,13 +12,19 @@ public class MappingParamsUtils {
                 request.getTopic(),
                 "slide_count",
                 request.getSlideCount(),
-                "model", request.getModel(),
-                "provider", request.getProvider());
+                "model",
+                request.getModel(),
+                "provider",
+                request.getProvider());
     }
 
     public static Map<String, Object> constructParams(PresentationPromptRequest request) {
         return Map.of("outline",
                 request.getOutline(),
+                "model",
+                request.getModel(),
+                "provider",
+                request.getProvider(),
                 "language",
                 request.getLanguage(),
                 "slide_count",

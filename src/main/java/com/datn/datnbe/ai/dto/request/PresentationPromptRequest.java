@@ -1,8 +1,8 @@
 package com.datn.datnbe.ai.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -26,7 +26,7 @@ public class PresentationPromptRequest {
     String model;
     String language;
 
-    @JsonProperty("slide_count")
+    @JsonAlias("slide_count, slideCount")
     Integer slideCount;
     String provider;
 
