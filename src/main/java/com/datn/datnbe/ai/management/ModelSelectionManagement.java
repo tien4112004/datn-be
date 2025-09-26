@@ -52,9 +52,7 @@ public class ModelSelectionManagement implements ModelSelectionApi {
 
     @Override
     public ModelResponseDto setModelStatus(Integer modelId, UpdateModelStatusRequest request) {
-        var existingModel = modelConfigurationRepo.getModelById(modelId);
-
-        final Boolean isEnabled = request.getIsEnable();
+        final Boolean isEnabled = request.getIsEnabled();
         final Boolean isDefault = request.getIsDefault();
 
         // Nothing to update
