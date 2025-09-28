@@ -1,8 +1,10 @@
 package com.datn.datnbe.document.api;
 
 import com.datn.datnbe.document.dto.response.UploadedMediaResponseDto;
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+@Service
 public interface MediaStorageApi {
     /**
      * Upload any supported media file
