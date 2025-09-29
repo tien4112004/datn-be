@@ -30,12 +30,15 @@ public class AIApiClient {
     @Value("${ai.api.timeout:30000}")
     private int timeout;
 
+    @Value("${app.api-client.max-in-memory-size}") // 10 MB default
+    private int MAX_IN_MEMORY_SIZE; // 10 MB
+
     public AIApiClient(RestTemplate restTemplate, WebClient.Builder webClientBuilder) {
         this.restTemplate = restTemplate;
         HttpClient httpClient = HttpClient.create().protocol(HttpProtocol.HTTP11);
 
         this.webClient = webClientBuilder.clientConnector(new ReactorClientHttpConnector(httpClient))
-                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(10 * 1024 * 1024))
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(MAX_IN_MEMORY_SIZE))
                 .build();
     }
 
