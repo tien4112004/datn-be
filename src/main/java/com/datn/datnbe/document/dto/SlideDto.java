@@ -63,7 +63,7 @@ public class SlideDto {
         }
 
         @JsonAnyGetter
-        public java.util.Map<String, Object> getExtraFields() {
+        public Map<String, Object> getExtraFields() {
             return extraFields;
         }
     }

@@ -92,4 +92,10 @@ public class PresentationController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePresentation(@PathVariable String id) {
+        presentationApi.deletePresentation(id);
+        return ResponseEntity.noContent().build();
+    }
+
 }

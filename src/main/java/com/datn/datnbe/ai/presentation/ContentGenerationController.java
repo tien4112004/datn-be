@@ -1,6 +1,8 @@
 package com.datn.datnbe.ai.presentation;
 
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Map;
 
 import org.bson.types.ObjectId;
 import org.springframework.http.MediaType;
@@ -14,7 +16,6 @@ import com.datn.datnbe.ai.api.AIResultApi;
 import com.datn.datnbe.ai.api.ContentGenerationApi;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
-import com.datn.datnbe.ai.utils.StreamingResponseUtils;
 import com.datn.datnbe.document.api.PresentationApi;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
@@ -38,35 +39,56 @@ public class ContentGenerationController {
     ContentGenerationApi contentGenerationExternalApi;
     PresentationApi presentationApi;
     AIResultApi aiResultApi;
+    static Integer OUTLINE_DELAY = 25; // milliseconds
+    static Integer SLIDE_DELAY = 500; // milliseconds
 
     @PostMapping(value = "presentations/outline-generate", produces = MediaType.TEXT_PLAIN_VALUE)
     public Flux<String> generateOutline(@RequestBody OutlinePromptRequest request) {
         log.info("Received outline generation request: {}", request);
 
-        return StreamingResponseUtils
-                .streamWordByWordWithSpaces(StreamingResponseUtils.X_DELAY,
-                        contentGenerationExternalApi.generateOutline(request)
-                                .doOnSubscribe(subscription -> log.info("Starting outline generation stream")))
-                .doOnError(error -> {
-                    log.error("Error generating outline", error);
-                    throw new AppException(ErrorCode.GENERATION_ERROR, "Failed to generate outline");
-                })
-                .onErrorMap(error -> new AppException(ErrorCode.GENERATION_ERROR,
-                        "Failed to generate outline: " + error.getMessage()));
+        return contentGenerationExternalApi.generateOutline(request)
+                .delayElements(Duration.ofMillis(OUTLINE_DELAY))
+                .doOnNext(chunk -> log.info("Received outline chunk: {}", chunk))
+                .doOnSubscribe(subscription -> log.info("Starting outline generation stream"))
+                .onErrorResume(AppException.class, ex -> {
+                    throw ex;
+                });
     }
 
     @PostMapping(value = "presentations/generate", produces = MediaType.TEXT_PLAIN_VALUE)
-    public Flux<String> generateSlides(@RequestBody PresentationPromptRequest request) {
-        return StreamingResponseUtils
-                .streamByJsonObject(StreamingResponseUtils.HIGH_DELAY,
-                        contentGenerationExternalApi.generateSlides(request)
-                                .doOnSubscribe(subscription -> log.info("Starting slide generation stream")))
-                .doOnError(error -> {
-                    log.error("Error generating slides", error);
-                    throw new AppException(ErrorCode.GENERATION_ERROR, "Failed to generate slides");
+    public ResponseEntity<Flux<String>> generateSlides(@RequestBody PresentationPromptRequest request) {
+        String presentationId = (new ObjectId()).toString();
+        StringBuilder result = new StringBuilder();
+
+        PresentationCreateRequest createRequest = PresentationCreateRequest.builder()
+                .id(presentationId)
+                .title("AI Generated Presentation")
+                .slides(new ArrayList<>())
+                .metadata(convertToMap(request.getPresentation()))
+                .isParsed(false)
+                .build();
+        presentationApi.createPresentation(createRequest);
+
+        var slideSse = contentGenerationExternalApi.generateSlides(request)
+                .doOnNext(response -> log.info("Received response chunk: {}", response))
+                .map(slide -> slide.substring("data: ".length()) + "\n\n")
+                .delayElements(Duration.ofMillis(SLIDE_DELAY))
+                .doOnSubscribe(s -> log.info("Starting slide generation stream"))
+                .doOnNext(slide -> {
+                    result.append(slide);
+                    log.info("send slide to FE: {}", slide);
                 })
-                .onErrorMap(error -> new AppException(ErrorCode.GENERATION_ERROR,
-                        "Failed to generate slides: " + error.getMessage()));
+                .doOnComplete(() -> {
+                    aiResultApi.saveAIResult(result.toString(), presentationId);
+                    log.info("Slide generation completed, result saved with ID: {}", presentationId);
+                })
+                .onErrorMap(err -> {
+                    log.error("Error generating slides", err);
+                    return new AppException(ErrorCode.GENERATION_ERROR,
+                            "Failed to generate slides: " + err.getMessage());
+                });
+
+        return ResponseEntity.ok().header("X-Presentation", presentationId).body(slideSse);
     }
 
     @PostMapping(value = "presentations/generate/batch", produces = "application/json")
@@ -106,7 +128,12 @@ public class ContentGenerationController {
         data.set("presentation", mapper.valueToTree(newPresentation));
 
         return ResponseEntity.ok()
-                .header("presentationId", presentationId)
+                .header("X-Presentation", presentationId)
                 .body(AppResponseDto.<JsonNode>builder().data(data).build());
+    }
+
+    private Map<String, Object> convertToMap(Object object) {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.convertValue(object, Map.class);
     }
 }

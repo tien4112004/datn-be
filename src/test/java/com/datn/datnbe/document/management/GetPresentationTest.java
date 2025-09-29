@@ -1,8 +1,21 @@
 package com.datn.datnbe.document.management;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.bson.types.ObjectId;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import com.datn.datnbe.document.dto.SlideDto;
 import com.datn.datnbe.document.dto.response.PresentationDto;
@@ -12,23 +25,6 @@ import com.datn.datnbe.document.management.validation.PresentationValidation;
 import com.datn.datnbe.document.mapper.PresentationEntityMapper;
 import com.datn.datnbe.document.repository.PresentationRepository;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.when;
-
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 
 @SpringBootTest(classes = {TestConfig.class, PresentationManagement.class,
@@ -75,7 +71,7 @@ class GetPresentationTest {
     @Test
     void getPresentation_WithExistingId_ShouldReturnPresentation() {
         // Given
-        String presentationId = "test-id-1";
+        String presentationId = "68d1f7cb4828f3a0d4a432ec";
         LocalDateTime createdAt = LocalDateTime.now();
 
         Presentation presentation = Presentation.builder()
@@ -85,14 +81,7 @@ class GetPresentationTest {
                 .updatedAt(createdAt)
                 .build();
 
-        PresentationDto expectedDto = PresentationDto.builder()
-                .id(presentationId)
-                .title("First Presentation")
-                .createdAt(createdAt)
-                .updatedAt(createdAt)
-                .build();
-
-        when(presentationRepository.findById(presentationId)).thenReturn(Optional.of(presentation));
+        when(presentationRepository.findById(any(ObjectId.class))).thenReturn(Optional.of(presentation));
 
         // When
         PresentationDto result = presentationService.getPresentation(presentationId);
@@ -106,9 +95,9 @@ class GetPresentationTest {
     @Test
     void getPresentation_WithNonExistentId_ShouldThrowPRESENTATION_NOT_FOUND() {
         // Given
-        String nonExistentId = "non-existent-id";
+        String nonExistentId = "507f1f77bcf86cd799439011"; // Valid ObjectId format but non-existent
 
-        when(presentationRepository.findById(nonExistentId)).thenReturn(Optional.empty());
+        when(presentationRepository.findById(any(ObjectId.class))).thenReturn(Optional.empty());
 
         // When & Then
         assertThatThrownBy(() -> presentationService.getPresentation(nonExistentId)).isInstanceOf(AppException.class)
@@ -122,7 +111,7 @@ class GetPresentationTest {
     @Test
     void getPresentation_WithPresentationContainingSlides_ShouldReturnCompleteDto() {
         // Given
-        String presentationId = "presentation-with-slides";
+        String presentationId = "68d1f7cb4828f3a0d4a432ec";
         LocalDateTime createdAt = LocalDateTime.now();
 
         Slide slideEntity = Slide.builder().id("slide-1").build();
@@ -135,15 +124,7 @@ class GetPresentationTest {
                 .updatedAt(createdAt)
                 .build();
 
-        PresentationDto expectedDto = PresentationDto.builder()
-                .id(presentationId)
-                .title("Presentation with Slides")
-                .slides(List.of(slideDto))
-                .createdAt(createdAt)
-                .updatedAt(createdAt)
-                .build();
-
-        when(presentationRepository.findById(presentationId)).thenReturn(Optional.of(mockPresentation));
+        when(presentationRepository.findById(any(ObjectId.class))).thenReturn(Optional.of(mockPresentation));
 
         // When
         PresentationDto result = presentationService.getPresentation(presentationId);
@@ -157,41 +138,31 @@ class GetPresentationTest {
     }
 
     @Test
-    void getPresentation_WithNullId_ShouldThrowPRESENTATION_NOT_FOUND() {
+    void getPresentation_WithNullId_ShouldThrowIllegalArgumentException() {
         // Given
         String nullId = null;
 
-        when(presentationRepository.findById(nullId)).thenReturn(Optional.empty());
-
         // When & Then
-        assertThatThrownBy(() -> presentationService.getPresentation(nullId)).isInstanceOf(AppException.class)
-                .hasMessageContaining("Presentation not found with ID: null")
-                .satisfies(ex -> {
-                    AppException appEx = (AppException) ex;
-                    assertThat(appEx.getErrorCode()).isEqualTo(ErrorCode.PRESENTATION_NOT_FOUND);
-                });
+        assertThatThrownBy(() -> presentationService.getPresentation(nullId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("hexString can not be null");
     }
 
     @Test
-    void getPresentation_WithEmptyStringId_ShouldThrowPRESENTATION_NOT_FOUND() {
+    void getPresentation_WithEmptyStringId_ShouldThrowIllegalArgumentException() {
         // Given
         String emptyId = "";
 
-        when(presentationRepository.findById(emptyId)).thenReturn(Optional.empty());
-
         // When & Then
-        assertThatThrownBy(() -> presentationService.getPresentation(emptyId)).isInstanceOf(AppException.class)
-                .hasMessageContaining("Presentation not found with ID: ")
-                .satisfies(ex -> {
-                    AppException appEx = (AppException) ex;
-                    assertThat(appEx.getErrorCode()).isEqualTo(ErrorCode.PRESENTATION_NOT_FOUND);
-                });
+        assertThatThrownBy(() -> presentationService.getPresentation(emptyId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("hexString has 24 characters");
     }
 
     @Test
     void getPresentation_WithPresentationWithoutSlides_ShouldReturnDto() {
         // Given
-        String presentationId = "presentation-without-slides";
+        String presentationId = "68d1f7cb4828f3a0d4a432ec";
         LocalDateTime createdAt = LocalDateTime.now();
 
         Presentation presentation = Presentation.builder()
@@ -202,15 +173,7 @@ class GetPresentationTest {
                 .updatedAt(createdAt)
                 .build();
 
-        PresentationDto expectedDto = PresentationDto.builder()
-                .id(presentationId)
-                .title("Empty Presentation")
-                .slides(List.of())
-                .createdAt(createdAt)
-                .updatedAt(createdAt)
-                .build();
-
-        when(presentationRepository.findById(presentationId)).thenReturn(Optional.of(presentation));
+        when(presentationRepository.findById(any(ObjectId.class))).thenReturn(Optional.of(presentation));
 
         // When
         PresentationDto result = presentationService.getPresentation(presentationId);
@@ -225,7 +188,7 @@ class GetPresentationTest {
     @Test
     void getPresentation_WithMultipleSlides_ShouldReturnAllSlides() {
         // Given
-        String presentationId = "presentation-multi-slides";
+        String presentationId = "68d1f7cb4828f3a0d4a432ec";
         LocalDateTime createdAt = LocalDateTime.now();
 
         SlideDto slide2 = SlideDto.builder()
@@ -245,15 +208,7 @@ class GetPresentationTest {
                 .updatedAt(createdAt)
                 .build();
 
-        PresentationDto expectedDto = PresentationDto.builder()
-                .id(presentationId)
-                .title("Multi-slide Presentation")
-                .slides(List.of(slideDto, slide2))
-                .createdAt(createdAt)
-                .updatedAt(createdAt)
-                .build();
-
-        when(presentationRepository.findById(presentationId)).thenReturn(Optional.of(mockPresentation));
+        when(presentationRepository.findById(any(ObjectId.class))).thenReturn(Optional.of(mockPresentation));
 
         // When
         PresentationDto result = presentationService.getPresentation(presentationId);

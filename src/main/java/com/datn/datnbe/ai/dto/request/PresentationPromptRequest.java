@@ -1,5 +1,6 @@
 package com.datn.datnbe.ai.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -18,10 +19,12 @@ public class PresentationPromptRequest {
     @NotBlank(message = "Outline cannot be blank")
     @Size(min = 1, message = "Outline must have at least 1 character")
     String outline;
-
     String model;
     String language;
-    String slideCount;
-    String learningObjective;
-    String targetAge;
+
+    @JsonAlias("slide_count, slideCount")
+    Integer slideCount;
+    String provider;
+
+    private Object presentation;
 }

@@ -1,24 +1,25 @@
 package com.datn.datnbe.ai.integration;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.testcontainers.containers.PostgreSQLContainer;
 
 import com.datn.datnbe.ai.entity.ModelConfigurationEntity;
 import com.datn.datnbe.ai.enums.ModelType;
 import com.datn.datnbe.ai.repository.interfaces.ModelConfigurationRepo;
 import com.datn.datnbe.testcontainers.BaseIntegrationTest;
-import java.util.List;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.testcontainers.containers.PostgreSQLContainer;
 
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class ModelConfigurationIntegrationTest extends BaseIntegrationTest {
 
@@ -26,16 +27,10 @@ class ModelConfigurationIntegrationTest extends BaseIntegrationTest {
     private ModelConfigurationRepo modelConfigurationRepo;
 
     @Autowired
-    private TestRestTemplate restTemplate;
-
-    @Autowired
     private PostgreSQLContainer<?> postgreSQLContainer;
 
     @PersistenceContext
     private EntityManager entityManager;
-
-    @LocalServerPort
-    private int port;
 
     private ModelConfigurationEntity testTextModel1;
     private ModelConfigurationEntity testTextModel2;

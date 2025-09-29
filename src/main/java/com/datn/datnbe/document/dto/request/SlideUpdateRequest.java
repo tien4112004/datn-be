@@ -25,7 +25,7 @@ public class SlideUpdateRequest {
 
     @NotBlank(message = "Slide ID cannot be blank")
     @Valid
-    String slideId;
+    String id;
 
     @Valid
     List<SlideElementUpdateRequest> elements;

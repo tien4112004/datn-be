@@ -1,22 +1,25 @@
 package com.datn.datnbe.ai.management;
 
-import com.datn.datnbe.ai.api.AIResultApi;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
+import lombok.experimental.NonFinal;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.datn.datnbe.ai.api.ContentGenerationApi;
 import com.datn.datnbe.ai.api.ModelSelectionApi;
-import com.datn.datnbe.ai.config.chatmodelconfiguration.SystemPromptConfig;
+import com.datn.datnbe.ai.apiclient.AIApiClient;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
-import com.datn.datnbe.ai.factory.ChatClientFactory;
 import com.datn.datnbe.ai.utils.MappingParamsUtils;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
 @Service
@@ -24,10 +27,16 @@ import reactor.core.publisher.Flux;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 public class ContentGenerationManagement implements ContentGenerationApi {
-    SystemPromptConfig systemPromptConfig;
     ModelSelectionApi modelSelectionApi;
-    ChatClientFactory chatClientFactory;
-    AIResultApi aiResultApi;
+    AIApiClient aiApiClient;
+
+    @Value("${ai.api.outline-endpoint}")
+    @NonFinal
+    String OUTLINE_API_ENDPOINT;
+
+    @Value("${ai.api.presentation-endpoint}")
+    @NonFinal
+    String PRESENTATION_API_ENDPOINT;
     // AIEventPublisher aiEventPublisher;
 
     @Override
@@ -37,13 +46,10 @@ public class ContentGenerationManagement implements ContentGenerationApi {
             log.error("Model {} is not enabled for outline generation", request.getModel());
             return Flux.error(new AppException(ErrorCode.MODEL_NOT_ENABLED));
         }
-        var chatClient = chatClientFactory.getChatClient(request.getModel());
 
-        return chatClient.prompt()
-                .user(prompt -> prompt.text(systemPromptConfig.getOutlinePrompt())
-                        .params(MappingParamsUtils.constructParams(request)))
-                .stream()
-                .content();
+        log.info("Calling AI to stream outline generation");
+        return aiApiClient.postSse(OUTLINE_API_ENDPOINT, MappingParamsUtils.constructParams(request))
+                .map(chunk -> new String(Base64.getDecoder().decode(chunk), StandardCharsets.UTF_8));
     }
 
     @Override
@@ -55,27 +61,9 @@ public class ContentGenerationManagement implements ContentGenerationApi {
             return Flux.error(new AppException(ErrorCode.MODEL_NOT_ENABLED));
         }
 
-        var chatClient = chatClientFactory.getChatClient(request.getModel());
-
         log.info("Calling AI to stream presentation slides");
+        request.setPresentation(null);
 
-        StringBuilder completeResponse = new StringBuilder();
-
-        return chatClient.prompt()
-                .user(promptSys -> promptSys.text(systemPromptConfig.getSlidePrompt())
-                        .params(MappingParamsUtils.constructParams(request)))
-                .stream()
-                .content()
-                .doOnNext(chunk -> completeResponse.append(chunk))
-                .doOnError(error -> log.error("Error in streaming presentation generation: {}", error.getMessage()));
-    }
-
-    private String extractJsonFromResponse(String response) {
-        String cleaned = response.trim();
-
-        cleaned = cleaned.replaceAll("(?m)^```json\\s*|^```\\s*", "").replaceAll("\n---", ",").replaceAll(",\\s*$", "");
-
-        cleaned = "{\"slides\":[" + cleaned + "]}";
-        return cleaned;
+        return aiApiClient.postSse(PRESENTATION_API_ENDPOINT, MappingParamsUtils.constructParams(request));
     }
 }
