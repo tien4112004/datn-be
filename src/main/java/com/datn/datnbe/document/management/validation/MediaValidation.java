@@ -3,12 +3,21 @@ package com.datn.datnbe.document.management.validation;
 import com.datn.datnbe.document.enums.MediaType;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
+@Component
 public class MediaValidation {
-    @Value("${app.media.file-size-limit}") // 10MB
     private static long fileSizeLimit;
+
+    @Value("${app.media.file-size-limit}")
+    public void setFileSizeLimit(long limit) {
+        fileSizeLimit = limit;
+    }
+
     public static void validateFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new AppException(ErrorCode.MISSING_REQUIRED_FIELD, "File cannot be empty");
