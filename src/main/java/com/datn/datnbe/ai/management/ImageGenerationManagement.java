@@ -6,6 +6,7 @@ import com.datn.datnbe.ai.apiclient.AIApiClient;
 import com.datn.datnbe.ai.dto.request.ImagePromptRequest;
 import com.datn.datnbe.ai.dto.response.ImageGeneratedResponseDto;
 import com.datn.datnbe.ai.utils.MappingParamsUtils;
+import com.datn.datnbe.sharedkernel.Base64MultipartFile;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import lombok.AccessLevel;
@@ -17,8 +18,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.util.Base64;
 import java.util.List;
 
@@ -48,28 +47,31 @@ public class ImageGenerationManagement implements ImageGenerationApi {
 
         ImageGeneratedResponseDto generatedImage = aiApiClient
                 .post(IMAGE_API_ENDPOINT, MappingParamsUtils.constructParams(request), ImageGeneratedResponseDto.class);
-        log.info("Image generation end: {}", generatedImage);
 
-        if (generatedImage.getError() != null) {
+        if (generatedImage.getError() != null || generatedImage.getImages() == null
+                || generatedImage.getImages().isEmpty()) {
             log.error("Error during image generation: {}", generatedImage.getError());
             throw new AppException(ErrorCode.GENERATION_ERROR, generatedImage.getError());
         }
 
-        return generatedImage.getImages().stream().map(this::uploadImageToStorage).toList();
+        log.info("Image generation completed");
+
+        return generatedImage.getImages().stream().map(this::convertBase64ToMultipartFile).toList();
     }
 
-    private MultipartFile uploadImageToStorage(String base64Image) {
-        // Decode the base64 string to bytes
-        byte[] decoded = Base64.getDecoder().decode(base64Image);
+    private MultipartFile convertBase64ToMultipartFile(String base64Image) {
+        try {
+            byte[] decoded = Base64.getDecoder().decode(base64Image);
 
-        File file = new File("AI_generated_image.png");
-        try (FileOutputStream fos = new FileOutputStream(file)) {
-            fos.write(decoded);
+            // Create and return MultipartFile
+            return new Base64MultipartFile(decoded, "AI_generated_image.png", "image/png", "image");
+
+        } catch (IllegalArgumentException e) {
+            log.error("Error decoding base64 image", e);
+            throw new AppException(ErrorCode.INVALID_BASE64_FORMAT);
         } catch (Exception e) {
-            log.error("Error writing image file", e);
+            log.error("Error converting base64 to MultipartFile", e);
             throw new AppException(ErrorCode.FILE_PROCESSING_ERROR);
         }
-
-        return (MultipartFile) file;
     }
 }
