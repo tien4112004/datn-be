@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.types.ObjectId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -139,8 +140,8 @@ public class PresentationManagement implements PresentationApi {
     @Override
     public PresentationDto getPresentation(String id) {
         log.info("Fetching presentation with ID: {}", id);
-
-        Optional<Presentation> presentationOpt = presentationRepository.findById(id);
+        ObjectId oId = new ObjectId(id);
+        Optional<Presentation> presentationOpt = presentationRepository.findById(oId);
         validation.validatePresentationExists(presentationOpt, id);
 
         Presentation presentation = presentationOpt.get();
@@ -159,5 +160,15 @@ public class PresentationManagement implements PresentationApi {
         Presentation existingPresentation = presentationOpt.get();
         existingPresentation.setIsParsed(!existingPresentation.getIsParsed());
         presentationRepository.save(existingPresentation);
+    }
+
+    @Override
+    public void deletePresentation(String id) {
+        log.info("Deleting presentation with ID: {}", id);
+        Optional<Presentation> presentationOpt = presentationRepository.findById(id);
+        validation.validatePresentationExists(presentationOpt, id);
+        Presentation presentation = presentationOpt.get();
+        presentation.setDeletedAt(java.time.LocalDate.now());
+        presentationRepository.save(presentation);
     }
 }

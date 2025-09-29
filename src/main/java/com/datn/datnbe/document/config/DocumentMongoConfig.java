@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.convert.ReadingConverter;
+import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -44,6 +46,7 @@ public class DocumentMongoConfig {
         return new MongoCustomConversions(converters);
     }
 
+    @ReadingConverter
     public static class SlideElementTypeReadConverter implements Converter<String, SlideElementType> {
         @Override
         public SlideElementType convert(String source) {
@@ -51,6 +54,7 @@ public class DocumentMongoConfig {
         }
     }
 
+    @WritingConverter
     public static class SlideElementTypeWriteConverter implements Converter<SlideElementType, String> {
         @Override
         public String convert(SlideElementType source) {

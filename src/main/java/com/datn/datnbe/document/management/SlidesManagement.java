@@ -37,13 +37,6 @@ public class SlidesManagement implements SlidesApi {
             boolean removed = existingPresentation.getSlides()
                     .removeIf(slide -> slide.getId() != null && slide.getId().equals(upsertSlide.getId()));
             existingPresentation.getSlides().add(upsertSlide);
-            if (removed) {
-                log.info("Updated slide with ID: {}", upsertSlide.getId());
-            } else {
-                // Add new slide
-                existingPresentation.getSlides().add(upsertSlide);
-                log.info("Added new slide with ID: {}", upsertSlide.getId());
-            }
         }
 
         Presentation savedPresentation = presentationRepository.save(existingPresentation);

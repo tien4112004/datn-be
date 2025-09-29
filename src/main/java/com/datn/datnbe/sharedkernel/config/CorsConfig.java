@@ -23,6 +23,9 @@ public class CorsConfig implements WebMvcConfigurer {
     @Value("${app.cors.max-age:3600}")
     private long maxAge;
 
+    @Value("${app.cors.exposed-headers:}")
+    private String exposedHeaders;
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         var mapping = registry.addMapping("/**")
@@ -39,5 +42,7 @@ public class CorsConfig implements WebMvcConfigurer {
         } else {
             mapping.allowedOriginPatterns("*");
         }
+
+        mapping.exposedHeaders(exposedHeaders.split(","));
     }
 }

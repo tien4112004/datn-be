@@ -12,22 +12,22 @@ public class MappingParamsUtils {
                 request.getTopic(),
                 "slide_count",
                 request.getSlideCount(),
-                "learning_objective",
-                request.getLearningObjective(),
-                "target_age",
-                request.getTargetAge());
+                "model",
+                request.getModel(),
+                "provider",
+                request.getProvider());
     }
 
     public static Map<String, Object> constructParams(PresentationPromptRequest request) {
         return Map.of("outline",
                 request.getOutline(),
+                "model",
+                request.getModel(),
+                "provider",
+                request.getProvider(),
                 "language",
                 request.getLanguage(),
                 "slide_count",
-                request.getSlideCount(),
-                "learning_objective",
-                request.getLearningObjective(),
-                "target_age",
-                request.getTargetAge());
+                request.getSlideCount());
     }
 }

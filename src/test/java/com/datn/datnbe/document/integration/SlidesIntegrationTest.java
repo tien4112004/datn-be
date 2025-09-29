@@ -1,35 +1,43 @@
 package com.datn.datnbe.document.integration;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+
 import com.datn.datnbe.document.dto.SlideDto;
-import com.datn.datnbe.document.dto.request.SlideUpdateRequest;
-import com.datn.datnbe.document.dto.request.SlideUpdateRequest.SlideElementUpdateRequest;
 import com.datn.datnbe.document.dto.SlideDto.SlideBackgroundDto;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
+import com.datn.datnbe.document.dto.request.SlideUpdateRequest;
+import com.datn.datnbe.document.dto.request.SlideUpdateRequest.SlideElementUpdateRequest;
 import com.datn.datnbe.document.dto.request.SlidesUpsertRequest;
 import com.datn.datnbe.sharedkernel.idempotency.api.IdempotencyKey;
 import com.datn.datnbe.sharedkernel.idempotency.api.IdempotencyStatus;
 import com.datn.datnbe.sharedkernel.idempotency.internal.IdempotencyRepository;
 import com.datn.datnbe.testcontainers.BaseIntegrationTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
+@SpringBootTest
+@EnableAutoConfiguration(exclude = {
+        org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration.class,
+        org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration.class,
+        org.springframework.boot.autoconfigure.http.client.HttpClientAutoConfiguration.class})
 public class SlidesIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
@@ -110,7 +118,7 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
                 .build();
 
         SlideUpdateRequest newSlide = SlideUpdateRequest.builder()
-                .slideId("integration-slide-1")
+                .id("integration-slide-1")
                 .elements(List.of(newElement))
                 .background(newBackground)
                 .build();
@@ -158,12 +166,12 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
                 .build();
 
         SlideUpdateRequest slide1 = SlideUpdateRequest.builder()
-                .slideId("multi-slide-1")
+                .id("multi-slide-1")
                 .elements(List.of(element1))
                 .build();
 
         SlideUpdateRequest slide2 = SlideUpdateRequest.builder()
-                .slideId("multi-slide-2")
+                .id("multi-slide-2")
                 .elements(List.of(element2))
                 .build();
 
@@ -218,7 +226,7 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
                 .build();
 
         SlideUpdateRequest complexSlide = SlideUpdateRequest.builder()
-                .slideId("complex-integration-slide")
+                .id("complex-integration-slide")
                 .elements(List.of(complexElement))
                 .background(complexBackground)
                 .build();
@@ -240,10 +248,7 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
     @DisplayName("Should reject request without idempotency key")
     void upsertSlides_WithoutIdempotencyKey_ShouldReturnBadRequest() throws Exception {
         // Given
-        SlideUpdateRequest slide = SlideUpdateRequest.builder()
-                .slideId("slide-without-key")
-                .elements(List.of())
-                .build();
+        SlideUpdateRequest slide = SlideUpdateRequest.builder().id("slide-without-key").elements(List.of()).build();
 
         SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(List.of(slide)).build();
 
@@ -258,7 +263,7 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
         // Given - Slide with blank ID (violates @NotBlank constraint)
         String idempotencyKey = "integration-test-validation-error";
         SlideUpdateRequest invalidSlide = SlideUpdateRequest.builder()
-                .slideId("")  // Invalid: blank ID
+                .id("")  // Invalid: blank ID
                 .elements(List.of())
                 .build();
 
@@ -304,15 +309,9 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
         String idempotencyKey1 = "concurrent-test-key-1";
         String idempotencyKey2 = "concurrent-test-key-2";
 
-        SlideUpdateRequest slide1 = SlideUpdateRequest.builder()
-                .slideId("concurrent-slide-1")
-                .elements(List.of())
-                .build();
+        SlideUpdateRequest slide1 = SlideUpdateRequest.builder().id("concurrent-slide-1").elements(List.of()).build();
 
-        SlideUpdateRequest slide2 = SlideUpdateRequest.builder()
-                .slideId("concurrent-slide-2")
-                .elements(List.of())
-                .build();
+        SlideUpdateRequest slide2 = SlideUpdateRequest.builder().id("concurrent-slide-2").elements(List.of()).build();
 
         SlidesUpsertRequest request1 = SlidesUpsertRequest.builder().slides(List.of(slide1)).build();
 
