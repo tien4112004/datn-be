@@ -4,6 +4,7 @@ import com.datn.datnbe.ai.api.ImageGenerationApi;
 import com.datn.datnbe.ai.dto.request.ImagePromptRequest;
 import com.datn.datnbe.ai.dto.response.ImageResponseDto;
 import com.datn.datnbe.ai.management.ImageGenerationIdempotencyService;
+import com.datn.datnbe.ai.mapper.ImageGenerateMapper;
 import com.datn.datnbe.document.api.MediaStorageApi;
 import com.datn.datnbe.document.api.PresentationApi;
 import com.datn.datnbe.document.dto.response.UploadedMediaResponseDto;
@@ -32,6 +33,7 @@ public class ImageGenerationController {
     private final ImageGenerationApi imageGenerationApi;
     private final MediaStorageApi mediaStorageApi;
     private final PresentationApi presentationApi;
+    private final ImageGenerateMapper imageGenerateMapper;
 
     @PostMapping("/images/generate")
     public ResponseEntity<AppResponseDto<ImageResponseDto>> generateImage(@RequestBody ImagePromptRequest request) {
@@ -39,12 +41,7 @@ public class ImageGenerationController {
         List<MultipartFile> imageResponse = imageGenerationApi.generateImage(request);
 
         log.info("uploading images to media storage");
-        ImageResponseDto uploadedMedia = ImageResponseDto.builder()
-                .cdnUrls(imageResponse.stream()
-                        .map(mediaStorageApi::upload)
-                        .map(UploadedMediaResponseDto::getCdnUrl)
-                        .toList())
-                .build();
+        ImageResponseDto uploadedMedia = imageGenerateMapper.toImageResponseDto(imageResponse, mediaStorageApi);
         log.info("Images uploaded successfully: {}", uploadedMedia);
 
         return ResponseEntity.ok(AppResponseDto.<ImageResponseDto>builder().data(uploadedMedia).build());
