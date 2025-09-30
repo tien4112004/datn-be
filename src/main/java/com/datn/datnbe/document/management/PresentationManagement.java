@@ -24,10 +24,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.UUID;
 
+@Service
 @RequiredArgsConstructor
 @Slf4j
 public class PresentationManagement implements PresentationApi {

@@ -5,11 +5,9 @@ import com.datn.datnbe.document.dto.response.PresentationCreateResponseDto;
 import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
 public interface PresentationApi {
     PresentationCreateResponseDto createPresentation(PresentationCreateRequest request);
 

@@ -8,11 +8,9 @@ import com.datn.datnbe.document.dto.response.MindmapCreateResponseDto;
 import com.datn.datnbe.document.dto.response.MindmapDto;
 import com.datn.datnbe.document.dto.response.MindmapListResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
 public interface MindmapApi {
     MindmapCreateResponseDto createMindmap(MindmapCreateRequest request);
 

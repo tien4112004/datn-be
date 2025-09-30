@@ -8,9 +8,11 @@ import com.datn.datnbe.document.entity.Presentation;
 import com.datn.datnbe.document.repository.PresentationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+@Service
 @RequiredArgsConstructor
 @Slf4j
 public class SlidesManagement implements SlidesApi {
