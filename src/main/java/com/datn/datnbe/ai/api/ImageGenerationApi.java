@@ -6,6 +6,5 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface ImageGenerationApi {
-
     List<MultipartFile> generateImage(ImagePromptRequest request);
 }

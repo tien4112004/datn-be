@@ -5,6 +5,7 @@ import com.datn.datnbe.document.dto.response.PresentationCreateResponseDto;
 import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
+
 import java.util.List;
 
 public interface PresentationApi {
@@ -23,4 +24,6 @@ public interface PresentationApi {
     void updatePresentationParsingStatus(String id);
 
     void deletePresentation(String id);
+
+    long insertImageToPresentation(String presentationId, String slideId, String elementId, String imageUrl);
 }

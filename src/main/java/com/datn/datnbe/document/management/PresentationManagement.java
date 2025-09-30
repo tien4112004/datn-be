@@ -171,4 +171,10 @@ public class PresentationManagement implements PresentationApi {
         presentation.setDeletedAt(java.time.LocalDate.now());
         presentationRepository.save(presentation);
     }
+
+    @Override
+    public long insertImageToPresentation(String presentationId, String slideId, String elementId, String imageUrl) {
+        ObjectId presentationIdObj = new ObjectId(presentationId);
+        return presentationRepository.insertImageToPresentation(presentationIdObj, slideId, elementId, imageUrl);
+    }
 }
