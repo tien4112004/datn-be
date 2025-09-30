@@ -28,7 +28,7 @@ import java.util.List;
 public class ImageGenerationManagement implements ImageGenerationApi {
     @Value("${ai.api.image-endpoint}")
     @NonFinal
-    String IMAGE_API_ENDPOINT = "/api/image/generation";
+    String IMAGE_API_ENDPOINT;
 
     AIApiClient aiApiClient;
 

@@ -39,10 +39,6 @@ public class MappingParamsUtils {
                 request.getModel(),
                 "provider",
                 request.getProvider(),
-                //                "art_style", request.getArtStyle(),
-                //                "art_description", request.getArtDescription(),
-                //                "theme_style", request.getThemeStyle(),
-                //                "theme_description", request.getThemeDescription(),
                 "aspect_ratio",
                 request.getAspectRatio());
 
