@@ -4,7 +4,7 @@ import com.datn.datnbe.document.api.MindmapApi;
 import com.datn.datnbe.document.dto.request.MindmapCollectionRequest;
 import com.datn.datnbe.document.dto.request.MindmapCreateRequest;
 import com.datn.datnbe.document.dto.request.MindmapUpdateRequest;
-import com.datn.datnbe.document.dto.request.MindmapUpdateTitleRequest;
+import com.datn.datnbe.document.dto.request.MindmapUpdateTitleAndDescriptionRequest;
 import com.datn.datnbe.document.dto.response.MindmapDto;
 import com.datn.datnbe.document.dto.response.MindmapCreateResponseDto;
 import com.datn.datnbe.document.dto.response.MindmapListResponseDto;
@@ -129,7 +129,7 @@ public class MindmapManagement implements MindmapApi {
     }
 
     @Override
-    public void updateTitleMindmap(String id, MindmapUpdateTitleRequest request) {
+    public void updateTitleAndDescriptionMindmap(String id, MindmapUpdateTitleAndDescriptionRequest request) {
         log.info("Updating mindmap title with id: '{}'", id);
 
         try {

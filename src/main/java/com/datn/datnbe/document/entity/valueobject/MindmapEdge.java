@@ -24,7 +24,6 @@ public class MindmapEdge {
     String type;
 
     @Builder.Default
-
     Map<String, Object> extraFields = new HashMap<>();
     @JsonAnySetter
     public void setExtraField(String key, Object value) {

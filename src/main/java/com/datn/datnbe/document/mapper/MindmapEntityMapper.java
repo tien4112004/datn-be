@@ -23,7 +23,7 @@ import java.util.UUID;
 public interface MindmapEntityMapper {
 
     @Mapping(target = "title", expression = "java((request.getTitle() == null || request.getTitle().isEmpty()) ? \"Untitled Presentation\" : request.getTitle())")
-    @Mapping(target = "description", expression = "java(request.getTitle())")
+    @Mapping(target = "description", expression = "java(request.getDescription())")
     @Mapping(target = "createdAt", expression = "java(LocalDateTime.now())")
     @Mapping(target = "updatedAt", expression = "java(LocalDateTime.now())")
     @Mapping(target = "nodes", source = "nodes")

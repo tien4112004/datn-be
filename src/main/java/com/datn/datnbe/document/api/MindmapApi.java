@@ -3,7 +3,7 @@ package com.datn.datnbe.document.api;
 import com.datn.datnbe.document.dto.request.MindmapCollectionRequest;
 import com.datn.datnbe.document.dto.request.MindmapCreateRequest;
 import com.datn.datnbe.document.dto.request.MindmapUpdateRequest;
-import com.datn.datnbe.document.dto.request.MindmapUpdateTitleRequest;
+import com.datn.datnbe.document.dto.request.MindmapUpdateTitleAndDescriptionRequest;
 import com.datn.datnbe.document.dto.response.MindmapCreateResponseDto;
 import com.datn.datnbe.document.dto.response.MindmapDto;
 import com.datn.datnbe.document.dto.response.MindmapListResponseDto;
@@ -20,7 +20,7 @@ public interface MindmapApi {
 
     void updateMindmap(String id, MindmapUpdateRequest request);
 
-    void updateTitleMindmap(String id, MindmapUpdateTitleRequest request);
+    void updateTitleAndDescriptionMindmap(String id, MindmapUpdateTitleAndDescriptionRequest request);
 
     MindmapDto getMindmap(String id);
 }

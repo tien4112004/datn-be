@@ -9,7 +9,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class MindmapUpdateTitleRequest {
+public class MindmapUpdateTitleAndDescriptionRequest {
 
     @Size(max = 255, message = "Title must not exceed 255 characters")
     String title;

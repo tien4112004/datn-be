@@ -4,7 +4,7 @@ import com.datn.datnbe.document.api.MindmapApi;
 import com.datn.datnbe.document.dto.request.MindmapCollectionRequest;
 import com.datn.datnbe.document.dto.request.MindmapCreateRequest;
 import com.datn.datnbe.document.dto.request.MindmapUpdateRequest;
-import com.datn.datnbe.document.dto.request.MindmapUpdateTitleRequest;
+import com.datn.datnbe.document.dto.request.MindmapUpdateTitleAndDescriptionRequest;
 import com.datn.datnbe.document.dto.response.MindmapCreateResponseDto;
 import com.datn.datnbe.document.dto.response.MindmapDto;
 import com.datn.datnbe.document.dto.response.MindmapListResponseDto;
@@ -79,9 +79,9 @@ public class MindmapController {
 
     @PatchMapping(value = "/{id}/title", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> updateMindmapTitle(@PathVariable String id,
-            @Valid @RequestBody MindmapUpdateTitleRequest request) {
+            @Valid @RequestBody MindmapUpdateTitleAndDescriptionRequest request) {
         log.info("Received request to update mindmap title with id: {}", id);
-        mindmapApi.updateTitleMindmap(id, request);
+        mindmapApi.updateTitleAndDescriptionMindmap(id, request);
         return ResponseEntity.noContent().build();
     }
 }
