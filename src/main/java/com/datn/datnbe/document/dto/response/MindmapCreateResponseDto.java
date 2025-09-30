@@ -20,7 +20,6 @@ public class MindmapCreateResponseDto {
     private String description;
     //    private String ownerId;
     private LocalDateTime createdAt;
-    private Boolean isParsed;
 
     @Builder.Default
     Map<String, Object> extraFields = new HashMap<>();

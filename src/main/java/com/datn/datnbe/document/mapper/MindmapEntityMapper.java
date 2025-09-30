@@ -49,6 +49,7 @@ public interface MindmapEntityMapper {
     void updateEntityFromRequest(MindmapUpdateRequest request, @MappingTarget Mindmap mindmap);
 
     @Mapping(target = "id", expression = "java(nodeDto.getId() != null ? nodeDto.getId() : UUID.randomUUID().toString())")
+    @Mapping(target = "type", source = "type")
     @Mapping(target = "extraFields", source = "extraFields")
     MindmapNode nodeDtoToEntity(MindmapNodeDto nodeDto);
 

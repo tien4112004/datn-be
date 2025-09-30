@@ -9,7 +9,6 @@ import com.datn.datnbe.document.dto.response.MindmapDto;
 import com.datn.datnbe.document.dto.response.MindmapCreateResponseDto;
 import com.datn.datnbe.document.dto.response.MindmapListResponseDto;
 import com.datn.datnbe.document.entity.Mindmap;
-import com.datn.datnbe.document.entity.valueobject.MindmapNode;
 import com.datn.datnbe.document.mapper.MindmapEntityMapper;
 import com.datn.datnbe.document.repository.MindmapRepository;
 import com.datn.datnbe.document.management.validation.MindmapValidation;
@@ -200,34 +199,6 @@ public class MindmapManagement implements MindmapApi {
         }
 
         return mindmap;
-    }
-
-    private void updateMindmapFields(Mindmap existingMindmap, MindmapUpdateRequest request) {
-        mapper.updateEntityFromRequest(request, existingMindmap);
-
-        if (request.getNodes() != null) {
-            List<MindmapNode> updatedNodes = mapper.nodeDtosToEntities(request.getNodes());
-
-            updatedNodes.forEach(node -> {
-                if (node.getId() == null) {
-                    node.setId(UUID.randomUUID().toString());
-                }
-            });
-
-            existingMindmap.setNodes(updatedNodes);
-        }
-
-        if (request.getEdges() != null) {
-            var updatedEdges = mapper.edgeDtosToEntities(request.getEdges());
-
-            updatedEdges.forEach(edge -> {
-                if (edge.getId() == null) {
-                    edge.setId(UUID.randomUUID().toString());
-                }
-            });
-
-            existingMindmap.setEdges(updatedEdges);
-        }
     }
 
     private Mindmap findMindmapById(String id) {

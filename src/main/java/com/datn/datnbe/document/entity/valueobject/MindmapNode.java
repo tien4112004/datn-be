@@ -18,6 +18,9 @@ public class MindmapNode {
     @Field("id")
     String id;
 
+    @Field("type")
+    String type;
+
     @Builder.Default
     Map<String, Object> extraFields = new HashMap<>();
 

@@ -14,7 +14,9 @@ import java.util.Map;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class MindmapNodeDto {
-    private String id;
+    String id;
+
+    String type;
 
     @Builder.Default
     Map<String, Object> extraFields = new HashMap<>();
