@@ -28,4 +28,9 @@ public class PresentationIdempotencyService extends AbstractIdempotencyService {
         throw new AppException(ErrorCode.IDEMPOTENCY_KEY_INVALID,
                 "Valid keys must be in the format '{presentationId}:{slideId}'");
     }
+
+    @Override
+    public String getActualKey(String originalKey) {
+        return originalKey + ":update";
+    }
 }

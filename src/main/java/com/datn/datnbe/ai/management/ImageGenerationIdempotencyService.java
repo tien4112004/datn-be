@@ -23,4 +23,9 @@ public class ImageGenerationIdempotencyService extends AbstractIdempotencyServic
         throw new AppException(ErrorCode.IDEMPOTENCY_KEY_INVALID,
                 "Valid keys must be in the format '{presentationId}:{slideId}:{elementId}'");
     }
+
+    @Override
+    public String getActualKey(String originalKey) {
+        return originalKey + "-image";
+    }
 }

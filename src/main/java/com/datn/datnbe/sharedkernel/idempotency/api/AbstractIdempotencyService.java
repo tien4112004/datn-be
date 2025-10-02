@@ -131,4 +131,15 @@ public abstract class AbstractIdempotencyService {
         log.info("Request with this idempotency key is already in progress.");
         // No-op by default
     }
+
+    /**
+     * Returns the actual key to be used for idempotency operations.
+     * Override this method to customize key transformation.
+     *
+     * @param originalKey the original idempotency key
+     * @return the transformed idempotency key
+     */
+    public String getActualKey(String originalKey) {
+        return originalKey;
+    }
 }

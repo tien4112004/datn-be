@@ -52,9 +52,11 @@ public class IdempotencyAspect {
             service.invalidate(key);
         }
 
-        var existingEntity = repository.findById(key).orElse(null);
+        String actualKey = service.getActualKey(key);
 
-        log.info("Idempotency key: {}", key);
+        var existingEntity = repository.findById(actualKey).orElse(null);
+
+        log.info("Idempotency key: {}", actualKey);
         try {
             if (existingEntity == null) {
                 existingEntity = service.initialize(key);
