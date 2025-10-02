@@ -6,7 +6,6 @@ import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -14,8 +13,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import reactor.core.publisher.Flux;
-import reactor.netty.http.HttpProtocol;
-import reactor.netty.http.client.HttpClient;
 
 @Slf4j
 @Component
@@ -27,19 +24,9 @@ public class AIApiClient {
     @Value("${ai.api.base-url}")
     private String baseUrl;
 
-    @Value("${ai.api.timeout:30000}")
-    private int timeout;
-
-    @Value("${app.api-client.max-in-memory-size}") // 10 MB default
-    private int MAX_IN_MEMORY_SIZE; // 10 MB
-
-    public AIApiClient(RestTemplate restTemplate, WebClient.Builder webClientBuilder) {
+    public AIApiClient(RestTemplate restTemplate, WebClient webClientBuilder) {
         this.restTemplate = restTemplate;
-        HttpClient httpClient = HttpClient.create().protocol(HttpProtocol.HTTP11);
-
-        this.webClient = webClientBuilder.clientConnector(new ReactorClientHttpConnector(httpClient))
-                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(MAX_IN_MEMORY_SIZE))
-                .build();
+        this.webClient = webClientBuilder;
     }
 
     public <T> T get(String endpoint, Class<T> responseType) {

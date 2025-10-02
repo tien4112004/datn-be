@@ -4,8 +4,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.netty.http.HttpProtocol;
+import reactor.netty.http.client.HttpClient;
 
 @Configuration
 public class ApiClientConfig {
@@ -27,7 +30,11 @@ public class ApiClientConfig {
     }
 
     @Bean
-    public WebClient.Builder webClientBuilder() {
-        return WebClient.builder().codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(MAX_IN_MEMORY_SIZE));
+    public WebClient webClientBuilder() {
+        HttpClient httpClient = HttpClient.create().protocol(HttpProtocol.HTTP11);
+        return WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .codecs(c -> c.defaultCodecs().maxInMemorySize(MAX_IN_MEMORY_SIZE))
+                .build();
     }
 }
