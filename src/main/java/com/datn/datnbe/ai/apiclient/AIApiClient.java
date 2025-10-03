@@ -24,9 +24,9 @@ public class AIApiClient {
     @Value("${ai.api.base-url}")
     private String baseUrl;
 
-    public AIApiClient(RestTemplate restTemplate, WebClient webClientBuilder) {
+    public AIApiClient(RestTemplate restTemplate, WebClient webClient) {
         this.restTemplate = restTemplate;
-        this.webClient = webClientBuilder;
+        this.webClient = webClient;
     }
 
     public <T> T get(String endpoint, Class<T> responseType) {

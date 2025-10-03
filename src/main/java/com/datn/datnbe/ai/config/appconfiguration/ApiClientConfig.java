@@ -30,7 +30,7 @@ public class ApiClientConfig {
     }
 
     @Bean
-    public WebClient webClientBuilder() {
+    public WebClient webClient() {
         HttpClient httpClient = HttpClient.create().protocol(HttpProtocol.HTTP11);
         return WebClient.builder()
                 .clientConnector(new ReactorClientHttpConnector(httpClient))

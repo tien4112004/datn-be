@@ -58,6 +58,7 @@ public class MediaStorageManagement implements MediaStorageApi {
         log.info("Saved media record with ID: {} for file: {}", savedMedia.getId(), originalFilename);
 
         return UploadedMediaResponseDto.builder()
+                .id(savedMedia.getId())
                 .mediaType(mediaType.name())
                 .cdnUrl(savedMedia.getCdnUrl())
                 .extension(extension)

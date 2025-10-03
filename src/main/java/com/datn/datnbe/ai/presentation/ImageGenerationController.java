@@ -7,7 +7,6 @@ import com.datn.datnbe.ai.management.ImageGenerationIdempotencyService;
 import com.datn.datnbe.ai.mapper.ImageGenerateMapper;
 import com.datn.datnbe.document.api.MediaStorageApi;
 import com.datn.datnbe.document.api.PresentationApi;
-import com.datn.datnbe.document.dto.response.UploadedMediaResponseDto;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
@@ -49,18 +48,17 @@ public class ImageGenerationController {
 
     @PostMapping("/images/generate-with-idempotency")
     @Idempotent(serviceType = ImageGenerationIdempotencyService.class)
-    public ResponseEntity<AppResponseDto<Void>> generateImageWithIdempotency(@RequestBody ImagePromptRequest request,
+    public ResponseEntity<AppResponseDto<ImageResponseDto>> generateImageWithIdempotency(
+            @RequestBody ImagePromptRequest request,
             HttpServletRequest httpRequest) {
 
-        log.info("Received idempotent image generation request: {}", request);
+        List<MultipartFile> imageResponse = imageGenerationApi.generateImage(request);
 
-        log.info("Generating images");
-        List<String> uploadedMedia = imageGenerationApi.generateImage(request)
-                .stream()
-                .map(mediaStorageApi::upload)
-                .map(UploadedMediaResponseDto::getCdnUrl)
-                .toList();
-        if (uploadedMedia.isEmpty()) {
+        log.info("uploading images to media storage");
+        ImageResponseDto uploadedMedia = imageGenerateMapper.toImageResponseDto(imageResponse, mediaStorageApi);
+        log.info("Images uploaded successfully: {}", uploadedMedia);
+
+        if (uploadedMedia == null) {
             throw new AppException(ErrorCode.GENERATION_ERROR, "No images were generated");
         }
 
@@ -72,14 +70,17 @@ public class ImageGenerationController {
         String presentationId = keys.getFirst();
         String slideId = keys.get(1);
         String elementId = keys.get(2);
-        String url = uploadedMedia.get(0);
+        // String url = uploadedMedia.getFirst().get("cdnUrl").toString();
+
+        // Using a random image from picsum.photos as a placeholder
+        int randomNumber = (int) (Math.random() * 1000);
+        String url = "https://picsum.photos/800/600?random=" + randomNumber;
 
         if (!(presentationApi.insertImageToPresentation(presentationId, slideId, elementId, url) > 0)) {
             throw new AppException(ErrorCode.IMAGE_INSERTION_FAILED);
         }
 
-        AppResponseDto<Void> response = AppResponseDto.<Void>builder().build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(AppResponseDto.<ImageResponseDto>builder().data(uploadedMedia).build());
     }
 
 }

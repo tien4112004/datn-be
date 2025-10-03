@@ -11,4 +11,5 @@ public class UploadedMediaResponseDto {
     private String cdnUrl;
     private String mediaType;
     private String extension;
+    private Long id;
 }

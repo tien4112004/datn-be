@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import java.util.List;
+import java.util.Map;
 
 @Builder
 @Data
@@ -14,5 +15,5 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ImageResponseDto {
-    List<String> cdnUrls;
+    List<Map<String, Object>> images;
 }
