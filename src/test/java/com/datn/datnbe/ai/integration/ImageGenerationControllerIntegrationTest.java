@@ -152,8 +152,8 @@ public class ImageGenerationControllerIntegrationTest extends BaseIntegrationTes
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").exists())
-                .andExpect(jsonPath("$.data.cdnUrls").isArray())
-                .andExpect(jsonPath("$.data.cdnUrls", hasSize(2)));
+                .andExpect(jsonPath("$.data.images").isArray())
+                .andExpect(jsonPath("$.data.images", hasSize(2)));
 
         // Verify AI API was called
         verify(aiApiClient, times(1)).post(any(String.class), any(Map.class), eq(ImageGeneratedResponseDto.class));
