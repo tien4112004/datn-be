@@ -19,14 +19,14 @@ public class ImageController {
     ImageManagement imageManagement;
 
     @GetMapping
-    public ResponseEntity<AppResponseDto> upload(Pageable pageable) {
+    public ResponseEntity<AppResponseDto> getImages(Pageable pageable) {
         var response = imageManagement.getImages(pageable);
 
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AppResponseDto> getImage(@PathVariable Long id) {
+    public ResponseEntity<AppResponseDto> getImageById(@PathVariable Long id) {
         var response = imageManagement.getImageById(id);
 
         return ResponseEntity.ok(AppResponseDto.success(response));
