@@ -83,12 +83,12 @@ class ImageControllerTest {
         // When & Then
         mockMvc.perform(get("/api/images").param("page", "0").param("size", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.data.pagination.totalItems").value(2))
-                .andExpect(jsonPath("$.data.data.pagination.totalPages").value(1))
-                .andExpect(jsonPath("$.data.data.data[0].id").value(1))
-                .andExpect(jsonPath("$.data.data.data[0].originalFilename").value("test-image-1.jpg"))
-                .andExpect(jsonPath("$.data.data.data[0].url").value("https://cdn.example.com/test-image-1.jpg"))
-                .andExpect(jsonPath("$.data.data.data[1].id").value(2));
+                .andExpect(jsonPath("$.pagination.totalItems").value(2))
+                .andExpect(jsonPath("$.pagination.totalPages").value(1))
+                .andExpect(jsonPath("$.data[0].id").value(1))
+                .andExpect(jsonPath("$.data[0].originalFilename").value("test-image-1.jpg"))
+                .andExpect(jsonPath("$.data[0].url").value("https://cdn.example.com/test-image-1.jpg"))
+                .andExpect(jsonPath("$.data[1].id").value(2));
     }
 
     @Test
@@ -109,9 +109,7 @@ class ImageControllerTest {
         when(imageManagement.getImages(any(Pageable.class))).thenReturn(paginatedResponse);
 
         // When & Then
-        mockMvc.perform(get("/api/images"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.data.data[0].id").value(1));
+        mockMvc.perform(get("/api/images")).andExpect(status().isOk()).andExpect(jsonPath("$.data[0].id").value(1));
     }
 
     @Test
@@ -134,8 +132,8 @@ class ImageControllerTest {
         // When & Then
         mockMvc.perform(get("/api/images"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.data.data").isEmpty())
-                .andExpect(jsonPath("$.data.data.pagination.totalItems").value(0));
+                .andExpect(jsonPath("$.data").isEmpty())
+                .andExpect(jsonPath("$.pagination.totalItems").value(0));
     }
 
     @Test
@@ -147,11 +145,11 @@ class ImageControllerTest {
         // When & Then
         mockMvc.perform(get("/api/images/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.data.id").value(1))
-                .andExpect(jsonPath("$.data.data.originalFilename").value("test-image-1.jpg"))
-                .andExpect(jsonPath("$.data.data.url").value("https://cdn.example.com/test-image-1.jpg"))
-                .andExpect(jsonPath("$.data.data.mediaType").value("IMAGE"))
-                .andExpect(jsonPath("$.data.data.fileSize").value(1024));
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.originalFilename").value("test-image-1.jpg"))
+                .andExpect(jsonPath("$.data.url").value("https://cdn.example.com/test-image-1.jpg"))
+                .andExpect(jsonPath("$.data.mediaType").value("IMAGE"))
+                .andExpect(jsonPath("$.data.fileSize").value(1024));
     }
 
     @Test
@@ -185,9 +183,9 @@ class ImageControllerTest {
         // When & Then
         mockMvc.perform(get("/api/images").param("page", "0").param("size", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.data.pagination.pageSize").value(1))
-                .andExpect(jsonPath("$.data.data.data").isArray())
-                .andExpect(jsonPath("$.data.data.data.length()").value(1));
+                .andExpect(jsonPath("$.pagination.pageSize").value(1))
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data.length()").value(1));
     }
 
     @Test
@@ -210,8 +208,8 @@ class ImageControllerTest {
         // When & Then
         mockMvc.perform(get("/api/images").param("page", "1").param("size", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.data.pagination.currentPage").value(1))
-                .andExpect(jsonPath("$.data.data.data[0].id").value(2));
+                .andExpect(jsonPath("$.pagination.currentPage").value(1))
+                .andExpect(jsonPath("$.data[0].id").value(2));
     }
 
     @Test
@@ -222,8 +220,8 @@ class ImageControllerTest {
         // When & Then
         mockMvc.perform(get("/api/images/2"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.data.id").value(2))
-                .andExpect(jsonPath("$.data.data.originalFilename").value("test-image-2.png"))
-                .andExpect(jsonPath("$.data.data.fileSize").value(2048));
+                .andExpect(jsonPath("$.data.id").value(2))
+                .andExpect(jsonPath("$.data.originalFilename").value("test-image-2.png"))
+                .andExpect(jsonPath("$.data.fileSize").value(2048));
     }
 }
