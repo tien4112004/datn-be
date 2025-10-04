@@ -22,7 +22,7 @@ public class ImageController {
     public ResponseEntity<AppResponseDto> getImages(Pageable pageable) {
         var response = imageManagement.getImages(pageable);
 
-        return ResponseEntity.ok(AppResponseDto.success(response));
+        return ResponseEntity.ok(AppResponseDto.successWithPagination(response.getData(), response.getPagination()));
     }
 
     @GetMapping("/{id}")

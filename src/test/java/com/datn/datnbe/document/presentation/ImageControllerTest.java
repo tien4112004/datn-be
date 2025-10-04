@@ -3,7 +3,6 @@ package com.datn.datnbe.document.presentation;
 import com.datn.datnbe.document.dto.response.MediaResponseDto;
 import com.datn.datnbe.document.enums.MediaType;
 import com.datn.datnbe.document.management.ImageManagement;
-import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
@@ -79,9 +78,7 @@ class ImageControllerTest {
                 .data(List.of(testMediaDto1, testMediaDto2))
                 .build();
 
-        AppResponseDto<PaginatedResponseDto<MediaResponseDto>> response = AppResponseDto.success(paginatedResponse);
-
-        when(imageManagement.getImages(any(Pageable.class))).thenReturn(response);
+        when(imageManagement.getImages(any(Pageable.class))).thenReturn(paginatedResponse);
 
         // When & Then
         mockMvc.perform(get("/api/images").param("page", "0").param("size", "10"))
@@ -109,9 +106,7 @@ class ImageControllerTest {
                 .data(List.of(testMediaDto1))
                 .build();
 
-        AppResponseDto<PaginatedResponseDto<MediaResponseDto>> response = AppResponseDto.success(paginatedResponse);
-
-        when(imageManagement.getImages(any(Pageable.class))).thenReturn(response);
+        when(imageManagement.getImages(any(Pageable.class))).thenReturn(paginatedResponse);
 
         // When & Then
         mockMvc.perform(get("/api/images"))
@@ -134,9 +129,7 @@ class ImageControllerTest {
                 .data(List.of())
                 .build();
 
-        AppResponseDto<PaginatedResponseDto<MediaResponseDto>> response = AppResponseDto.success(paginatedResponse);
-
-        when(imageManagement.getImages(any(Pageable.class))).thenReturn(response);
+        when(imageManagement.getImages(any(Pageable.class))).thenReturn(paginatedResponse);
 
         // When & Then
         mockMvc.perform(get("/api/images"))
@@ -148,9 +141,8 @@ class ImageControllerTest {
     @Test
     void getImageById_WithExistingId_ShouldReturnImage() throws Exception {
         // Given
-        AppResponseDto<MediaResponseDto> response = AppResponseDto.success(testMediaDto1);
 
-        when(imageManagement.getImageById(1L)).thenReturn(response);
+        when(imageManagement.getImageById(1L)).thenReturn(testMediaDto1);
 
         // When & Then
         mockMvc.perform(get("/api/images/1"))
@@ -188,9 +180,7 @@ class ImageControllerTest {
                 .data(List.of(testMediaDto1))
                 .build();
 
-        AppResponseDto<PaginatedResponseDto<MediaResponseDto>> response = AppResponseDto.success(paginatedResponse);
-
-        when(imageManagement.getImages(any(Pageable.class))).thenReturn(response);
+        when(imageManagement.getImages(any(Pageable.class))).thenReturn(paginatedResponse);
 
         // When & Then
         mockMvc.perform(get("/api/images").param("page", "0").param("size", "1"))
@@ -215,9 +205,7 @@ class ImageControllerTest {
                 .data(List.of(testMediaDto2))
                 .build();
 
-        AppResponseDto<PaginatedResponseDto<MediaResponseDto>> response = AppResponseDto.success(paginatedResponse);
-
-        when(imageManagement.getImages(any(Pageable.class))).thenReturn(response);
+        when(imageManagement.getImages(any(Pageable.class))).thenReturn(paginatedResponse);
 
         // When & Then
         mockMvc.perform(get("/api/images").param("page", "1").param("size", "1"))
@@ -229,9 +217,7 @@ class ImageControllerTest {
     @Test
     void getImageById_WithDifferentImageId_ShouldReturnCorrectImage() throws Exception {
         // Given
-        AppResponseDto<MediaResponseDto> response = AppResponseDto.success(testMediaDto2);
-
-        when(imageManagement.getImageById(2L)).thenReturn(response);
+        when(imageManagement.getImageById(2L)).thenReturn(testMediaDto2);
 
         // When & Then
         mockMvc.perform(get("/api/images/2"))

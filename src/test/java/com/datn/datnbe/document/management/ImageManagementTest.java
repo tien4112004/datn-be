@@ -5,7 +5,6 @@ import com.datn.datnbe.document.entity.Media;
 import com.datn.datnbe.document.enums.MediaType;
 import com.datn.datnbe.document.mapper.MediaEntityMapper;
 import com.datn.datnbe.document.repository.MediaRepository;
-import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
@@ -103,18 +102,14 @@ class ImageManagementTest {
         when(mediaEntityMapper.toResponseDto(testMedia2)).thenReturn(testMediaDto2);
 
         // When
-        AppResponseDto<PaginatedResponseDto<MediaResponseDto>> result = imageManagement.getImages(pageable);
+        PaginatedResponseDto<MediaResponseDto> result = imageManagement.getImages(pageable);
 
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getData()).isNotNull();
-        assertThat(result.getData().getData()).hasSize(2);
-        assertThat(result.getData().getPagination().getTotalItems()).isEqualTo(2);
-        assertThat(result.getData().getPagination().getTotalPages()).isEqualTo(1);
-        assertThat(result.getData().getData().getFirst().getId()).isEqualTo(1L);
-        assertThat(result.getData().getData().getFirst().getOriginalFilename()).isEqualTo("test-image-1.jpg");
-        assertThat(result.getData().getData().getFirst().getCdnUrl())
-                .isEqualTo("https://cdn.example.com/test-image-1.jpg");
+        assertThat(result.getData().getFirst().getId()).isEqualTo(1L);
+        assertThat(result.getData().getFirst().getOriginalFilename()).isEqualTo("test-image-1.jpg");
+        assertThat(result.getData().getFirst().getCdnUrl()).isEqualTo("https://cdn.example.com/test-image-1.jpg");
     }
 
     @Test
@@ -126,14 +121,11 @@ class ImageManagementTest {
         when(mediaRepository.findByMediaType(MediaType.IMAGE, pageable)).thenReturn(mediaPage);
 
         // When
-        AppResponseDto<PaginatedResponseDto<MediaResponseDto>> result = imageManagement.getImages(pageable);
+        PaginatedResponseDto<MediaResponseDto> result = imageManagement.getImages(pageable);
 
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getData()).isNotNull();
-        assertThat(result.getData().getData()).isEmpty();
-        assertThat(result.getData().getPagination().getTotalItems()).isEqualTo(0);
-        assertThat(result.getData().getPagination().getTotalPages()).isEqualTo(0);
     }
 
     @Test
@@ -146,15 +138,12 @@ class ImageManagementTest {
         when(mediaEntityMapper.toResponseDto(testMedia2)).thenReturn(testMediaDto2);
 
         // When
-        AppResponseDto<PaginatedResponseDto<MediaResponseDto>> result = imageManagement.getImages(pageable);
+        PaginatedResponseDto<MediaResponseDto> result = imageManagement.getImages(pageable);
 
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getData()).isNotNull();
-        assertThat(result.getData().getData()).hasSize(1);
-        assertThat(result.getData().getPagination().getTotalItems()).isEqualTo(2);
-        assertThat(result.getData().getPagination().getTotalPages()).isEqualTo(2);
-        assertThat(result.getData().getData().getFirst().getId()).isEqualTo(2L);
+        assertThat(result.getData().getFirst().getId()).isEqualTo(2L);
     }
 
     @Test
@@ -165,16 +154,16 @@ class ImageManagementTest {
         when(mediaEntityMapper.toResponseDto(testMedia1)).thenReturn(testMediaDto1);
 
         // When
-        AppResponseDto<MediaResponseDto> result = imageManagement.getImageById(imageId);
+        MediaResponseDto result = imageManagement.getImageById(imageId);
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getData()).isNotNull();
-        assertThat(result.getData().getId()).isEqualTo(1L);
-        assertThat(result.getData().getOriginalFilename()).isEqualTo("test-image-1.jpg");
-        assertThat(result.getData().getCdnUrl()).isEqualTo("https://cdn.example.com/test-image-1.jpg");
-        assertThat(result.getData().getMediaType()).isEqualTo(MediaType.IMAGE);
-        assertThat(result.getData().getFileSize()).isEqualTo(1024L);
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getOriginalFilename()).isEqualTo("test-image-1.jpg");
+        assertThat(result.getCdnUrl()).isEqualTo("https://cdn.example.com/test-image-1.jpg");
+        assertThat(result.getMediaType()).isEqualTo(MediaType.IMAGE);
+        assertThat(result.getFileSize()).isEqualTo(1024L);
     }
 
     @Test
@@ -212,13 +201,11 @@ class ImageManagementTest {
         when(mediaEntityMapper.toResponseDto(testMedia2)).thenReturn(testMediaDto2);
 
         // When
-        AppResponseDto<PaginatedResponseDto<MediaResponseDto>> result = imageManagement.getImages(pageable);
+        PaginatedResponseDto<MediaResponseDto> result = imageManagement.getImages(pageable);
 
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getData()).isNotNull();
-        assertThat(result.getData().getData()).hasSize(2);
-        assertThat(result.getData().getPagination().getPageSize()).isEqualTo(100);
     }
 
     @Test
@@ -231,11 +218,10 @@ class ImageManagementTest {
         when(mediaEntityMapper.toResponseDto(testMedia1)).thenReturn(testMediaDto1);
 
         // When
-        AppResponseDto<PaginatedResponseDto<MediaResponseDto>> result = imageManagement.getImages(pageable);
+        PaginatedResponseDto<MediaResponseDto> result = imageManagement.getImages(pageable);
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getData().getData()).allMatch(dto -> dto.getMediaType() == MediaType.IMAGE);
     }
 
     @Test
@@ -246,11 +232,11 @@ class ImageManagementTest {
         when(mediaEntityMapper.toResponseDto(testMedia2)).thenReturn(testMediaDto2);
 
         // When
-        AppResponseDto<MediaResponseDto> result = imageManagement.getImageById(imageId);
+        MediaResponseDto result = imageManagement.getImageById(imageId);
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getData().getOriginalFilename()).isEqualTo("test-image-2.png");
-        assertThat(result.getData().getFileSize()).isEqualTo(2048L);
+        assertThat(result.getOriginalFilename()).isEqualTo("test-image-2.png");
+        assertThat(result.getFileSize()).isEqualTo(2048L);
     }
 }

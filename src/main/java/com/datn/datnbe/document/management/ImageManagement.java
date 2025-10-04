@@ -5,7 +5,6 @@ import com.datn.datnbe.document.dto.response.MediaResponseDto;
 import com.datn.datnbe.document.enums.MediaType;
 import com.datn.datnbe.document.mapper.MediaEntityMapper;
 import com.datn.datnbe.document.repository.MediaRepository;
-import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
@@ -25,24 +24,22 @@ public class ImageManagement implements ImagesApi {
     MediaEntityMapper mediaMapper;
 
     @Override
-    public AppResponseDto<PaginatedResponseDto<MediaResponseDto>> getImages(Pageable pageable) {
+    public PaginatedResponseDto<MediaResponseDto> getImages(Pageable pageable) {
         var medias = mediaRepository.findByMediaType(MediaType.IMAGE, pageable);
 
         var paginationDto = PaginationDto.getFromPageable(pageable);
         paginationDto.setTotalItems(medias.getTotalElements());
         paginationDto.setTotalPages(medias.getTotalPages());
 
-        var paginatedResponse = PaginatedResponseDto.<MediaResponseDto>builder()
+        return PaginatedResponseDto.<MediaResponseDto>builder()
                 .pagination(paginationDto)
                 .data(medias.stream().map(mediaMapper::toResponseDto).toList())
                 .build();
-
-        return AppResponseDto.success(paginatedResponse);
     }
 
     @Override
-    public AppResponseDto<MediaResponseDto> getImageById(Long imageId) {
-        return AppResponseDto.success(mediaMapper.toResponseDto(mediaRepository.findById(imageId)
-                .orElseThrow(() -> new AppException(ErrorCode.MEDIA_NOT_FOUND, "Image not found"))));
+    public MediaResponseDto getImageById(Long imageId) {
+        return mediaMapper.toResponseDto(mediaRepository.findById(imageId)
+                .orElseThrow(() -> new AppException(ErrorCode.MEDIA_NOT_FOUND, "Image not found")));
     }
 }
