@@ -1,26 +1,25 @@
 package com.datn.datnbe.document.entity.valueobject;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.mongodb.core.mapping.Field;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class SlideBackground {
-    @Field("type")
-    @NonNull
-    String type;
+public class MindmapNode {
+    @Field("id")
+    String id;
 
-    @Field("color")
-    String color;
+    @Field("type")
+    String type;
 
     @Builder.Default
     Map<String, Object> extraFields = new HashMap<>();
