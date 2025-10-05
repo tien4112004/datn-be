@@ -87,7 +87,6 @@ public class SlideElement {
     @Field("wordSpace")
     Float wordSpace;
 
-    @Builder.Default
     Map<String, Object> extraFields = new HashMap<>();
 
     @JsonAnySetter

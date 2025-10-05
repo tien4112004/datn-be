@@ -29,6 +29,8 @@ public class Presentation {
     @Field("title")
     String title;
 
+    // @Embedded
+    // @DBRef
     @Field("slides")
     List<Slide> slides;
 

@@ -22,7 +22,6 @@ public class SlideBackground {
     @Field("color")
     String color;
 
-    @Builder.Default
     Map<String, Object> extraFields = new HashMap<>();
 
     @JsonAnySetter
