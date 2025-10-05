@@ -18,4 +18,5 @@ public class PresentationUpdateTitleRequest {
     @NotNull(message = "Title cannot be null")
     @NotEmpty(message = "Title cannot be empty")
     private String title;
+
 }
