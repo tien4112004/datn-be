@@ -39,11 +39,12 @@ public class PresentationManagement implements PresentationApi {
     private final PresentationValidation validation;
 
     private String generateUniqueTitle(String originalTitle) {
+        log.info("Generating unique title for {}", originalTitle);
         if (!presentationRepository.existsByTitle(originalTitle)) {
             return originalTitle;
         }
 
-        String candidate;
+        String candidate = originalTitle;
         int num = 0;
         while (true) {
             candidate = originalTitle + " (" + (num + 1) + ")";
