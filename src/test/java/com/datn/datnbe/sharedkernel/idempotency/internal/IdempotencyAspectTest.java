@@ -1,5 +1,35 @@
 package com.datn.datnbe.sharedkernel.idempotency.internal;
 
+import java.lang.reflect.Method;
+import java.util.Optional;
+
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.reflect.MethodSignature;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationContext;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.idempotency.api.AbstractIdempotencyService;
@@ -9,30 +39,8 @@ import com.datn.datnbe.sharedkernel.idempotency.api.Idempotent;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
+
 import jakarta.servlet.http.HttpServletRequest;
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.reflect.MethodSignature;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationContext;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-
-import java.lang.reflect.Method;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("IdempotencyAspect Tests")
@@ -122,6 +130,7 @@ class IdempotencyAspectTest {
                 .build();
 
         setupMocks(key);
+        when(idempotencyService.getActualKey(key)).thenReturn(key);
         when(repository.findById(key)).thenReturn(Optional.empty());
         when(idempotencyService.initialize(key)).thenReturn(newEntity);
         when(joinPoint.proceed()).thenReturn(response);
@@ -151,6 +160,7 @@ class IdempotencyAspectTest {
                 .build();
 
         setupMocks(key);
+        when(idempotencyService.getActualKey(key)).thenReturn(key);
         when(repository.findById(key)).thenReturn(Optional.of(completedEntity));
         when(idempotencyService.isCompleted(completedEntity)).thenReturn(true);
         when(joinPoint.getSignature()).thenReturn(methodSignature);
@@ -185,6 +195,7 @@ class IdempotencyAspectTest {
                 .build();
 
         setupMocks(key);
+        when(idempotencyService.getActualKey(key)).thenReturn(key);
         when(repository.findById(key)).thenReturn(Optional.of(failedEntity));
         when(idempotencyService.isFailed(failedEntity)).thenReturn(true);
         when(idempotencyService.canRetry(failedEntity)).thenReturn(true);
@@ -216,6 +227,7 @@ class IdempotencyAspectTest {
                 .build();
 
         setupMocks(key);
+        when(idempotencyService.getActualKey(key)).thenReturn(key);
         when(repository.findById(key)).thenReturn(Optional.of(inProgressEntity));
         when(idempotencyService.isInProgress(inProgressEntity)).thenReturn(true);
         when(joinPoint.proceed()).thenReturn(response);
@@ -245,6 +257,7 @@ class IdempotencyAspectTest {
                 .build();
 
         setupMocks(key);
+        when(idempotencyService.getActualKey(key)).thenReturn(key);
         when(repository.findById(key)).thenReturn(Optional.of(entity));
         when(idempotencyService.isInProgress(entity)).thenReturn(true);
         when(joinPoint.proceed()).thenThrow(exception);

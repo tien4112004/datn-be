@@ -71,6 +71,13 @@ app:
           provider: "Google"
           default-model: false
           model-type: text
+      openRouter:
+        - model-name: "google/gemini-2.5-flash-image-preview"
+          display-name: "Nano Banana"
+          provider: "openRouter"
+          default-model: true
+          model-type: image
+
   cors:
     allowed-origins: "*"
     allowed-origin-patterns: ${ALLOWED_ORIGINS}
@@ -90,6 +97,7 @@ ai:
     timeout: ${AI_API_TIMEOUT:30000}
     outline-endpoint: ${AI_API_OUTLINE_ENDPOINT:/api/outline/generate/stream/mock}
     presentation-endpoint: ${AI_API_PRESENTATION_ENDPOINT:/api/presentations/generate/stream/mock}
+    image-endpoint: ${AI_API_IMAGE_ENDPOINT:/api/image/generate/mock}
 
 cloudflare:
   r2:

@@ -32,7 +32,11 @@ public enum ErrorCode {
 
     AI_WORKER_UNPROCESSABLE_ENTITY("AI Worker cannot process the request", 422),
     AI_WORKER_SERVER_ERROR("AI Worker encountered an error", 500),
-    AI_WORKER_UNAVAILABLE("AI Worker is unavailable", 503);
+    AI_WORKER_UNAVAILABLE("AI Worker is unavailable", 503),
+
+    FILE_PROCESSING_ERROR("Error processing the file", 500), INVALID_BASE64_FORMAT("Invalid Base64 format", 500),
+
+    IMAGE_INSERTION_FAILED("Failed to insert image into presentation", 400);
 
     private final String defaultMessage;
     private final Integer statusCode;
