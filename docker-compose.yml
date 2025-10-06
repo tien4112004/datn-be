@@ -86,5 +86,6 @@ services:
       timeout: 5s
       retries: 30
       start_period: 60s
+    restart: unless-stopped
     volumes:
       - ./keycloak-data:/opt/keycloak/data
