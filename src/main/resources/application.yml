@@ -105,6 +105,11 @@ app:
   api-client:
     timeout: 30000 # 30 seconds
     max-in-memory-size: 10485760 # 10MB
+  keycloak:
+    issuer: http://localhost:8082/realms/ai-primary-dev
+    client-id: ai-primary
+  oauth2:
+    redirect-uri: http://localhost:8080/login/oauth2/code/keycloak
 
 ai:
   api:

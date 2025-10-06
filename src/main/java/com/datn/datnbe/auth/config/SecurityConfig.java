@@ -12,7 +12,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests(auth -> auth.requestMatchers("/", "/public")
+        http.authorizeHttpRequests(auth -> auth.requestMatchers("/", "/public", "/signin", "/signup")
                 .permitAll()
                 .requestMatchers("/api/admin/**")
                 .hasRole("admin")
