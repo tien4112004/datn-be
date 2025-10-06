@@ -5,18 +5,15 @@ import com.datn.datnbe.document.dto.request.PresentationCollectionRequest;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
 import com.datn.datnbe.document.dto.request.PresentationUpdateRequest;
 import com.datn.datnbe.document.dto.request.PresentationUpdateTitleRequest;
-import com.datn.datnbe.document.dto.response.PresentationDto;
-import com.datn.datnbe.document.management.validation.PresentationValidation;
 import com.datn.datnbe.document.dto.response.PresentationCreateResponseDto;
+import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
 import com.datn.datnbe.document.entity.Presentation;
+import com.datn.datnbe.document.management.validation.PresentationValidation;
 import com.datn.datnbe.document.mapper.PresentationEntityMapper;
 import com.datn.datnbe.document.repository.PresentationRepository;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
@@ -27,7 +24,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -38,11 +38,42 @@ public class PresentationManagement implements PresentationApi {
     private final PresentationEntityMapper mapper;
     private final PresentationValidation validation;
 
+    private String generateUniqueTitle(String originalTitle) {
+        if (!presentationRepository.existsByTitle(originalTitle)) {
+            return originalTitle;
+        }
+
+        String candidate;
+        int num = 0;
+        while (true) {
+            candidate = originalTitle + " (" + (num + 1) + ")";
+            num++;
+
+            if (num > 10000) {
+                break;
+            }
+
+            if (!presentationRepository.existsByTitle(candidate)) {
+                return candidate;
+            }
+        }
+
+        // Fall back
+        return candidate + " (" + (System.currentTimeMillis()) + ")";
+    }
+
     @Override
     public PresentationCreateResponseDto createPresentation(PresentationCreateRequest request) {
         log.info("Creating presentation with title: {}", request.getTitle());
 
+        // Generate unique title if duplicate exists
+        String uniqueTitle = generateUniqueTitle(request.getTitle());
+        if (!uniqueTitle.equals(request.getTitle())) {
+            log.info("Title '{}' already exists, using '{}' instead", request.getTitle(), uniqueTitle);
+        }
+
         Presentation presentation = mapper.createRequestToEntity(request);
+        presentation.setTitle(uniqueTitle);
         presentation.getSlides()
                 .stream()
                 .filter(slide -> slide.getId() == null)
@@ -110,7 +141,6 @@ public class PresentationManagement implements PresentationApi {
         Optional<Presentation> presentation = presentationRepository.findById(id);
 
         validation.validatePresentationExists(presentation, id);
-        validation.validateTitleUniqueness(request.getTitle());
 
         Presentation existingPresentation = presentation.get();
 
@@ -128,7 +158,6 @@ public class PresentationManagement implements PresentationApi {
         Optional<Presentation> presentation = presentationRepository.findById(id);
 
         validation.validatePresentationExists(presentation, id);
-        validation.validateTitleUniqueness(request.getTitle());
 
         Presentation existingPresentation = presentation.get();
 

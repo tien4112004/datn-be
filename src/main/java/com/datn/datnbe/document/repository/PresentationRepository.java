@@ -20,8 +20,11 @@ public interface PresentationRepository extends MongoRepository<Presentation, St
     @Query("{ 'deleted_at': null }")
     Page<Presentation> findAll(Pageable pageable);
 
-    @Query("{ 'title': ?0, 'deleted_at': null }")
-    boolean existsByTitle(String title);
+    @Query(value = "{ 'title': { $regex: ?0, $options: '' }, 'deleted_at': null }", sort = "{'title':  1}")
+    java.util.List<Presentation> findByTitlePattern(String titlePattern);
+
+    @Query(value = "{ 'title': { $regex: ?0, $options: '' }, 'deleted_at': null }", sort = "{ 'title': -1 }")
+    java.util.List<Presentation> findByTitlePatternOrderByTitleDesc(String titlePattern);
 
     @Query("{ '_id': ?0, 'deleted_at': null }")
     Optional<Presentation> findById(ObjectId id);
@@ -58,5 +61,9 @@ public interface PresentationRepository extends MongoRepository<Presentation, St
                 } }
             } }
             """})
+
     long insertImageToPresentation(ObjectId presentationId, String slideId, String elementId, String imageUrl);
+    
+    @Query(value = "{ 'title': ?0, 'deleted_at': null }", exists = true)
+    boolean existsByTitle(String title);
 }
