@@ -39,7 +39,22 @@ spring:
   data:
     mongodb:
       uri: ${MONGODB_URI:mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DATABASE}?authSource=${MONGODB_AUTH_DATABASE}}
-
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: ${KEYCLOAK_CLIENT_ID:datn-frontend}
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:change-me}
+            authorization-grant-type: authorization_code
+            redirect-uri: ${KEYCLOAK_REDIRECT_URI:http://localhost:3000/login/oauth2/code/keycloak}
+            scope: openid, profile, email
+        provider:
+            keycloak:
+                issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8080/realms/datn-realm}
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8080/realms/datn-realm/protocol/openid-connect/certs}
 server:
   servlet:
     encoding:
