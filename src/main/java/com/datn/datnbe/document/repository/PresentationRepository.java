@@ -20,12 +20,6 @@ public interface PresentationRepository extends MongoRepository<Presentation, St
     @Query("{ 'deleted_at': null }")
     Page<Presentation> findAll(Pageable pageable);
 
-    @Query(value = "{ 'title': { $regex: ?0, $options: '' }, 'deleted_at': null }", sort = "{'title':  1}")
-    java.util.List<Presentation> findByTitlePattern(String titlePattern);
-
-    @Query(value = "{ 'title': { $regex: ?0, $options: '' }, 'deleted_at': null }", sort = "{ 'title': -1 }")
-    java.util.List<Presentation> findByTitlePatternOrderByTitleDesc(String titlePattern);
-
     @Query("{ '_id': ?0, 'deleted_at': null }")
     Optional<Presentation> findById(ObjectId id);
 
