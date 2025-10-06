@@ -140,8 +140,14 @@ public class PresentationManagement implements PresentationApi {
     @Override
     public PresentationDto getPresentation(String id) {
         log.info("Fetching presentation with ID: {}", id);
-        ObjectId oId = new ObjectId(id);
-        Optional<Presentation> presentationOpt = presentationRepository.findById(oId);
+        Optional<Presentation> presentationOpt;
+
+        if (ObjectId.isValid(id)) {
+            ObjectId oId = new ObjectId(id);
+            presentationOpt = presentationRepository.findById(oId);
+        } else {
+            presentationOpt = presentationRepository.findById(id);
+        }
         validation.validatePresentationExists(presentationOpt, id);
 
         Presentation presentation = presentationOpt.get();
@@ -170,5 +176,11 @@ public class PresentationManagement implements PresentationApi {
         Presentation presentation = presentationOpt.get();
         presentation.setDeletedAt(java.time.LocalDate.now());
         presentationRepository.save(presentation);
+    }
+
+    @Override
+    public long insertImageToPresentation(String presentationId, String slideId, String elementId, String imageUrl) {
+        ObjectId presentationIdObj = new ObjectId(presentationId);
+        return presentationRepository.insertImageToPresentation(presentationIdObj, slideId, elementId, imageUrl);
     }
 }

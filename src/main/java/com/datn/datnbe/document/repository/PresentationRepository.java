@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.repository.Update;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -24,4 +25,38 @@ public interface PresentationRepository extends MongoRepository<Presentation, St
 
     @Query("{ '_id': ?0, 'deleted_at': null }")
     Optional<Presentation> findById(ObjectId id);
+
+    @Query("{ '_id': ?0, 'deleted_at': null }")
+    @Update(pipeline = {"""
+            { $set: {
+                slides: { $map: {
+                    input: "$slides", as: "s",
+                    in: { $cond: [
+                        { $eq: [ "$$s.id", ?1 ] },
+                        { $mergeObjects: [
+                            "$$s",
+                            { elements: { $map: {
+                                input: "$$s.elements", as: "e",
+                                in: { $cond: [
+                                    { $and: [
+                                        { $eq: [ "$$e.id", ?2 ] },
+                                        { $eq: [ { $toLower: "$$e.type" }, "image" ] }
+                                    ] },
+                                    { $mergeObjects: [
+                                        "$$e",
+                                        { extraFields: { $mergeObjects: [
+                                            { $ifNull: [ "$$e.extraFields", {} ] },
+                                            { src: ?3 }
+                                        ] } }
+                                    ] },
+                                    "$$e"
+                                ] }
+                            } } }
+                        ] },
+                        "$$s"
+                    ] }
+                } }
+            } }
+            """})
+    long insertImageToPresentation(ObjectId presentationId, String slideId, String elementId, String imageUrl);
 }

@@ -144,8 +144,7 @@ class GetPresentationTest {
 
         // When & Then
         assertThatThrownBy(() -> presentationService.getPresentation(nullId))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("hexString can not be null");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -154,9 +153,8 @@ class GetPresentationTest {
         String emptyId = "";
 
         // When & Then
-        assertThatThrownBy(() -> presentationService.getPresentation(emptyId))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("hexString has 24 characters");
+        assertThatThrownBy(() -> presentationService.getPresentation(emptyId)).isInstanceOf(AppException.class)
+                .hasMessageContaining("Presentation not found");
     }
 
     @Test

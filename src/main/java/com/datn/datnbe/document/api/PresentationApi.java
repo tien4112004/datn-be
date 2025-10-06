@@ -24,4 +24,6 @@ public interface PresentationApi {
     void updatePresentationParsingStatus(String id);
 
     void deletePresentation(String id);
+
+    long insertImageToPresentation(String presentationId, String slideId, String elementId, String imageUrl);
 }
