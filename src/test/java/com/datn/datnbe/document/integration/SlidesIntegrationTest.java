@@ -81,7 +81,10 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
                 .background(background)
                 .build();
 
-        PresentationCreateRequest createRequest = PresentationCreateRequest.builder().slides(List.of(slide)).build();
+        PresentationCreateRequest createRequest = PresentationCreateRequest.builder()
+                .title("test presentation")
+                .slides(List.of(slide))
+                .build();
 
         MvcResult result = mockMvc
                 .perform(post("/api/presentations").contentType(MediaType.APPLICATION_JSON)
