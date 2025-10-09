@@ -1,20 +1,30 @@
 package com.datn.datnbe.auth.config;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
+@EnableWebSecurity
 @Profile("!test & !integration-test")
+@RequiredArgsConstructor
 public class SecurityConfig {
+    private final ClientRegistrationRepository clientRegistrationRepository;
+
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests(auth -> auth.requestMatchers("/", "/public", "/signin", "/signup")
+        var oidcLogoutHandler = new OidcClientInitiatedLogoutSuccessHandler(clientRegistrationRepository);
+
+        http.authorizeHttpRequests(auth -> auth.requestMatchers("/public", "/signin", "/signup")
                 .permitAll()
                 .requestMatchers("/api/admin/**")
                 .hasRole("admin")
@@ -22,11 +32,10 @@ public class SecurityConfig {
                 .hasRole("user")
                 .anyRequest()
                 .authenticated())
-                .oauth2Login(Customizer.withDefaults())      // OIDC login via Keycloak
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter()) // roles from token
-                ));
+                .oauth2Login(Customizer.withDefaults())
+                .logout(l -> l.logoutSuccessHandler(oidcLogoutHandler))
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter())));
 
-        // CSRF defaults are fine for form-based; if you're pure API, consider disabling or using tokens.
         return http.build();
     }
 

@@ -44,7 +44,7 @@ spring:
       client:
         registration:
           keycloak:
-            client-id: ${KEYCLOAK_CLIENT_ID:datn-frontend}
+            client-id: ${KEYCLOAK_CLIENT_ID:ai-primary}
             client-secret: ${KEYCLOAK_CLIENT_SECRET:change-me}
             authorization-grant-type: authorization_code
             redirect-uri: ${KEYCLOAK_REDIRECT_URI:http://localhost:3000/login/oauth2/code/keycloak}
@@ -105,11 +105,15 @@ app:
   api-client:
     timeout: 30000 # 30 seconds
     max-in-memory-size: 10485760 # 10MB
-  keycloak:
-    issuer: http://localhost:8082/realms/ai-primary-dev
-    client-id: ai-primary
-  oauth2:
-    redirect-uri: http://localhost:8080/login/oauth2/code/keycloak
+  auth:
+    properties:
+      issuer: ${KEYCLOAK_ISSUER_URI:http://localhost:8082/realms/ai-primary-dev}
+      client-id: ${KEYCLOAK_CLIENT_ID:ai-primary}
+      redirect-uri: http://localhost:8080/login/oauth2/code/keycloak
+      signin-uri: /oauth2/authorization/keycloak
+      signup-uri: ${KEYCLOAK_ISSUER_URI}/login-actions/registration
+      logout-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/logout
+      token-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/token
 
 ai:
   api:
