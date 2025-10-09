@@ -27,7 +27,7 @@ import lombok.experimental.FieldDefaults;
 @EntityListeners(AuditingEntityListener.class)
 public class IdempotencyKey {
     @Id
-    @Column(name = "`key`", nullable = false, unique = true)
+    @Column(name = "key", nullable = false, unique = true)
     String key;
 
     @Column(name = "response_data", columnDefinition = "TEXT")
