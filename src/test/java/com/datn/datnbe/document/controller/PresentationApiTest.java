@@ -1,24 +1,5 @@
 package com.datn.datnbe.document.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import com.datn.datnbe.document.api.PresentationApi;
-import com.datn.datnbe.document.api.SlidesApi;
-import com.datn.datnbe.document.dto.SlideDto;
-import com.datn.datnbe.document.dto.request.SlideUpdateRequest;
-import com.datn.datnbe.document.dto.request.SlideUpdateRequest.SlideElementUpdateRequest;
-import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
-import com.datn.datnbe.document.dto.request.SlidesUpsertRequest;
-import com.datn.datnbe.document.dto.response.PresentationCreateResponseDto;
-import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
-import com.datn.datnbe.document.presentation.PresentationController;
-import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
-import com.datn.datnbe.sharedkernel.dto.PaginationDto;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -26,21 +7,42 @@ import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(PresentationController.class)
+import com.datn.datnbe.document.api.PresentationApi;
+import com.datn.datnbe.document.api.SlidesApi;
+import com.datn.datnbe.document.dto.SlideDto;
+import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
+import com.datn.datnbe.document.dto.request.SlideUpdateRequest;
+import com.datn.datnbe.document.dto.request.SlideUpdateRequest.SlideElementUpdateRequest;
+import com.datn.datnbe.document.dto.request.SlidesUpsertRequest;
+import com.datn.datnbe.document.dto.response.PresentationCreateResponseDto;
+import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
+import com.datn.datnbe.document.presentation.PresentationController;
+import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
+import com.datn.datnbe.sharedkernel.dto.PaginationDto;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+@WebMvcTest(value = PresentationController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class,
+        OAuth2ClientAutoConfiguration.class, OAuth2ResourceServerAutoConfiguration.class})
 class PresentationApiTest {
 
     @Autowired

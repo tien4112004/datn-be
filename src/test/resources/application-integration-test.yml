@@ -2,6 +2,16 @@ spring:
   application:
     name: datn-be-integration-test
   
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.oauth2.client.reactive.ReactiveOAuth2ClientAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.oauth2.resource.reactive.ReactiveOAuth2ResourceServerAutoConfiguration
+      - org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration
+      - org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration
+      - org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration
+  
   jpa:
     hibernate:
       ddl-auto: create-drop
@@ -25,6 +35,16 @@ spring:
   data:
     mongodb:
       database: testdb
+
+  security:
+    oauth2:
+      client:
+        registration: {}
+        provider: {}
+      resourceserver:
+        jwt:
+          issuer-uri: ""
+          jwk-set-uri: ""
 
   ai:
     model:

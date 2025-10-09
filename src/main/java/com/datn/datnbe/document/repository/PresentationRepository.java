@@ -57,7 +57,7 @@ public interface PresentationRepository extends MongoRepository<Presentation, St
             """})
 
     long insertImageToPresentation(ObjectId presentationId, String slideId, String elementId, String imageUrl);
-    
+
     @Query(value = "{ 'title': ?0, 'deleted_at': null }", exists = true)
     boolean existsByTitle(String title);
 }

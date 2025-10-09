@@ -52,7 +52,11 @@ dependencies {
     implementation "software.amazon.awssdk:apache-client:$cloudflareAwsSdkVersion"
     implementation 'org.apache.httpcomponents.client5:httpclient5:5.2.1'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
     testImplementation 'io.projectreactor:reactor-test'
+    testImplementation 'org.springframework.security:spring-security-test'
     compileOnly 'org.projectlombok:lombok:1.18.38'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
