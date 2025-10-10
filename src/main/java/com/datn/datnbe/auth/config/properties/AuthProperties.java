@@ -1,4 +1,4 @@
-package com.datn.datnbe.auth.config;
+package com.datn.datnbe.auth.config.properties;
 
 import lombok.AccessLevel;
 import lombok.Getter;

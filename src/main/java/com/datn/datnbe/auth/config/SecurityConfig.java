@@ -39,6 +39,8 @@ public class SecurityConfig {
 
         http.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"));
 
+        http.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"));
+
         return http.build();
     }
 }
