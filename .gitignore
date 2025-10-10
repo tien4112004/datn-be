@@ -61,3 +61,6 @@ service-account.json
 
 /bin
 /bin/*
+
+# Keycloak realm
+keycloak-data/**

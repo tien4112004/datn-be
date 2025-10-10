@@ -24,7 +24,7 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         var oidcLogoutHandler = new OidcClientInitiatedLogoutSuccessHandler(clientRegistrationRepository);
 
-        http.authorizeHttpRequests(auth -> auth.requestMatchers("/public", "/signin", "/signup")
+        http.authorizeHttpRequests(auth -> auth.requestMatchers("/public", "/api/auth/signin", "/api/auth/signup")
                 .permitAll()
                 .requestMatchers("/api/admin/**")
                 .hasRole("admin")
@@ -35,6 +35,8 @@ public class SecurityConfig {
                 .oauth2Login(Customizer.withDefaults())
                 .logout(l -> l.logoutSuccessHandler(oidcLogoutHandler))
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter())));
+
+        http.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"));
 
         return http.build();
     }
