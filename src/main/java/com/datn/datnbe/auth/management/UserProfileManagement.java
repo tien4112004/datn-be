@@ -1,15 +1,13 @@
 package com.datn.datnbe.auth.management;
 
 import com.datn.datnbe.auth.api.UserProfileApi;
-import com.datn.datnbe.auth.dto.request.SignupRequest;
+import com.datn.datnbe.auth.dto.request.UserProfileCreateRequest;
 import com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest;
-import com.datn.datnbe.auth.dto.response.UserProfileResponse;
+import com.datn.datnbe.auth.dto.response.UserProfileResponseDto;
 import com.datn.datnbe.auth.entity.UserProfile;
 import com.datn.datnbe.auth.mapper.UserProfileMapper;
-import com.datn.datnbe.auth.repository.UserProfileRepo;
+import com.datn.datnbe.auth.repository.impl.jpa.UserProfileJPARepo;
 import com.datn.datnbe.auth.service.KeycloakAuthService;
-import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
-import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import jakarta.transaction.Transactional;
@@ -17,7 +15,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -26,25 +23,13 @@ import org.springframework.stereotype.Service;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserProfileManagement implements UserProfileApi {
 
-    UserProfileRepo userProfileRepo;
+    UserProfileJPARepo userProfileJPARepo;
     UserProfileMapper userProfileMapper;
     KeycloakAuthService keycloakAuthService;
 
     @Override
-    public PaginatedResponseDto<UserProfileResponse> getUserProfiles(Pageable pageable) {
-        var userProfiles = userProfileRepo.findAll(pageable)
-                .getContent()
-                .stream()
-                .map(userProfileMapper::toResponseDto)
-                .toList();
-        var responseList = PaginationDto.getFromPageable(pageable);
-
-        return PaginatedResponseDto.<UserProfileResponse>builder().data(userProfiles).pagination(responseList).build();
-    }
-
-    @Override
     @Transactional
-    public UserProfileResponse createUserProfile(SignupRequest request) {
+    public UserProfileResponseDto createUserProfile(UserProfileCreateRequest request) {
         log.info("Creating user profile for email: {}", request.getEmail());
 
         String keycloakUserId = null;

@@ -48,5 +48,21 @@ public interface UserProfileApi {
      */
     void deleteUserProfile(String userId);
 
+    /**
+     * Creates a new user profile from Keycloak user information.
+     * 
+     * @param keycloakUserId the Keycloak user ID
+     * @param email the user's email
+     * @param firstName the user's first name
+     * @param lastName the user's last name
+     */
     void createUserFromKeycloakUser(String keycloakUserId, String email, String firstName, String lastName);
+    
+    /**
+     * Checks if a user profile exists for the given user ID.
+     *
+     * @param userId the user ID
+     * @return true if a profile exists, false otherwise
+     */
+    boolean existsById(String userId);
 }

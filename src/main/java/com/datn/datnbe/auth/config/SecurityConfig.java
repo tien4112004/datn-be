@@ -70,6 +70,8 @@ public class SecurityConfig {
                         exceptions -> exceptions.authenticationEntryPoint(this::handleAuthenticationException)
                                 .accessDeniedHandler(this::handleAccessDeniedException));
 
+        http.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"));
+
         return http.build();
     }
 
