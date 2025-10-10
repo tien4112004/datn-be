@@ -1,10 +1,11 @@
 package com.datn.datnbe.auth.api;
 
+import org.springframework.data.domain.Pageable;
+
 import com.datn.datnbe.auth.dto.request.SignupRequest;
 import com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest;
 import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
-import org.springframework.data.domain.Pageable;
 
 public interface UserProfileApi {
 
