@@ -114,6 +114,13 @@ app:
       signup-uri: ${KEYCLOAK_ISSUER_URI}/login-actions/registration
       logout-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/logout
       token-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/token
+    keycloak:
+      realm: "master"
+      endpoint: ${KEYCLOAK_SERVER_URL:http://localhost:8082}
+      application:
+        client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:ai-primary}
+        client-username: ${KEYCLOAK_ADMIN_USERNAME:admin}
+        client-password: ${KEYCLOAK_ADMIN_PASSWORD:admin}
 
 ai:
   api:

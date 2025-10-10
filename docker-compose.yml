@@ -56,7 +56,7 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.5
     container_name: keycloak
-    command: [ "start-dev" ]
+    command: start --import-realm --optimized --verbose
     environment:
       - KC_DB=postgres
       - KC_DB_URL=jdbc:postgresql://postgres:5432/datn_monolith_db
