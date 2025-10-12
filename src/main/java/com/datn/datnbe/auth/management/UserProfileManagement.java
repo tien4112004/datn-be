@@ -163,6 +163,7 @@ public class UserProfileManagement implements UserProfileApi {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('ADMIN) || hasRole('USER')")
     public void deleteUserProfile(String userId) {
         log.info("Deleting user profile for user ID: {}", userId);
 

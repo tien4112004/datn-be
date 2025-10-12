@@ -20,6 +20,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -32,16 +36,17 @@ public class UserProfileController {
 
     /**
      * Endpoint to get the current logged-in user's profile.
+     * Endpoint to get the current logged-in user's profile.
      *
      * @param jwt the JWT token containing the authenticated user's information
      * @return ResponseEntity containing the user profile
      */
-    @GetMapping("/me")
-    public ResponseEntity<AppResponseDto<UserProfileResponse>> getCurrentUserProfile(@AuthenticationPrincipal Jwt jwt) {
+    @DeleteMapping("/me")
+    public ResponseEntity<AppResponseDto<Void>> deleteCurrentUserProfile(@AuthenticationPrincipal Jwt jwt) {
         String userId = jwt.getSubject();
-        log.info("Fetching profile for current user with Keycloak user ID: {}", userId);
-        UserProfileResponse response = userProfileApi.getUserProfile(userId);
-        return ResponseEntity.ok(AppResponseDto.success(response));
+        log.info("Deleting profile for current user with Keycloak user ID: {}", userId);
+        userProfileApi.deleteUserProfile(userId);
+        return ResponseEntity.ok(AppResponseDto.success());
     }
 
     /**
