@@ -21,6 +21,7 @@ public interface UserProfileMapper {
     @Mapping(target = "keycloakUserId", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     void updateEntityFromRequest(com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest request,
             @MappingTarget UserProfile userProfile);
 }
