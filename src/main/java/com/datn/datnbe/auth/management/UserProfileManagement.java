@@ -6,7 +6,7 @@ import com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest;
 import com.datn.datnbe.auth.dto.response.UserProfileResponseDto;
 import com.datn.datnbe.auth.entity.UserProfile;
 import com.datn.datnbe.auth.mapper.UserProfileMapper;
-import com.datn.datnbe.auth.repository.impl.jpa.UserProfileJPARepo;
+import com.datn.datnbe.auth.repository.UserProfileRepo;
 import com.datn.datnbe.auth.service.KeycloakAuthService;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserProfileManagement implements UserProfileApi {
 
-    UserProfileJPARepo userProfileJPARepo;
+    UserProfileRepo userProfileRepo;
     UserProfileMapper userProfileMapper;
     KeycloakAuthService keycloakAuthService;
 
