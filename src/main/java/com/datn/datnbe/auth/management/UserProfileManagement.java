@@ -15,6 +15,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -128,6 +129,7 @@ public class UserProfileManagement implements UserProfileApi {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('ADMIN) || hasRole('USER')")
     public void deleteUserProfile(String userId) {
         log.info("Deleting user profile for user ID: {}", userId);
 
@@ -150,10 +152,5 @@ public class UserProfileManagement implements UserProfileApi {
             log.error("Failed to delete user from Keycloak for user ID: {}. Error: {}", userId, e.getMessage());
             // Continue - local delete succeeded, consider if you want to throw or just log
         }
-    }
-
-    @Override
-    public boolean existsById(String userId) {
-        return userProfileRepo.existsById(userId);
     }
 }

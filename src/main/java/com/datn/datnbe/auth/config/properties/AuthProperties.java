@@ -1,21 +1,26 @@
 package com.datn.datnbe.auth.config.properties;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Getter
 @Setter
 @Component
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @ConfigurationProperties(prefix = "app.auth.properties")
 public class AuthProperties {
-    private String issuer;
-    private String clientId;
-    private String clientSecret;
-    private String redirectUri;
-    private String signInUri;
-    private String signUpUri;
-    private String logoutUri;
-    private String tokenUri;
+    String realm;
+    String issuer;
+    String serverUrl;
+    String clientId;
+    String clientSecret;
+    String redirectUri;
+    String signInUri;
+    String signUpUri;
+    String logoutUri;
+    String tokenUri;
 }
