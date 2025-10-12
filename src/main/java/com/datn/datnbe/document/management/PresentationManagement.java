@@ -9,11 +9,14 @@ import com.datn.datnbe.document.dto.response.PresentationCreateResponseDto;
 import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
 import com.datn.datnbe.document.entity.Presentation;
+import com.datn.datnbe.document.entity.valueobject.SlideElement;
 import com.datn.datnbe.document.management.validation.PresentationValidation;
 import com.datn.datnbe.document.mapper.PresentationEntityMapper;
 import com.datn.datnbe.document.repository.PresentationRepository;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
+import com.datn.datnbe.sharedkernel.exceptions.AppException;
+import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
@@ -211,6 +214,51 @@ public class PresentationManagement implements PresentationApi {
     @Override
     public long insertImageToPresentation(String presentationId, String slideId, String elementId, String imageUrl) {
         ObjectId presentationIdObj = new ObjectId(presentationId);
-        return presentationRepository.insertImageToPresentation(presentationIdObj, slideId, elementId, imageUrl);
+
+        var presentation = presentationRepository.findById(presentationIdObj);
+
+        if (presentation.isEmpty()) {
+            throw new AppException(ErrorCode.PRESENTATION_NOT_FOUND);
+        }
+
+        // Get Image
+        var imageElement = presentation.get()
+                .getSlides()
+                .stream()
+                .filter(slide -> slide.getId().equals(slideId))
+                .flatMap(slide -> slide.getElements().stream())
+                .filter(element -> element.getId().equals(elementId))
+                .findFirst();
+
+        Object finalClip = getClip(imageElement);
+
+        return presentationRepository
+                .insertImageToPresentation(presentationIdObj, slideId, elementId, imageUrl, finalClip);
+    }
+
+    private static Object getClip(Optional<SlideElement> imageElement) {
+        if (imageElement.isEmpty()) {
+            throw new AppException(ErrorCode.PRESENTATION_NOT_FOUND);
+        }
+
+        var containerRatio = imageElement.get().getWidth() / imageElement.get().getHeight();
+
+        Object finalClip = 1 > containerRatio ? new java.util.HashMap<String, Object>() {
+            {
+                put("shape", "rect");
+                put("range",
+                        new double[][]{{((1 - containerRatio) / 2) * 100, 0},
+                                {100 - ((1 - containerRatio) / 2) * 100, 100}});
+            }
+        } : new java.util.HashMap<String, Object>() {
+            {
+                put("shape", "rect");
+                put("range",
+                        new double[][]{{0, ((1 - 1 / containerRatio) / 2) * 100},
+                                {100, 100 - ((1 - 1 / containerRatio) / 2) * 100}});
+            }
+        };
+
+        return finalClip;
     }
 }

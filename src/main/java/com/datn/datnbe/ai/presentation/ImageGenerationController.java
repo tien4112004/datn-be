@@ -46,7 +46,7 @@ public class ImageGenerationController {
         return ResponseEntity.ok(AppResponseDto.<ImageResponseDto>builder().data(uploadedMedia).build());
     }
 
-    @PostMapping("/images/generate-with-idempotency")
+    @PostMapping("/images/generate-in-presentation")
     @Idempotent(serviceType = ImageGenerationIdempotencyService.class)
     public ResponseEntity<AppResponseDto<ImageResponseDto>> generateImageWithIdempotency(
             @RequestBody ImagePromptRequest request,
@@ -70,7 +70,7 @@ public class ImageGenerationController {
         String presentationId = keys.getFirst();
         String slideId = keys.get(1);
         String elementId = keys.get(2);
-        // String url = uploadedMedia.getFirst().get("cdnUrl").toString();
+        //         String url = uploadedMedia.getFirst().get("cdnUrl").toString();
 
         // Using a random image from picsum.photos as a placeholder
         int randomNumber = (int) (Math.random() * 1000);
