@@ -1,12 +1,13 @@
 package com.datn.datnbe.auth.repository;
 
-import com.datn.datnbe.auth.entity.UserProfile;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import com.datn.datnbe.auth.entity.UserProfile;
 
 @Repository
 public interface UserProfileRepo

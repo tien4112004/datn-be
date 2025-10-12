@@ -7,6 +7,7 @@ import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.auth.entity.UserProfile;
 import com.datn.datnbe.auth.mapper.UserProfileMapper;
 import com.datn.datnbe.auth.repository.UserProfileRepo;
+import com.datn.datnbe.auth.repository.UserProfileRepo;
 import com.datn.datnbe.auth.service.KeycloakAuthService;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserProfileManagement implements UserProfileApi {
 
+    UserProfileRepo userProfileRepo;
     UserProfileRepo userProfileRepo;
     UserProfileMapper userProfileMapper;
     KeycloakAuthService keycloakAuthService;
@@ -52,11 +54,13 @@ public class UserProfileManagement implements UserProfileApi {
         try {
             keycloakUserId = keycloakAuthService.createKeycloakUser(request
                     .getEmail(), request.getPassword(), request.getFirstName(), request.getLastName(), "user");
+                    .getEmail(), request.getPassword(), request.getFirstName(), request.getLastName(), "user");
 
             log.info("Successfully created user in Keycloak with ID: {}", keycloakUserId);
             UserProfile userProfile = userProfileMapper.toEntity(request);
             userProfile.setKeycloakUserId(keycloakUserId);
 
+            UserProfile savedProfile = userProfileRepo.save(userProfile);
             UserProfile savedProfile = userProfileRepo.save(userProfile);
 
             log.info("Successfully created user profile in database with ID: {}", savedProfile.getId());
@@ -106,7 +110,29 @@ public class UserProfileManagement implements UserProfileApi {
                         "User profile not found for user ID: " + userId));
 
         // Update local user profile
+        // Update local user profile
         userProfileMapper.updateEntityFromRequest(request, userProfile);
+        UserProfile updatedProfile = userProfileRepo.save(userProfile);
+
+        String keycloakUserId = userProfile.getKeycloakUserId();
+        String currentEmail = null;
+
+        // Sync with Keycloak
+        try {
+            // Get current email from Keycloak (since we don't store it locally)
+            currentEmail = keycloakAuthService.getUserEmail(keycloakUserId);
+
+            // Update Keycloak user with new names (keep existing email)
+            keycloakAuthService.updateKeycloakUser(keycloakUserId,
+                    updatedProfile.getFirstName(),
+                    updatedProfile.getLastName(),
+                    currentEmail);
+
+            log.info("Successfully synced user profile update to Keycloak for user ID: {}", userId);
+        } catch (Exception e) {
+            log.error("Failed to sync profile update to Keycloak for user ID: {}. Error: {}", userId, e.getMessage());
+            // Continue - local update succeeded, Keycloak sync failed but we don't rollback
+        }
         UserProfile updatedProfile = userProfileRepo.save(userProfile);
 
         String keycloakUserId = userProfile.getKeycloakUserId();

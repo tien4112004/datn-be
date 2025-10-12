@@ -29,6 +29,8 @@ import lombok.experimental.FieldDefaults;
 @Table(uniqueConstraints = {@UniqueConstraint(name = "uk_keycloak_user_id", columnNames = {"keycloak_user_id"})})
 @SQLDelete(sql = "UPDATE user_profile SET deleted_at = NOW() WHERE id = ?")
 @SQLRestriction("deleted_at IS NULL")
+@SQLDelete(sql = "UPDATE user_profile SET deleted_at = NOW() WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
 @AllArgsConstructor
@@ -51,6 +53,9 @@ public class UserProfile {
     @Column(name = "email", nullable = false)
     String email;
 
+    @Column(name = "email", nullable = false)
+    String email;
+
     @Column(name = "date_of_birth")
     LocalDate dateOfBirth;
 
@@ -62,6 +67,9 @@ public class UserProfile {
 
     @Column(name = "updated_at")
     LocalDateTime updatedAt;
+
+    @Column(name = "deleted_at")
+    LocalDateTime deletedAt;
 
     @Column(name = "deleted_at")
     LocalDateTime deletedAt;

@@ -37,6 +37,8 @@ public class AuthController {
     AuthProperties authProperties;
     UserProfileApi userProfileApi;
     AuthenticationService authenticationService;
+    UserProfileApi userProfileApi;
+    AuthenticationService authenticationService;
 
     @PostMapping("/signin")
     public ResponseEntity<AppResponseDto<SignInResponse>> signIn(@Valid @RequestBody SigninRequest request) {
@@ -60,6 +62,8 @@ public class AuthController {
             idToken = oidc.getIdToken().getTokenValue();
         }
 
+        String url = UriComponentsBuilder.fromUriString(authProperties.getLogoutUri())
+                .queryParam("post_logout_redirect_uri", authProperties.getRedirectUri())
         String url = UriComponentsBuilder.fromUriString(authProperties.getLogoutUri())
                 .queryParam("post_logout_redirect_uri", authProperties.getRedirectUri())
                 .queryParam("id_token_hint", idToken)
