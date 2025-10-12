@@ -47,12 +47,4 @@ public interface UserProfileApi {
      * @param userId the user ID
      */
     void deleteUserProfile(String userId);
-
-    /**
-     * Checks if a user profile exists for the given user ID.
-     *
-     * @param userId the user ID
-     * @return true if a profile exists, false otherwise
-     */
-    boolean existsById(String userId);
 }
