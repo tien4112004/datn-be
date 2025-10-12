@@ -92,7 +92,6 @@ app:
           provider: "openRouter"
           default-model: true
           model-type: image
-
   cors:
     allowed-origins: "*"
     allowed-origin-patterns: ${ALLOWED_ORIGINS}
@@ -109,8 +108,9 @@ app:
     properties:
       issuer: ${KEYCLOAK_ISSUER_URI:http://localhost:8082/realms/ai-primary-dev}
       client-id: ${KEYCLOAK_CLIENT_ID:ai-primary}
+      client-secret: ${KEYCLOAK_CLIENT_SECRET:change-me}
       redirect-uri: http://localhost:8080/login/oauth2/code/keycloak
-      signin-uri: /oauth2/authorization/keycloak
+      signIn-uri: /oauth2/authorization/keycloak
       signup-uri: ${KEYCLOAK_ISSUER_URI}/login-actions/registration
       logout-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/logout
       token-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/token

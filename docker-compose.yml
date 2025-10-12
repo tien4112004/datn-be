@@ -56,12 +56,12 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.5
     container_name: keycloak
-    command: start --import-realm --optimized --verbose
+    command:
+      - start-dev
+      - --import-realm
+      - --optimized
+      - --verbose
     environment:
-      - KC_DB=postgres
-      - KC_DB_URL=jdbc:postgresql://postgres:5432/datn_monolith_db
-      - KC_DB_USERNAME=postgres
-      - KC_DB_PASSWORD=postgres
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
       - KC_HTTP_ENABLED=true

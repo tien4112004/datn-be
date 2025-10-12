@@ -3,6 +3,8 @@ package com.datn.datnbe.auth.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -11,6 +13,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Table(uniqueConstraints = {@UniqueConstraint(name = "uk_keycloak_user_id", columnNames = {"keycloak_user_id"})})
+@SQLDelete(sql = "UPDATE user_profile SET deleted_at = NOW() WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
 @AllArgsConstructor
@@ -30,6 +34,9 @@ public class UserProfile {
     @Column(name = "last_name", nullable = false)
     String lastName;
 
+    @Column(name = "email", nullable = false)
+    String email;
+
     @Column(name = "date_of_birth")
     LocalDate dateOfBirth;
 
@@ -38,6 +45,9 @@ public class UserProfile {
 
     @Column(name = "updated_at")
     LocalDateTime updatedAt;
+
+    @Column(name = "deleted_at")
+    LocalDateTime deletedAt;
 
     @PrePersist
     protected void onCreate() {
