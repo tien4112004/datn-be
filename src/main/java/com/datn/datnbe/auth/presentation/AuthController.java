@@ -23,10 +23,6 @@ import org.springframework.security.web.authentication.logout.SecurityContextLog
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.datn.datnbe.auth.config.AuthProperties;
-
-import javax.validation.Valid;
-
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
