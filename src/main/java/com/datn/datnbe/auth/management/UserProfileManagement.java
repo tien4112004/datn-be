@@ -8,6 +8,8 @@ import com.datn.datnbe.auth.entity.UserProfile;
 import com.datn.datnbe.auth.mapper.UserProfileMapper;
 import com.datn.datnbe.auth.repository.UserProfileRepo;
 import com.datn.datnbe.auth.service.KeycloakAuthService;
+import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
+import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import jakarta.transaction.Transactional;
@@ -15,6 +17,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -26,6 +29,21 @@ public class UserProfileManagement implements UserProfileApi {
     UserProfileRepo userProfileRepo;
     UserProfileMapper userProfileMapper;
     KeycloakAuthService keycloakAuthService;
+
+    @Override
+    public PaginatedResponseDto<UserProfileResponseDto> getUserProfiles(Pageable pageable) {
+        var userProfiles = userProfileRepo.findAll(pageable)
+                .getContent()
+                .stream()
+                .map(userProfileMapper::toResponseDto)
+                .toList();
+        var responseList = PaginationDto.getFromPageable(pageable);
+
+        return PaginatedResponseDto.<UserProfileResponseDto>builder()
+                .data(userProfiles)
+                .pagination(responseList)
+                .build();
+    }
 
     @Override
     @Transactional
