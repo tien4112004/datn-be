@@ -11,6 +11,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -29,6 +30,7 @@ public class AdminUserController {
      * @return ResponseEntity containing the created user profile
      */
     @PostMapping
+    @PreAuthorize(value = "hasRole('ADMIN')")
     public ResponseEntity<AppResponseDto<UserProfileResponseDto>> createUserProfile(
             @Valid @RequestBody UserProfileCreateRequest request) {
         UserProfileResponseDto response = userProfileApi.createUserProfile(request);
@@ -42,9 +44,10 @@ public class AdminUserController {
      * @return ResponseEntity containing the user profile
      */
     @GetMapping("/{userId}")
+    @PreAuthorize(value = "hasRole('ADMIN')")
     public ResponseEntity<AppResponseDto<UserProfileResponseDto>> getUserProfile(@PathVariable String userId) {
         log.info("Fetching user profile for Keycloak user ID: {}", userId);
-        UserProfileResponseDto response = userProfileApi.getUserProfileByKeycloakId(userId);
+        UserProfileResponseDto response = userProfileApi.getUserProfile(userId);
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 
@@ -55,6 +58,7 @@ public class AdminUserController {
      * @return ResponseEntity with no content
      */
     @DeleteMapping("/{userId}")
+    @PreAuthorize(value = "hasRole('ADMIN')")
     public ResponseEntity<AppResponseDto<Void>> deleteUserProfile(@PathVariable String userId) {
         log.info("Deleting user profile for Keycloak user ID: {}", userId);
         userProfileApi.deleteUserProfile(userId);
