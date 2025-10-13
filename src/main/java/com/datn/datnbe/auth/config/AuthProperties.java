@@ -1,4 +1,4 @@
-package com.datn.datnbe.auth.config.properties;
+package com.datn.datnbe.auth.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;

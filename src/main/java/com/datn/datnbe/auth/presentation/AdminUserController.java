@@ -56,7 +56,7 @@ public class AdminUserController {
     @PreAuthorize(value = "hasRole('ADMIN')")
     public ResponseEntity<AppResponseDto<UserProfileResponse>> getUserProfile(@PathVariable String userId) {
         log.info("Fetching user profile for Keycloak user ID: {}", userId);
-        UserProfileResponse response = userProfileApi.getUserProfile(userId);
+        UserProfileResponseDto response = userProfileApi.getUserProfileByKeycloakId(userId);
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 

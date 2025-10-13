@@ -80,11 +80,12 @@ public class UserProfileManagement implements UserProfileApi {
     }
 
     @Override
-    public UserProfileResponse getUserProfile(String userId) {
+    public UserProfileResponseDto getUserProfileById(String userId) {
         log.debug("Retrieving user profile for user ID: {}", userId);
-        UserProfile userProfile = userProfileRepo.findByIdOrKeycloakUserId(userId)
+
+        UserProfile userProfile = userProfileRepo.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_PROFILE_NOT_FOUND,
-                        "User profile not found for user ID: " + userId));
+                        "User profile not found for user ID: " + userKeycloakId));
 
         UserProfileResponse response = userProfileMapper.toResponseDto(userProfile);
 
@@ -93,7 +94,7 @@ public class UserProfileManagement implements UserProfileApi {
             String email = keycloakAuthService.getUserEmail(userProfile.getKeycloakUserId());
             response.setEmail(email);
         } catch (Exception e) {
-            log.error("Failed to fetch email from Keycloak for user ID: {}", userId, e);
+            log.error("Failed to fetch email from Keycloak for user ID: {}", userKeycloakId, e);
             // Continue without email
         }
 
