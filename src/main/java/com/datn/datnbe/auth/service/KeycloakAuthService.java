@@ -1,6 +1,6 @@
 package com.datn.datnbe.auth.service;
 
-import com.datn.datnbe.auth.config.properties.AuthProperties;
+import com.datn.datnbe.auth.config.AuthProperties;
 import com.datn.datnbe.auth.dto.request.SigninRequest;
 import com.datn.datnbe.auth.dto.response.AuthTokenResponse;
 import com.datn.datnbe.auth.utils.KeycloakUtils;

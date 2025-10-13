@@ -34,7 +34,7 @@ public class UserProfileController {
             @AuthenticationPrincipal Jwt jwt) {
         String userId = jwt.getSubject();
         log.info("Fetching profile for current user with Keycloak user ID: {}", userId);
-        UserProfileResponseDto response = userProfileApi.getUserProfileById(userId);
+        UserProfileResponseDto response = userProfileApi.getUserProfileByKeycloakId(userId);
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 
