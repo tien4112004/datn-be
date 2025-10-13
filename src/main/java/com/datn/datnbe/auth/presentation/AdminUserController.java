@@ -44,7 +44,7 @@ public class AdminUserController {
     @GetMapping("/{userId}")
     public ResponseEntity<AppResponseDto<UserProfileResponseDto>> getUserProfile(@PathVariable String userId) {
         log.info("Fetching user profile for Keycloak user ID: {}", userId);
-        UserProfileResponseDto response = userProfileApi.getUserProfileById(userId);
+        UserProfileResponseDto response = userProfileApi.getUserProfileByKeycloakId(userId);
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 

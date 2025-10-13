@@ -1,7 +1,7 @@
 package com.datn.datnbe.auth.presentation;
 
 import com.datn.datnbe.auth.api.UserProfileApi;
-import com.datn.datnbe.auth.config.properties.AuthProperties;
+import com.datn.datnbe.auth.config.AuthProperties;
 import com.datn.datnbe.auth.dto.request.SigninRequest;
 import com.datn.datnbe.auth.dto.request.UserProfileCreateRequest;
 import com.datn.datnbe.auth.dto.response.SigninResponse;
