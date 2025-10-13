@@ -232,6 +232,13 @@ public class PresentationManagement implements PresentationApi {
 
         Object finalClip = getClip(imageElement);
 
+        log.info("Update image element with ID: {} on slide ID: {} in presentation ID: {} with URL: {} and clip: {}",
+                elementId,
+                slideId,
+                presentationId,
+                imageUrl,
+                finalClip);
+
         return presentationRepository
                 .insertImageToPresentation(presentationIdObj, slideId, elementId, imageUrl, finalClip);
     }
