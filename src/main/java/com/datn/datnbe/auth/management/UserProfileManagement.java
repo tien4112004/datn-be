@@ -15,7 +15,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -40,12 +39,8 @@ public class UserProfileManagement implements UserProfileApi {
                     .getEmail(), request.getPassword(), request.getFirstName(), request.getLastName(), "user");
 
             log.info("Successfully created user in Keycloak with ID: {}", keycloakUserId);
-            UserProfile userProfile = UserProfile.builder()
-                    .keycloakUserId(keycloakUserId)
-                    .firstName(request.getFirstName())
-                    .lastName(request.getLastName())
-                    .dateOfBirth(request.getDateOfBirth())
-                    .build();
+            UserProfile userProfile = userProfileMapper.toEntity(request);
+            userProfile.setKeycloakUserId(keycloakUserId);
 
             UserProfile savedProfile = userProfileRepo.save(userProfile);
 
@@ -66,11 +61,11 @@ public class UserProfileManagement implements UserProfileApi {
     }
 
     @Override
-    public UserProfileResponseDto getUserProfileByKeycloakId(String userKeycloakId) {
-        log.debug("Retrieving user profile for user ID: {}", userKeycloakId);
-        UserProfile userProfile = userProfileRepo.findByKeycloakUserId(userKeycloakId)
+    public UserProfileResponseDto getUserProfile(String userId) {
+        log.debug("Retrieving user profile for user ID: {}", userId);
+        UserProfile userProfile = userProfileRepo.findByIdOrKeycloakUserId(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_PROFILE_NOT_FOUND,
-                        "User profile not found for user ID: " + userKeycloakId));
+                        "User profile not found for user ID: " + userId));
 
         UserProfileResponseDto response = userProfileMapper.toResponseDto(userProfile);
 
@@ -79,7 +74,7 @@ public class UserProfileManagement implements UserProfileApi {
             String email = keycloakAuthService.getUserEmail(userProfile.getKeycloakUserId());
             response.setEmail(email);
         } catch (Exception e) {
-            log.error("Failed to fetch email from Keycloak for user ID: {}", userKeycloakId, e);
+            log.error("Failed to fetch email from Keycloak for user ID: {}", userId, e);
             // Continue without email
         }
 
@@ -91,7 +86,7 @@ public class UserProfileManagement implements UserProfileApi {
     public UserProfileResponseDto updateUserProfile(String userId, UserProfileUpdateRequest request) {
         log.info("Updating user profile for user ID: {}", userId);
 
-        UserProfile userProfile = userProfileRepo.findById(userId)
+        UserProfile userProfile = userProfileRepo.findByIdOrKeycloakUserId(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_PROFILE_NOT_FOUND,
                         "User profile not found for user ID: " + userId));
 
@@ -127,12 +122,11 @@ public class UserProfileManagement implements UserProfileApi {
 
     @Override
     @Transactional
-    @PreAuthorize("hasRole('ADMIN) || hasRole('USER')")
     public void deleteUserProfile(String userId) {
         log.info("Deleting user profile for user ID: {}", userId);
 
         // Get the user profile first to retrieve the Keycloak user ID
-        UserProfile userProfile = userProfileRepo.findById(userId)
+        UserProfile userProfile = userProfileRepo.findByIdOrKeycloakUserId(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_PROFILE_NOT_FOUND,
                         "User profile not found for user ID: " + userId));
 

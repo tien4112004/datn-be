@@ -34,7 +34,7 @@ public class UserProfileController {
             @AuthenticationPrincipal Jwt jwt) {
         String userId = jwt.getSubject();
         log.info("Fetching profile for current user with Keycloak user ID: {}", userId);
-        UserProfileResponseDto response = userProfileApi.getUserProfileByKeycloakId(userId);
+        UserProfileResponseDto response = userProfileApi.getUserProfile(userId);
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 
@@ -55,13 +55,14 @@ public class UserProfileController {
     /**
      * Endpoint to update a user profile by Keycloak user ID.
      *
-     * @param userId the Keycloak user ID
+     * @param jwt the JWT token containing the authenticated user's information
      * @param request the UserProfileUpdateRequest containing updated data
      * @return ResponseEntity containing the updated user profile
      */
-    @PatchMapping("/{userId}")
-    public ResponseEntity<AppResponseDto<UserProfileResponseDto>> updateUserProfile(@PathVariable String userId,
+    @PatchMapping("/me")
+    public ResponseEntity<AppResponseDto<UserProfileResponseDto>> updateUserProfile(@AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody UserProfileUpdateRequest request) {
+        String userId = jwt.getSubject();
         log.info("Updating user profile for Keycloak user ID: {}", userId);
         UserProfileResponseDto response = userProfileApi.updateUserProfile(userId, request);
         return ResponseEntity.ok(AppResponseDto.success(response));
