@@ -55,7 +55,6 @@ public class UserProfileManagement implements UserProfileApi {
             return response;
 
         } catch (Exception e) {
-            // If saving to PostgreSQL fails, delete the Keycloak user
             if (keycloakUserId != null) {
                 log.error("Failed to save user profile to database. Rolling back Keycloak user creation.", e);
                 keycloakAuthService.deleteKeycloakUser(keycloakUserId);
@@ -67,12 +66,11 @@ public class UserProfileManagement implements UserProfileApi {
     }
 
     @Override
-    public UserProfileResponseDto getUserProfileById(String userId) {
-        log.debug("Retrieving user profile for user ID: {}", userId);
-
-        UserProfile userProfile = userProfileRepo.findById(userId)
+    public UserProfileResponseDto getUserProfileByKeycloakId(String userKeycloakId) {
+        log.debug("Retrieving user profile for user ID: {}", userKeycloakId);
+        UserProfile userProfile = userProfileRepo.findByKeycloakUserId(userKeycloakId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_PROFILE_NOT_FOUND,
-                        "User profile not found for user ID: " + userId));
+                        "User profile not found for user ID: " + userKeycloakId));
 
         UserProfileResponseDto response = userProfileMapper.toResponseDto(userProfile);
 
@@ -81,7 +79,7 @@ public class UserProfileManagement implements UserProfileApi {
             String email = keycloakAuthService.getUserEmail(userProfile.getKeycloakUserId());
             response.setEmail(email);
         } catch (Exception e) {
-            log.error("Failed to fetch email from Keycloak for user ID: {}", userId, e);
+            log.error("Failed to fetch email from Keycloak for user ID: {}", userKeycloakId, e);
             // Continue without email
         }
 

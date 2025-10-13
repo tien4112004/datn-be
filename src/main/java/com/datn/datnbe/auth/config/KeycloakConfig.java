@@ -1,6 +1,5 @@
 package com.datn.datnbe.auth.config;
 
-import com.datn.datnbe.auth.config.properties.KeycloakProperties;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
@@ -13,23 +12,22 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @RequiredArgsConstructor
 public class KeycloakConfig {
-    private final KeycloakProperties keycloakProps;
+    private final AuthProperties authProperties;
 
     @Bean
     public Keycloak keycloak() {
         return KeycloakBuilder.builder()
-                .serverUrl(keycloakProps.getEndpoint())
-                .realm(keycloakProps.getRealm())
-                .grantType(OAuth2Constants.PASSWORD)
-                .clientId(keycloakProps.getApplication().getClientId())
-                .username(keycloakProps.getApplication().getClientUsername())
-                .password(keycloakProps.getApplication().getClientPassword())
+                .serverUrl(authProperties.getServerUrl())
+                .realm(authProperties.getRealm())
+                .grantType(OAuth2Constants.CLIENT_CREDENTIALS)
+                .clientId(authProperties.getClientId())
+                .clientSecret(authProperties.getClientSecret())
                 .build();
     }
 
     @Bean
     public RealmResource realmResource(Keycloak keycloak) {
-        return keycloak.realm(keycloakProps.getRealm());
+        return keycloak.realm(authProperties.getRealm());
     }
 
     @Bean
