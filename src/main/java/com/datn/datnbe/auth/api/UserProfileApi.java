@@ -17,10 +17,10 @@ public interface UserProfileApi {
     /**
      * Retrieves a user profile by user ID.
      *
-     * @param userKeycloakId the user ID
+     * @param userId the user ID
      * @return UserProfileResponseDto containing the profile data
      */
-    UserProfileResponseDto getUserProfileByKeycloakId(String userKeycloakId);
+    UserProfileResponseDto getUserProfile(String userId);
 
     /**
      * Updates a user profile by user ID.
