@@ -9,6 +9,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/admin/user")
+@RequestMapping("/api/admin/users")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AdminUserController {
@@ -49,6 +50,18 @@ public class AdminUserController {
         log.info("Fetching user profile for Keycloak user ID: {}", userId);
         UserProfileResponseDto response = userProfileApi.getUserProfile(userId);
         return ResponseEntity.ok(AppResponseDto.success(response));
+    }
+
+    /**
+     * Endpoint to get all users.
+     *
+     * @return ResponseEntity containing the list of user profiles
+     */
+    @GetMapping("")
+    @PreAuthorize(value = "hasRole('ADMIN')")
+    public ResponseEntity<AppResponseDto> getAllUsers(Pageable pageable) {
+        var response = userProfileApi.getUserProfiles(pageable);
+        return ResponseEntity.ok(AppResponseDto.successWithPagination(response.getData(), response.getPagination()));
     }
 
     /**

@@ -3,8 +3,18 @@ package com.datn.datnbe.auth.api;
 import com.datn.datnbe.auth.dto.request.UserProfileCreateRequest;
 import com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest;
 import com.datn.datnbe.auth.dto.response.UserProfileResponseDto;
+import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
+import org.springframework.data.domain.Pageable;
 
 public interface UserProfileApi {
+
+    /**
+     * Retrieves a list of user profiles based on the provided request criteria.
+     *
+     * @param pageable the Pageable object for pagination
+     * @return List of UserProfileResponseDto containing the profile data
+     */
+    PaginatedResponseDto<UserProfileResponseDto> getUserProfiles(Pageable pageable);
 
     /**
      * Creates a new user profile.
@@ -25,7 +35,7 @@ public interface UserProfileApi {
     /**
      * Updates a user profile by user ID.
      *
-     * @param userId the user ID
+     * @param userId  the user ID
      * @param request the UserProfileUpdateRequest containing the updated data
      * @return UserProfileResponseDto containing the updated profile
      */
