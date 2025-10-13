@@ -11,8 +11,6 @@ import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInit
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
 
-import lombok.RequiredArgsConstructor;
-
 @Configuration
 @EnableWebSecurity
 @Profile("!test & !integration-test")
@@ -29,6 +27,8 @@ public class SecurityConfig {
                 .permitAll()
                 .requestMatchers("/api/admin/**")
                 .hasRole("admin")
+                .requestMatchers("/api/**")
+                .hasRole("user")
                 .anyRequest()
                 .authenticated())
                 .oauth2Login(Customizer.withDefaults())
