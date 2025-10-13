@@ -28,7 +28,7 @@ public interface UserProfileApi {
     /**
      * Retrieves a user profile by user ID.
      *
-     * @param userKeycloakId the user ID
+     * @param userId the user ID
      * @return UserProfileResponseDto containing the profile data
      */
     UserProfileResponse getUserProfile(String userId);

@@ -7,7 +7,6 @@ import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.auth.entity.UserProfile;
 import com.datn.datnbe.auth.mapper.UserProfileMapper;
 import com.datn.datnbe.auth.repository.UserProfileRepo;
-import com.datn.datnbe.auth.repository.UserProfileRepo;
 import com.datn.datnbe.auth.service.KeycloakAuthService;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
@@ -85,7 +84,7 @@ public class UserProfileManagement implements UserProfileApi {
 
         UserProfile userProfile = userProfileRepo.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_PROFILE_NOT_FOUND,
-                        "User profile not found for user ID: " + userKeycloakId));
+                        "User profile not found for user ID: " + userId));
 
         UserProfileResponse response = userProfileMapper.toResponseDto(userProfile);
 
@@ -94,7 +93,7 @@ public class UserProfileManagement implements UserProfileApi {
             String email = keycloakAuthService.getUserEmail(userProfile.getKeycloakUserId());
             response.setEmail(email);
         } catch (Exception e) {
-            log.error("Failed to fetch email from Keycloak for user ID: {}", userKeycloakId, e);
+            log.error("Failed to fetch email from Keycloak for user ID: {}", userId, e);
             // Continue without email
         }
 
@@ -164,7 +163,6 @@ public class UserProfileManagement implements UserProfileApi {
 
     @Override
     @Transactional
-    @PreAuthorize("hasRole('ADMIN) || hasRole('USER')")
     public void deleteUserProfile(String userId) {
         log.info("Deleting user profile for user ID: {}", userId);
 
