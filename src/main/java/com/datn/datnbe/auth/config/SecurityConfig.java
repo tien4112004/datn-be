@@ -29,8 +29,6 @@ public class SecurityConfig {
                 .permitAll()
                 .requestMatchers("/api/admin/**")
                 .hasRole("admin")
-                .requestMatchers("/api/**")
-                .hasRole("user")
                 .anyRequest()
                 .authenticated())
                 .oauth2Login(Customizer.withDefaults())
