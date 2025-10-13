@@ -15,12 +15,15 @@ import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInit
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
 
+<<<<<<< HEAD
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+=======
+>>>>>>> f74467a (feat: me route; jwt converter)
 @Configuration
 @EnableWebSecurity
 @Profile("!test & !integration-test")

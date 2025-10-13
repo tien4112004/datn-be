@@ -59,6 +59,7 @@ public class KeycloakAuthService {
             user.setEnabled(true);
             user.setUsername(email);
             user.setEmail(email);
+            user.setRealmRoles(Collections.singletonList(role));
             user.setFirstName(firstName);
             user.setLastName(lastName);
             user.setEmailVerified(false);
