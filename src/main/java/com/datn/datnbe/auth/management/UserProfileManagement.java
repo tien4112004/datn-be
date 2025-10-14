@@ -1,9 +1,9 @@
 package com.datn.datnbe.auth.management;
 
 import com.datn.datnbe.auth.api.UserProfileApi;
-import com.datn.datnbe.auth.dto.request.UserProfileCreateRequest;
+import com.datn.datnbe.auth.dto.request.SignupRequest;
 import com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest;
-import com.datn.datnbe.auth.dto.response.UserProfileResponseDto;
+import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.auth.entity.UserProfile;
 import com.datn.datnbe.auth.mapper.UserProfileMapper;
 import com.datn.datnbe.auth.repository.UserProfileRepo;
@@ -31,7 +31,7 @@ public class UserProfileManagement implements UserProfileApi {
     KeycloakAuthService keycloakAuthService;
 
     @Override
-    public PaginatedResponseDto<UserProfileResponseDto> getUserProfiles(Pageable pageable) {
+    public PaginatedResponseDto<UserProfileResponse> getUserProfiles(Pageable pageable) {
         var userProfiles = userProfileRepo.findAll(pageable)
                 .getContent()
                 .stream()
@@ -39,15 +39,12 @@ public class UserProfileManagement implements UserProfileApi {
                 .toList();
         var responseList = PaginationDto.getFromPageable(pageable);
 
-        return PaginatedResponseDto.<UserProfileResponseDto>builder()
-                .data(userProfiles)
-                .pagination(responseList)
-                .build();
+        return PaginatedResponseDto.<UserProfileResponse>builder().data(userProfiles).pagination(responseList).build();
     }
 
     @Override
     @Transactional
-    public UserProfileResponseDto createUserProfile(UserProfileCreateRequest request) {
+    public UserProfileResponse createUserProfile(SignupRequest request) {
         log.info("Creating user profile for email: {}", request.getEmail());
 
         String keycloakUserId = null;
