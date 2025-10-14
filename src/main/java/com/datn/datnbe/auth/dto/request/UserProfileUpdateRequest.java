@@ -22,4 +22,6 @@ public class UserProfileUpdateRequest {
     @Past(message = "Date of birth must be in the past")
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateOfBirth;
+
+    private String phoneNumber;
 }
