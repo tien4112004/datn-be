@@ -40,6 +40,9 @@ public class UserProfile {
     @Column(name = "date_of_birth")
     LocalDate dateOfBirth;
 
+    @Column(name = "phone_number")
+    String phoneNumber;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     LocalDateTime createdAt;
 

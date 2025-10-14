@@ -1,9 +1,9 @@
 package com.datn.datnbe.auth.management;
 
 import com.datn.datnbe.auth.api.UserProfileApi;
-import com.datn.datnbe.auth.dto.request.UserProfileCreateRequest;
+import com.datn.datnbe.auth.dto.request.SignupRequest;
 import com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest;
-import com.datn.datnbe.auth.dto.response.UserProfileResponseDto;
+import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.auth.entity.UserProfile;
 import com.datn.datnbe.auth.mapper.UserProfileMapper;
 import com.datn.datnbe.auth.repository.UserProfileRepo;
@@ -31,7 +31,7 @@ public class UserProfileManagement implements UserProfileApi {
     KeycloakAuthService keycloakAuthService;
 
     @Override
-    public PaginatedResponseDto<UserProfileResponseDto> getUserProfiles(Pageable pageable) {
+    public PaginatedResponseDto<UserProfileResponse> getUserProfiles(Pageable pageable) {
         var userProfiles = userProfileRepo.findAll(pageable)
                 .getContent()
                 .stream()
@@ -39,15 +39,12 @@ public class UserProfileManagement implements UserProfileApi {
                 .toList();
         var responseList = PaginationDto.getFromPageable(pageable);
 
-        return PaginatedResponseDto.<UserProfileResponseDto>builder()
-                .data(userProfiles)
-                .pagination(responseList)
-                .build();
+        return PaginatedResponseDto.<UserProfileResponse>builder().data(userProfiles).pagination(responseList).build();
     }
 
     @Override
     @Transactional
-    public UserProfileResponseDto createUserProfile(UserProfileCreateRequest request) {
+    public UserProfileResponse createUserProfile(SignupRequest request) {
         log.info("Creating user profile for email: {}", request.getEmail());
 
         String keycloakUserId = null;
@@ -63,7 +60,7 @@ public class UserProfileManagement implements UserProfileApi {
             UserProfile savedProfile = userProfileRepo.save(userProfile);
 
             log.info("Successfully created user profile in database with ID: {}", savedProfile.getId());
-            UserProfileResponseDto response = userProfileMapper.toResponseDto(savedProfile);
+            UserProfileResponse response = userProfileMapper.toResponseDto(savedProfile);
             response.setEmail(request.getEmail());
             return response;
 
@@ -79,13 +76,13 @@ public class UserProfileManagement implements UserProfileApi {
     }
 
     @Override
-    public UserProfileResponseDto getUserProfile(String userId) {
+    public UserProfileResponse getUserProfile(String userId) {
         log.debug("Retrieving user profile for user ID: {}", userId);
         UserProfile userProfile = userProfileRepo.findByIdOrKeycloakUserId(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_PROFILE_NOT_FOUND,
                         "User profile not found for user ID: " + userId));
 
-        UserProfileResponseDto response = userProfileMapper.toResponseDto(userProfile);
+        UserProfileResponse response = userProfileMapper.toResponseDto(userProfile);
 
         // Fetch email from Keycloak
         try {
@@ -101,7 +98,7 @@ public class UserProfileManagement implements UserProfileApi {
 
     @Override
     @Transactional
-    public UserProfileResponseDto updateUserProfile(String userId, UserProfileUpdateRequest request) {
+    public UserProfileResponse updateUserProfile(String userId, UserProfileUpdateRequest request) {
         log.info("Updating user profile for user ID: {}", userId);
 
         UserProfile userProfile = userProfileRepo.findByIdOrKeycloakUserId(userId)
@@ -133,7 +130,7 @@ public class UserProfileManagement implements UserProfileApi {
         }
 
         log.info("Successfully updated user profile for user ID: {}", userId);
-        UserProfileResponseDto response = userProfileMapper.toResponseDto(updatedProfile);
+        UserProfileResponse response = userProfileMapper.toResponseDto(updatedProfile);
         response.setEmail(currentEmail);
         return response;
     }

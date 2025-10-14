@@ -1,8 +1,8 @@
 package com.datn.datnbe.auth.presentation;
 
 import com.datn.datnbe.auth.api.UserProfileApi;
-import com.datn.datnbe.auth.dto.request.UserProfileCreateRequest;
-import com.datn.datnbe.auth.dto.response.UserProfileResponseDto;
+import com.datn.datnbe.auth.dto.request.SignupRequest;
+import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -32,9 +32,9 @@ public class AdminUserController {
      */
     @PostMapping
     @PreAuthorize(value = "hasRole('ADMIN')")
-    public ResponseEntity<AppResponseDto<UserProfileResponseDto>> createUserProfile(
-            @Valid @RequestBody UserProfileCreateRequest request) {
-        UserProfileResponseDto response = userProfileApi.createUserProfile(request);
+    public ResponseEntity<AppResponseDto<UserProfileResponse>> createUserProfile(
+            @Valid @RequestBody SignupRequest request) {
+        UserProfileResponse response = userProfileApi.createUserProfile(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(AppResponseDto.success(response));
     }
 
@@ -46,9 +46,9 @@ public class AdminUserController {
      */
     @GetMapping("/{userId}")
     @PreAuthorize(value = "hasRole('ADMIN')")
-    public ResponseEntity<AppResponseDto<UserProfileResponseDto>> getUserProfile(@PathVariable String userId) {
+    public ResponseEntity<AppResponseDto<UserProfileResponse>> getUserProfile(@PathVariable String userId) {
         log.info("Fetching user profile for Keycloak user ID: {}", userId);
-        UserProfileResponseDto response = userProfileApi.getUserProfile(userId);
+        UserProfileResponse response = userProfileApi.getUserProfile(userId);
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 

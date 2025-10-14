@@ -2,7 +2,7 @@ package com.datn.datnbe.auth.presentation;
 
 import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest;
-import com.datn.datnbe.auth.dto.response.UserProfileResponseDto;
+import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -30,11 +30,10 @@ public class UserProfileController {
      * @return ResponseEntity containing the user profile
      */
     @GetMapping("/me")
-    public ResponseEntity<AppResponseDto<UserProfileResponseDto>> getCurrentUserProfile(
-            @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<AppResponseDto<UserProfileResponse>> getCurrentUserProfile(@AuthenticationPrincipal Jwt jwt) {
         String userId = jwt.getSubject();
         log.info("Fetching profile for current user with Keycloak user ID: {}", userId);
-        UserProfileResponseDto response = userProfileApi.getUserProfile(userId);
+        UserProfileResponse response = userProfileApi.getUserProfile(userId);
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 
@@ -60,11 +59,11 @@ public class UserProfileController {
      * @return ResponseEntity containing the updated user profile
      */
     @PatchMapping("/me")
-    public ResponseEntity<AppResponseDto<UserProfileResponseDto>> updateUserProfile(@AuthenticationPrincipal Jwt jwt,
+    public ResponseEntity<AppResponseDto<UserProfileResponse>> updateUserProfile(@AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody UserProfileUpdateRequest request) {
         String userId = jwt.getSubject();
         log.info("Updating user profile for Keycloak user ID: {}", userId);
-        UserProfileResponseDto response = userProfileApi.updateUserProfile(userId, request);
+        UserProfileResponse response = userProfileApi.updateUserProfile(userId, request);
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 }

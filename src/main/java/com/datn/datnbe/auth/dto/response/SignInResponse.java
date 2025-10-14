@@ -9,7 +9,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class SigninResponse {
+public class SignInResponse {
 
     @JsonProperty("access_token")
     String accessToken;

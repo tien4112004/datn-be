@@ -3,9 +3,9 @@ package com.datn.datnbe.auth.presentation;
 import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.config.AuthProperties;
 import com.datn.datnbe.auth.dto.request.SigninRequest;
-import com.datn.datnbe.auth.dto.request.UserProfileCreateRequest;
-import com.datn.datnbe.auth.dto.response.SigninResponse;
-import com.datn.datnbe.auth.dto.response.UserProfileResponseDto;
+import com.datn.datnbe.auth.dto.request.SignupRequest;
+import com.datn.datnbe.auth.dto.response.SignInResponse;
+import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.auth.service.AuthenticationService;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,15 +33,14 @@ public class AuthController {
     AuthenticationService authenticationService;
 
     @PostMapping("/signin")
-    public ResponseEntity<AppResponseDto<SigninResponse>> signIn(@Valid @RequestBody SigninRequest request) {
-        SigninResponse response = authenticationService.signIn(request);
+    public ResponseEntity<AppResponseDto<SignInResponse>> signIn(@Valid @RequestBody SigninRequest request) {
+        SignInResponse response = authenticationService.signIn(request);
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<AppResponseDto<UserProfileResponseDto>> signup(
-            @Valid @RequestBody UserProfileCreateRequest request) {
-        UserProfileResponseDto response = userProfileApi.createUserProfile(request);
+    public ResponseEntity<AppResponseDto<UserProfileResponse>> signup(@Valid @RequestBody SignupRequest request) {
+        UserProfileResponse response = userProfileApi.createUserProfile(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(AppResponseDto.success(response));
     }
 

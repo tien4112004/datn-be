@@ -1,6 +1,7 @@
 package com.datn.datnbe.auth.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -12,7 +13,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserProfileResponseDto {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class UserProfileResponse {
 
     String id;
 
@@ -24,6 +26,8 @@ public class UserProfileResponseDto {
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     LocalDate dateOfBirth;
+
+    String phoneNumber;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     LocalDateTime createdAt;

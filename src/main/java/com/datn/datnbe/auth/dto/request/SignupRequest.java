@@ -15,7 +15,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserProfileCreateRequest {
+public class SignupRequest {
 
     @Email
     @NotBlank(message = "Email is required")
@@ -35,6 +35,8 @@ public class UserProfileCreateRequest {
     @Past(message = "Date of birth must be in the past")
     @JsonFormat(pattern = "yyyy-MM-dd")
     LocalDate dateOfBirth;
+
+    String phoneNumber;
 
     // UserRole role;
 }

@@ -2,7 +2,7 @@ package com.datn.datnbe.auth.service;
 
 import com.datn.datnbe.auth.dto.request.SigninRequest;
 import com.datn.datnbe.auth.dto.response.AuthTokenResponse;
-import com.datn.datnbe.auth.dto.response.SigninResponse;
+import com.datn.datnbe.auth.dto.response.SignInResponse;
 import com.datn.datnbe.auth.repository.UserProfileRepo;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
@@ -25,7 +25,7 @@ public class AuthenticationService {
     /**
      * Authenticate user with email and password and return tokens with user profile
      */
-    public SigninResponse signIn(SigninRequest request) {
+    public SignInResponse signIn(SigninRequest request) {
         log.info("Attempting to sign in user: {}", request.getEmail());
 
         var userProfileOpt = userProfileRepo.findByEmail(request.getEmail());
@@ -42,7 +42,7 @@ public class AuthenticationService {
                 throw new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Authentication failed");
             }
 
-            return SigninResponse.builder()
+            return SignInResponse.builder()
                     .accessToken(tokenResponse.getAccessToken())
                     .refreshToken(tokenResponse.getRefreshToken())
                     .expiresIn(tokenResponse.getExpiresIn())
