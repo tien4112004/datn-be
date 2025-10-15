@@ -58,6 +58,7 @@ public class UserProfileController {
      * @param request the UserProfileUpdateRequest containing updated data
      * @return ResponseEntity containing the updated user profile
      */
+    @Deprecated(forRemoval = true)
     @PatchMapping("/me")
     public ResponseEntity<AppResponseDto<UserProfileResponse>> updateUserProfile(@AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody UserProfileUpdateRequest request) {
