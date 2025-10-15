@@ -70,6 +70,7 @@ public class AdminUserController {
      * @param userId the Keycloak user ID
      * @return ResponseEntity with no content
      */
+    @Deprecated(forRemoval = true)
     @DeleteMapping("/{userId}")
     @PreAuthorize(value = "hasRole('ADMIN')")
     public ResponseEntity<AppResponseDto<Void>> deleteUserProfile(@PathVariable String userId) {
