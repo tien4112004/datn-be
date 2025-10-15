@@ -25,28 +25,35 @@ public class FilePermissionService {
     private final KeycloakAuthorizationService keycloakAuthzService;
 
     @Transactional
-    public FileResourceMapping registerFile(String fileId, String fileName, String ownerId) {
-        log.info("Registering file {} in Keycloak for owner {}", fileId, ownerId);
+    public FileResourceMapping registerFile(String fileId, String fileName, String ownerId, String resourceType) {
+        log.info("Registering file {} in Keycloak for owner {} with resource type {}", fileId, ownerId, resourceType);
 
         // Check if already registered
         if (mappingRepository.existsByFileId(fileId)) {
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR, "File " + fileId + " is already registered");
         }
 
+        // Use default resource type if not provided
+        if (resourceType == null || resourceType.isBlank()) {
+            resourceType = "files";
+        }
+
         // Create resource in Keycloak
         String resourceName = "file-" + fileId;
+        String resourcePath = "/api/" + resourceType + "/" + fileId;
+
         KeycloakResourceDto resourceDto = KeycloakResourceDto.builder()
                 .name(resourceName)
-                .type("urn:file")
+                .type("urn:" + resourceType)
                 .displayName(fileName)
                 .owner(ownerId)
                 .ownerManagedAccess(true)
-                .uris(Set.of("/api/files/" + fileId))
+                .uris(Set.of(resourcePath))
                 .scopes(Set.of("read", "write", "share"))
                 .build();
 
         String keycloakResourceId = keycloakAuthzService.createResource(resourceDto).getId();
-        log.info("Created Keycloak resource {} with ID {}", resourceName, keycloakResourceId);
+        log.info("Created Keycloak resource {} with ID {} and path {}", resourceName, keycloakResourceId, resourcePath);
 
         // Create owner policy
         String ownerPolicyName = resourceName + "-owner-policy";
@@ -82,10 +89,14 @@ public class FilePermissionService {
                 .fileId(fileId)
                 .keycloakResourceId(keycloakResourceId)
                 .keycloakResourceName(resourceName)
+                .resourceType(resourceType)
                 .build();
 
         FileResourceMapping saved = mappingRepository.save(mapping);
-        log.info("Saved mapping: fileId={} → keycloakResourceId={}", fileId, keycloakResourceId);
+        log.info("Saved mapping: fileId={} → keycloakResourceId={} (type: {})",
+                fileId,
+                keycloakResourceId,
+                resourceType);
 
         return saved;
     }
