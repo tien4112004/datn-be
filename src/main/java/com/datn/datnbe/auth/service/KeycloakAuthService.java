@@ -1,11 +1,24 @@
 package com.datn.datnbe.auth.service;
 
+import java.util.Collections;
+import java.util.List;
+
+import org.keycloak.admin.client.resource.RealmResource;
+import org.keycloak.admin.client.resource.UsersResource;
+import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.RoleRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+
 import com.datn.datnbe.auth.config.AuthProperties;
 import com.datn.datnbe.auth.dto.request.SigninRequest;
 import com.datn.datnbe.auth.dto.response.AuthTokenResponse;
 import com.datn.datnbe.auth.utils.KeycloakUtils;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+
 import jakarta.ws.rs.core.Response;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
