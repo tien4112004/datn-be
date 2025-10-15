@@ -45,9 +45,9 @@ public class FilePermissionController {
         Jwt jwt = (Jwt) authentication.getPrincipal();
         String ownerId = request.getOwnerId() != null ? request.getOwnerId() : jwt.getSubject();
 
-        // Register file in Keycloak
+        // Register file in Keycloak with resource type
         FileResourceMapping mapping = filePermissionService
-                .registerFile(request.getFileId(), request.getFileName(), ownerId);
+                .registerFile(request.getFileId(), request.getFileName(), ownerId, request.getResourceType());
 
         // Build response
         FileRegistrationResponse response = FileRegistrationResponse.builder()
