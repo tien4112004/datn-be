@@ -62,6 +62,14 @@ public class FileResourceMapping {
     String keycloakResourceName;
 
     /**
+     * The resource type (e.g., "files", "presentations", "documents")
+     * Used to construct the resource URI path
+     */
+    @Column
+    @Builder.Default
+    String resourceType = "files";
+
+    /**
      * The Keycloak group ID for file sharing
      * Created when file is first shared, contains all users with access
      */
