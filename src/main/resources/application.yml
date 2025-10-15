@@ -118,6 +118,13 @@ app:
       logout-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/logout
       token-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/token
       server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8082}
+    authorization:
+      server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8082}
+      realm: ${KEYCLOAK_REALM:ai-primary-dev}
+      client-id: ${KEYCLOAK_CLIENT_ID:ai-primary}
+      client-secret: ${KEYCLOAK_CLIENT_SECRET:change-me}
+      connection-timeout: 5000
+      read-timeout: 30000
 
 ai:
   api:
