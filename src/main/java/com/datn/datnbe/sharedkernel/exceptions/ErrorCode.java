@@ -43,7 +43,11 @@ public enum ErrorCode {
     USER_INACTIVE("User account is inactive", 403), USER_PROFILE_NOT_FOUND("User profile not found", 404),
     USER_PROFILE_CREATION_FAILED("Failed to create user profile", 500),
     AUTH_INVALID_CREDENTIALS("Invalid credentials provided", 401), AUTH_UNAUTHORIZED("Unauthorized access", 401),
-    AUTH_SERVER_ERROR("Authentication server error", 500),;
+    AUTH_SERVER_ERROR("Authentication server error", 500),
+
+    // Authorization errors
+    UNAUTHORIZED("Unauthorized", 401), RESOURCE_NOT_FOUND("Resource not found", 404),
+    INTERNAL_SERVER_ERROR("Internal server error", 500),;
 
     private final String defaultMessage;
     private final Integer statusCode;
