@@ -1,6 +1,4 @@
 spring:
-  profiles:
-    active: docker
   application:
     name: 'datn-be'
   # AI MODULE CONFIGURATION
