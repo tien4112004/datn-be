@@ -11,10 +11,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * DTO for Keycloak Group
- * Used to create and manage groups for file sharing
- */
 @Data
 @Builder
 @NoArgsConstructor

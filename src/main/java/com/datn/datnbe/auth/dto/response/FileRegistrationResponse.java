@@ -5,9 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Response after registering a file in Keycloak.
- */
 @Data
 @Builder
 @NoArgsConstructor

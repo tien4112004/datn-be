@@ -123,20 +123,6 @@ public class FilePermissionController {
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 
-    @PostMapping("/{fileId}/cleanup-legacy-permissions")
-    public ResponseEntity<AppResponseDto<String>> cleanupLegacyPermissions(@PathVariable String fileId,
-            Authentication authentication) {
-
-        log.info("Cleaning up legacy permissions for file {}", fileId);
-
-        Jwt jwt = (Jwt) authentication.getPrincipal();
-        String userId = jwt.getSubject();
-
-        filePermissionService.cleanupLegacyPermissions(fileId, userId);
-
-        return ResponseEntity.ok(AppResponseDto.success("Legacy permissions cleaned up successfully"));
-    }
-
     @PostMapping("/{fileId}/revoke")
     public ResponseEntity<AppResponseDto<String>> revokeAccess(@PathVariable String fileId,
             @RequestBody @Valid RevokeAccessRequest request,

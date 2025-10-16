@@ -39,6 +39,7 @@ public class FilePermissionService {
         }
 
         // Create resource in Keycloak
+        //TODO: use file's name
         String resourceName = "file-" + fileId;
         String resourcePath = "/api/" + resourceType + "/" + fileId;
 
@@ -206,77 +207,6 @@ public class FilePermissionService {
         log.info("Successfully shared file {} with user {} - added to group {}", fileId, targetUserId, groupName);
     }
 
-    @Transactional
-    public void unregisterFile(String fileId) {
-        log.info("Unregistering file {} from Keycloak", fileId);
-
-        FileResourceMapping mapping = mappingRepository.findByFileId(fileId)
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND,
-                        "File " + fileId + " not found in Keycloak registry"));
-
-        // Delete the shared group if it exists
-        if (mapping.getKeycloakGroupId() != null) {
-            try {
-                keycloakAuthzService.deleteGroup(mapping.getKeycloakGroupId());
-                log.info("Deleted shared group {} for file {}", mapping.getKeycloakGroupName(), fileId);
-            } catch (Exception e) {
-                log.warn("Failed to delete group {}: {}", mapping.getKeycloakGroupName(), e.getMessage());
-            }
-        }
-
-        // Delete resource from Keycloak (this will cascade delete policies and permissions)
-        keycloakAuthzService.deleteResource(mapping.getKeycloakResourceId());
-
-        // Delete mapping
-        mappingRepository.deleteByFileId(fileId);
-
-        log.info("Unregistered file {} from Keycloak", fileId);
-    }
-
-    public String getKeycloakResourceId(String fileId) {
-        return mappingRepository.findByFileId(fileId)
-                .map(FileResourceMapping::getKeycloakResourceId)
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND,
-                        "File " + fileId + " not registered in Keycloak"));
-    }
-
-    @Transactional
-    public void cleanupLegacyPermissions(String fileId, String userId) {
-        log.info("Cleaning up legacy permissions for file {}", fileId);
-
-        String keycloakResourceId = getKeycloakResourceId(fileId);
-        KeycloakResourceDto resource = keycloakAuthzService.getResource(keycloakResourceId);
-
-        // Verify ownership - owner can be String or object {id: "..."}
-        String ownerId = resource.getOwner();
-        if (ownerId != null && !ownerId.equals(userId)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED, "Only the owner can cleanup legacy permissions");
-        }
-
-        // Delete legacy per-scope permissions if they exist
-        String[] legacyScopes = {"read", "write", "share"};
-        for (String scope : legacyScopes) {
-            String legacyPermissionName = String.format("file-%s-%s-permission", fileId, scope);
-            try {
-                keycloakAuthzService.deletePermission(legacyPermissionName);
-                log.info("Deleted legacy permission: {}", legacyPermissionName);
-            } catch (Exception e) {
-                log.warn("Could not delete legacy permission {} (may not exist): {}",
-                        legacyPermissionName,
-                        e.getMessage());
-            }
-        }
-
-        log.info("Completed cleanup of legacy permissions for file {}", fileId);
-    }
-
-    /**
-     * Revokes file access from a user by removing them from the shared group.
-     *
-     * @param fileId The file ID
-     * @param targetUserId The user ID to revoke access from
-     * @param currentUserId The current user (must be owner)
-     */
     @Transactional
     public void revokeFileAccess(String fileId, String targetUserId, String currentUserId) {
         log.info("Revoking access to file {} from user {}", fileId, targetUserId);
