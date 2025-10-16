@@ -63,4 +63,5 @@ service-account.json
 /bin/*
 
 # Keycloak realm
-keycloak-data/**
+keycloak-data/import/*.json
+keycloak-data/h2
