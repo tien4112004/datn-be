@@ -60,4 +60,5 @@ node_modules
 /bin/*
 
 # Keycloak realm
-keycloak-data/**
+keycloak-data/import/*.json
+keycloak-data/h2
