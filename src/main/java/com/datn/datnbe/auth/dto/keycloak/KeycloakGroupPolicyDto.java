@@ -10,10 +10,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * DTO for Keycloak Group-based Policy
- * Used to create policies based on group membership for file sharing
- */
 @Data
 @Builder
 @NoArgsConstructor
@@ -41,19 +37,12 @@ public class KeycloakGroupPolicyDto {
     @Builder.Default
     private String decisionStrategy = "UNANIMOUS";
 
-    /**
-     * List of group definitions with ID and extendChildren flag.
-     * Keycloak expects format: [{"id": "group-id", "extendChildren": false}]
-     */
     @JsonProperty("groups")
     private List<GroupDefinition> groups;
 
     @JsonProperty("groupsClaim")
     private String groupsClaim;
 
-    /**
-     * Group definition for policy
-     */
     @Data
     @Builder
     @NoArgsConstructor
