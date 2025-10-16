@@ -11,8 +11,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class KeycloakAuthService {
     UsersResource usersResource;
+    RealmResource realmResource;
     AuthProperties authProperties;
     WebClient webClient;
 
@@ -42,7 +45,6 @@ public class KeycloakAuthService {
             user.setEnabled(true);
             user.setUsername(email);
             user.setEmail(email);
-            user.setRealmRoles(Collections.singletonList(role));
             user.setFirstName(firstName);
             user.setLastName(lastName);
             user.setEmailVerified(false);
@@ -54,9 +56,6 @@ public class KeycloakAuthService {
             credential.setTemporary(false);
             user.setCredentials(Collections.singletonList(credential));
 
-            // Set roles
-            user.setRealmRoles(Collections.singletonList(role.toLowerCase()));
-
             // Create user
             Response response = usersResource.create(user);
 
@@ -64,6 +63,10 @@ public class KeycloakAuthService {
                 String locationHeader = response.getHeaderString("Location");
                 String keycloakUserId = KeycloakUtils.extractUserIdFromLocation(locationHeader);
                 log.info("Successfully created Keycloak user with ID: {}", keycloakUserId);
+
+                // Assign realm role to the user
+                assignRealmRole(keycloakUserId, role.toLowerCase());
+
                 return keycloakUserId;
             } else {
                 log.error("Failed to create Keycloak user. Status: {}", response.getStatus());
@@ -74,6 +77,26 @@ public class KeycloakAuthService {
         } catch (Exception e) {
             log.error("Error creating Keycloak user: {}", e.getMessage(), e);
             throw new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Failed to create user in authentication system");
+        }
+    }
+
+    /**
+     * Assign realm role to a user
+     */
+    private void assignRealmRole(String keycloakUserId, String roleName) {
+        try {
+            // Get the role representation from the realm
+            RoleRepresentation roleRepresentation = realmResource.roles().get(roleName).toRepresentation();
+
+            // Assign the role to the user
+            usersResource.get(keycloakUserId).roles().realmLevel().add(Collections.singletonList(roleRepresentation));
+
+            log.info("Successfully assigned realm role '{}' to user: {}", roleName, keycloakUserId);
+
+        } catch (Exception e) {
+            log.error("Error assigning realm role '{}' to user {}: {}", roleName, keycloakUserId, e.getMessage(), e);
+            throw new AppException(ErrorCode.UNCATEGORIZED_ERROR,
+                    "Failed to assign role '" + roleName + "' to user. Make sure the role exists in Keycloak realm.");
         }
     }
 
