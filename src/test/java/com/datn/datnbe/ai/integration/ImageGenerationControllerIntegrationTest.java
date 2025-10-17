@@ -231,7 +231,7 @@ public class ImageGenerationControllerIntegrationTest extends BaseIntegrationTes
                 .thenReturn(mockResponse);
 
         // When - First request
-        mockMvc.perform(post("/api/images/generate-with-idempotency").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(post("/api/images/generate-in-presentation").contentType(MediaType.APPLICATION_JSON)
                 .header("Idempotency-Key", idempotencyKey)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().isOk());
 
@@ -274,12 +274,12 @@ public class ImageGenerationControllerIntegrationTest extends BaseIntegrationTes
         clearInvocations(aiApiClient);
 
         // When - First request
-        mockMvc.perform(post("/api/images/generate-with-idempotency").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(post("/api/images/generate-in-presentation").contentType(MediaType.APPLICATION_JSON)
                 .header("Idempotency-Key", idempotencyKey)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().isOk());
 
         // When - Second request with same idempotency key
-        mockMvc.perform(post("/api/images/generate-with-idempotency").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(post("/api/images/generate-in-presentation").contentType(MediaType.APPLICATION_JSON)
                 .header("Idempotency-Key", idempotencyKey)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().isOk());
 
@@ -332,12 +332,12 @@ public class ImageGenerationControllerIntegrationTest extends BaseIntegrationTes
                 .thenReturn(mockResponse);
 
         // When - First request
-        mockMvc.perform(post("/api/images/generate-with-idempotency").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(post("/api/images/generate-in-presentation").contentType(MediaType.APPLICATION_JSON)
                 .header("Idempotency-Key", idempotencyKey1)
                 .content(objectMapper.writeValueAsString(request1))).andExpect(status().isOk());
 
         // When - Second request with different key
-        mockMvc.perform(post("/api/images/generate-with-idempotency").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(post("/api/images/generate-in-presentation").contentType(MediaType.APPLICATION_JSON)
                 .header("Idempotency-Key", idempotencyKey2)
                 .content(objectMapper.writeValueAsString(request2))).andExpect(status().isOk());
 
@@ -371,7 +371,7 @@ public class ImageGenerationControllerIntegrationTest extends BaseIntegrationTes
                 .build();
 
         // When & Then
-        mockMvc.perform(post("/api/images/generate-with-idempotency").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(post("/api/images/generate-in-presentation").contentType(MediaType.APPLICATION_JSON)
                 .header("Idempotency-Key", invalidIdempotencyKey)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().is4xxClientError());
 
@@ -390,7 +390,7 @@ public class ImageGenerationControllerIntegrationTest extends BaseIntegrationTes
                 .build();
 
         // When & Then - Request without Idempotency-Key header
-        mockMvc.perform(post("/api/images/generate-with-idempotency").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(post("/api/images/generate-in-presentation").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().is4xxClientError());
 
         // Verify AI API was not called
@@ -419,7 +419,7 @@ public class ImageGenerationControllerIntegrationTest extends BaseIntegrationTes
                 .thenReturn(errorResponse);
 
         // When & Then
-        mockMvc.perform(post("/api/images/generate-with-idempotency").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(post("/api/images/generate-in-presentation").contentType(MediaType.APPLICATION_JSON)
                 .header("Idempotency-Key", idempotencyKey)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().is5xxServerError()); // GENERATION_ERROR maps to 500
 
@@ -453,7 +453,7 @@ public class ImageGenerationControllerIntegrationTest extends BaseIntegrationTes
                 .thenReturn(emptyResponse);
 
         // When & Then
-        mockMvc.perform(post("/api/images/generate-with-idempotency").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(post("/api/images/generate-in-presentation").contentType(MediaType.APPLICATION_JSON)
                 .header("Idempotency-Key", idempotencyKey)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().is5xxServerError()); // GENERATION_ERROR maps to 500
 
@@ -490,7 +490,7 @@ public class ImageGenerationControllerIntegrationTest extends BaseIntegrationTes
                 .thenReturn(successResponse);
 
         // When - First request (fails)
-        mockMvc.perform(post("/api/images/generate-with-idempotency").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(post("/api/images/generate-in-presentation").contentType(MediaType.APPLICATION_JSON)
                 .header("Idempotency-Key", idempotencyKey)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().is5xxServerError());
 
@@ -500,7 +500,7 @@ public class ImageGenerationControllerIntegrationTest extends BaseIntegrationTes
         assertThat(failedRecord.get().getStatus()).isEqualTo(IdempotencyStatus.FAILED);
         assertThat(failedRecord.get().getRetryCount()).isEqualTo(0);
 
-        mockMvc.perform(post("/api/images/generate-with-idempotency").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(post("/api/images/generate-in-presentation").contentType(MediaType.APPLICATION_JSON)
                 .header("Idempotency-Key", idempotencyKey)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().is5xxServerError());
 
@@ -510,7 +510,7 @@ public class ImageGenerationControllerIntegrationTest extends BaseIntegrationTes
         assertThat(failedRecord.get().getRetryCount()).isEqualTo(1);
 
         // When - Retry request (succeeds)
-        mockMvc.perform(post("/api/images/generate-with-idempotency").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(post("/api/images/generate-in-presentation").contentType(MediaType.APPLICATION_JSON)
                 .header("Idempotency-Key", idempotencyKey)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().isOk());
 
@@ -547,7 +547,7 @@ public class ImageGenerationControllerIntegrationTest extends BaseIntegrationTes
                 .thenReturn(mockResponse);
 
         // When
-        mockMvc.perform(post("/api/images/generate-with-idempotency").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(post("/api/images/generate-in-presentation").contentType(MediaType.APPLICATION_JSON)
                 .header("Idempotency-Key", baseIdempotencyKey)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().isOk());
 
