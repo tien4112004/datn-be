@@ -54,9 +54,6 @@ build/
 application-dev.yml
 node_modules
 
-### GCLOUD ###
-service-account.json
-
 *.class
 
 /bin
