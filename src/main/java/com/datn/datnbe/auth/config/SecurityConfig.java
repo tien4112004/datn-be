@@ -9,8 +9,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -19,12 +17,13 @@ import org.springframework.security.web.SecurityFilterChain;
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final ClientRegistrationRepository clientRegistrationRepository;
+    private final JwtConverter jwtConverter;
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         var oidcLogoutHandler = new OidcClientInitiatedLogoutSuccessHandler(clientRegistrationRepository);
 
-        http.authorizeHttpRequests(auth -> auth.requestMatchers("/public", "/signin", "/signup")
+        http.authorizeHttpRequests(auth -> auth.requestMatchers("/public", "/api/auth/signin", "/api/auth/signup")
                 .permitAll()
                 .requestMatchers("/api/admin/**")
                 .hasRole("admin")
@@ -34,19 +33,10 @@ public class SecurityConfig {
                 .authenticated())
                 .oauth2Login(Customizer.withDefaults())
                 .logout(l -> l.logoutSuccessHandler(oidcLogoutHandler))
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter())));
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtConverter)));
+
+        http.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"));
 
         return http.build();
-    }
-
-    private JwtAuthenticationConverter jwtAuthConverter() {
-        // Extract Keycloak realm roles from realm_access.roles → ROLE_*
-        JwtGrantedAuthoritiesConverter delegate = new JwtGrantedAuthoritiesConverter();
-        delegate.setAuthoritiesClaimName("realm_access.roles");
-        delegate.setAuthorityPrefix("ROLE_");
-
-        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(delegate);
-        return converter;
     }
 }
