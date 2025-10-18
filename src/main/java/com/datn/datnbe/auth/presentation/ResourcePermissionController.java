@@ -68,7 +68,6 @@ public class ResourcePermissionController {
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 
-    //TODO: review later
     @GetMapping("/{documentId}/permissions")
     public ResponseEntity<AppResponseDto<ResourcePermissionResponse>> checkPermissions(@PathVariable String documentId,
             Authentication authentication) {
