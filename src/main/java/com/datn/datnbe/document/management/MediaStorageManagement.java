@@ -3,7 +3,7 @@ package com.datn.datnbe.document.management;
 import com.datn.datnbe.document.api.MediaStorageApi;
 import com.datn.datnbe.document.dto.response.UploadedMediaResponseDto;
 import com.datn.datnbe.document.entity.Media;
-import com.datn.datnbe.document.enums.MediaType;
+import com.datn.datnbe.sharedkernel.enums.MediaType;
 import com.datn.datnbe.document.management.validation.MediaValidation;
 import com.datn.datnbe.document.repository.MediaRepository;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import static com.datn.datnbe.document.utils.MediaStorageUtils.*;
+import static com.datn.datnbe.sharedkernel.utils.MediaStorageUtils.*;
 
 @Service
 @RequiredArgsConstructor

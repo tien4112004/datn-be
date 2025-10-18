@@ -100,40 +100,6 @@ public class KeycloakAuthService {
         }
     }
 
-    public AuthTokenResponse signIn(SigninRequest request, String userKeycloakId) {
-        log.info("url signin: {}", authProperties.getTokenUri());
-
-        try {
-            var requestBody = "client_id=" + authProperties.getClientId() + "&username=" + request.getEmail()
-                    + "&password=" + request.getPassword() + "&grant_type=password" + "&client_secret="
-                    + authProperties.getClientSecret() + "&user_id=" + userKeycloakId;
-
-            return webClient.post()
-                    .uri(authProperties.getTokenUri())
-                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                    .bodyValue(requestBody)
-                    .retrieve()
-                    .onStatus(status -> status.value() == 400,
-                            resp -> resp.bodyToMono(String.class)
-                                    .defaultIfEmpty("")
-                                    .map(body -> new AppException(ErrorCode.AUTH_INVALID_CREDENTIALS, body)))
-                    .onStatus(status -> status.value() == 401,
-                            resp -> resp.bodyToMono(String.class)
-                                    .defaultIfEmpty("")
-                                    .map(body -> new AppException(ErrorCode.AUTH_UNAUTHORIZED, body)))
-                    .onStatus(status -> status.value() >= 500,
-                            resp -> resp.bodyToMono(String.class)
-                                    .defaultIfEmpty("")
-                                    .map(body -> new AppException(ErrorCode.AUTH_SERVER_ERROR, body)))
-                    .bodyToMono(AuthTokenResponse.class)
-                    .block();
-
-        } catch (Exception e) {
-            log.error("Error during Keycloak signin: {}", e.getMessage(), e);
-            throw new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Authentication failed: " + e.getMessage());
-        }
-    }
-
     /**
      * Get Keycloak user ID by email
      */
@@ -161,26 +127,6 @@ public class KeycloakAuthService {
             log.error("Error getting Keycloak user email: {}", e.getMessage(), e);
             throw new AppException(ErrorCode.UNCATEGORIZED_ERROR,
                     "Failed to retrieve user email from authentication system");
-        }
-    }
-
-    /**
-     * Assign realm role to a user
-     */
-    private void assignRealmRole(String keycloakUserId, String roleName) {
-        try {
-            // Get the role representation from the realm
-            RoleRepresentation roleRepresentation = realmResource.roles().get(roleName).toRepresentation();
-
-            // Assign the role to the user
-            usersResource.get(keycloakUserId).roles().realmLevel().add(Collections.singletonList(roleRepresentation));
-
-            log.info("Successfully assigned realm role '{}' to user: {}", roleName, keycloakUserId);
-
-        } catch (Exception e) {
-            log.error("Error assigning realm role '{}' to user {}: {}", roleName, keycloakUserId, e.getMessage(), e);
-            throw new AppException(ErrorCode.UNCATEGORIZED_ERROR,
-                    "Failed to assign role '" + roleName + "' to user. Make sure the role exists in Keycloak realm.");
         }
     }
 
@@ -215,36 +161,6 @@ public class KeycloakAuthService {
         } catch (Exception e) {
             log.error("Error during Keycloak signin: {}", e.getMessage(), e);
             throw new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Authentication failed: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Get Keycloak user ID by email
-     */
-    public String getKeycloakUserIdByEmail(String email) {
-        try {
-            List<UserRepresentation> users = usersResource.searchByEmail(email, true);
-            if (users.isEmpty()) {
-                throw new AppException(ErrorCode.USER_PROFILE_NOT_FOUND, "User not found with email: " + email);
-            }
-            return users.get(0).getId();
-        } catch (Exception e) {
-            log.error("Error searching Keycloak user by email: {}", e.getMessage(), e);
-            throw new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Failed to find user by email");
-        }
-    }
-
-    /**
-     * Get user email from Keycloak
-     */
-    public String getUserEmail(String keycloakUserId) {
-        try {
-            UserRepresentation user = usersResource.get(keycloakUserId).toRepresentation();
-            return user.getEmail();
-        } catch (Exception e) {
-            log.error("Error getting Keycloak user email: {}", e.getMessage(), e);
-            throw new AppException(ErrorCode.UNCATEGORIZED_ERROR,
-                    "Failed to retrieve user email from authentication system");
         }
     }
 
