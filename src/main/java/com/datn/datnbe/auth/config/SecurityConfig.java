@@ -36,7 +36,11 @@ public class SecurityConfig {
 
         http.authorizeHttpRequests(auth -> auth
                 // Public endpoints - no authentication required
-                .requestMatchers("/public/**", "/api/auth/signin", "/api/auth/signup", "/api/resources/register")
+                .requestMatchers("/public/**",
+                        "/api/auth/signin",
+                        "/api/auth/signup",
+                        "/api/auth/keycloak/callback",
+                        "/api/resources/register")
                 .permitAll()
 
                 // Admin endpoints - requires ADMIN role
