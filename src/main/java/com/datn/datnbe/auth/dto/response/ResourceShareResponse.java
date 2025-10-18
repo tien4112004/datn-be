@@ -16,9 +16,9 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class FileShareResponse {
+public class ResourceShareResponse {
 
-    String fileId;
+    String resourceId;
 
     String sharedWithUserId;
 
@@ -27,7 +27,4 @@ public class FileShareResponse {
     Set<String> grantedPermissions;
 
     String message;
-
-    @Builder.Default
-    Boolean success = true;
 }

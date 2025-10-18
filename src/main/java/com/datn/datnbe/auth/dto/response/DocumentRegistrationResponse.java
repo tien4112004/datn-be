@@ -9,17 +9,15 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class FileRegistrationResponse {
+public class DocumentRegistrationResponse {
 
-    private String fileId;
+    private String id;
 
-    private String fileName;
+    private String name;
 
     private String keycloakResourceId;
 
     private String ownerId;
 
     private String message;
-
-    private boolean success;
 }

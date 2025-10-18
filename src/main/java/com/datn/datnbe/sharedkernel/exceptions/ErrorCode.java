@@ -47,6 +47,9 @@ public enum ErrorCode {
 
     // Authorization errors
     UNAUTHORIZED("Unauthorized", 401), RESOURCE_NOT_FOUND("Resource not found", 404),
+    RESOURCE_ALREADY_EXISTS("Resource already exists", 409),
+    FORBIDDEN("Forbidden: You don't have permission to access this resource", 403),
+
     INTERNAL_SERVER_ERROR("Internal server error", 500),;
 
     private final String defaultMessage;
