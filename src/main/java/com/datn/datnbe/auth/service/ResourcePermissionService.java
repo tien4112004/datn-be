@@ -1,8 +1,11 @@
 package com.datn.datnbe.auth.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
+import com.datn.datnbe.auth.entity.UserProfile;
+import com.datn.datnbe.auth.repository.UserProfileRepo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +36,7 @@ public class ResourcePermissionService {
     private final KeycloakAuthorizationService keycloakAuthzService;
     private final ResourcePermissionMapper mapper;
     private final KeycloakDtoMapper keycloakMapper;
+    private final UserProfileRepo userProfileRepo;
 
     @Transactional
     public DocumentRegistrationResponse registerResource(ResourceRegistrationRequest request, String ownerId) {
@@ -133,14 +137,17 @@ public class ResourcePermissionService {
         Set<String> requestedScopes = request.getPermissions();
         PermissionLevel level = determinePermissionLevel(requestedScopes);
 
+        // Retrieve target user's Keycloak ID
+        Optional<UserProfile> userProfile = userProfileRepo.findByIdOrKeycloakUserId(request.getTargetUserId());
+
         // 4. Remove user from OTHER permission groups to avoid conflicts
-        removeUserFromOtherGroups(request.getTargetUserId(), level, mapping);
+        removeUserFromOtherGroups(userProfile.get().getKeycloakUserId(), level, mapping);
 
         // 5. Get or create the appropriate group based on permission level
         String groupId = getOrCreatePermissionGroup(documentId, level, mapping);
 
         // 6. Add the user to the appropriate group
-        keycloakAuthzService.addUserToGroup(request.getTargetUserId(), groupId);
+        keycloakAuthzService.addUserToGroup(userProfile.get().getKeycloakUserId(), groupId);
 
         log.info("Successfully shared resource {} with user {} at {} level",
                 documentId,
@@ -150,9 +157,6 @@ public class ResourcePermissionService {
         return mapper.toResourceShareResponse(documentId, request.getTargetUserId(), requestedScopes);
     }
 
-    /**
-     * Remove user from other permission groups to ensure they only have the requested permission level
-     */
     private void removeUserFromOtherGroups(String userId,
             PermissionLevel targetLevel,
             DocumentResourceMapping mapping) {
@@ -277,6 +281,13 @@ public class ResourcePermissionService {
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND,
                         "Document " + documentId + " not found in Keycloak registry"));
 
+        // retrieve keycloak user id of target user
+        Optional<UserProfile> userProfile = userProfileRepo.findByIdOrKeycloakUserId(targetUserId);
+        if (userProfile.isEmpty()) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND, "User " + targetUserId + " not found");
+        }
+        String keycloakUserId = userProfile.get().getKeycloakUserId();
+
         // Verify ownership
         KeycloakResourceDto resource = keycloakAuthzService.getResource(mapping.getKeycloakResourceId());
         if (!resource.getOwner().equals(currentUserId)) {
@@ -293,7 +304,7 @@ public class ResourcePermissionService {
         boolean removed = false;
         if (mapping.getReadersGroupId() != null) {
             try {
-                keycloakAuthzService.removeUserFromGroup(targetUserId, mapping.getReadersGroupId());
+                keycloakAuthzService.removeUserFromGroup(keycloakUserId, mapping.getReadersGroupId());
                 removed = true;
                 log.info("Removed user {} from readers group", targetUserId);
             } catch (Exception e) {
@@ -303,7 +314,7 @@ public class ResourcePermissionService {
 
         if (mapping.getWritersGroupId() != null) {
             try {
-                keycloakAuthzService.removeUserFromGroup(targetUserId, mapping.getWritersGroupId());
+                keycloakAuthzService.removeUserFromGroup(keycloakUserId, mapping.getWritersGroupId());
                 removed = true;
                 log.info("Removed user {} from writers group", targetUserId);
             } catch (Exception e) {

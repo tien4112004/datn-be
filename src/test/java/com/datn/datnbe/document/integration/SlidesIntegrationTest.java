@@ -3,6 +3,7 @@ package com.datn.datnbe.document.integration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,7 +12,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -20,7 +24,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
+import com.datn.datnbe.auth.dto.response.ResourcePermissionResponse;
+import com.datn.datnbe.auth.service.ResourcePermissionService;
 import com.datn.datnbe.document.dto.SlideDto;
 import com.datn.datnbe.document.dto.SlideDto.SlideBackgroundDto;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
@@ -38,6 +46,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
         org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration.class,
         org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration.class,
         org.springframework.boot.autoconfigure.http.client.HttpClientAutoConfiguration.class})
+@WithMockUser(username = "test-user-id", roles = "USER")
 public class SlidesIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
@@ -49,13 +58,27 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private IdempotencyRepository idempotencyRepository;
 
+    @MockBean
+    private ResourcePermissionService resourcePermissionService;
+
     private MockMvc mockMvc;
     private String presentationId;
 
     @BeforeEach
     void setUp() throws Exception {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .apply(SecurityMockMvcConfigurers.springSecurity())
+                .build();
         idempotencyRepository.deleteAll();
+
+        // Mock permission service to always grant full permissions
+        when(resourcePermissionService.checkUserPermissions(anyString(), anyString(), anyString()))
+                .thenReturn(ResourcePermissionResponse.builder()
+                        .resourceId("test-resource")
+                        .userId("test-user-id")
+                        .permissions(Set.of("read", "write", "share"))
+                        .hasAccess(true)
+                        .build());
 
         presentationId = createTestPresentation();
     }
