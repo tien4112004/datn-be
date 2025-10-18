@@ -11,6 +11,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @Slf4j
 @ControllerAdvice
@@ -46,8 +47,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<AppResponseDto<Map<String, String>>> handleValidationExceptions(
             MethodArgumentNotValidException ex) {
-        log.error("Validation error: {}", ex.getMessage(), ex);
-
         Map<String, String> errors = new HashMap<>();
         log.error("Validation errors occurred: {}", ex.getMessage());
         ex.getBindingResult().getAllErrors().forEach((error) -> {
@@ -75,5 +74,14 @@ public class GlobalExceptionHandler {
         log.error("An unexpected error occurred: {}", ex.getMessage(), ex);
         AppResponseDto<Object> response = AppResponseDto.failure(appException);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<AppResponseDto<Object>> handleMaxSizeException(MaxUploadSizeExceededException ex) {
+        log.error("File size exceeds the maximum limit: {}", ex.getMessage(), ex);
+
+        AppException appException = new AppException(ErrorCode.FILE_TOO_LARGE);
+        AppResponseDto<Object> response = AppResponseDto.failure(appException);
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(response);
     }
 }

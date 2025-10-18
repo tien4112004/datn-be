@@ -1,43 +1,52 @@
 package com.datn.datnbe.auth.presentation;
 
+import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.config.AuthProperties;
+import com.datn.datnbe.auth.dto.request.SigninRequest;
+import com.datn.datnbe.auth.dto.request.SignupRequest;
+import com.datn.datnbe.auth.dto.response.SignInResponse;
+import com.datn.datnbe.auth.dto.response.UserProfileResponse;
+import com.datn.datnbe.auth.service.AuthenticationService;
+import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
-@Controller
+@RestController
+@RequestMapping("/api/auth")
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthController {
-    private final AuthProperties authProperties;
+    AuthProperties authProperties;
+    UserProfileApi userProfileApi;
+    AuthenticationService authenticationService;
 
-    public AuthController(AuthProperties authProperties) {
-        this.authProperties = authProperties;
+    @PostMapping("/signin")
+    public ResponseEntity<AppResponseDto<SignInResponse>> signIn(@Valid @RequestBody SigninRequest request) {
+        SignInResponse response = authenticationService.signIn(request);
+        return ResponseEntity.ok(AppResponseDto.success(response));
     }
 
-    @GetMapping("/signin")
-    public String signin() {
-        return "redirect:" + authProperties.getProperty("signin-uri");
-    }
-
-    @GetMapping("/signup")
-    public String signup() {
-        String url = UriComponentsBuilder.fromUriString(authProperties.getProperty("signup-uri"))
-                .queryParam("client_id", authProperties.getProperty("client-id"))
-                .queryParam("response_type", "code")
-                .queryParam("scope", "openid profile email")
-                .queryParam("redirect_uri", authProperties.getProperty("redirect-uri"))
-                .queryParam("kc_action", "register")
-                .toUriString();
-        return "redirect:" + url;
+    @PostMapping("/signup")
+    public ResponseEntity<AppResponseDto<UserProfileResponse>> signup(@Valid @RequestBody SignupRequest request) {
+        UserProfileResponse response = userProfileApi.createUserProfile(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(AppResponseDto.success(response));
     }
 
     @GetMapping("/logout")
     public String logout(HttpServletRequest request, HttpServletResponse response, Authentication auth) {
+
         new SecurityContextLogoutHandler().logout(request, response, auth);
 
         String idToken = null;
@@ -45,8 +54,8 @@ public class AuthController {
             idToken = oidc.getIdToken().getTokenValue();
         }
 
-        String url = UriComponentsBuilder.fromUriString(authProperties.getProperty("logout-uri"))
-                .queryParam("post_logout_redirect_uri", authProperties.getProperty("redirect-uri"))
+        String url = UriComponentsBuilder.fromUriString(authProperties.getLogoutUri())
+                .queryParam("post_logout_redirect_uri", authProperties.getRedirectUri())
                 .queryParam("id_token_hint", idToken)
                 .toUriString();
 
