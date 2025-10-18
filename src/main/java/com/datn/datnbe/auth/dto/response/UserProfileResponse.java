@@ -29,6 +29,8 @@ public class UserProfileResponse {
 
     String phoneNumber;
 
+    String avatarUrl;
+
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     LocalDateTime createdAt;
 

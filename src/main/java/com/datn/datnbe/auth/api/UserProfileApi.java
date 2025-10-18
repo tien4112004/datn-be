@@ -2,9 +2,11 @@ package com.datn.datnbe.auth.api;
 
 import com.datn.datnbe.auth.dto.request.SignupRequest;
 import com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest;
+import com.datn.datnbe.auth.dto.response.UpdateAvatarResponse;
 import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface UserProfileApi {
 
@@ -57,12 +59,13 @@ public interface UserProfileApi {
      * @param lastName the user's last name
      */
     void createUserFromKeycloakUser(String keycloakUserId, String email, String firstName, String lastName);
-    
+
     /**
-     * Checks if a user profile exists for the given user ID.
+     * Updates the avatar of a user profile.
      *
      * @param userId the user ID
-     * @return true if a profile exists, false otherwise
+     * @param avatar the avatar image file
+     * @return UpdateAvatarResponse containing the CDN URL of the uploaded avatar
      */
-    boolean existsById(String userId);
+    UpdateAvatarResponse updateUserAvatar(String userId, MultipartFile avatar);
 }

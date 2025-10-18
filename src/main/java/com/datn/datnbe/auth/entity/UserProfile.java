@@ -43,6 +43,9 @@ public class UserProfile {
     @Column(name = "phone_number")
     String phoneNumber;
 
+    @Column(name = "avatar_url")
+    String avatarUrl;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     LocalDateTime createdAt;
 
