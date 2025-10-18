@@ -2,6 +2,7 @@ package com.datn.datnbe.auth.apiclient;
 
 import java.util.List;
 
+import com.datn.datnbe.auth.dto.response.AuthTokenResponse;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -40,12 +41,6 @@ public class KeycloakApiClient {
 
     private String serviceAccountToken;
     private long tokenExpiryTime;
-
-    @lombok.Data
-    private static class ClientRepresentation {
-        private String id;
-        private String clientId;
-    }
 
     private String getServiceAccountToken() {
         if (serviceAccountToken != null && System.currentTimeMillis() < tokenExpiryTime - 30000) {
@@ -162,11 +157,11 @@ public class KeycloakApiClient {
         }
     }
 
-    public String createUserPolicy(KeycloakUserPolicyDto policy, String clientUuid) {
+    public String createUserPolicy(KeycloakUserPolicyDto policy) {
         String url = String.format("%s/admin/realms/%s/clients/%s/authz/resource-server/policy/user",
                 authzProperties.getServerUrl(),
                 authzProperties.getRealm(),
-                clientUuid);
+                authzProperties.getClientUuid());
 
         HttpHeaders headers = createAuthHeaders();
         HttpEntity<KeycloakUserPolicyDto> request = new HttpEntity<>(policy, headers);
@@ -193,11 +188,11 @@ public class KeycloakApiClient {
         }
     }
 
-    public String createPermission(KeycloakPermissionDto permission, String clientUuid) {
+    public String createPermission(KeycloakPermissionDto permission) {
         String url = String.format("%s/admin/realms/%s/clients/%s/authz/resource-server/permission/scope",
                 authzProperties.getServerUrl(),
                 authzProperties.getRealm(),
-                clientUuid);
+                authzProperties.getClientUuid());
 
         HttpHeaders headers = createAuthHeaders();
         HttpEntity<KeycloakPermissionDto> request = new HttpEntity<>(permission, headers);
@@ -218,15 +213,15 @@ public class KeycloakApiClient {
             return responseBody;
 
         } catch (HttpClientErrorException e) {
-            throw e; // Re-throw to handle conflict in service layer
+            throw e;
         }
     }
 
-    public List<KeycloakPermissionDto> getPermissionsByName(String permissionName, String clientUuid) {
+    public List<KeycloakPermissionDto> getPermissionsByName(String permissionName) {
         String url = String.format("%s/admin/realms/%s/clients/%s/authz/resource-server/permission?name=%s",
                 authzProperties.getServerUrl(),
                 authzProperties.getRealm(),
-                clientUuid,
+                authzProperties.getClientUuid(),
                 permissionName);
 
         HttpHeaders headers = createAuthHeaders();
@@ -250,11 +245,11 @@ public class KeycloakApiClient {
         }
     }
 
-    public KeycloakPermissionDto getPermissionById(String permissionId, String clientUuid) {
+    public KeycloakPermissionDto getPermissionById(String permissionId) {
         String url = String.format("%s/admin/realms/%s/clients/%s/authz/resource-server/permission/scope/%s",
                 authzProperties.getServerUrl(),
                 authzProperties.getRealm(),
-                clientUuid,
+                authzProperties.getClientUuid(),
                 permissionId);
 
         HttpHeaders headers = createAuthHeaders();
@@ -277,62 +272,7 @@ public class KeycloakApiClient {
         }
     }
 
-    public void updatePermission(String permissionId, KeycloakPermissionDto permission, String clientUuid) {
-        String url = String.format("%s/admin/realms/%s/clients/%s/authz/resource-server/permission/scope/%s",
-                authzProperties.getServerUrl(),
-                authzProperties.getRealm(),
-                clientUuid,
-                permissionId);
-
-        HttpHeaders headers = createAuthHeaders();
-        HttpEntity<KeycloakPermissionDto> request = new HttpEntity<>(permission, headers);
-
-        try {
-            log.debug("Updating permission in Keycloak: {}", permission.getName());
-
-            ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.PUT, request, Void.class);
-
-            log.info("Successfully updated permission: {}", permission.getName());
-
-        } catch (HttpClientErrorException e) {
-            log.error("Failed to update permission '{}': {} - {}",
-                    permission.getName(),
-                    e.getStatusCode(),
-                    e.getResponseBodyAsString());
-            throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR,
-                    "Failed to update permission in Keycloak: " + e.getMessage());
-        }
-    }
-
-    public String getClientUuid(String clientId) {
-        String url = String.format("%s/admin/realms/%s/clients?clientId=%s",
-                authzProperties.getServerUrl(),
-                authzProperties.getRealm(),
-                clientId);
-
-        HttpHeaders headers = createAuthHeaders();
-        HttpEntity<Void> request = new HttpEntity<>(headers);
-
-        try {
-            ResponseEntity<List<ClientRepresentation>> response = restTemplate
-                    .exchange(url, HttpMethod.GET, request, new ParameterizedTypeReference<>() {
-                    });
-
-            List<ClientRepresentation> clients = response.getBody();
-            if (clients == null || clients.isEmpty()) {
-                throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR, "Client not found: " + clientId);
-            }
-
-            return clients.get(0).getId();
-
-        } catch (HttpClientErrorException e) {
-            log.error("Failed to fetch client UUID: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
-            throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR,
-                    "Failed to fetch client UUID from Keycloak: " + e.getMessage());
-        }
-    }
-
-    public KeycloakTokenResponse requestRPT(String userToken, String resourceName) {
+    public AuthTokenResponse requestRPT(String userToken, String resourceName) {
         String tokenUrl = String.format("%s/realms/%s/protocol/openid-connect/token",
                 authzProperties.getServerUrl(),
                 authzProperties.getRealm());
@@ -353,13 +293,13 @@ public class KeycloakApiClient {
         try {
             log.info("Requesting RPT for resource: {}", resourceName);
 
-            ResponseEntity<KeycloakTokenResponse> response = restTemplate
-                    .exchange(tokenUrl, HttpMethod.POST, request, KeycloakTokenResponse.class);
+            ResponseEntity<AuthTokenResponse> response = restTemplate
+                    .exchange(tokenUrl, HttpMethod.POST, request, AuthTokenResponse.class);
 
             return response.getBody();
 
         } catch (HttpClientErrorException e) {
-            throw e; // Re-throw to handle in service layer
+            throw e;
         }
     }
 
@@ -387,7 +327,7 @@ public class KeycloakApiClient {
             return location.substring(location.lastIndexOf('/') + 1);
 
         } catch (HttpClientErrorException e) {
-            throw e; // Re-throw to handle conflict in service layer
+            throw e;
         }
     }
 
@@ -463,11 +403,11 @@ public class KeycloakApiClient {
         }
     }
 
-    public String createGroupPolicy(KeycloakGroupPolicyDto policy, String clientUuid) {
+    public String createGroupPolicy(KeycloakGroupPolicyDto policy) {
         String url = String.format("%s/admin/realms/%s/clients/%s/authz/resource-server/policy/group",
                 authzProperties.getServerUrl(),
                 authzProperties.getRealm(),
-                clientUuid);
+                authzProperties.getClientUuid());
 
         HttpHeaders headers = createAuthHeaders();
         HttpEntity<KeycloakGroupPolicyDto> request = new HttpEntity<>(policy, headers);
@@ -488,15 +428,15 @@ public class KeycloakApiClient {
             return responseBody;
 
         } catch (HttpClientErrorException e) {
-            throw e; // Re-throw to handle conflict in service layer
+            throw e;
         }
     }
 
-    public List<KeycloakGroupPolicyDto> searchGroupPolicies(String policyName, String clientUuid) {
+    public List<KeycloakGroupPolicyDto> searchGroupPolicies(String policyName) {
         String url = String.format("%s/admin/realms/%s/clients/%s/authz/resource-server/policy?name=%s&type=group",
                 authzProperties.getServerUrl(),
                 authzProperties.getRealm(),
-                clientUuid,
+                authzProperties.getClientUuid(),
                 policyName);
 
         HttpHeaders headers = createAuthHeaders();

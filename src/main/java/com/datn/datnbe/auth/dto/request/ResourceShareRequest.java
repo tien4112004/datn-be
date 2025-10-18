@@ -19,7 +19,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class FileShareRequest {
+public class ResourceShareRequest {
 
     @NotBlank(message = "Target user ID is required")
     String targetUserId;

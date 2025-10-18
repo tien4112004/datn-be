@@ -123,6 +123,7 @@ app:
       realm: ${KEYCLOAK_REALM:ai-primary-dev}
       client-id: ${KEYCLOAK_CLIENT_ID:ai-primary}
       client-secret: ${KEYCLOAK_CLIENT_SECRET:change-me}
+      client-uuid: ${KEYCLOAK_CLIENT_UUID:}
       connection-timeout: 5000
       read-timeout: 30000
 
