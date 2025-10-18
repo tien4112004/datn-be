@@ -19,12 +19,6 @@ services:
       # MongoDB connection for document persistence
       - MONGODB_URI=mongodb://mongouser:mongopassword@mongo:27017/presentation_db?authSource=admin
 
-      # AI services configuration
-      - OPENAI_KEY=${OPENAI_KEY}
-      - VERTEX_PROJECT_ID=${VERTEX_PROJECT_ID}
-      - VERTEX_LOCATION=${VERTEX_LOCATION}
-      - GOOGLE_APPLICATION_CREDENTIALS=/secrets/key.json
-
       # Keycloak configuration
       - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
       - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
@@ -57,8 +51,6 @@ services:
 
       # Spring profile
       - SPRING_PROFILES_ACTIVE=docker
-    volumes:
-      - ${VERTEX_SERVICE_ACCOUNT_KEY_PATH}:/secrets/key.json:ro
     healthcheck:
       test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /actuator/health HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'"]
       interval: 30s
