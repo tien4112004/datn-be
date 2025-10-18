@@ -51,10 +51,10 @@ spring:
             scope: openid, profile, email
         provider:
             keycloak:
-                issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8080/realms/datn-realm}
+                issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8082/realms/ai-primary-dev}
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8080/realms/datn-realm/protocol/openid-connect/certs}
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8082/realms/ai-primary-dev}
 server:
   servlet:
     encoding:
@@ -92,7 +92,6 @@ app:
           provider: "openRouter"
           default-model: true
           model-type: image
-
   cors:
     allowed-origins: "*"
     allowed-origin-patterns: ${ALLOWED_ORIGINS}
@@ -107,13 +106,24 @@ app:
     max-in-memory-size: 10485760 # 10MB
   auth:
     properties:
+      realm: ${KEYCLOAK_REALM:ai-primary-dev}
       issuer: ${KEYCLOAK_ISSUER_URI:http://localhost:8082/realms/ai-primary-dev}
       client-id: ${KEYCLOAK_CLIENT_ID:ai-primary}
+      client-secret: ${KEYCLOAK_CLIENT_SECRET:change-me}
       redirect-uri: http://localhost:8080/login/oauth2/code/keycloak
-      signin-uri: /oauth2/authorization/keycloak
+      signIn-uri: /oauth2/authorization/keycloak
       signup-uri: ${KEYCLOAK_ISSUER_URI}/login-actions/registration
       logout-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/logout
       token-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/token
+      server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8082}
+    authorization:
+      server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8082}
+      realm: ${KEYCLOAK_REALM:ai-primary-dev}
+      client-id: ${KEYCLOAK_CLIENT_ID:ai-primary}
+      client-secret: ${KEYCLOAK_CLIENT_SECRET:change-me}
+      client-uuid: ${KEYCLOAK_CLIENT_UUID:}
+      connection-timeout: 5000
+      read-timeout: 30000
 
 ai:
   api:
