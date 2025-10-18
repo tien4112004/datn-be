@@ -15,12 +15,16 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.config.AuthProperties;
+import com.datn.datnbe.auth.dto.request.KeycloakCallbackRequest;
 import com.datn.datnbe.auth.dto.request.SigninRequest;
 import com.datn.datnbe.auth.dto.request.SignupRequest;
+import com.datn.datnbe.auth.dto.response.AuthTokenResponse;
 import com.datn.datnbe.auth.dto.response.SignInResponse;
 import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.auth.service.AuthenticationService;
+import com.datn.datnbe.auth.service.KeycloakAuthService;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
+
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,14 +32,6 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -78,5 +74,23 @@ public class AuthController {
                 .toUriString();
 
         return "redirect:" + url;
+    }
+
+    @PostMapping("/keycloak/callback")
+    public ResponseEntity<AppResponseDto<SignInResponse>> keycloakCallback(
+            @Valid @RequestBody KeycloakCallbackRequest request) {
+
+        // Exchange authorization code for tokens using existing KeycloakAuthService
+        AuthTokenResponse authTokenResponse = keycloakAuthService.exchangeAuthorizationCode(request);
+
+        // Map AuthTokenResponse to SignInResponse
+        SignInResponse response = SignInResponse.builder()
+                .accessToken(authTokenResponse.getAccessToken())
+                .refreshToken(authTokenResponse.getRefreshToken())
+                .tokenType(authTokenResponse.getTokenType())
+                .expiresIn(authTokenResponse.getExpiresIn())
+                .build();
+
+        return ResponseEntity.ok(AppResponseDto.success(response));
     }
 }
