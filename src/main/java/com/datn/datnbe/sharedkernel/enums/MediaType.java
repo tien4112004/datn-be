@@ -1,4 +1,4 @@
-package com.datn.datnbe.document.enums;
+package com.datn.datnbe.sharedkernel.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

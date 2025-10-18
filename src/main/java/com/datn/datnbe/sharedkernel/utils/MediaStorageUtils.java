@@ -1,4 +1,4 @@
-package com.datn.datnbe.document.utils;
+package com.datn.datnbe.sharedkernel.utils;
 
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;

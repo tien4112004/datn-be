@@ -26,7 +26,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import static com.datn.datnbe.document.utils.MediaStorageUtils.*;
+import static com.datn.datnbe.sharedkernel.utils.MediaStorageUtils.*;
 
 @Slf4j
 @Service

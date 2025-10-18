@@ -1,6 +1,6 @@
 package com.datn.datnbe.auth.validation;
 
-import com.datn.datnbe.document.enums.MediaType;
+import com.datn.datnbe.sharedkernel.enums.MediaType;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
