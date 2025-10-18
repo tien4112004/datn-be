@@ -16,12 +16,6 @@ services:
       # MongoDB connection for document persistence
       - MONGODB_URI=mongodb://mongouser:mongopassword@mongo:27017/presentation_db?authSource=admin
 
-      # AI services configuration
-      - OPENAI_KEY=${OPENAI_KEY}
-      - VERTEX_PROJECT_ID=${VERTEX_PROJECT_ID}
-      - VERTEX_LOCATION=${VERTEX_LOCATION}
-      - GOOGLE_APPLICATION_CREDENTIALS=/secrets/key.json
-
       # CORS configuration
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
 
