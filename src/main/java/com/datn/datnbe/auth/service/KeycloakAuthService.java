@@ -115,26 +115,6 @@ public class KeycloakAuthService {
     }
 
     /**
-     * Assign realm role to a user
-     */
-    private void assignRealmRole(String keycloakUserId, String roleName) {
-        try {
-            // Get the role representation from the realm
-            RoleRepresentation roleRepresentation = realmResource.roles().get(roleName).toRepresentation();
-
-            // Assign the role to the user
-            usersResource.get(keycloakUserId).roles().realmLevel().add(Collections.singletonList(roleRepresentation));
-
-            log.info("Successfully assigned realm role '{}' to user: {}", roleName, keycloakUserId);
-
-        } catch (Exception e) {
-            log.error("Error assigning realm role '{}' to user {}: {}", roleName, keycloakUserId, e.getMessage(), e);
-            throw new AppException(ErrorCode.UNCATEGORIZED_ERROR,
-                    "Failed to assign role '" + roleName + "' to user. Make sure the role exists in Keycloak realm.");
-        }
-    }
-
-    /**
      * Common method to exchange credentials with Keycloak token endpoint
      * Handles both password grant and authorization code grant
      */
