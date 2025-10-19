@@ -1,6 +1,4 @@
 spring:
-  profiles:
-    active: default
   application:
     name: 'datn-be'
   # AI MODULE CONFIGURATION
@@ -53,10 +51,10 @@ spring:
             scope: openid, profile, email
         provider:
             keycloak:
-                issuer-uri: http://localhost:8082/realms/ai-primary-dev
+                issuer-uri: ${KEYCLOAK_ISSUER_URI}
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8082/realms/ai-primary-dev
+          issuer-uri: ${KEYCLOAK_ISSUER_URI}
 server:
   servlet:
     encoding:
