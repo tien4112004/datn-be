@@ -5,6 +5,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtDecoders;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -82,6 +85,15 @@ public class AuthController {
 
         // Exchange authorization code for tokens using existing KeycloakAuthService
         AuthTokenResponse authTokenResponse = keycloakAuthService.exchangeAuthorizationCode(request);
+
+        JwtDecoder decoder = JwtDecoders.fromIssuerLocation(authProperties.getIssuer());
+        Jwt jwt = decoder.decode(authTokenResponse.getAccessToken());
+
+        // sync user profile if not exists
+        userProfileApi.createUserFromKeycloakUser(jwt.getSubject(),
+                jwt.getClaimAsString("email"),
+                jwt.getClaimAsString("given_name"),
+                jwt.getClaimAsString("family_name"));
 
         // Map AuthTokenResponse to SignInResponse
         SignInResponse response = SignInResponse.builder()

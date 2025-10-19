@@ -186,4 +186,28 @@ public class UserProfileManagement implements UserProfileApi {
             // Continue - local delete succeeded, consider if you want to throw or just log
         }
     }
+
+    @Override
+    @Transactional
+    public void createUserFromKeycloakUser(String keycloakUserId, String email, String firstName, String lastName) {
+        log.info("Creating user profile from Keycloak user ID: {}", keycloakUserId);
+
+        try {
+            UserProfile userProfile = UserProfile.builder()
+                    .keycloakUserId(keycloakUserId)
+                    .email(email)
+                    .firstName(firstName)
+                    .lastName(lastName)
+                    .build();
+
+            UserProfile savedProfile = userProfileRepo.save(userProfile);
+
+            log.info("Successfully created user profile in database with ID: {}", savedProfile.getId());
+            UserProfileResponse response = userProfileMapper.toResponseDto(savedProfile);
+            response.setEmail(email);
+
+        } catch (Exception e) {
+            log.error("Error creating user profile from Keycloak user: {}, user might be existed", e.getMessage(), e);
+        }
+    }
 }

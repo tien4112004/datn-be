@@ -48,4 +48,6 @@ public interface UserProfileApi {
      * @param userId the user ID
      */
     void deleteUserProfile(String userId);
+
+    void createUserFromKeycloakUser(String keycloakUserId, String email, String firstName, String lastName);
 }
