@@ -1,4 +1,4 @@
-package com.datn.datnbe.ai.config.appconfiguration;
+package com.datn.datnbe.sharedkernel.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -29,7 +29,7 @@ public class ApiClientConfig {
         return restTemplate;
     }
 
-    @Bean
+    @Bean(value = "basicWebClient")
     public WebClient webClient() {
         HttpClient httpClient = HttpClient.create().protocol(HttpProtocol.HTTP11);
         return WebClient.builder()

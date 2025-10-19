@@ -36,7 +36,14 @@ public enum ErrorCode {
 
     FILE_PROCESSING_ERROR("Error processing the file", 500), INVALID_BASE64_FORMAT("Invalid Base64 format", 500),
 
-    IMAGE_INSERTION_FAILED("Failed to insert image into presentation", 400);
+    IMAGE_INSERTION_FAILED("Failed to insert image into presentation", 400),
+
+    EMAIL_ALREADY_EXISTS("Email already registered", 409), USER_NOT_FOUND("User not found", 404),
+    USER_CREATION_FAILED("Failed to create authentication account", 500),
+    USER_INACTIVE("User account is inactive", 403), USER_PROFILE_NOT_FOUND("User profile not found", 404),
+    USER_PROFILE_CREATION_FAILED("Failed to create user profile", 500),
+    AUTH_INVALID_CREDENTIALS("Invalid credentials provided", 401), AUTH_UNAUTHORIZED("Unauthorized access", 401),
+    AUTH_SERVER_ERROR("Authentication server error", 500),;
 
     private final String defaultMessage;
     private final Integer statusCode;

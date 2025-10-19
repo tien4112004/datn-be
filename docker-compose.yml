@@ -3,6 +3,9 @@ services:
     build: .
     image: datn-be:latest
     container_name: datn-be
+    depends_on:
+      keycloak:
+        condition: service_healthy
     deploy:
       resources:
         limits:
@@ -15,6 +18,14 @@ services:
 
       # MongoDB connection for document persistence
       - MONGODB_URI=mongodb://mongouser:mongopassword@mongo:27017/presentation_db?authSource=admin
+
+      # Keycloak configuration
+      - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
+      - KEYCLOAK_REDIRECT_URI=${KEYCLOAK_REDIRECT_URI}
+      - KEYCLOAK_ISSUER_URI=${KEYCLOAK_ISSUER_URI}
+      - KEYCLOAK_REALM_NAME=${KEYCLOAK_REALM_NAME}
+      - KEYCLOAK_SERVER_URL=${KEYCLOAK_SERVER_URL}
 
       # CORS configuration
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
@@ -40,14 +51,12 @@ services:
 
       # Spring profile
       - SPRING_PROFILES_ACTIVE=docker
-    volumes:
-      - ${VERTEX_SERVICE_ACCOUNT_KEY_PATH}:/secrets/key.json:ro
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /actuator/health HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'"]
       interval: 30s
       timeout: 10s
-      start_period: 60s
-      retries: 3
+      start_period: 90s
+      retries: 5
     restart: unless-stopped
     ports:
       - "8080:8080"
@@ -56,30 +65,24 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.5
     container_name: keycloak
-    command: [ "start-dev" ]
+    command:
+      - start-dev
+      - --import-realm
     environment:
-      - KC_DB=postgres
-      - KC_DB_URL=jdbc:postgresql://postgres:5432/datn_monolith_db
-      - KC_DB_USERNAME=postgres
-      - KC_DB_PASSWORD=postgres
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
       - KC_HTTP_ENABLED=true
-      - KC_HOSTNAME=localhost
-      - KC_HOSTNAME_PORT=8082
       - KC_HOSTNAME_STRICT=false
       - KC_HOSTNAME_STRICT_HTTPS=false
-      - KC_HTTP_RELATIVE_PATH=/
       - KC_HEALTH_ENABLED=true
     ports:
       - "8082:8080"
       - "8443:8443"
     healthcheck:
-      test: [ "CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'" ]
-      interval: 10s
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080;echo -e \"GET /health/ready HTTP/1.1\r\nhost: http://localhost\r\nConnection: close\r\n\r\n\" >&3;grep \"HTTP/1.1 200 OK\" <&3"]
+      interval: 5s
       timeout: 5s
-      retries: 30
-      start_period: 60s
+      retries: 3
     restart: unless-stopped
     volumes:
       - ./keycloak-data:/opt/keycloak/data
