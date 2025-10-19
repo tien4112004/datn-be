@@ -1,6 +1,7 @@
 package com.datn.datnbe.auth.mapper;
 
 import com.datn.datnbe.auth.dto.request.SignupRequest;
+import com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest;
 import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.auth.entity.UserProfile;
 import org.mapstruct.Mapper;
@@ -22,6 +23,5 @@ public interface UserProfileMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "deletedAt", ignore = true)
-    void updateEntityFromRequest(com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest request,
-            @MappingTarget UserProfile userProfile);
+    void updateEntityFromRequest(UserProfileUpdateRequest request, @MappingTarget UserProfile userProfile);
 }
