@@ -43,7 +43,8 @@ public interface PresentationRepository extends MongoRepository<Presentation, St
                                         "$$e",
                                         { extraFields: { $mergeObjects: [
                                             { $ifNull: [ "$$e.extraFields", {} ] },
-                                            { src: ?3 }
+                                            { src: ?3 },
+                                            { clip: ?4 }
                                         ] } }
                                     ] },
                                     "$$e"
@@ -56,7 +57,11 @@ public interface PresentationRepository extends MongoRepository<Presentation, St
             } }
             """})
 
-    long insertImageToPresentation(ObjectId presentationId, String slideId, String elementId, String imageUrl);
+    long insertImageToPresentation(ObjectId presentationId,
+            String slideId,
+            String elementId,
+            String imageUrl,
+            Object clip);
 
     @Query(value = "{ 'title': ?0, 'deleted_at': null }", exists = true)
     boolean existsByTitle(String title);
