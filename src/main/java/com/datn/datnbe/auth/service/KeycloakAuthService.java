@@ -1,11 +1,25 @@
 package com.datn.datnbe.auth.service;
 
+import java.util.Collections;
+import java.util.List;
+
+import org.keycloak.admin.client.resource.RealmResource;
+import org.keycloak.admin.client.resource.UsersResource;
+import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.RoleRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+
 import com.datn.datnbe.auth.config.AuthProperties;
+import com.datn.datnbe.auth.dto.request.KeycloakCallbackRequest;
 import com.datn.datnbe.auth.dto.request.SigninRequest;
 import com.datn.datnbe.auth.dto.response.AuthTokenResponse;
 import com.datn.datnbe.auth.utils.KeycloakUtils;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+
 import jakarta.ws.rs.core.Response;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -100,14 +114,12 @@ public class KeycloakAuthService {
         }
     }
 
-    public AuthTokenResponse signIn(SigninRequest request, String userKeycloakId) {
-        log.info("url signin: {}", authProperties.getTokenUri());
-
+    /**
+     * Common method to exchange credentials with Keycloak token endpoint
+     * Handles both password grant and authorization code grant
+     */
+    private AuthTokenResponse exchangeToken(String requestBody, String errorContext) {
         try {
-            var requestBody = "client_id=" + authProperties.getClientId() + "&username=" + request.getEmail()
-                    + "&password=" + request.getPassword() + "&grant_type=password" + "&client_secret="
-                    + authProperties.getClientSecret() + "&user_id=" + userKeycloakId;
-
             return webClient.post()
                     .uri(authProperties.getTokenUri())
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -129,9 +141,19 @@ public class KeycloakAuthService {
                     .block();
 
         } catch (Exception e) {
-            log.error("Error during Keycloak signin: {}", e.getMessage(), e);
+            log.error("Error during {}: {}", errorContext, e.getMessage(), e);
             throw new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Authentication failed: " + e.getMessage());
         }
+    }
+
+    public AuthTokenResponse signIn(SigninRequest request, String userKeycloakId) {
+        log.info("url signin: {}", authProperties.getTokenUri());
+
+        var requestBody = "client_id=" + authProperties.getClientId() + "&username=" + request.getEmail() + "&password="
+                + request.getPassword() + "&grant_type=password" + "&client_secret=" + authProperties.getClientSecret()
+                + "&user_id=" + userKeycloakId;
+
+        return exchangeToken(requestBody, "Keycloak signin");
     }
 
     /**
@@ -195,5 +217,22 @@ public class KeycloakAuthService {
             log.error("Error deleting Keycloak user: {}", e.getMessage(), e);
             // Don't throw here - this is cleanup
         }
+    }
+
+    /**
+     * Exchange Keycloak authorization code for JWT tokens
+     * Used for OAuth2 Authorization Code flow with Identity Providers (Google, Facebook, etc.)
+     *
+     * @param request KeycloakCallbackRequest containing authorization code and redirect URI
+     * @return AuthTokenResponse with access token, refresh token, and expiry information
+     */
+    public AuthTokenResponse exchangeAuthorizationCode(KeycloakCallbackRequest request) {
+        log.info("Exchanging Keycloak authorization code for JWT tokens");
+
+        var requestBody = "grant_type=authorization_code" + "&code=" + request.getCode() + "&redirect_uri="
+                + request.getRedirectUri() + "&client_id=" + authProperties.getClientId() + "&client_secret="
+                + authProperties.getClientSecret();
+
+        return exchangeToken(requestBody, "authorization code exchange");
     }
 }
