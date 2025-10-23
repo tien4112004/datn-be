@@ -15,6 +15,7 @@ import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.service.R2StorageService;
+import com.datn.datnbe.sharedkernel.utils.MediaStorageUtils;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ public class UserProfileManagement implements UserProfileApi {
     UserProfileMapper userProfileMapper;
     KeycloakAuthService keycloakAuthService;
     R2StorageService r2StorageService;
+    AvatarValidation avatarValidation;
 
     @NonFinal
     @Value("${cloudflare.r2.public-url}")
@@ -180,7 +182,7 @@ public class UserProfileManagement implements UserProfileApi {
         log.info("Updating avatar for user ID: {}", userId);
 
         // Validate avatar file (image only, max 5MB)
-        AvatarValidation.validateAvatarFile(avatar);
+        avatarValidation.validateAvatarFile(avatar);
 
         // Find user profile
         UserProfile userProfile = userProfileRepo.findByIdOrKeycloakUserId(userId)
@@ -205,7 +207,7 @@ public class UserProfileManagement implements UserProfileApi {
         // Delete old avatar from R2 if exists
         if (userProfile.getAvatarUrl() != null && !userProfile.getAvatarUrl().isEmpty()) {
             try {
-                String oldKey = extractStorageKeyFromUrl(userProfile.getAvatarUrl(), cdnDomain);
+                String oldKey = MediaStorageUtils.extractStorageKeyFromUrl(userProfile.getAvatarUrl(), cdnDomain);
                 r2StorageService.deleteFile(oldKey);
                 log.info("Successfully deleted old avatar with key: {}", oldKey);
             } catch (Exception e) {
@@ -220,25 +222,5 @@ public class UserProfileManagement implements UserProfileApi {
         log.info("Successfully updated avatar for user ID: {}", userId);
 
         return UpdateAvatarResponse.builder().avatarUrl(avatarUrl).build();
-    }
-
-    /**
-     * Extracts the storage key from a CDN URL
-     *
-     * @param cdnUrl    the full CDN URL
-     * @param cdnDomain the CDN domain
-     * @return the storage key
-     */
-    private String extractStorageKeyFromUrl(String cdnUrl, String cdnDomain) {
-        String normalizedDomain = cdnDomain.endsWith("/") ? cdnDomain : cdnDomain + "/";
-        if (cdnUrl.startsWith(normalizedDomain)) {
-            return cdnUrl.substring(normalizedDomain.length());
-        }
-        // If doesn't start with domain, try without trailing slash
-        normalizedDomain = cdnDomain.endsWith("/") ? cdnDomain.substring(0, cdnDomain.length() - 1) : cdnDomain;
-        if (cdnUrl.startsWith(normalizedDomain + "/")) {
-            return cdnUrl.substring(normalizedDomain.length() + 1);
-        }
-        throw new IllegalArgumentException("Invalid CDN URL format: " + cdnUrl);
     }
 }
