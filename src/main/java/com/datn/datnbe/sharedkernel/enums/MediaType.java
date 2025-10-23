@@ -1,11 +1,13 @@
-package com.datn.datnbe.document.enums;
+package com.datn.datnbe.sharedkernel.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Getter
 @RequiredArgsConstructor
 public enum MediaType {
@@ -38,5 +40,15 @@ public enum MediaType {
             throw new IllegalArgumentException("Invalid file extension in filename: " + filename);
         }
         return filename.substring(idx + 1);
+    }
+
+    public static List<String> getAllowedExtensionsOf(MediaType mediaType) {
+        log.info("Allowed extensions for media type {}: {}", mediaType, mediaType.extensions);
+        return mediaType.extensions;
+    }
+
+    public static List<String> getAllowedContentTypesOf(MediaType mediaType) {
+        log.info("Allowed content types for media type {}: {}", mediaType, mediaType.extensions);
+        return mediaType.extensions.stream().map(type -> mediaType.toString().toLowerCase() + '/' + type).toList();
     }
 }

@@ -103,6 +103,7 @@ app:
     exposed-headers: X-Presentation
   media:
     file-size-limit: 10485760 # 10MB
+    avatar-size-limit: '5242880' # 10MB
   api-client:
     timeout: 30000 # 30 seconds
     max-in-memory-size: 10485760 # 10MB

@@ -1,7 +1,7 @@
 package com.datn.datnbe.document.repository;
 
 import com.datn.datnbe.document.entity.Media;
-import com.datn.datnbe.document.enums.MediaType;
+import com.datn.datnbe.sharedkernel.enums.MediaType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
