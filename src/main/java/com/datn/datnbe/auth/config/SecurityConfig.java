@@ -39,8 +39,9 @@ public class SecurityConfig {
                 .requestMatchers("/public/**",
                         "/api/auth/signin",
                         "/api/auth/signup",
-                        "/api/auth/keycloak/callback",
-                        "/api/resources/register")
+                        "/api/auth/exchange",
+                        "/api/resources/register",
+                        "/api/auth/google/signin")
                 .permitAll()
 
                 // Admin endpoints - requires ADMIN role

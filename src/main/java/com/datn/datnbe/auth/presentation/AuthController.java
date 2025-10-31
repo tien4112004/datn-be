@@ -1,6 +1,22 @@
 package com.datn.datnbe.auth.presentation;
 
+import com.datn.datnbe.auth.api.UserProfileApi;
+import com.datn.datnbe.auth.config.AuthProperties;
+import com.datn.datnbe.auth.dto.request.KeycloakCallbackRequest;
+import com.datn.datnbe.auth.dto.request.SigninRequest;
+import com.datn.datnbe.auth.dto.request.SignupRequest;
+import com.datn.datnbe.auth.dto.response.AuthTokenResponse;
+import com.datn.datnbe.auth.dto.response.SignInResponse;
+import com.datn.datnbe.auth.dto.response.UserProfileResponse;
+import com.datn.datnbe.auth.service.AuthenticationService;
 import com.datn.datnbe.auth.service.KeycloakAuthService;
+import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -10,29 +26,13 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtDecoders;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.datn.datnbe.auth.api.UserProfileApi;
-import com.datn.datnbe.auth.config.AuthProperties;
-import com.datn.datnbe.auth.dto.request.SigninRequest;
-import com.datn.datnbe.auth.dto.request.SignupRequest;
-import com.datn.datnbe.auth.dto.response.AuthTokenResponse;
-import com.datn.datnbe.auth.dto.response.SignInResponse;
-import com.datn.datnbe.auth.dto.response.UserProfileResponse;
-import com.datn.datnbe.auth.service.AuthenticationService;
-import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
-import com.datn.datnbe.auth.dto.request.KeycloakCallbackRequest;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
+import java.net.URLEncoder;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -74,7 +74,7 @@ public class AuthController {
         return "redirect:" + url;
     }
 
-    @PostMapping("/keycloak/callback")
+    @PostMapping("/exchange")
     public ResponseEntity<AppResponseDto<SignInResponse>> keycloakCallback(
             @Valid @RequestBody KeycloakCallbackRequest request) {
 
@@ -99,5 +99,38 @@ public class AuthController {
                 .build();
 
         return ResponseEntity.ok(AppResponseDto.success(response));
+    }
+
+    @GetMapping("/google/signin")
+    public ResponseEntity<AppResponseDto<String>> googleLogin(
+            @RequestParam(defaultValue = "http://localhost:3000") String redirectUri) {
+        String state = UUID.randomUUID().toString();
+
+        Map<String, String> params = Map.of("client_id",
+                authProperties.getClientId(),
+                "response_type",
+                "code",
+                "scope",
+                "openid profile email",
+                "redirect_uri",
+                redirectUri,
+                "state",
+                state,
+                "kc_idp_hint",
+                "google",
+                "prompt",
+                "login");
+
+        String queryString = params.entrySet()
+                .stream()
+                .map(e -> e.getKey() + "=" + URLEncoder.encode(e.getValue(), java.nio.charset.StandardCharsets.UTF_8))
+                .collect(Collectors.joining("&"));
+
+        String googleLoginUrl = String.format("%s/realms/%s/protocol/openid-connect/auth?%s",
+                authProperties.getServerUrl(),
+                authProperties.getRealm(),
+                queryString);
+
+        return ResponseEntity.ok(AppResponseDto.success(googleLoginUrl));
     }
 }
