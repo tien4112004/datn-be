@@ -1,7 +1,10 @@
 package com.datn.datnbe.auth.config;
 
-import java.io.IOException;
-
+import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -14,12 +17,7 @@ import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInit
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
 
-import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
+import java.io.IOException;
 
 @Configuration
 @EnableWebSecurity
@@ -39,8 +37,9 @@ public class SecurityConfig {
                 .requestMatchers("/public/**",
                         "/api/auth/signin",
                         "/api/auth/signup",
-                        "/api/auth/keycloak/callback",
-                        "/api/resources/register")
+                        "/api/auth/exchange",
+                        "/api/resources/register",
+                        "/api/auth/google/signin")
                 .permitAll()
 
                 // Admin endpoints - requires ADMIN role
