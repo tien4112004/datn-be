@@ -1,5 +1,8 @@
 package com.datn.datnbe.auth.management;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
 import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.dto.request.SignupRequest;
 import com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest;
@@ -12,13 +15,12 @@ import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
@@ -167,6 +169,12 @@ public class UserProfileManagement implements UserProfileApi {
         log.info("Creating user profile from Keycloak user ID: {}", keycloakUserId);
 
         try {
+            // Check if user already exists
+            if (userProfileRepo.findByKeycloakUserId(keycloakUserId).isPresent()) {
+                log.info("User profile already exists for Keycloak user ID: {}. Skipping creation.", keycloakUserId);
+                return;
+            }
+
             UserProfile userProfile = UserProfile.builder()
                     .keycloakUserId(keycloakUserId)
                     .email(email)
