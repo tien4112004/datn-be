@@ -1,5 +1,10 @@
 package com.datn.datnbe.auth.management;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.dto.request.SignupRequest;
 import com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest;
@@ -16,18 +21,18 @@ import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.service.R2StorageService;
 import com.datn.datnbe.sharedkernel.utils.MediaStorageUtils;
+import static com.datn.datnbe.sharedkernel.utils.MediaStorageUtils.buildCdnUrl;
+import static com.datn.datnbe.sharedkernel.utils.MediaStorageUtils.buildObjectKey;
+import static com.datn.datnbe.sharedkernel.utils.MediaStorageUtils.getContentType;
+import static com.datn.datnbe.sharedkernel.utils.MediaStorageUtils.getOriginalFilename;
+import static com.datn.datnbe.sharedkernel.utils.MediaStorageUtils.sanitizeFilename;
+
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
-import static com.datn.datnbe.sharedkernel.utils.MediaStorageUtils.*;
 
 @Slf4j
 @Service
@@ -182,6 +187,12 @@ public class UserProfileManagement implements UserProfileApi {
         log.info("Creating user profile from Keycloak user ID: {}", keycloakUserId);
 
         try {
+            // Check if user already exists
+            if (userProfileRepo.findByKeycloakUserId(keycloakUserId).isPresent()) {
+                log.info("User profile already exists for Keycloak user ID: {}. Skipping creation.", keycloakUserId);
+                return;
+            }
+
             UserProfile userProfile = UserProfile.builder()
                     .keycloakUserId(keycloakUserId)
                     .email(email)
