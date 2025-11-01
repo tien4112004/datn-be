@@ -2,24 +2,27 @@ package com.datn.datnbe.auth.config;
 
 import java.io.IOException;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
 
+import com.datn.datnbe.auth.utils.CookieBearerTokenResolver;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
@@ -63,8 +66,10 @@ public class SecurityConfig {
                 .logout(logout -> logout.logoutSuccessHandler(oidcLogoutHandler)
                         .logoutUrl("/api/auth/logout")
                         .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID"))
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtConverter)))
+                        .deleteCookies("JSESSIONID", "access_token", "refresh_token"))
+                .oauth2ResourceServer(
+                        oauth2 -> oauth2.bearerTokenResolver(new CookieBearerTokenResolver("access_token"))
+                                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtConverter)))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
                 .exceptionHandling(
@@ -78,7 +83,7 @@ public class SecurityConfig {
 
     private void handleAuthenticationException(HttpServletRequest request,
             HttpServletResponse response,
-            org.springframework.security.core.AuthenticationException authException) throws IOException {
+            AuthenticationException authException) throws IOException {
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
@@ -94,15 +99,15 @@ public class SecurityConfig {
 
     private void handleAccessDeniedException(HttpServletRequest request,
             HttpServletResponse response,
-            org.springframework.security.access.AccessDeniedException accessDeniedException) throws IOException {
-        response.setStatus(HttpStatus.FORBIDDEN.value());
+            AccessDeniedException accessDeniedException) throws IOException {
+        response.setStatus(HttpStatus.NOT_FOUND.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
         AppResponseDto<?> errorResponse = AppResponseDto.builder()
                 .success(false)
-                .code(HttpStatus.FORBIDDEN.value())
-                .message("Access denied: " + accessDeniedException.getMessage())
-                .errorCode("FORBIDDEN")
+                .code(HttpStatus.NOT_FOUND.value())
+                .message("Not found resource!")
+                .errorCode("NOT_FOUND")
                 .build();
 
         objectMapper.writeValue(response.getOutputStream(), errorResponse);

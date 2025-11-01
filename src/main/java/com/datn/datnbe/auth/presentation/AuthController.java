@@ -11,6 +11,7 @@ import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.auth.service.AuthenticationService;
 import com.datn.datnbe.auth.service.KeycloakAuthService;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -43,6 +44,7 @@ public class AuthController {
     UserProfileApi userProfileApi;
     AuthenticationService authenticationService;
     KeycloakAuthService keycloakAuthService;
+    Integer MAX_AGE = 604800; // 7 days
 
     @PostMapping("/signin")
     public ResponseEntity<AppResponseDto<SignInResponse>> signIn(@Valid @RequestBody SigninRequest request) {
@@ -76,7 +78,8 @@ public class AuthController {
 
     @PostMapping("/exchange")
     public ResponseEntity<AppResponseDto<SignInResponse>> keycloakCallback(
-            @Valid @RequestBody KeycloakCallbackRequest request) {
+            @Valid @RequestBody KeycloakCallbackRequest request,
+            HttpServletResponse response) {
 
         // Exchange authorization code for tokens using existing KeycloakAuthService
         AuthTokenResponse authTokenResponse = keycloakAuthService.exchangeAuthorizationCode(request);
@@ -90,15 +93,19 @@ public class AuthController {
                 jwt.getClaimAsString("given_name"),
                 jwt.getClaimAsString("family_name"));
 
+        response.addCookie(
+                createCookie("access_token", authTokenResponse.getAccessToken(), authTokenResponse.getExpiresIn()));
+        response.addCookie(createCookie("refresh_token", authTokenResponse.getRefreshToken(), MAX_AGE));
+
         // Map AuthTokenResponse to SignInResponse
-        SignInResponse response = SignInResponse.builder()
+        SignInResponse signInResponse = SignInResponse.builder()
                 .accessToken(authTokenResponse.getAccessToken())
                 .refreshToken(authTokenResponse.getRefreshToken())
                 .tokenType(authTokenResponse.getTokenType())
                 .expiresIn(authTokenResponse.getExpiresIn())
                 .build();
 
-        return ResponseEntity.ok(AppResponseDto.success(response));
+        return ResponseEntity.ok(AppResponseDto.success(signInResponse));
     }
 
     @GetMapping("/google/signin")
@@ -132,5 +139,16 @@ public class AuthController {
                 queryString);
 
         return ResponseEntity.ok(AppResponseDto.success(googleLoginUrl));
+    }
+
+    private Cookie createCookie(String name, String value, int maxAge) {
+        return new Cookie(name, value) {
+            {
+                setHttpOnly(true);
+                //            setSecure(true); https
+                setPath("/");
+                setMaxAge(maxAge);
+            }
+        };
     }
 }
