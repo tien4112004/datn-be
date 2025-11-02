@@ -100,7 +100,7 @@ app:
     allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
     allow-credentials: false
     max-age: 3600
-    exposed-headers: X-Presentation
+    exposed-headers: X-Presentation, permission
   media:
     file-size-limit: 10485760 # 10MB
     avatar-size-limit: '5242880' # 10MB
