@@ -1,4 +1,4 @@
-package com.datn.datnbe.document.utils;
+package com.datn.datnbe.sharedkernel.utils;
 
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
@@ -32,5 +32,18 @@ public class MediaStorageUtils {
 
     public static String buildCdnUrl(String storageKey, String cdnDomain) {
         return cdnDomain.endsWith("/") ? cdnDomain + storageKey : cdnDomain + "/" + storageKey;
+    }
+
+    public static String extractStorageKeyFromUrl(String cdnUrl, String cdnDomain) {
+        String normalizedDomain = cdnDomain.endsWith("/") ? cdnDomain : cdnDomain + "/";
+        if (cdnUrl.startsWith(normalizedDomain)) {
+            return cdnUrl.substring(normalizedDomain.length());
+        }
+        // If doesn't start with domain, try without trailing slash
+        normalizedDomain = cdnDomain.endsWith("/") ? cdnDomain.substring(0, cdnDomain.length() - 1) : cdnDomain;
+        if (cdnUrl.startsWith(normalizedDomain + "/")) {
+            return cdnUrl.substring(normalizedDomain.length() + 1);
+        }
+        throw new IllegalArgumentException("Invalid CDN URL format: " + cdnUrl);
     }
 }
