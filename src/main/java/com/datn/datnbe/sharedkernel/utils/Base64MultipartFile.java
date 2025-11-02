@@ -1,4 +1,4 @@
-package com.datn.datnbe.sharedkernel;
+package com.datn.datnbe.sharedkernel.utils;
 
 import lombok.*;
 import org.springframework.web.multipart.MultipartFile;

@@ -3,22 +3,31 @@ package com.datn.datnbe.auth.management;
 import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.dto.request.SignupRequest;
 import com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest;
+import com.datn.datnbe.auth.dto.response.UpdateAvatarResponse;
 import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.auth.entity.UserProfile;
 import com.datn.datnbe.auth.mapper.UserProfileMapper;
 import com.datn.datnbe.auth.repository.UserProfileRepo;
 import com.datn.datnbe.auth.service.KeycloakAuthService;
+import com.datn.datnbe.auth.validation.AvatarValidation;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+import com.datn.datnbe.sharedkernel.service.R2StorageService;
+import com.datn.datnbe.sharedkernel.utils.MediaStorageUtils;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import static com.datn.datnbe.sharedkernel.utils.MediaStorageUtils.*;
 
 @Slf4j
 @Service
@@ -29,6 +38,12 @@ public class UserProfileManagement implements UserProfileApi {
     UserProfileRepo userProfileRepo;
     UserProfileMapper userProfileMapper;
     KeycloakAuthService keycloakAuthService;
+    R2StorageService r2StorageService;
+    AvatarValidation avatarValidation;
+
+    @NonFinal
+    @Value("${cloudflare.r2.public-url}")
+    String cdnDomain;
 
     @Override
     public PaginatedResponseDto<UserProfileResponse> getUserProfiles(Pageable pageable) {
@@ -183,5 +198,51 @@ public class UserProfileManagement implements UserProfileApi {
         } catch (Exception e) {
             log.error("Error creating user profile from Keycloak user: {}, user might be existed", e.getMessage(), e);
         }
+    }
+    
+    public UpdateAvatarResponse updateUserAvatar(String userId, MultipartFile avatar) {
+        log.info("Updating avatar for user ID: {}", userId);
+
+        // Validate avatar file (image only, max 5MB)
+        avatarValidation.validateAvatarFile(avatar);
+
+        // Find user profile
+        UserProfile userProfile = userProfileRepo.findByIdOrKeycloakUserId(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_PROFILE_NOT_FOUND,
+                        "User profile not found for user ID: " + userId));
+
+        // Prepare file metadata
+        String originalFilename = getOriginalFilename(avatar);
+        String contentType = getContentType(avatar);
+        String sanitizedFilename = sanitizeFilename(originalFilename);
+
+        // Build storage key for avatars folder
+        String storageKey = buildObjectKey("avatars", sanitizedFilename);
+
+        // Upload to R2 storage
+        String uploadedKey = r2StorageService.uploadFile(avatar, storageKey, contentType);
+        log.info("Successfully uploaded avatar to R2 with key: {}", uploadedKey);
+
+        // Build CDN URL
+        String avatarUrl = buildCdnUrl(uploadedKey, cdnDomain);
+
+        // Delete old avatar from R2 if exists
+        if (userProfile.getAvatarUrl() != null && !userProfile.getAvatarUrl().isEmpty()) {
+            try {
+                String oldKey = MediaStorageUtils.extractStorageKeyFromUrl(userProfile.getAvatarUrl(), cdnDomain);
+                r2StorageService.deleteFile(oldKey);
+                log.info("Successfully deleted old avatar with key: {}", oldKey);
+            } catch (Exception e) {
+                log.warn("Failed to delete old avatar, continuing with update: {}", e.getMessage());
+            }
+        }
+
+        // Update user profile with new avatar URL
+        userProfile.setAvatarUrl(avatarUrl);
+        userProfileRepo.save(userProfile);
+
+        log.info("Successfully updated avatar for user ID: {}", userId);
+
+        return UpdateAvatarResponse.builder().avatarUrl(avatarUrl).build();
     }
 }

@@ -41,7 +41,6 @@ public enum ErrorCode {
     EMAIL_ALREADY_EXISTS("Email already registered", 409), USER_NOT_FOUND("User not found", 404),
     USER_CREATION_FAILED("Failed to create authentication account", 500),
     USER_INACTIVE("User account is inactive", 403), USER_PROFILE_NOT_FOUND("User profile not found", 404),
-    USER_PROFILE_CREATION_FAILED("Failed to create user profile", 500),
     AUTH_INVALID_CREDENTIALS("Invalid credentials provided", 401), AUTH_UNAUTHORIZED("Unauthorized access", 401),
     AUTH_SERVER_ERROR("Authentication server error", 500),
 
@@ -50,7 +49,8 @@ public enum ErrorCode {
     RESOURCE_ALREADY_EXISTS("Resource already exists", 409),
     FORBIDDEN("Forbidden: You don't have permission to access this resource", 403),
 
-    INTERNAL_SERVER_ERROR("Internal server error", 500),;
+    INTERNAL_SERVER_ERROR("Internal server error", 500),
+    USER_PROFILE_CREATION_FAILED("Failed to create user profile", 500);
 
     private final String defaultMessage;
     private final Integer statusCode;

@@ -25,17 +25,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.keycloak.admin.client.resource.RealmResource;
-import org.keycloak.admin.client.resource.UsersResource;
-import org.keycloak.representations.idm.CredentialRepresentation;
-import org.keycloak.representations.idm.RoleRepresentation;
-import org.keycloak.representations.idm.UserRepresentation;
-import org.springframework.http.MediaType;
-import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-
-import java.util.Collections;
-import java.util.List;
 
 @Slf4j
 @Service
@@ -115,10 +104,41 @@ public class KeycloakAuthService {
     }
 
     /**
+     * Get Keycloak user ID by email
+     */
+    public String getKeycloakUserIdByEmail(String email) {
+        try {
+            List<UserRepresentation> users = usersResource.searchByEmail(email, true);
+            if (users.isEmpty()) {
+                throw new AppException(ErrorCode.USER_PROFILE_NOT_FOUND, "User not found with email: " + email);
+            }
+            return users.get(0).getId();
+        } catch (Exception e) {
+            log.error("Error searching Keycloak user by email: {}", e.getMessage(), e);
+            throw new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Failed to find user by email");
+        }
+    }
+
+    /**
+     * Get user email from Keycloak
+     */
+    public String getUserEmail(String keycloakUserId) {
+        try {
+            UserRepresentation user = usersResource.get(keycloakUserId).toRepresentation();
+            return user.getEmail();
+        } catch (Exception e) {
+            log.error("Error getting Keycloak user email: {}", e.getMessage(), e);
+            throw new AppException(ErrorCode.UNCATEGORIZED_ERROR,
+                    "Failed to retrieve user email from authentication system");
+        }
+    }
+
+    /**
      * Common method to exchange credentials with Keycloak token endpoint
      * Handles both password grant and authorization code grant
      */
     private AuthTokenResponse exchangeToken(String requestBody, String errorContext) {
+
         try {
             return webClient.post()
                     .uri(authProperties.getTokenUri())
@@ -154,36 +174,6 @@ public class KeycloakAuthService {
                 + "&user_id=" + userKeycloakId;
 
         return exchangeToken(requestBody, "Keycloak signin");
-    }
-
-    /**
-     * Get Keycloak user ID by email
-     */
-    public String getKeycloakUserIdByEmail(String email) {
-        try {
-            List<UserRepresentation> users = usersResource.searchByEmail(email, true);
-            if (users.isEmpty()) {
-                throw new AppException(ErrorCode.USER_PROFILE_NOT_FOUND, "User not found with email: " + email);
-            }
-            return users.get(0).getId();
-        } catch (Exception e) {
-            log.error("Error searching Keycloak user by email: {}", e.getMessage(), e);
-            throw new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Failed to find user by email");
-        }
-    }
-
-    /**
-     * Get user email from Keycloak
-     */
-    public String getUserEmail(String keycloakUserId) {
-        try {
-            UserRepresentation user = usersResource.get(keycloakUserId).toRepresentation();
-            return user.getEmail();
-        } catch (Exception e) {
-            log.error("Error getting Keycloak user email: {}", e.getMessage(), e);
-            throw new AppException(ErrorCode.UNCATEGORIZED_ERROR,
-                    "Failed to retrieve user email from authentication system");
-        }
     }
 
     /**

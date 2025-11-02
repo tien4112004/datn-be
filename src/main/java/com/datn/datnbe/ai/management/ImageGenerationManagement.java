@@ -6,7 +6,7 @@ import com.datn.datnbe.ai.apiclient.AIApiClient;
 import com.datn.datnbe.ai.dto.request.ImagePromptRequest;
 import com.datn.datnbe.ai.dto.response.ImageGeneratedResponseDto;
 import com.datn.datnbe.ai.utils.MappingParamsUtils;
-import com.datn.datnbe.sharedkernel.Base64MultipartFile;
+import com.datn.datnbe.sharedkernel.utils.Base64MultipartFile;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import lombok.AccessLevel;

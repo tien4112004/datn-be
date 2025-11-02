@@ -1,6 +1,6 @@
 package com.datn.datnbe.document.entity;
 
-import com.datn.datnbe.document.enums.MediaType;
+import com.datn.datnbe.sharedkernel.enums.MediaType;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;

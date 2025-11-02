@@ -1,6 +1,6 @@
 package com.datn.datnbe.document.dto.response;
 
-import com.datn.datnbe.document.enums.MediaType;
+import com.datn.datnbe.sharedkernel.enums.MediaType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
 import lombok.Data;

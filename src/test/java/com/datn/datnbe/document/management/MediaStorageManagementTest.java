@@ -8,13 +8,14 @@ import static org.mockito.Mockito.*;
 
 import com.datn.datnbe.document.dto.response.UploadedMediaResponseDto;
 import com.datn.datnbe.document.entity.Media;
-import com.datn.datnbe.document.enums.MediaType;
+import com.datn.datnbe.sharedkernel.enums.MediaType;
 import com.datn.datnbe.document.management.validation.MediaValidation;
 import com.datn.datnbe.document.repository.MediaRepository;
-import com.datn.datnbe.document.service.R2StorageService;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import java.util.Optional;
+
+import com.datn.datnbe.sharedkernel.service.R2StorageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
