@@ -41,11 +41,13 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class AuthController {
     AuthProperties authProperties;
     UserProfileApi userProfileApi;
@@ -100,9 +102,14 @@ public class AuthController {
                 jwt.getClaimAsString("given_name"),
                 jwt.getClaimAsString("family_name"));
 
-        response.addCookie(
-                createCookie("access_token", authTokenResponse.getAccessToken(), authTokenResponse.getExpiresIn()));
-        response.addCookie(createCookie("refresh_token", authTokenResponse.getRefreshToken(), MAX_AGE));
+        // Add cookies to response
+        Cookie accessTokenCookie = createCookie("access_token",
+                authTokenResponse.getAccessToken(),
+                authTokenResponse.getExpiresIn());
+        Cookie refreshTokenCookie = createCookie("refresh_token", authTokenResponse.getRefreshToken(), MAX_AGE);
+
+        response.addCookie(accessTokenCookie);
+        response.addCookie(refreshTokenCookie);
 
         // Map AuthTokenResponse to SignInResponse
         SignInResponse signInResponse = SignInResponse.builder()
@@ -149,13 +156,15 @@ public class AuthController {
     }
 
     private Cookie createCookie(String name, String value, int maxAge) {
-        return new Cookie(name, value) {
-            {
-                setHttpOnly(true);
-                //            setSecure(true); https
-                setPath("/");
-                setMaxAge(maxAge);
-            }
-        };
+        //TODO: when going production, set Secure to true
+        Cookie cookie = new Cookie(name, value);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(maxAge);
+        cookie.setAttribute("SameSite", "Lax");
+
+        log.info("Creating cookie: name={}, maxAge={}, httpOnly=true, sameSite=Lax", name, maxAge);
+
+        return cookie;
     }
 }

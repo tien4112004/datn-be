@@ -95,10 +95,10 @@ app:
           default-model: true
           model-type: image
   cors:
-    allowed-origins: "*"
-    allowed-origin-patterns: ${ALLOWED_ORIGINS}
+    allowed-origins: ""
+    allowed-origin-patterns: ".*"
     allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
-    allow-credentials: false
+    allow-credentials: true
     max-age: 3600
     exposed-headers: X-Presentation, permission
   media:
