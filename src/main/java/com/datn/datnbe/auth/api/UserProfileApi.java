@@ -52,7 +52,7 @@ public interface UserProfileApi {
 
     /**
      * Creates a new user profile from Keycloak user information.
-     * 
+     *
      * @param keycloakUserId the Keycloak user ID
      * @param email the user's email
      * @param firstName the user's first name

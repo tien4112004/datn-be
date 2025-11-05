@@ -199,7 +199,7 @@ public class UserProfileManagement implements UserProfileApi {
             log.error("Error creating user profile from Keycloak user: {}, user might be existed", e.getMessage(), e);
         }
     }
-    
+
     public UpdateAvatarResponse updateUserAvatar(String userId, MultipartFile avatar) {
         log.info("Updating avatar for user ID: {}", userId);
 
