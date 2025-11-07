@@ -10,6 +10,9 @@ pipeline {
         DEPLOY_DIR = '/opt/datn-be'
         ENV_FILE = '/opt/datn-be/.env.prod'
         CONTAINER_NAME = 'aiprimary-be'
+        // GitHub integration
+        GH_TOKEN = credentials('github-token')
+        GH_API_URL = 'https://api.github.com'
     }
 
     options {
@@ -64,6 +67,28 @@ pipeline {
                         echo "Commit Hash: $(git rev-parse HEAD)"
                         echo "Commit Message: $(git log -1 --pretty=%B)"
                         echo "Branch: $(git rev-parse --abbrev-ref HEAD)"
+                    '''
+                }
+            }
+        }
+
+        stage('Update GitHub Status - Deploying') {
+            steps {
+                script {
+                    echo "========== Updating GitHub Deployment Status =========="
+                    
+                    sh '''
+                        COMMIT_SHA=$(git rev-parse HEAD)
+                        
+                        # Update GitHub commit status to pending
+                        curl -X POST \
+                            -H "Accept: application/vnd.github+json" \
+                            -H "Authorization: token ${GH_TOKEN}" \
+                            -H "X-GitHub-Api-Version: 2022-11-28" \
+                            "${GH_API_URL}/repos/${GITHUB_REPO}/statuses/${COMMIT_SHA}" \
+                            -d "{\"state\":\"pending\",\"target_url\":\"${BUILD_URL}\",\"description\":\"Deployment in progress on Jenkins\",\"context\":\"Jenkins Deployment\"}"
+                        
+                        echo "✓ GitHub status updated: pending"
                     '''
                 }
             }
@@ -266,6 +291,20 @@ pipeline {
             script {
                 echo "✓ Deployment successful!"
                 
+                // Update GitHub commit status to success
+                sh '''
+                    COMMIT_SHA=$(git rev-parse HEAD)
+                    
+                    curl -X POST \
+                        -H "Accept: application/vnd.github+json" \
+                        -H "Authorization: token ${GH_TOKEN}" \
+                        -H "X-GitHub-Api-Version: 2022-11-28" \
+                        "${GH_API_URL}/repos/${GITHUB_REPO}/statuses/${COMMIT_SHA}" \
+                        -d "{\"state\":\"success\",\"target_url\":\"${BUILD_URL}\",\"description\":\"Deployment successful on Jenkins\",\"context\":\"Jenkins Deployment\"}"
+                    
+                    echo "✓ GitHub status updated: success"
+                '''
+                
                 // Optional: Send success notification
                 // emailext(
                 //     subject: "Deployment Successful - datn-be",
@@ -278,6 +317,20 @@ pipeline {
         failure {
             script {
                 echo "✗ Deployment failed!"
+                
+                // Update GitHub commit status to failure
+                sh '''
+                    COMMIT_SHA=$(git rev-parse HEAD)
+                    
+                    curl -X POST \
+                        -H "Accept: application/vnd.github+json" \
+                        -H "Authorization: token ${GH_TOKEN}" \
+                        -H "X-GitHub-Api-Version: 2022-11-28" \
+                        "${GH_API_URL}/repos/${GITHUB_REPO}/statuses/${COMMIT_SHA}" \
+                        -d "{\"state\":\"failure\",\"target_url\":\"${BUILD_URL}\",\"description\":\"Deployment failed on Jenkins\",\"context\":\"Jenkins Deployment\"}"
+                    
+                    echo "✓ GitHub status updated: failure"
+                '''
                 
                 // Print detailed logs for debugging
                 sh '''
