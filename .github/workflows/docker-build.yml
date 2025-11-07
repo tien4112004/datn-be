@@ -65,6 +65,35 @@ jobs:
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
 
+      - name: Trigger Jenkins deployment
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        env:
+          JENKINS_URL: ${{ secrets.JENKINS_URL }}
+          JENKINS_USER: ${{ secrets.JENKINS_USER }}
+          JENKINS_API_TOKEN: ${{ secrets.JENKINS_API_TOKEN }}
+          JENKINS_JOB: ${{ secrets.JENKINS_JOB_NAME }}
+        run: |
+          echo "Triggering Jenkins job for deployment..."
+          # Get the first image tag produced by docker metadata
+          TAGS="${{ steps.meta.outputs.tags }}"
+          echo "Meta tags: $TAGS"
+          IMAGE_REF=$(echo "$TAGS" | tr ',' '\n' | head -n1)
+          IMAGE_TAG="${IMAGE_REF##*:}"
+          echo "Parsed image: $IMAGE_REF"
+          echo "Parsed tag: $IMAGE_TAG"
+
+          if [ -z "${JENKINS_URL}" ] || [ -z "${JENKINS_USER}" ] || [ -z "${JENKINS_API_TOKEN}" ] || [ -z "${JENKINS_JOB}" ]; then
+            echo "One or more Jenkins secrets are missing (JENKINS_URL/JENKINS_USER/JENKINS_API_TOKEN/JENKINS_JOB_NAME). Skipping Jenkins trigger.";
+            exit 1;
+          fi
+
+          # Trigger Jenkins job (buildWithParameters) passing IMAGE_TAG as parameter
+          # Use basic auth with user:api_token
+          TRIGGER_URL="${JENKINS_URL}/job/${JENKINS_JOB}/buildWithParameters?IMAGE_TAG=${IMAGE_TAG}"
+          echo "Trigger URL: ${TRIGGER_URL}"
+          curl -s -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" -X POST "${TRIGGER_URL}" --fail || { echo "Failed to trigger Jenkins job"; exit 1; }
+          echo "✓ Jenkins job triggered"
+
   # security:
   #   name: Security Scan
   #   runs-on: ubuntu-latest
