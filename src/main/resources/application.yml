@@ -96,7 +96,7 @@ app:
           model-type: image
   cors:
     allowed-origins: "http://localhost:5173, http:localhost:3000, http:localhost:8080"
-    allowed-origin-patterns: ".*"
+    allowed-origin-patterns: ${ALLOWED_ORIGINS}
     allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
     allow-credentials: true
     max-age: 3600
