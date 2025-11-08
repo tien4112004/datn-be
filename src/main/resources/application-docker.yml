@@ -22,7 +22,7 @@ spring:
       - org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration
       - org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration
   datasource:
-    url: ${POSTGRES_DB_URL:jdbc:postgresql://localhost:5432/datn_monolith_db}
+    url: ${POSTGRES_DB_URL:jdbc:postgresql://postgres:5432/datn_monolith_db}
     username: ${POSTGRES_DB_USERNAME:postgres}
     password: ${POSTGRES_DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
@@ -47,11 +47,11 @@ spring:
             client-id: ${KEYCLOAK_CLIENT_ID:ai-primary}
             client-secret: ${KEYCLOAK_CLIENT_SECRET:change-me}
             authorization-grant-type: authorization_code
-            redirect-uri: ${KEYCLOAK_REDIRECT_URI:http://localhost:3000/login/oauth2/code/keycloak}
+            redirect-uri: ${KEYCLOAK_REDIRECT_URI:http://datn-be:8080/login/oauth2/code/keycloak}
             scope: openid, profile, email
         provider:
-            keycloak:
-                issuer-uri: ${KEYCLOAK_ISSUER_URI}
+          keycloak:
+            issuer-uri: ${KEYCLOAK_ISSUER_URI}
       resourceserver:
         jwt:
           issuer-uri: ${KEYCLOAK_ISSUER_URI}
@@ -93,12 +93,12 @@ app:
           default-model: true
           model-type: image
   cors:
-    allowed-origins: "*"
+    allowed-origins: "http://localhost:5173, http:localhost:3000, http:localhost:8080"
     allowed-origin-patterns: ${ALLOWED_ORIGINS}
     allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
-    allow-credentials: false
+    allow-credentials: true
     max-age: 3600
-    exposed-headers: X-Presentation
+    exposed-headers: X-Presentation, permission
   media:
     file-size-limit: 10485760 # 10MB
   api-client:
@@ -107,15 +107,23 @@ app:
   auth:
     properties:
       realm: ${KEYCLOAK_REALM:ai-primary-dev}
-      issuer: ${KEYCLOAK_ISSUER_URI:http://localhost:8082/realms/ai-primary-dev}
+      issuer: ${KEYCLOAK_ISSUER_URI:http://keycloak:8080/realms/ai-primary-dev}
       client-id: ${KEYCLOAK_CLIENT_ID:ai-primary}
       client-secret: ${KEYCLOAK_CLIENT_SECRET:change-me}
-      redirect-uri: http://localhost:8080/login/oauth2/code/keycloak
+      redirect-uri: http://keycloak:8080/login/oauth2/code/keycloak
       signIn-uri: /oauth2/authorization/keycloak
       signup-uri: ${KEYCLOAK_ISSUER_URI}/login-actions/registration
       logout-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/logout
       token-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/token
-      server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8082}
+      server-url: ${KEYCLOAK_SERVER_URL:http://keycloak:8080}
+    authorization:
+      server-url: ${KEYCLOAK_SERVER_URL:http://keycloak:8080}
+      realm: ${KEYCLOAK_REALM:ai-primary-dev}
+      client-id: ${KEYCLOAK_CLIENT_ID:ai-primary}
+      client-secret: ${KEYCLOAK_CLIENT_SECRET:change-me}
+      client-uuid: ${KEYCLOAK_CLIENT_UUID}
+      connection-timeout: 5000
+      read-timeout: 30000
 
 ai:
   api:
@@ -127,10 +135,10 @@ ai:
 
 cloudflare:
   r2:
-    endpoint:  https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com
+    endpoint: https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com
     accessKey: ${S3_ACCESS_KEY_ID}
     secretKey: ${S3_SECRET_ACCESS_KEY}
-    bucket:    ${R2_BUCKET_NAME}
+    bucket: ${R2_BUCKET_NAME}
     public-url: ${R2_PUBLIC_URL_DEV}
 
 logging:

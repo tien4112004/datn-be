@@ -1,10 +1,15 @@
 package com.datn.datnbe.sharedkernel.config;
 
 import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import com.datn.datnbe.sharedkernel.security.response.PermissionHeaderResponseWrapper;
 
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
@@ -26,6 +31,9 @@ public class CorsConfig implements WebMvcConfigurer {
     @Value("${app.cors.exposed-headers:}")
     private String exposedHeaders;
 
+    @Autowired
+    private PermissionHeaderResponseWrapper permissionHeaderResponseWrapper;
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         var mapping = registry.addMapping("/**")
@@ -44,5 +52,10 @@ public class CorsConfig implements WebMvcConfigurer {
         }
 
         mapping.exposedHeaders(exposedHeaders.split(","));
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(permissionHeaderResponseWrapper);
     }
 }
