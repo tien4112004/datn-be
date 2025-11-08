@@ -14,6 +14,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
@@ -25,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Aspect that intercepts methods annotated with @RequireDocumentPermission
  * and validates that the current user has the required permissions on the document.
- *
+ * <p>
  * Uses reflection and ApplicationContext to dynamically load the permission service
  * to avoid circular module dependencies between sharedkernel and auth modules.
  */
@@ -34,6 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 @Order(1)
 @Slf4j
 public class DocumentPermissionAspect {
+
+    public static final String USER_PERMISSIONS_ATTRIBUTE = "userDocumentPermissions";
 
     @Autowired
     private ApplicationContext applicationContext;
@@ -69,8 +73,7 @@ public class DocumentPermissionAspect {
                     .getMethod("checkUserPermissions", String.class, String.class, String.class);
             var response = checkMethod.invoke(permissionService, documentId, userToken, userId);
             var getPermissionsMethod = response.getClass().getMethod("getPermissions");
-            @SuppressWarnings("unchecked") Set<String> permissions = (Set<String>) getPermissionsMethod
-                    .invoke(response);
+            Set<String> permissions = (Set<String>) getPermissionsMethod.invoke(response);
             userPermissions = permissions;
         } catch (Exception e) {
             // Unwrap reflection exceptions to get the actual cause
@@ -86,6 +89,9 @@ public class DocumentPermissionAspect {
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR,
                     "Failed to check permissions: " + (cause != null ? cause.getMessage() : "Unknown error"));
         }
+
+        // Store permissions in request attributes for later access by response wrapper
+        storePermissionsInRequest(userPermissions);
 
         List<String> requiredScopes = Arrays.asList(requirePermission.scopes());
         boolean hasAllPermissions = requiredScopes.stream().allMatch(userPermissions::contains);
@@ -104,6 +110,23 @@ public class DocumentPermissionAspect {
         }
 
         log.debug("Permission check passed for user {} on document {}", userId, documentId);
+    }
+
+    /**
+     * Store user permissions in request attributes for later retrieval by response wrapper
+     */
+    private void storePermissionsInRequest(Set<String> permissions) {
+        try {
+            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder
+                    .getRequestAttributes();
+            if (attributes != null) {
+                attributes
+                        .setAttribute(USER_PERMISSIONS_ATTRIBUTE, permissions, ServletRequestAttributes.SCOPE_REQUEST);
+                log.debug("Stored user permissions in request: {}", permissions);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to store permissions in request attributes", e);
+        }
     }
 
     /**
