@@ -125,7 +125,7 @@ public class AuthController {
         return ResponseEntity.ok(AppResponseDto.success(signInResponse));
     }
 
-    @GetMapping("/google/signin")
+    @GetMapping("/google/authorize")
     public ResponseEntity<AppResponseDto<String>> googleLogin(
             @RequestParam(defaultValue = "http://localhost:3000") String redirectUri) {
         String state = UUID.randomUUID().toString();
