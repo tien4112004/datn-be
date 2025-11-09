@@ -5,11 +5,13 @@ import java.io.IOException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
@@ -38,6 +40,10 @@ public class SecurityConfig {
         var oidcLogoutHandler = new OidcClientInitiatedLogoutSuccessHandler(clientRegistrationRepository);
 
         http.authorizeHttpRequests(auth -> auth
+                // Allow OPTIONS requests (CORS preflight) without authentication
+                .requestMatchers(HttpMethod.OPTIONS, "/**")
+                .permitAll()
+
                 // Public endpoints - no authentication required
                 .requestMatchers("/public/**",
                         "/api/auth/signin",
@@ -112,4 +118,18 @@ public class SecurityConfig {
 
         objectMapper.writeValue(response.getOutputStream(), errorResponse);
     }
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring()
+                .requestMatchers("/v3/api-docs/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/api/auth/signin",
+                        "/api/auth/signup",
+                        "/api/auth/exchange",
+                        "/api/resources/register",
+                        "/api/auth/google/authorize");
+    }
+
 }
