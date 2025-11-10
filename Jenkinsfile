@@ -35,37 +35,8 @@ pipeline {
                     echo "Image: ${IMAGE_NAME}"
                     echo "Deploy Directory: ${DEPLOY_DIR}"
                     echo "Environment File: ${ENV_FILE}"
+                    echo "Branch: ${env.BRANCH_NAME}"
                     
-                    // Clean workspace
-                    cleanWs()
-                    
-                    // Create deploy directory if not exists
-                    sh '''
-                        mkdir -p ${DEPLOY_DIR}
-                    '''
-                }
-            }
-        }
-
-        stage('Checkout') {
-            steps {
-                script {
-                    echo "========== Cloning Repository =========="
-                    checkout([
-                        $class: 'GitSCM',
-                        branches: [[name: '*/main']],
-                        userRemoteConfigs: [[
-                            url: "https://github.com/${GITHUB_REPO}.git",
-                            credentialsId: 'github-credentials' // Make sure to configure this in Jenkins
-                        ]]
-                    ])
-                    
-                    // Show commit info
-                    sh '''
-                        echo "Commit Hash: $(git rev-parse HEAD)"
-                        echo "Commit Message: $(git log -1 --pretty=%B)"
-                        echo "Branch: $(git rev-parse --abbrev-ref HEAD)"
-                    '''
                 }
             }
         }
@@ -119,16 +90,13 @@ pipeline {
                                 exit 1
                             fi
                             
-                            # Save token to temporary file (safer for piping)
-                            echo "${GITHUB_TOKEN}" > /tmp/.ghcr-token
+                            # Set username explicitly
+                            GHCR_USERNAME="tien4112004"
                             
-                            # Login to GHCR using token file
-                            cat /tmp/.ghcr-token | docker login "${DOCKER_REGISTRY}" -u "${GITHUB_USERNAME}" --password-stdin
+                            # Login to GHCR
+                            echo "${GITHUB_TOKEN}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
                             
-                            # Clean up token file
-                            rm -f /tmp/.ghcr-token
-                            
-                            echo "✓ Successfully authenticated to ${DOCKER_REGISTRY}"
+                            echo "✓ Successfully authenticated to ghcr.io"
                         '''
                     }
                 }
@@ -245,6 +213,9 @@ pipeline {
         }
 
         stage('Cleanup Old Images') {
+            when {
+                branch 'main'
+            }
             steps {
                 script {
                     echo "========== Cleaning Up Old Docker Images =========="
