@@ -2,22 +2,26 @@ services:
   datn-be:
     # build: .
     image: ghcr.io/tien4112004/datn-be:latest
-    container_name: datn-be
+    container_name: aiprimary-be
     depends_on:
       keycloak:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_started
     deploy:
       resources:
         limits:
           memory: 1024M
     environment:
       # Single PostgreSQL database connection
-      - POSTGRES_DB_URL=jdbc:postgresql://postgres:5432/datn_monolith_db
+      - POSTGRES_DB_URL=jdbc:postgresql://aiprimary-postgres:5432/datn_monolith_db
       - POSTGRES_DB_USERNAME=postgres
       - POSTGRES_DB_PASSWORD=postgres
 
       # MongoDB connection for document persistence
-      - MONGODB_URI=mongodb://mongouser:mongopassword@mongo:27017/presentation_db?authSource=admin
+      - MONGODB_URI=mongodb://mongouser:mongopassword@aiprimary-mongo:27017/presentation_db?authSource=admin
 
       # Keycloak configuration
       - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
@@ -63,12 +67,12 @@ services:
       retries: 5
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "8081:8080" # Changed from 8080 to 8081 to avoid conflict
 
   # TODO: When deploying to production, consider using a managed Keycloak service or set up Keycloak in a separate, secure environment.
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.5
-    container_name: keycloak
+    container_name: aiprimary-keycloak
     command:
       - start-dev
       - --import-realm
@@ -94,3 +98,38 @@ services:
     restart: unless-stopped
     volumes:
       - ./keycloak-data:/opt/keycloak/data
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: aiprimary-postgres
+    environment:
+      - POSTGRES_DB=datn_monolith_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5433:5432" # Changed from 5432 to 5433 to avoid conflict
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7-jammy
+    container_name: aiprimary-mongo
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongouser
+      - MONGO_INITDB_ROOT_PASSWORD=mongopassword
+      - MONGO_INITDB_DATABASE=presentation_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  mongo-data:
