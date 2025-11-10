@@ -4,6 +4,7 @@ pipeline {
     // Environment variables
     environment {
         GITHUB_REPO = 'tien4112004/datn-be'
+        GITHUB_USERNAME = 'tien4112004'  // GitHub username for GHCR authentication
         DOCKER_REGISTRY = 'ghcr.io'
         IMAGE_NAME = "${DOCKER_REGISTRY}/${GITHUB_REPO}"
         DOCKER_COMPOSE_FILE = 'docker-compose.prod.yml'
@@ -110,9 +111,24 @@ pipeline {
                 script {
                     echo "========== Authenticating with GHCR =========="
                     
-                    withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+                    withCredentials([string(credentialsId: 'aiprimary-github-token', variable: 'GITHUB_TOKEN')]) {
                         sh '''
-                            echo "${GITHUB_TOKEN}" | docker login ${DOCKER_REGISTRY} -u ${GITHUB_USERNAME} --password-stdin
+                            # Validate token is not empty
+                            if [ -z "${GITHUB_TOKEN}" ]; then
+                                echo "ERROR: GITHUB_TOKEN is empty"
+                                exit 1
+                            fi
+                            
+                            # Save token to temporary file (safer for piping)
+                            echo "${GITHUB_TOKEN}" > /tmp/.ghcr-token
+                            
+                            # Login to GHCR using token file
+                            cat /tmp/.ghcr-token | docker login "${DOCKER_REGISTRY}" -u "${GITHUB_USERNAME}" --password-stdin
+                            
+                            # Clean up token file
+                            rm -f /tmp/.ghcr-token
+                            
+                            echo "✓ Successfully authenticated to ${DOCKER_REGISTRY}"
                         '''
                     }
                 }
