@@ -87,11 +87,35 @@ jobs:
             exit 1;
           fi
 
-          # Trigger Jenkins job (buildWithParameters) passing IMAGE_TAG as parameter
-          # Use basic auth with user:api_token
+          # Step 1: Fetch CSRF crumb from Jenkins (required for CSRF protection)
+          echo "Fetching CSRF crumb from Jenkins..."
+          CRUMB_RESPONSE=$(curl -s -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" "${JENKINS_URL}/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\":\",//crumb)")
+          echo "Crumb response: $CRUMB_RESPONSE"
+
+          # Parse crumb response (format: Jenkins-Crumb:abc123def456)
+          CRUMB_FIELD=$(echo "$CRUMB_RESPONSE" | cut -d':' -f1)
+          CRUMB_VALUE=$(echo "$CRUMB_RESPONSE" | cut -d':' -f2-)
+
+          if [ -z "$CRUMB_VALUE" ]; then
+            echo "Warning: Could not fetch CSRF crumb, attempting request without it..."
+            CRUMB_HEADER=""
+          else
+            echo "CSRF crumb fetched: ${CRUMB_FIELD}=${CRUMB_VALUE}"
+            CRUMB_HEADER="-H \"${CRUMB_FIELD}: ${CRUMB_VALUE}\""
+          fi
+
+          # Step 2: Trigger Jenkins job with CSRF crumb
           TRIGGER_URL="${JENKINS_URL}/job/${JENKINS_JOB}/buildWithParameters?IMAGE_TAG=${IMAGE_TAG}"
           echo "Trigger URL: ${TRIGGER_URL}"
-          curl -s -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" -X POST "${TRIGGER_URL}" --fail || { echo "Failed to trigger Jenkins job"; exit 1; }
+
+          if [ -n "$CRUMB_HEADER" ]; then
+            curl -s -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" \
+              -H "${CRUMB_FIELD}: ${CRUMB_VALUE}" \
+              -X POST "${TRIGGER_URL}" --fail || { echo "Failed to trigger Jenkins job"; exit 1; }
+          else
+            curl -s -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" \
+              -X POST "${TRIGGER_URL}" --fail || { echo "Failed to trigger Jenkins job"; exit 1; }
+          fi
           echo "✓ Jenkins job triggered"
 
   # security:

@@ -10,9 +10,6 @@ pipeline {
         DEPLOY_DIR = '/opt/datn-be'
         ENV_FILE = '/opt/datn-be/.env.prod'
         CONTAINER_NAME = 'aiprimary-be'
-        // GitHub integration
-        GH_TOKEN = credentials('github-token')
-        GH_API_URL = 'https://api.github.com'
     }
 
     options {
@@ -256,11 +253,22 @@ pipeline {
             script {
                 echo "========== Pipeline Completed =========="
                 
-                // Save deployment logs
+                // Save deployment logs only if container exists
                 sh '''
-                    mkdir -p ${WORKSPACE}/logs
-                    docker logs ${CONTAINER_NAME} > ${WORKSPACE}/logs/deployment.log 2>&1 || true
-                    docker compose -f ${DEPLOY_DIR}/${DOCKER_COMPOSE_FILE} ps > ${WORKSPACE}/logs/containers.log 2>&1 || true
+                    mkdir -p ${WORKSPACE}/logs || true
+                    
+                    # Only save logs if container exists
+                    if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+                        echo "Saving logs for container ${CONTAINER_NAME}..."
+                        docker logs ${CONTAINER_NAME} > ${WORKSPACE}/logs/deployment.log 2>&1 || true
+                    else
+                        echo "Container ${CONTAINER_NAME} does not exist, skipping log collection"
+                    fi
+                    
+                    # Only save compose status if compose file exists
+                    if [ -f "${DEPLOY_DIR}/${DOCKER_COMPOSE_FILE}" ]; then
+                        docker compose -f ${DEPLOY_DIR}/${DOCKER_COMPOSE_FILE} ps > ${WORKSPACE}/logs/containers.log 2>&1 || true
+                    fi
                 '''
             }
         }
@@ -274,17 +282,25 @@ pipeline {
         failure {
             script {
                 echo "✗ Deployment failed!"
-                                
+                
                 sh '''
                     echo "========== Container Status =========="
-                    docker ps -a
+                    docker ps -a || true
                     
                     echo "========== Recent Logs =========="
-                    docker logs --tail 50 ${CONTAINER_NAME} || true
+                    if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+                        docker logs --tail 50 ${CONTAINER_NAME} || true
+                    else
+                        echo "Container ${CONTAINER_NAME} does not exist yet"
+                    fi
                     
                     echo "========== Docker Compose Status =========="
-                    cd ${DEPLOY_DIR}
-                    docker compose -f ${DOCKER_COMPOSE_FILE} ps || true
+                    if [ -f "${DEPLOY_DIR}/${DOCKER_COMPOSE_FILE}" ]; then
+                        cd ${DEPLOY_DIR}
+                        docker compose -f ${DOCKER_COMPOSE_FILE} ps || true
+                    else
+                        echo "Docker compose file not found at ${DEPLOY_DIR}/${DOCKER_COMPOSE_FILE}"
+                    fi
                 '''
             }
         }
