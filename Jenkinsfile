@@ -72,28 +72,6 @@ pipeline {
             }
         }
 
-        stage('Update GitHub Status - Deploying') {
-            steps {
-                script {
-                    echo "========== Updating GitHub Deployment Status =========="
-                    
-                    sh '''
-                        COMMIT_SHA=$(git rev-parse HEAD)
-                        
-                        # Update GitHub commit status to pending
-                        curl -X POST \
-                            -H "Accept: application/vnd.github+json" \
-                            -H "Authorization: token ${GH_TOKEN}" \
-                            -H "X-GitHub-Api-Version: 2022-11-28" \
-                            "${GH_API_URL}/repos/${GITHUB_REPO}/statuses/${COMMIT_SHA}" \
-                            -d "{\"state\":\"pending\",\"target_url\":\"${BUILD_URL}\",\"description\":\"Deployment in progress on Jenkins\",\"context\":\"Jenkins Deployment\"}"
-                        
-                        echo "✓ GitHub status updated: pending"
-                    '''
-                }
-            }
-        }
-
         stage('Validate Environment') {
             steps {
                 script {
@@ -290,49 +268,13 @@ pipeline {
         success {
             script {
                 echo "✓ Deployment successful!"
-                
-                // Update GitHub commit status to success
-                sh '''
-                    COMMIT_SHA=$(git rev-parse HEAD)
-                    
-                    curl -X POST \
-                        -H "Accept: application/vnd.github+json" \
-                        -H "Authorization: token ${GH_TOKEN}" \
-                        -H "X-GitHub-Api-Version: 2022-11-28" \
-                        "${GH_API_URL}/repos/${GITHUB_REPO}/statuses/${COMMIT_SHA}" \
-                        -d "{\"state\":\"success\",\"target_url\":\"${BUILD_URL}\",\"description\":\"Deployment successful on Jenkins\",\"context\":\"Jenkins Deployment\"}"
-                    
-                    echo "✓ GitHub status updated: success"
-                '''
-                
-                // Optional: Send success notification
-                // emailext(
-                //     subject: "Deployment Successful - datn-be",
-                //     body: "The application has been successfully deployed.\n\nCommit: ${GIT_COMMIT}\n\nBuild: ${BUILD_URL}",
-                //     to: "your-email@example.com"
-                // )
             }
         }
 
         failure {
             script {
                 echo "✗ Deployment failed!"
-                
-                // Update GitHub commit status to failure
-                sh '''
-                    COMMIT_SHA=$(git rev-parse HEAD)
-                    
-                    curl -X POST \
-                        -H "Accept: application/vnd.github+json" \
-                        -H "Authorization: token ${GH_TOKEN}" \
-                        -H "X-GitHub-Api-Version: 2022-11-28" \
-                        "${GH_API_URL}/repos/${GITHUB_REPO}/statuses/${COMMIT_SHA}" \
-                        -d "{\"state\":\"failure\",\"target_url\":\"${BUILD_URL}\",\"description\":\"Deployment failed on Jenkins\",\"context\":\"Jenkins Deployment\"}"
-                    
-                    echo "✓ GitHub status updated: failure"
-                '''
-                
-                // Print detailed logs for debugging
+                                
                 sh '''
                     echo "========== Container Status =========="
                     docker ps -a
@@ -344,13 +286,6 @@ pipeline {
                     cd ${DEPLOY_DIR}
                     docker compose -f ${DOCKER_COMPOSE_FILE} ps || true
                 '''
-                
-                // Optional: Send failure notification
-                // emailext(
-                //     subject: "Deployment Failed - datn-be",
-                //     body: "The deployment has failed.\n\nCommit: ${GIT_COMMIT}\n\nBuild: ${BUILD_URL}\n\nPlease check the logs for details.",
-                //     to: "your-email@example.com"
-                // )
             }
         }
 
@@ -361,7 +296,6 @@ pipeline {
         cleanup {
             script {
                 echo "Cleaning up workspace..."
-                // Optional: Clean workspace after build
                 // cleanWs()
             }
         }
