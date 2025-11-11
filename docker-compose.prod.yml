@@ -2,7 +2,7 @@ services:
   datn-be:
     # build: .
     image: ghcr.io/tien4112004/datn-be:latest
-    container_name: aiprimary-be
+    container_name: backend-aiprimary
     depends_on:
       keycloak:
         condition: service_healthy
@@ -72,7 +72,7 @@ services:
   # TODO: When deploying to production, consider using a managed Keycloak service or set up Keycloak in a separate, secure environment.
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.5
-    container_name: aiprimary-keycloak
+    container_name: keycloak-aiprimary
     command:
       - start-dev
       - --import-realm
@@ -101,7 +101,7 @@ services:
 
   postgres:
     image: postgres:16-alpine
-    container_name: aiprimary-postgres
+    container_name: postgres-aiprimary
     environment:
       - POSTGRES_DB=datn_monolith_db
       - POSTGRES_USER=postgres
@@ -119,7 +119,7 @@ services:
 
   mongo:
     image: mongo:7-jammy
-    container_name: aiprimary-mongo
+    container_name: mongodb-aiprimary
     environment:
       - MONGO_INITDB_ROOT_USERNAME=mongouser
       - MONGO_INITDB_ROOT_PASSWORD=mongopassword
