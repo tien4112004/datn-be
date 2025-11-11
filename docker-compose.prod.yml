@@ -16,12 +16,12 @@ services:
           memory: 1024M
     environment:
       # Single PostgreSQL database connection
-      - POSTGRES_DB_URL=jdbc:postgresql://aiprimary-postgres:5432/datn_monolith_db
+      - POSTGRES_DB_URL=jdbc:postgresql://postgres-aiprimary:5432/datn_monolith_db
       - POSTGRES_DB_USERNAME=postgres
       - POSTGRES_DB_PASSWORD=postgres
 
       # MongoDB connection for document persistence
-      - MONGODB_URI=mongodb://mongouser:mongopassword@aiprimary-mongo:27017/presentation_db?authSource=admin
+      - MONGODB_URI=mongodb://mongouser:mongopassword@mongodb-aiprimary:27017/presentation_db?authSource=admin
 
       # Keycloak configuration
       - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
@@ -76,6 +76,9 @@ services:
     command:
       - start-dev
       - --import-realm
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
@@ -83,6 +86,11 @@ services:
       - KC_HOSTNAME_STRICT=false
       - KC_HOSTNAME_STRICT_HTTPS=false
       - KC_HEALTH_ENABLED=true
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres-aiprimary:5432/keycloak_db
+      - KC_DB_USERNAME=postgres
+      - KC_DB_PASSWORD=postgres
+      - KC_DB_SCHEMA=public
     ports:
       - "8082:8080"
       - "8443:8443"
@@ -92,12 +100,11 @@ services:
           "CMD-SHELL",
           "exec 3<>/dev/tcp/127.0.0.1/8080;echo -e \"GET /health/ready HTTP/1.1\r\nhost: http://localhost\r\nConnection: close\r\n\r\n\" >&3;grep \"HTTP/1.1 200 OK\" <&3",
         ]
-      interval: 5s
+      interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 5
+      start_period: 30s
     restart: unless-stopped
-    volumes:
-      - ./keycloak-data:/opt/keycloak/data
 
   postgres:
     image: postgres:16-alpine
@@ -110,6 +117,7 @@ services:
       - "5433:5432" # Changed from 5432 to 5433 to avoid conflict
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./init-keycloak-db.sql:/docker-entrypoint-initdb.d/init-keycloak-db.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
