@@ -69,31 +69,42 @@ services:
     ports:
       - "8081:8080" # Changed from 8080 to 8081 to avoid conflict
 
-  # TODO: When deploying to production, consider using a managed Keycloak service or set up Keycloak in a separate, secure environment.
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.5
     container_name: keycloak-aiprimary
     command:
-      - start-dev
+      - start
       - --import-realm
+      - --proxy=edge
     depends_on:
       postgres:
         condition: service_healthy
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
+      
+      # HTTP/HTTPS Configuration for production behind reverse proxy
       - KC_HTTP_ENABLED=true
-      - KC_HOSTNAME_STRICT=false
-      - KC_HOSTNAME_STRICT_HTTPS=false
+      - KC_HOSTNAME=auth.huy-devops.site
+      - KC_HOSTNAME_STRICT=true
+      - KC_HOSTNAME_STRICT_HTTPS=true
+      - KC_PROXY=edge
+      - KC_PROXY_HEADERS=xforwarded
+      
+      # Health check
       - KC_HEALTH_ENABLED=true
+      
+      # Database configuration
       - KC_DB=postgres
-      - KC_DB_URL=jdbc:postgresql://postgres-aiprimary:5432/keycloak_db
+      - KC_DB_URL=jdbc:postgresql://postgres-aiprimary:5432/datn_monolith_db
       - KC_DB_USERNAME=postgres
       - KC_DB_PASSWORD=postgres
       - KC_DB_SCHEMA=public
+      
+      # Logging
+      - KC_LOG_LEVEL=info
     ports:
       - "8082:8080"
-      - "8443:8443"
     healthcheck:
       test:
         [
@@ -117,7 +128,6 @@ services:
       - "5433:5432" # Changed from 5432 to 5433 to avoid conflict
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./init-keycloak-db.sql:/docker-entrypoint-initdb.d/init-keycloak-db.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s

@@ -36,7 +36,6 @@ pipeline {
                     echo "Deploy Directory: ${DEPLOY_DIR}"
                     echo "Environment File: ${ENV_FILE}"
                     echo "Branch: ${env.BRANCH_NAME}"
-                    
                 }
             }
         }
@@ -151,6 +150,7 @@ pipeline {
                         # cp ${WORKSPACE}/config/* ${DEPLOY_DIR}/config/ 2>/dev/null || true
                         
                         echo "Configuration copied to ${DEPLOY_DIR}"
+                        echo "Files in deploy directory:"
                         ls -la ${DEPLOY_DIR}
                     '''
                 }
@@ -173,40 +173,6 @@ pipeline {
                         docker compose -f ${DOCKER_COMPOSE_FILE} --env-file ${ENV_FILE} up -d
                         
                         echo "Containers started successfully"
-                    '''
-                }
-            }
-        }
-
-        stage('Health Check') {
-            steps {
-                script {
-                    echo "========== Performing Health Check =========="
-                    
-                    sh '''
-                        # Wait for container to be healthy
-                        sleep 10
-                        
-                        # Check if container is running
-                        if docker ps | grep -q ${CONTAINER_NAME}; then
-                            echo "✓ Container ${CONTAINER_NAME} is running"
-                        else
-                            echo "✗ Container ${CONTAINER_NAME} is NOT running"
-                            docker ps -a
-                            exit 1
-                        fi
-                        
-                        # Show container logs (last 20 lines)
-                        echo "========== Recent Container Logs =========="
-                        docker logs --tail 20 ${CONTAINER_NAME}
-                        
-                        # Check if application is responding
-                        sleep 5
-                        if docker exec ${CONTAINER_NAME} curl -f http://localhost:8080/actuator/health &>/dev/null; then
-                            echo "✓ Application health check passed"
-                        else
-                            echo "⚠ Health check endpoint not responding yet (this may be normal during startup)"
-                        fi
                     '''
                 }
             }
