@@ -1,0 +1,153 @@
+services:
+  datn-be:
+    # build: .
+    image: ghcr.io/tien4112004/datn-be:latest
+    container_name: backend-aiprimary
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+    environment:
+      # Single PostgreSQL database connection
+      - POSTGRES_DB_URL=jdbc:postgresql://postgres-aiprimary:5432/datn_monolith_db
+      - POSTGRES_DB_USERNAME=postgres
+      - POSTGRES_DB_PASSWORD=postgres
+
+      # MongoDB connection for document persistence
+      - MONGODB_URI=mongodb://mongouser:mongopassword@mongodb-aiprimary:27017/presentation_db?authSource=admin
+
+      # Keycloak configuration
+      - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
+      - KEYCLOAK_REDIRECT_URI=${KEYCLOAK_REDIRECT_URI}
+      - KEYCLOAK_ISSUER_URI=${KEYCLOAK_ISSUER_URI}
+      - KEYCLOAK_REALM_NAME=${KEYCLOAK_REALM_NAME}
+      - KEYCLOAK_SERVER_URL=${KEYCLOAK_SERVER_URL}
+
+      # CORS configuration
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+
+      # RabbitMQ configuration (if needed)
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME:-guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+
+      # Cloudflare R2
+      - R2_ACCOUNT_ID=${R2_ACCOUNT_ID}
+      - R2_BUCKET_NAME=${R2_BUCKET_NAME}
+      - R2_PUBLIC_URL_DEV=${R2_PUBLIC_URL_DEV}
+      - CLOUD_FLARE_API_TOKEN=${CLOUD_FLARE_API_TOKEN}
+      - S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID}
+      - S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY}
+
+      # AI Settings
+      - AI_API_BASE_URL
+      - AI_API_PRESENTATION_ENDPOINT
+      - AI_API_OUTLINE_ENDPOINT
+
+      # Spring profile
+      - SPRING_PROFILES_ACTIVE=docker
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /actuator/health HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'",
+        ]
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 5
+    restart: unless-stopped
+    ports:
+      - "8081:8080" # Changed from 8080 to 8081 to avoid conflict
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.5
+    container_name: keycloak-aiprimary
+    command:
+      - start
+      - --import-realm
+      - --proxy=edge
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      
+      # HTTP/HTTPS Configuration for production behind reverse proxy
+      - KC_HTTP_ENABLED=true
+      - KC_HOSTNAME=auth.huy-devops.site
+      - KC_HOSTNAME_STRICT=true
+      - KC_HOSTNAME_STRICT_HTTPS=true
+      - KC_PROXY=edge
+      - KC_PROXY_HEADERS=xforwarded
+      
+      # Health check
+      - KC_HEALTH_ENABLED=true
+      
+      # Database configuration
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres-aiprimary:5432/datn_monolith_db
+      - KC_DB_USERNAME=postgres
+      - KC_DB_PASSWORD=postgres
+      - KC_DB_SCHEMA=public
+      
+      # Logging
+      - KC_LOG_LEVEL=info
+    ports:
+      - "8082:8080"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "exec 3<>/dev/tcp/127.0.0.1/8080;echo -e \"GET /health/ready HTTP/1.1\r\nhost: http://localhost\r\nConnection: close\r\n\r\n\" >&3;grep \"HTTP/1.1 200 OK\" <&3",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres-aiprimary
+    environment:
+      - POSTGRES_DB=datn_monolith_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5433:5432" # Changed from 5432 to 5433 to avoid conflict
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7-jammy
+    container_name: mongodb-aiprimary
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongouser
+      - MONGO_INITDB_ROOT_PASSWORD=mongopassword
+      - MONGO_INITDB_DATABASE=presentation_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  mongo-data:

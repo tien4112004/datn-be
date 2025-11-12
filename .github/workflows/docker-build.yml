@@ -1,0 +1,141 @@
+# .github/workflows/docker-build.yml
+name: Docker Build
+
+on:
+  pull_request:
+  # Trigger on workflow_dispatch for manual builds on any branch (including PRs)
+  workflow_dispatch:
+  # Trigger only after CI workflow completes successfully on main
+  workflow_run:
+    workflows: ["CI/CD Pipeline"]
+    types: [completed]
+    branches:
+      - main
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    # Auto-run on main branch (after CI succeeds), or manual trigger on any branch
+    if: |
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') ||
+      (github.event_name == 'workflow_dispatch')
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=sha
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+      - name: Trigger Jenkins deployment
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        env:
+          JENKINS_URL: ${{ secrets.JENKINS_URL }}
+          JENKINS_USER: ${{ secrets.JENKINS_USER }}
+          JENKINS_API_TOKEN: ${{ secrets.JENKINS_API_TOKEN }}
+          JENKINS_JOB: ${{ secrets.JENKINS_JOB_NAME }}
+        run: |
+          echo "Triggering Jenkins job for deployment..."
+          # Get the first image tag produced by docker metadata
+          TAGS="${{ steps.meta.outputs.tags }}"
+          echo "Meta tags: $TAGS"
+          IMAGE_REF=$(echo "$TAGS" | tr ',' '\n' | head -n1)
+          IMAGE_TAG="${IMAGE_REF##*:}"
+          echo "Parsed image: $IMAGE_REF"
+          echo "Parsed tag: $IMAGE_TAG"
+
+          if [ -z "${JENKINS_URL}" ] || [ -z "${JENKINS_USER}" ] || [ -z "${JENKINS_API_TOKEN}" ] || [ -z "${JENKINS_JOB}" ]; then
+            echo "One or more Jenkins secrets are missing (JENKINS_URL/JENKINS_USER/JENKINS_API_TOKEN/JENKINS_JOB_NAME). Skipping Jenkins trigger.";
+            exit 1;
+          fi
+
+          # Step 1: Fetch CSRF crumb from Jenkins (required for CSRF protection)
+          echo "Fetching CSRF crumb from Jenkins..."
+          CRUMB_RESPONSE=$(curl -s -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" "${JENKINS_URL}/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\":\",//crumb)")
+          echo "Crumb response: $CRUMB_RESPONSE"
+
+          # Parse crumb response (format: Jenkins-Crumb:abc123def456)
+          CRUMB_FIELD=$(echo "$CRUMB_RESPONSE" | cut -d':' -f1)
+          CRUMB_VALUE=$(echo "$CRUMB_RESPONSE" | cut -d':' -f2-)
+
+          if [ -z "$CRUMB_VALUE" ]; then
+            echo "Warning: Could not fetch CSRF crumb, attempting request without it..."
+            CRUMB_HEADER=""
+          else
+            echo "CSRF crumb fetched: ${CRUMB_FIELD}=${CRUMB_VALUE}"
+            CRUMB_HEADER="-H \"${CRUMB_FIELD}: ${CRUMB_VALUE}\""
+          fi
+
+          # Step 2: Trigger Jenkins job with CSRF crumb
+          TRIGGER_URL="${JENKINS_URL}/job/${JENKINS_JOB}/buildWithParameters?IMAGE_TAG=${IMAGE_TAG}"
+          echo "Trigger URL: ${TRIGGER_URL}"
+
+          if [ -n "$CRUMB_HEADER" ]; then
+            curl -s -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" \
+              -H "${CRUMB_FIELD}: ${CRUMB_VALUE}" \
+              -X POST "${TRIGGER_URL}" --fail || { echo "Failed to trigger Jenkins job"; exit 1; }
+          else
+            curl -s -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" \
+              -X POST "${TRIGGER_URL}" --fail || { echo "Failed to trigger Jenkins job"; exit 1; }
+          fi
+          echo "✓ Jenkins job triggered"
+
+  # security:
+  #   name: Security Scan
+  #   runs-on: ubuntu-latest
+  #   needs: build
+  #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+
+  #     - name: Run Trivy vulnerability scanner
+  #       uses: aquasecurity/trivy-action@master
+  #       with:
+  #         image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+  #         format: 'sarif'
+  #         output: 'trivy-results.sarif'
+
+  #     - name: Upload Trivy scan results
+  #       uses: github/codeql-action/upload-sarif@v3
+  #       with:
+  #         sarif_file: 'trivy-results.sarif'
