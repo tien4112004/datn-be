@@ -46,13 +46,33 @@ public class ContentGenerationController {
     public Flux<String> generateOutline(@RequestBody OutlinePromptRequest request) {
         log.info("Received outline generation request: {}", request);
 
-        return contentGenerationExternalApi.generateOutline(request)
+        StringBuilder result = new StringBuilder();
+
+        // Create the background processing flux
+        Flux<String> backgroundFlux = contentGenerationExternalApi.generateOutline(request)
                 .delayElements(Duration.ofMillis(OUTLINE_DELAY))
-                .doOnNext(chunk -> log.info("Received outline chunk: {}", chunk))
-                .doOnSubscribe(subscription -> log.info("Starting outline generation stream"))
+                .doOnNext(chunk -> {
+                    result.append(chunk);
+                    log.info("Received outline chunk: {}", chunk);
+                })
+                .doOnComplete(() -> {
+                    log.info("Outline generation completed. Full result: {}", result.toString());
+                    // Save to database if needed
+                })
+                .doOnError(err -> log.error("Error generating outline", err))
                 .onErrorResume(AppException.class, ex -> {
                     throw ex;
-                });
+                })
+                .cache();
+
+        // Subscribe immediately to start background processing
+        backgroundFlux.subscribe(chunk -> log.info("Background processing outline chunk"),
+                error -> log.error("Background outline processing error", error),
+                () -> log.info("Background outline processing completed"));
+
+        // Return the same flux for the client
+        return backgroundFlux.doOnSubscribe(subscription -> log.info("Client subscribed to outline generation stream"))
+                .doOnCancel(() -> log.info("Client cancelled outline request, but background processing continues"));
     }
 
     @PostMapping(value = "presentations/generate", produces = MediaType.TEXT_PLAIN_VALUE)
@@ -69,24 +89,36 @@ public class ContentGenerationController {
                 .build();
         presentationApi.createPresentation(createRequest);
 
-        var slideSse = contentGenerationExternalApi.generateSlides(request)
+        // Create the background processing flux that runs independently
+        Flux<String> backgroundFlux = contentGenerationExternalApi.generateSlides(request)
                 .doOnNext(response -> log.info("Received response chunk: {}", response))
                 .map(slide -> slide.substring("data: ".length()) + "\n\n")
                 .delayElements(Duration.ofMillis(SLIDE_DELAY))
-                .doOnSubscribe(s -> log.info("Starting slide generation stream"))
                 .doOnNext(slide -> {
                     result.append(slide);
-                    log.info("send slide to FE: {}", slide);
+                    log.info("Processing slide in background: {}", slide);
                 })
                 .doOnComplete(() -> {
                     aiResultApi.saveAIResult(result.toString(), presentationId);
                     log.info("Slide generation completed, result saved with ID: {}", presentationId);
                 })
-                .onErrorMap(err -> {
+                .doOnError(err -> log.error("Error generating slides for ID: {}", presentationId, err))
+                .onErrorResume(err -> {
                     log.error("Error generating slides", err);
-                    return new AppException(ErrorCode.GENERATION_ERROR,
-                            "Failed to generate slides: " + err.getMessage());
-                });
+                    return Flux.error(new AppException(ErrorCode.GENERATION_ERROR,
+                            "Failed to generate slides: " + err.getMessage()));
+                })
+                .cache(); // Cache the flux so it only executes once
+
+        // Subscribe immediately to start background processing
+        backgroundFlux.subscribe(slide -> log.info("Background processing: {}", slide),
+                error -> log.error("Background processing error for ID: {}", presentationId, error),
+                () -> log.info("Background processing completed for ID: {}", presentationId));
+
+        // Return the same flux for the client
+        var slideSse = backgroundFlux.doOnSubscribe(s -> log.info("Client subscribed to slide generation stream"))
+                .doOnCancel(() -> log.info("Client cancelled request, but background processing continues for ID: {}",
+                        presentationId));
 
         return ResponseEntity.ok().header("X-Presentation", presentationId).body(slideSse);
     }
