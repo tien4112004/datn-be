@@ -46,13 +46,18 @@ public class ContentGenerationController {
     public Flux<String> generateOutline(@RequestBody OutlinePromptRequest request) {
         log.info("Received outline generation request: {}", request);
 
+        StringBuilder result = new StringBuilder();
+
+        // Create and return the flux with background processing
         return contentGenerationExternalApi.generateOutline(request)
                 .delayElements(Duration.ofMillis(OUTLINE_DELAY))
-                .doOnNext(chunk -> log.info("Received outline chunk: {}", chunk))
-                .doOnSubscribe(subscription -> log.info("Starting outline generation stream"))
-                .onErrorResume(AppException.class, ex -> {
-                    throw ex;
-                });
+                .doOnNext(chunk -> {
+                    result.append(chunk);
+                    log.info("Received outline chunk: {}", chunk);
+                })
+                .doOnError(err -> log.error("Error generating outline", err))
+                .doFinally(signalType -> log.info("Outline generation completed with signal: {}", signalType))
+                .cache();
     }
 
     @PostMapping(value = "presentations/generate", produces = MediaType.TEXT_PLAIN_VALUE)
@@ -69,24 +74,27 @@ public class ContentGenerationController {
                 .build();
         presentationApi.createPresentation(createRequest);
 
+        // Return the flux with all processing attached
         var slideSse = contentGenerationExternalApi.generateSlides(request)
                 .doOnNext(response -> log.info("Received response chunk: {}", response))
                 .map(slide -> slide.substring("data: ".length()) + "\n\n")
                 .delayElements(Duration.ofMillis(SLIDE_DELAY))
-                .doOnSubscribe(s -> log.info("Starting slide generation stream"))
                 .doOnNext(slide -> {
                     result.append(slide);
-                    log.info("send slide to FE: {}", slide);
+                    log.info("Processing slide in background: {}", slide);
                 })
                 .doOnComplete(() -> {
                     aiResultApi.saveAIResult(result.toString(), presentationId);
                     log.info("Slide generation completed, result saved with ID: {}", presentationId);
                 })
-                .onErrorMap(err -> {
+                .doOnError(err -> log.error("Error generating slides for ID: {}", presentationId, err))
+                .onErrorResume(err -> {
                     log.error("Error generating slides", err);
-                    return new AppException(ErrorCode.GENERATION_ERROR,
-                            "Failed to generate slides: " + err.getMessage());
-                });
+                    return Flux.error(new AppException(ErrorCode.GENERATION_ERROR,
+                            "Failed to generate slides: " + err.getMessage()));
+                })
+                .doOnSubscribe(s -> log.info("Client subscribed to slide generation stream for ID: {}", presentationId))
+                .cache();
 
         return ResponseEntity.ok().header("X-Presentation", presentationId).body(slideSse);
     }
