@@ -1,0 +1,94 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres-aiprimary
+    environment:
+      - POSTGRES_DB=datn_monolith_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5433:5432" # Changed from 5432 to 5433 to avoid conflict
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - network-aiprimary
+
+  mongo:
+    image: mongo:7-jammy
+    container_name: mongodb-aiprimary
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongouser
+      - MONGO_INITDB_ROOT_PASSWORD=mongopassword
+      - MONGO_INITDB_DATABASE=presentation_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    restart: unless-stopped
+    networks:
+      - network-aiprimary
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.5
+    container_name: keycloak-aiprimary
+    command:
+      - start
+      - --import-realm
+      - --proxy=edge
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+
+      # HTTP/HTTPS Configuration for production behind reverse proxy
+      - KC_HTTP_ENABLED=true
+      - KC_HOSTNAME=auth.huy-devops.site
+      - KC_HOSTNAME_STRICT=true
+      - KC_HOSTNAME_STRICT_HTTPS=true
+      - KC_PROXY=edge
+      - KC_PROXY_HEADERS=xforwarded
+
+      # Health check
+      - KC_HEALTH_ENABLED=true
+
+      # Database configuration
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres-aiprimary:5432/datn_monolith_db
+      - KC_DB_USERNAME=postgres
+      - KC_DB_PASSWORD=postgres
+      - KC_DB_SCHEMA=public
+
+      # Logging
+      - KC_LOG_LEVEL=info
+    ports:
+      - "8082:8080"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "exec 3<>/dev/tcp/127.0.0.1/8080;echo -e \"GET /health/ready HTTP/1.1\r\nhost: http://localhost\r\nConnection: close\r\n\r\n\" >&3;grep \"HTTP/1.1 200 OK\" <&3",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - network-aiprimary
+
+volumes:
+  postgres-data:
+  mongo-data:
+
+networks:
+  network-aiprimary:
+    name: network-aiprimary
+    driver: bridge
