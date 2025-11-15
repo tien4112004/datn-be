@@ -11,7 +11,7 @@ on:
     types: [completed]
     branches:
       - main
-      - feat/datn-295
+      - fix/datn-295
 
 env:
   REGISTRY: ghcr.io
