@@ -39,17 +39,11 @@ public class CorsConfig implements WebMvcConfigurer {
         var mapping = registry.addMapping("/**")
                 .allowedMethods(methods.split(","))
                 .allowedHeaders("*")
-                .allowCredentials(allowCredentials)
+                .allowCredentials(false)
                 .maxAge(maxAge);
 
-        // Prefer *either* exact origins or patterns
-        if (!allowedOrigins.isEmpty()) {
-            mapping.allowedOrigins(allowedOrigins.toArray(new String[0]));
-        } else if (!allowedOriginPatterns.isEmpty()) {
-            mapping.allowedOriginPatterns(allowedOriginPatterns.toArray(new String[0]));
-        } else {
-            mapping.allowedOriginPatterns("*");
-        }
+        // Allow all origins using pattern
+        mapping.allowedOriginPatterns("*");
 
         mapping.exposedHeaders(exposedHeaders.split(","));
     }

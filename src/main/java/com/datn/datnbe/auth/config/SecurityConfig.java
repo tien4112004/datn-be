@@ -38,45 +38,11 @@ public class SecurityConfig {
         var oidcLogoutHandler = new OidcClientInitiatedLogoutSuccessHandler(clientRegistrationRepository);
 
         http.authorizeHttpRequests(auth -> auth
-                // Public endpoints - no authentication required
-                .requestMatchers("/public/**",
-                        "/api/auth/signin",
-                        "/api/auth/signup",
-                        "/api/auth/exchange",
-                        "/api/resources/register",
-                        "/api/auth/google/signin")
-                .permitAll()
-
-                // Admin endpoints - requires ADMIN role
-                .requestMatchers("/api/admin/**")
-                .hasRole("admin")
-
-                // Resource endpoints - authenticated users only
-                .requestMatchers("/api/resources/**")
-                .authenticated()
-
-                // API endpoints - requires USER role
-                .requestMatchers("/api/**")
-                .hasAnyRole("user", "admin")
-
-                // Default deny
+                // Permit all requests - no authentication required
                 .anyRequest()
-                .authenticated())
-                .oauth2Login(oauth2 -> oauth2.defaultSuccessUrl("/", true))
-                .logout(logout -> logout.logoutSuccessHandler(oidcLogoutHandler)
-                        .logoutUrl("/api/auth/logout")
-                        .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID", "access_token", "refresh_token"))
-                .oauth2ResourceServer(
-                        oauth2 -> oauth2.bearerTokenResolver(new CookieBearerTokenResolver("access_token"))
-                                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtConverter)))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
-                .exceptionHandling(
-                        exceptions -> exceptions.authenticationEntryPoint(this::handleAuthenticationException)
-                                .accessDeniedHandler(this::handleAccessDeniedException));
-
-        http.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"));
+                .permitAll())
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
     }
