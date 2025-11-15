@@ -71,10 +71,10 @@ jobs:
       - name: Trigger Jenkins deployment
         if: success()
         env:
-          JENKINS_URL: $JENKINS_URL
+          JENKINS_URL: ${{ env.JENKINS_URL }}
           JENKINS_USER: ${{ secrets.JENKINS_USER }}
           JENKINS_API_TOKEN: ${{ secrets.JENKINS_API_TOKEN }}
-          JENKINS_JOB: $JENKINS_JOB_NAME
+          JENKINS_JOB: ${{  env.JENKINS_JOB_NAME  }}
         run: |
           echo "Triggering Jenkins job for deployment..."
           echo "Branch: ${{ github.ref_name }}"
