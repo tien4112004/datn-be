@@ -90,13 +90,6 @@ public class PresentationManagement implements PresentationApi {
     }
 
     @Override
-    public List<PresentationListResponseDto> getAllPresentations() {
-        List<Presentation> presentations = presentationRepository.findAll();
-
-        return presentations.stream().map(mapper::toListResponseDto).collect(Collectors.toList());
-    }
-
-    @Override
     public PaginatedResponseDto<PresentationListResponseDto> getAllPresentations(
             PresentationCollectionRequest request) {
         log.info("Fetching presentations with collection request - page: {}, pageSize: {}, filter: {}, sort: {}",

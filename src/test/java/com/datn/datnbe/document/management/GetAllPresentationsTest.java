@@ -77,36 +77,6 @@ class GetAllPresentationsTest {
     }
 
     @Test
-    void getAllPresentations_WithNoPagination_ShouldReturnAllPresentations() {
-        // Given
-        List<Presentation> presentations = Arrays.asList(presentation1, presentation2);
-        List<PresentationListResponseDto> expectedResponse = Arrays.asList(responseDto1, responseDto2);
-
-        when(presentationRepository.findAll()).thenReturn(presentations);
-
-        // When
-        List<PresentationListResponseDto> result = presentationService.getAllPresentations();
-
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result).hasSize(2);
-        assertThat(result).containsExactly(responseDto1, responseDto2);
-    }
-
-  @Test
-  void getAllPresentations_WithEmptyRepository_ShouldReturnEmptyList() {
-    // Given
-    when(presentationRepository.findAll()).thenReturn(List.of());
-
-    // When
-    List<PresentationListResponseDto> result = presentationService.getAllPresentations();
-
-    // Then
-    assertThat(result).isNotNull();
-    assertThat(result).isEmpty();
-  }
-
-    @Test
     void getAllPresentations_WithPagination_ShouldReturnPaginatedResponse() {
         // Given
         PresentationCollectionRequest request = PresentationCollectionRequest.builder()

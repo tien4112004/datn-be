@@ -245,58 +245,6 @@ class PresentationApiTest {
     }
 
     @Test
-    void getAllPresentations_ShouldReturnListOfPresentations() throws Exception {
-        // Given
-        LocalDateTime createdAt = LocalDateTime.now();
-        PresentationListResponseDto presentation1 = PresentationListResponseDto.builder()
-                .id("test-id-1")
-                .title("First Presentation")
-                .createdAt(createdAt)
-                .updatedAt(createdAt)
-                .build();
-
-        PresentationListResponseDto presentation2 = PresentationListResponseDto.builder()
-                .id("test-id-2")
-                .title("Second Presentation")
-                .createdAt(createdAt.plusHours(1))
-                .updatedAt(createdAt.plusHours(1))
-                .build();
-
-        List<PresentationListResponseDto> presentations = Arrays.asList(presentation1, presentation2);
-
-        when(presentationApi.getAllPresentations()).thenReturn(presentations);
-
-        // When & Then
-        mockMvc.perform(get("/api/presentations/all").contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data.length()").value(2))
-                .andExpect(jsonPath("$.data[0].id").value("test-id-1"))
-                .andExpect(jsonPath("$.data[0].title").value("First Presentation"))
-                .andExpect(jsonPath("$.data[1].id").value("test-id-2"))
-                .andExpect(jsonPath("$.data[1].title").value("Second Presentation"));
-    }
-
-    @Test
-	void getAllPresentations_WithEmptyList_ShouldReturnEmptyArray() throws Exception {
-		// Given
-		when(presentationApi.getAllPresentations()).thenReturn(List.of());
-
-		// When & Then
-		mockMvc.perform(get("/api/presentations/all")
-				.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isOk())
-				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-				.andExpect(jsonPath("$.success").value(true))
-				.andExpect(jsonPath("$.code").value(200))
-				.andExpect(jsonPath("$.data").isArray())
-				.andExpect(jsonPath("$.data.length()").value(0));
-	}
-
-    @Test
     void getPresentationsCollection_WithValidRequest_ShouldReturnPaginatedResponse() throws Exception {
         // Given
         LocalDateTime createdAt = LocalDateTime.now();

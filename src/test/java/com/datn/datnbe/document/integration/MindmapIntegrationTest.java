@@ -471,50 +471,6 @@ public class MindmapIntegrationTest {
     }
 
     @Test
-    void getAllMindmaps_returnsAllPersistedMindmaps() {
-        // Arrange - Create multiple mindmaps
-        for (int i = 0; i < 5; i++) {
-            MindmapCreateRequest request = MindmapCreateRequest.builder()
-                    .title("Mindmap " + i)
-                    .description("Description " + i)
-                    .nodes(List.of())
-                    .edges(List.of())
-                    .build();
-            management.createMindmap(request);
-        }
-
-        // Act
-        List<MindmapListResponseDto> result = management.getAllMindmaps();
-
-        // Assert - Verify count matches database
-        long dbCount = repository.count();
-        assertThat(result).hasSize((int) dbCount);
-        assertThat(result).hasSize(5);
-    }
-
-    @Test
-    void getAllMindmaps_returnsInDescendingOrderByCreatedAt() throws InterruptedException {
-        // Arrange - Create mindmaps with delays
-        List<String> createdIds = new ArrayList<>();
-        for (int i = 0; i < 3; i++) {
-            MindmapCreateRequest request = MindmapCreateRequest.builder()
-                    .title("Mindmap " + i)
-                    .description("Description " + i)
-                    .nodes(List.of())
-                    .edges(List.of())
-                    .build();
-            createdIds.add(management.createMindmap(request).getId());
-            Thread.sleep(50);
-        }
-
-        // Act
-        List<MindmapListResponseDto> result = management.getAllMindmaps();
-
-        // Assert - Most recent should be first
-        assertThat(result.get(0).getId()).isEqualTo(createdIds.get(2));
-    }
-
-    @Test
     void getAllMindmaps_paginated_returnsCorrectPageFromDatabase() {
         // Arrange - Create 25 mindmaps
         for (int i = 0; i < 25; i++) {

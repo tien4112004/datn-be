@@ -9,12 +9,8 @@ import com.datn.datnbe.document.dto.response.MindmapDto;
 import com.datn.datnbe.document.dto.response.MindmapListResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 
-import java.util.List;
-
 public interface MindmapApi {
     MindmapCreateResponseDto createMindmap(MindmapCreateRequest request);
-
-    List<MindmapListResponseDto> getAllMindmaps();
 
     PaginatedResponseDto<MindmapListResponseDto> getAllMindmaps(MindmapCollectionRequest request);
 

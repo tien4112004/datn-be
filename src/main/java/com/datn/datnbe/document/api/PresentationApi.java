@@ -6,12 +6,8 @@ import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 
-import java.util.List;
-
 public interface PresentationApi {
     PresentationCreateResponseDto createPresentation(PresentationCreateRequest request);
-
-    List<PresentationListResponseDto> getAllPresentations();
 
     PaginatedResponseDto<PresentationListResponseDto> getAllPresentations(PresentationCollectionRequest request);
 
