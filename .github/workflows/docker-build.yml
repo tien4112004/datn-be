@@ -16,8 +16,8 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  JENKINS_URL: https://jenkins.huy-devops.site/
-  JENKINS_JOB_NAME: aiprimary-backend/job/feat/datn-295
+  JENKINS_URL: https://jenkins.huy-devops.site
+  JENKINS_JOB_NAME: aiprimary-backend
 
 jobs:
   build:
@@ -93,8 +93,24 @@ jobs:
             exit 1;
           fi
 
-          # Construct trigger URL
-          TRIGGER_URL="${JENKINS_URL}/job/${JENKINS_JOB}/build"
+          # For multibranch pipeline: trigger a scan or specific branch
+          # Get the actual branch name (not PR merge branch)
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # For PRs, use the head branch name
+            BRANCH_NAME="${{ github.head_ref }}"
+          else
+            # For direct pushes, use the ref name
+            BRANCH_NAME="${{ github.ref_name }}"
+          fi
+
+          ENCODED_BRANCH=$(echo "$BRANCH_NAME" | sed 's/\//%2F/g')
+
+          echo "Branch name: ${BRANCH_NAME}"
+          echo "Encoded branch: ${ENCODED_BRANCH}"
+
+          # Construct trigger URL for multibranch pipeline
+          TRIGGER_URL="${JENKINS_URL}/job/${JENKINS_JOB}/job/${ENCODED_BRANCH}/build"
+
           echo "Trigger URL: ${TRIGGER_URL}"
 
           # Try to get CSRF crumb (if enabled)
