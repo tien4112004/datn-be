@@ -95,8 +95,8 @@ app:
           default-model: true
           model-type: image
   cors:
-    allowed-origins: "http://localhost:5173,http://localhost:3000,http://localhost:8080"
-    allowed-origin-patterns: ${ALLOWED_ORIGINS}
+    allowed-origins: ""
+    allowed-origin-patterns: "http://localhost:*,${ALLOWED_ORIGINS}"
     allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
     allow-credentials: true
     max-age: 3600
@@ -119,6 +119,8 @@ app:
       logout-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/logout
       token-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/token
       server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8082}
+      google-callback-uri: ${GOOGLE_CALLBACK_URI:http://localhost:8080/api/auth/google/callback}
+      fe-url: ${FE_URL:http://localhost:5173}
     authorization:
       server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8082}
       realm: ${KEYCLOAK_REALM:ai-primary-dev}

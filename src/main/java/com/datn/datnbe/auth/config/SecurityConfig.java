@@ -11,7 +11,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
@@ -52,6 +51,8 @@ public class SecurityConfig {
                         "/api/resources/register",
                         "/api/auth/google/signin",
                         "/api/auth/google/authorize",
+                        "/api/auth/google/callback",
+                        "/api/auth/google/callback-mobile",
                         "/v3/**")
                 .permitAll()
 
@@ -119,18 +120,4 @@ public class SecurityConfig {
 
         objectMapper.writeValue(response.getOutputStream(), errorResponse);
     }
-
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring()
-                .requestMatchers("/v3/api-docs/**",
-                        "/swagger-ui/**",
-                        "/swagger-ui.html",
-                        "/api/auth/signin",
-                        "/api/auth/signup",
-                        "/api/auth/exchange",
-                        "/api/resources/register",
-                        "/api/auth/google/authorize");
-    }
-
 }

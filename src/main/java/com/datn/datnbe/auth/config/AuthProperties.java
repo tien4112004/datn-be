@@ -23,4 +23,6 @@ public class AuthProperties {
     String signUpUri;
     String logoutUri;
     String tokenUri;
+    String googleCallbackUri;
+    String feUrl;
 }

@@ -31,6 +31,7 @@ import org.springframework.security.web.authentication.logout.SecurityContextLog
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.Map;
 import java.util.UUID;
@@ -137,7 +138,7 @@ public class AuthController {
                 "scope",
                 "openid profile email",
                 "redirect_uri",
-                redirectUri,
+                authProperties.getGoogleCallbackUri(),
                 "state",
                 state,
                 "kc_idp_hint",
@@ -156,6 +157,90 @@ public class AuthController {
                 queryString);
 
         return ResponseEntity.ok(AppResponseDto.success(googleLoginUrl));
+    }
+
+    @GetMapping("/google/callback")
+    public void googleCallback(@RequestParam String code,
+            @RequestParam String state,
+            @RequestParam(required = false) String session_state,
+            HttpServletResponse response) throws IOException {
+        log.info("Received Google OAuth callback for web with code: {}", code);
+
+        try {
+            // Exchange authorization code for tokens
+            KeycloakCallbackRequest callbackRequest = KeycloakCallbackRequest.builder()
+                    .code(code)
+                    .redirectUri(authProperties.getGoogleCallbackUri())
+                    .build();
+
+            AuthTokenResponse authTokenResponse = keycloakAuthService.exchangeAuthorizationCode(callbackRequest);
+
+            // Decode JWT to get user info
+            JwtDecoder decoder = JwtDecoders.fromIssuerLocation(authProperties.getIssuer());
+            Jwt jwt = decoder.decode(authTokenResponse.getAccessToken());
+
+            // Sync user profile if not exists
+            userProfileApi.createUserFromKeycloakUser(jwt.getSubject(),
+                    jwt.getClaimAsString("email"),
+                    jwt.getClaimAsString("given_name"),
+                    jwt.getClaimAsString("family_name"));
+
+            // Add cookies to response
+            Cookie accessTokenCookie = createCookie("access_token",
+                    authTokenResponse.getAccessToken(),
+                    authTokenResponse.getExpiresIn());
+            Cookie refreshTokenCookie = createCookie("refresh_token", authTokenResponse.getRefreshToken(), MAX_AGE);
+
+            response.addCookie(accessTokenCookie);
+            response.addCookie(refreshTokenCookie);
+
+            // Redirect to frontend with success flag
+            response.sendRedirect(authProperties.getFeUrl());
+
+        } catch (Exception e) {
+            log.error("Error during Google OAuth callback: {}", e.getMessage(), e);
+            response.sendRedirect(authProperties.getFeUrl());
+        }
+    }
+
+    @PostMapping("/google/callback/mobile")
+    public ResponseEntity<AppResponseDto<SignInResponse>> googleCallbackMobile(
+            @Valid @RequestBody KeycloakCallbackRequest request) {
+        log.info("Received Google OAuth callback for mobile");
+
+        try {
+            // Exchange authorization code for tokens
+            AuthTokenResponse authTokenResponse = keycloakAuthService.exchangeAuthorizationCode(request);
+
+            // Decode JWT to get user info
+            JwtDecoder decoder = JwtDecoders.fromIssuerLocation(authProperties.getIssuer());
+            Jwt jwt = decoder.decode(authTokenResponse.getAccessToken());
+
+            // Sync user profile if not exists
+            userProfileApi.createUserFromKeycloakUser(jwt.getSubject(),
+                    jwt.getClaimAsString("email"),
+                    jwt.getClaimAsString("given_name"),
+                    jwt.getClaimAsString("family_name"));
+
+            // Map AuthTokenResponse to SignInResponse
+            SignInResponse signInResponse = SignInResponse.builder()
+                    .accessToken(authTokenResponse.getAccessToken())
+                    .refreshToken(authTokenResponse.getRefreshToken())
+                    .tokenType(authTokenResponse.getTokenType())
+                    .expiresIn(authTokenResponse.getExpiresIn())
+                    .build();
+
+            return ResponseEntity.ok(AppResponseDto.success(signInResponse));
+
+        } catch (Exception e) {
+            log.error("Error during Google OAuth mobile callback: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(AppResponseDto.<SignInResponse>builder()
+                            .success(false)
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("Authentication failed: " + e.getMessage())
+                            .build());
+        }
     }
 
     private Cookie createCookie(String name, String value, int maxAge) {
