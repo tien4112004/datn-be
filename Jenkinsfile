@@ -211,7 +211,7 @@ pipeline {
                                     exit 1
                                 fi
                                 echo "Waiting for Keycloak... ($counter/$timeout)"
-                                sleep 1
+                                sleep 3
                             done
                             echo "✓ Keycloak is ready"
                             
