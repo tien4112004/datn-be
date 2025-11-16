@@ -74,7 +74,7 @@ pipeline {
                 script {
                     echo "========== Authenticating with GHCR =========="
                     
-                    withCredentials([string(credentialsId: 'github_pat_username', variable: 'GITHUB_TOKEN')]) {
+                    withCredentials([string(credentialsId: 'github_pat', variable: 'GITHUB_TOKEN')]) {
                         sh '''
                             # Validate token is not empty
                             if [ -z "${GITHUB_TOKEN}" ]; then
