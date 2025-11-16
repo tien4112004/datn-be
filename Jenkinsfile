@@ -204,7 +204,7 @@ pipeline {
                             # Wait for Keycloak
                             echo "Checking Keycloak..."
                             counter=0
-                            until docker exec keycloak-aiprimary curl -sf http://localhost:8080/health/ready > /dev/null 2>&1; do
+                            until curl -sf http://localhost:8082/health/ready > /dev/null 2>&1; do
                                 counter=$((counter + 1))
                                 if [ $counter -gt $timeout ]; then
                                     echo "ERROR: Keycloak failed to become ready within ${timeout} seconds"
