@@ -119,12 +119,9 @@ pipeline {
                     sh '''
                         cd ${DEPLOY_DIR}
                         
-                        # Only stop the backend application, not the databases
                         if [ -f "${DOCKER_COMPOSE_APP_FILE}" ]; then
-                            docker compose -f ${DOCKER_COMPOSE_APP_FILE} down --remove-orphans || true
-                            echo "Backend containers stopped successfully"
-                        else
-                            echo "Backend Docker Compose file not found in deploy directory"
+                            docker compose -f ${DOCKER_COMPOSE_APP_FILE} down || true
+                            echo "Backend services stopped via compose"
                         fi
                         
                         # Note: Database services (${DOCKER_COMPOSE_DB_FILE}) are kept running
