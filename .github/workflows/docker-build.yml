@@ -16,7 +16,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  JENKINS_URL: https://huy-devops.site/
+  JENKINS_URL: https://jenkins.huy-devops.site/
   JENKINS_JOB_NAME: aiprimary-backend/job/feat/datn-295
 
 jobs:
