@@ -50,12 +50,6 @@ public class PresentationController {
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 
-    @GetMapping("/all")
-    public ResponseEntity<AppResponseDto<List<PresentationListResponseDto>>> getAllPresentations() {
-        List<PresentationListResponseDto> presentations = presentationApi.getAllPresentations();
-        return ResponseEntity.ok(AppResponseDto.success(presentations));
-    }
-
     @GetMapping({"", "/"})
     public ResponseEntity<AppResponseDto<List<PresentationListResponseDto>>> getAllPresentationsCollection(
             @Valid @ModelAttribute PresentationCollectionRequest request) {

@@ -57,26 +57,6 @@ public class MindmapManagement implements MindmapApi {
 
     @Override
     @Transactional(readOnly = true)
-    public List<MindmapListResponseDto> getAllMindmaps() {
-        log.info("Retrieving all mindmaps");
-
-        try {
-            List<Mindmap> mindmaps = mindmapRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
-
-            List<MindmapListResponseDto> response = mindmaps.stream()
-                    .map(mapper::entityToListResponse)
-                    .collect(Collectors.toList());
-
-            log.info("Successfully retrieved {} mindmaps", response.size());
-            return response;
-        } catch (Exception e) {
-            log.error("Failed to retrieve all mindmaps. Error: {}", e.getMessage());
-            throw e;
-        }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public PaginatedResponseDto<MindmapListResponseDto> getAllMindmaps(MindmapCollectionRequest request) {
         log.info("Retrieving mindmaps with pagination - page: {}, size: {}", request.getPage(), request.getSize());
 

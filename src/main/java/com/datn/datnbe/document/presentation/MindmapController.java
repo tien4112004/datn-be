@@ -1,7 +1,5 @@
 package com.datn.datnbe.document.presentation;
 
-import java.util.List;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -46,13 +44,6 @@ public class MindmapController {
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<MindmapListResponseDto>> getAllMindmaps() {
-        log.info("Received request to get all mindmaps");
-        List<MindmapListResponseDto> response = mindmapApi.getAllMindmaps();
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping(value = "/paginated", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PaginatedResponseDto<MindmapListResponseDto>> getAllMindmapsPaginated(
             @RequestParam(defaultValue = "0") Integer page,
             @RequestParam(defaultValue = "10") Integer size,

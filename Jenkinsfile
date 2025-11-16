@@ -4,27 +4,20 @@ pipeline {
     // Environment variables
     environment {
         GITHUB_REPO = 'tien4112004/datn-be'
-        GITHUB_USERNAME = 'tien4112004'  // GitHub username for GHCR authentication
+        GITHUB_USERNAME = 'tien4112004'  // GHCR
         DOCKER_REGISTRY = 'ghcr.io'
         IMAGE_NAME = "${DOCKER_REGISTRY}/${GITHUB_REPO}"
-        DOCKER_COMPOSE_FILE = 'docker-compose.prod.yml'
+        DOCKER_COMPOSE_DB_FILE = 'docker-compose.db.prod.yml'
+        DOCKER_COMPOSE_APP_FILE = 'docker-compose.prod.yml'
         DEPLOY_DIR = '/opt/datn-be'
         ENV_FILE = '/opt/datn-be/.env.prod'
-        CONTAINER_NAME = 'aiprimary-be'
+        CONTAINER_NAME = 'backend-aiprimary'
     }
 
     options {
-        // Keep builds for 30 days
         buildDiscarder(logRotator(numToKeepStr: '30', daysToKeepStr: '30'))
-        // Add timestamps to console output
         timestamps()
-        // Timeout after 1 hour
         timeout(time: 1, unit: 'HOURS')
-    }
-
-    triggers {
-        // Trigger on webhook from GitHub (optional)
-        githubPush()
     }
 
     stages {
@@ -81,7 +74,7 @@ pipeline {
                 script {
                     echo "========== Authenticating with GHCR =========="
                     
-                    withCredentials([string(credentialsId: 'aiprimary-github-token', variable: 'GITHUB_TOKEN')]) {
+                    withCredentials([string(credentialsId: 'github_pat', variable: 'GITHUB_TOKEN')]) {
                         sh '''
                             # Validate token is not empty
                             if [ -z "${GITHUB_TOKEN}" ]; then
@@ -121,17 +114,17 @@ pipeline {
         stage('Stop Current Deployment') {
             steps {
                 script {
-                    echo "========== Stopping Current Deployment =========="
+                    echo "========== Stopping Current Backend Deployment =========="
                     
                     sh '''
                         cd ${DEPLOY_DIR}
                         
-                        if [ -f "${DOCKER_COMPOSE_FILE}" ]; then
-                            docker compose -f ${DOCKER_COMPOSE_FILE} down --remove-orphans || true
-                            echo "Containers stopped successfully"
-                        else
-                            echo "Docker Compose file not found in deploy directory"
+                        if [ -f "${DOCKER_COMPOSE_APP_FILE}" ]; then
+                            docker compose -f ${DOCKER_COMPOSE_APP_FILE} down || true
+                            echo "Backend services stopped via compose"
                         fi
+                        
+                        # Note: Database services (${DOCKER_COMPOSE_DB_FILE}) are kept running
                     '''
                 }
             }
@@ -143,8 +136,9 @@ pipeline {
                     echo "========== Copying Configuration Files =========="
                     
                     sh '''
-                        # Copy docker-compose.prod.yml to deploy directory
-                        cp ${WORKSPACE}/${DOCKER_COMPOSE_FILE} ${DEPLOY_DIR}/
+                        # Copy both docker-compose files to deploy directory
+                        cp ${WORKSPACE}/${DOCKER_COMPOSE_DB_FILE} ${DEPLOY_DIR}/
+                        cp ${WORKSPACE}/${DOCKER_COMPOSE_APP_FILE} ${DEPLOY_DIR}/
                         
                         # Copy any additional config files if needed
                         # cp ${WORKSPACE}/config/* ${DEPLOY_DIR}/config/ 2>/dev/null || true
@@ -165,14 +159,85 @@ pipeline {
                     sh '''
                         cd ${DEPLOY_DIR}
                         
-                        # Set proper image tag
+                        # Step 1: Ensure database services are running (if not already)
+                        echo "Checking database services..."
+                        if [ -f "${DOCKER_COMPOSE_DB_FILE}" ]; then
+                            # Start database services (this is idempotent - won't recreate if already running)
+                            docker compose -f ${DOCKER_COMPOSE_DB_FILE} up -d
+                            echo "Database services are starting..."
+                            
+                            # Wait for databases to be healthy
+                            echo "Waiting for database services to be healthy..."
+                            
+                            # Wait for PostgreSQL
+                            echo "Checking PostgreSQL..."
+                            timeout=60
+                            counter=0
+                            until docker exec postgres-aiprimary pg_isready -U postgres > /dev/null 2>&1; do
+                                counter=$((counter + 1))
+                                if [ $counter -gt $timeout ]; then
+                                    echo "ERROR: PostgreSQL failed to become ready within ${timeout} seconds"
+                                    exit 1
+                                fi
+                                echo "Waiting for PostgreSQL... ($counter/$timeout)"
+                                sleep 1
+                            done
+                            echo "✓ PostgreSQL is ready"
+                            
+                            # Wait for MongoDB
+                            echo "Checking MongoDB..."
+                            counter=0
+                            until docker exec mongodb-aiprimary mongosh --eval "db.adminCommand('ping')" > /dev/null 2>&1; do
+                                counter=$((counter + 1))
+                                if [ $counter -gt $timeout ]; then
+                                    echo "ERROR: MongoDB failed to become ready within ${timeout} seconds"
+                                    exit 1
+                                fi
+                                echo "Waiting for MongoDB... ($counter/$timeout)"
+                                sleep 1
+                            done
+                            echo "✓ MongoDB is ready"
+                            
+                            # Wait for Keycloak
+                            echo "Checking Keycloak..."
+                            counter=0
+                            until curl -sf http://localhost:8082/health/ready > /dev/null 2>&1; do
+                                counter=$((counter + 1))
+                                if [ $counter -gt $timeout ]; then
+                                    echo "ERROR: Keycloak failed to become ready within ${timeout} seconds"
+                                    exit 1
+                                fi
+                                echo "Waiting for Keycloak... ($counter/$timeout)"
+                                sleep 3
+                            done
+                            echo "✓ Keycloak is ready"
+                            
+                            echo "✓ All database services are healthy"
+                        else
+                            echo "WARNING: Database compose file not found at ${DEPLOY_DIR}/${DOCKER_COMPOSE_DB_FILE}"
+                            echo "Please ensure database services are running separately"
+                        fi
+                        
+                        # Step 2: Pull and start backend application
+                        echo "Starting backend application..."
                         export DOCKER_IMAGE="${IMAGE_NAME}:latest"
                         
-                        # Pull and start containers
-                        docker compose -f ${DOCKER_COMPOSE_FILE} --env-file ${ENV_FILE} pull
-                        docker compose -f ${DOCKER_COMPOSE_FILE} --env-file ${ENV_FILE} up -d
+                        docker compose -f ${DOCKER_COMPOSE_APP_FILE} --env-file ${ENV_FILE} pull
+                        docker compose -f ${DOCKER_COMPOSE_APP_FILE} --env-file ${ENV_FILE} up -d
                         
-                        echo "Containers started successfully"
+                        echo "Backend containers started successfully"
+                        
+                        # Wait a bit for backend to initialize
+                        echo "Waiting for backend to initialize..."
+                        sleep 10
+                        
+                        # Show status of all services
+                        echo "========== Service Status =========="
+                        echo "Database Services:"
+                        docker compose -f ${DOCKER_COMPOSE_DB_FILE} ps 2>/dev/null || echo "No database compose file"
+                        echo ""
+                        echo "Backend Services:"
+                        docker compose -f ${DOCKER_COMPOSE_APP_FILE} ps
                     '''
                 }
             }
@@ -219,8 +284,13 @@ pipeline {
                     fi
                     
                     # Only save compose status if compose file exists
-                    if [ -f "${DEPLOY_DIR}/${DOCKER_COMPOSE_FILE}" ]; then
-                        docker compose -f ${DEPLOY_DIR}/${DOCKER_COMPOSE_FILE} ps > ${WORKSPACE}/logs/containers.log 2>&1 || true
+                    if [ -f "${DEPLOY_DIR}/${DOCKER_COMPOSE_APP_FILE}" ]; then
+                        docker compose -f ${DEPLOY_DIR}/${DOCKER_COMPOSE_APP_FILE} ps > ${WORKSPACE}/logs/containers.log 2>&1 || true
+                    fi
+                    
+                    # Also save database status if available
+                    if [ -f "${DEPLOY_DIR}/${DOCKER_COMPOSE_DB_FILE}" ]; then
+                        docker compose -f ${DEPLOY_DIR}/${DOCKER_COMPOSE_DB_FILE} ps >> ${WORKSPACE}/logs/containers.log 2>&1 || true
                     fi
                 '''
             }
@@ -248,11 +318,15 @@ pipeline {
                     fi
                     
                     echo "========== Docker Compose Status =========="
-                    if [ -f "${DEPLOY_DIR}/${DOCKER_COMPOSE_FILE}" ]; then
+                    if [ -f "${DEPLOY_DIR}/${DOCKER_COMPOSE_APP_FILE}" ]; then
                         cd ${DEPLOY_DIR}
-                        docker compose -f ${DOCKER_COMPOSE_FILE} ps || true
+                        echo "Backend Status:"
+                        docker compose -f ${DOCKER_COMPOSE_APP_FILE} ps || true
+                        echo ""
+                        echo "Database Status:"
+                        docker compose -f ${DOCKER_COMPOSE_DB_FILE} ps || true
                     else
-                        echo "Docker compose file not found at ${DEPLOY_DIR}/${DOCKER_COMPOSE_FILE}"
+                        echo "Docker compose files not found at ${DEPLOY_DIR}"
                     fi
                 '''
             }
