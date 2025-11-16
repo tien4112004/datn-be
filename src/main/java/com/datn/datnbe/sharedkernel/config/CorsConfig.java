@@ -36,22 +36,22 @@ public class CorsConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        var mapping = registry.addMapping("/**")
-                .allowedMethods(methods.split(","))
-                .allowedHeaders("*")
-                .allowCredentials(allowCredentials)
-                .maxAge(maxAge);
+        var mapping = registry.addMapping("/**").allowedMethods(methods.split(",")).allowedHeaders("*").maxAge(maxAge);
 
         // Prefer *either* exact origins or patterns
         if (!allowedOrigins.isEmpty()) {
-            mapping.allowedOrigins(allowedOrigins.toArray(new String[0]));
+            mapping.allowedOrigins(allowedOrigins.toArray(new String[0])).allowCredentials(allowCredentials);
         } else if (!allowedOriginPatterns.isEmpty()) {
-            mapping.allowedOriginPatterns(allowedOriginPatterns.toArray(new String[0]));
+            mapping.allowedOriginPatterns(allowedOriginPatterns.toArray(new String[0]))
+                    .allowCredentials(allowCredentials);
         } else {
-            mapping.allowedOriginPatterns("*");
+            // When using wildcard pattern, credentials must be false
+            mapping.allowedOriginPatterns("*").allowCredentials(false);
         }
 
-        mapping.exposedHeaders(exposedHeaders.split(","));
+        if (exposedHeaders != null && !exposedHeaders.isBlank()) {
+            mapping.exposedHeaders(exposedHeaders.split(","));
+        }
     }
 
     @Override

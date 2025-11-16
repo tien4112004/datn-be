@@ -89,47 +89,16 @@ public class AuthController {
         return "redirect:" + url;
     }
 
-    @PostMapping("/exchange")
-    public ResponseEntity<AppResponseDto<SignInResponse>> keycloakCallback(
-            @Valid @RequestBody KeycloakCallbackRequest request,
-            HttpServletResponse response) {
-
-        // Exchange authorization code for tokens using existing KeycloakAuthService
-        AuthTokenResponse authTokenResponse = keycloakAuthService.exchangeAuthorizationCode(request);
-
-        JwtDecoder decoder = JwtDecoders.fromIssuerLocation(authProperties.getIssuer());
-        Jwt jwt = decoder.decode(authTokenResponse.getAccessToken());
-
-        // sync user profile if not exists
-        userProfileApi.createUserFromKeycloakUser(jwt.getSubject(),
-                jwt.getClaimAsString("email"),
-                jwt.getClaimAsString("given_name"),
-                jwt.getClaimAsString("family_name"));
-
-        // Add cookies to response
-        Cookie accessTokenCookie = createCookie("access_token",
-                authTokenResponse.getAccessToken(),
-                authTokenResponse.getExpiresIn());
-        Cookie refreshTokenCookie = createCookie("refresh_token", authTokenResponse.getRefreshToken(), MAX_AGE);
-
-        response.addCookie(accessTokenCookie);
-        response.addCookie(refreshTokenCookie);
-
-        // Map AuthTokenResponse to SignInResponse
-        SignInResponse signInResponse = SignInResponse.builder()
-                .accessToken(authTokenResponse.getAccessToken())
-                .refreshToken(authTokenResponse.getRefreshToken())
-                .tokenType(authTokenResponse.getTokenType())
-                .expiresIn(authTokenResponse.getExpiresIn())
-                .build();
-
-        return ResponseEntity.ok(AppResponseDto.success(signInResponse));
-    }
-
     @GetMapping("/google/authorize")
     public ResponseEntity<AppResponseDto<String>> googleLogin(
-            @RequestParam(defaultValue = "http://localhost:3000") String redirectUri) {
+            @RequestParam(defaultValue = "http://localhost:3000") String redirectUri,
+            @RequestParam(defaultValue = "false") boolean mobile) {
         String state = UUID.randomUUID().toString();
+
+        // Use mobile callback URI for mobile apps, otherwise use default
+        String callbackUri = mobile
+                ? (authProperties.getGoogleCallbackUri() + "-mobile")
+                : authProperties.getGoogleCallbackUri();
 
         Map<String, String> params = Map.of("client_id",
                 authProperties.getClientId(),
@@ -138,7 +107,7 @@ public class AuthController {
                 "scope",
                 "openid profile email",
                 "redirect_uri",
-                authProperties.getGoogleCallbackUri(),
+                callbackUri,
                 "state",
                 state,
                 "kc_idp_hint",
@@ -209,8 +178,15 @@ public class AuthController {
         log.info("Received Google OAuth callback for mobile");
 
         try {
+            KeycloakCallbackRequest mobileRequest = KeycloakCallbackRequest.builder()
+                    .code(request.getCode())
+                    .redirectUri(request.getRedirectUri() != null
+                            ? request.getRedirectUri()
+                            : (authProperties.getGoogleCallbackUri() + "-mobile"))
+                    .build();
+
             // Exchange authorization code for tokens
-            AuthTokenResponse authTokenResponse = keycloakAuthService.exchangeAuthorizationCode(request);
+            AuthTokenResponse authTokenResponse = keycloakAuthService.exchangeAuthorizationCode(mobileRequest);
 
             // Decode JWT to get user info
             JwtDecoder decoder = JwtDecoders.fromIssuerLocation(authProperties.getIssuer());
