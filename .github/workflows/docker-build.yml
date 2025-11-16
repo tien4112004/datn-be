@@ -80,7 +80,7 @@ jobs:
           echo "Branch: ${{ github.ref_name }}"
           echo "Event: ${{ github.event_name }}"
 
-          IMAGE_TAG="latest"
+          IMAGE_TAG="${{ github.ref_name }}"
           echo "Using image tag: $IMAGE_TAG"
 
           if [ -z "${JENKINS_URL}" ] || [ -z "${JENKINS_USER}" ] || [ -z "${JENKINS_API_TOKEN}" ] || [ -z "${JENKINS_JOB}" ]; then
@@ -88,36 +88,43 @@ jobs:
             exit 1;
           fi
 
-          # Step 1: Fetch CSRF crumb from Jenkins (required for CSRF protection)
-          echo "Fetching CSRF crumb from Jenkins..."
-          CRUMB_RESPONSE=$(curl -s -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" "${JENKINS_URL}/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\":\",//crumb)")
-          echo "Crumb response: $CRUMB_RESPONSE"
-
-          # Parse crumb response (format: Jenkins-Crumb:abc123def456)
-          CRUMB_FIELD=$(echo "$CRUMB_RESPONSE" | cut -d':' -f1)
-          CRUMB_VALUE=$(echo "$CRUMB_RESPONSE" | cut -d':' -f2-)
-
-          if [ -z "$CRUMB_VALUE" ]; then
-            echo "Warning: Could not fetch CSRF crumb, attempting request without it..."
-            CRUMB_HEADER=""
-          else
-            echo "CSRF crumb fetched: ${CRUMB_FIELD}=${CRUMB_VALUE}"
-            CRUMB_HEADER="-H \"${CRUMB_FIELD}: ${CRUMB_VALUE}\""
-          fi
-
-          # Step 2: Trigger Jenkins job with CSRF crumb
-          TRIGGER_URL="${JENKINS_URL}/job/${JENKINS_JOB}/buildWithParameters?IMAGE_TAG=${IMAGE_TAG}"
+          # Construct trigger URL
+          TRIGGER_URL="${JENKINS_URL}/job/${JENKINS_JOB}/build"
           echo "Trigger URL: ${TRIGGER_URL}"
 
-          if [ -n "$CRUMB_HEADER" ]; then
-            curl -s -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" \
+          # Try to get CSRF crumb (if enabled)
+          echo "Attempting to fetch CSRF crumb..."
+          CRUMB=$(curl -s -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" \
+            "${JENKINS_URL}/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,%22:%22,//crumb)" 2>/dev/null || echo "")
+
+          if [ -n "$CRUMB" ] && [[ "$CRUMB" != *"{"* ]]; then
+            echo "CSRF crumb obtained: ${CRUMB}"
+            CRUMB_FIELD=$(echo "$CRUMB" | cut -d':' -f1)
+            CRUMB_VALUE=$(echo "$CRUMB" | cut -d':' -f2-)
+            
+            # Trigger with CSRF crumb
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+              -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" \
               -H "${CRUMB_FIELD}: ${CRUMB_VALUE}" \
-              -X POST "${TRIGGER_URL}" --fail || { echo "Failed to trigger Jenkins job"; exit 1; }
+              -X POST "${TRIGGER_URL}")
           else
-            curl -s -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" \
-              -X POST "${TRIGGER_URL}" --fail || { echo "Failed to trigger Jenkins job"; exit 1; }
+            echo "CSRF crumb not available or not required, triggering without it..."
+            
+            # Trigger without CSRF crumb
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+              -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" \
+              -X POST "${TRIGGER_URL}")
           fi
-          echo "✓ Jenkins job triggered"
+
+          echo "HTTP response code: ${HTTP_CODE}"
+
+          # Check if trigger was successful (201 = created, 200 = ok)
+          if [ "$HTTP_CODE" = "201" ] || [ "$HTTP_CODE" = "200" ]; then
+            echo "✓ Jenkins job triggered successfully"
+          else
+            echo "✗ Failed to trigger Jenkins job (HTTP ${HTTP_CODE})"
+            exit 1
+          fi
 
   # security:
   #   name: Security Scan
