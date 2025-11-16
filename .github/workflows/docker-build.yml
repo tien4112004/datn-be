@@ -11,16 +11,18 @@ on:
     types: [completed]
     branches:
       - main
+      - fix/datn-295
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  JENKINS_URL: https://jenkins.huy-devops.site
+  JENKINS_JOB_NAME: aiprimary-backend
 
 jobs:
   build:
-    name: Build and Push Docker Image
+    name: Dockerize and Push Image
     runs-on: ubuntu-latest
-    # Auto-run on main branch (after CI succeeds), or manual trigger on any branch
     if: |
       (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') ||
       (github.event_name == 'workflow_dispatch')
@@ -51,7 +53,7 @@ jobs:
           tags: |
             type=ref,event=branch
             type=sha
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -66,57 +68,68 @@ jobs:
           platforms: linux/amd64,linux/arm64
 
       - name: Trigger Jenkins deployment
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        if: success()
         env:
-          JENKINS_URL: ${{ secrets.JENKINS_URL }}
+          JENKINS_URL: ${{ env.JENKINS_URL }}
           JENKINS_USER: ${{ secrets.JENKINS_USER }}
           JENKINS_API_TOKEN: ${{ secrets.JENKINS_API_TOKEN }}
-          JENKINS_JOB: ${{ secrets.JENKINS_JOB_NAME }}
+          JENKINS_JOB: ${{  env.JENKINS_JOB_NAME  }}
         run: |
           echo "Triggering Jenkins job for deployment..."
-          # Get the first image tag produced by docker metadata
-          TAGS="${{ steps.meta.outputs.tags }}"
-          echo "Meta tags: $TAGS"
-          IMAGE_REF=$(echo "$TAGS" | tr ',' '\n' | head -n1)
-          IMAGE_TAG="${IMAGE_REF##*:}"
-          echo "Parsed image: $IMAGE_REF"
-          echo "Parsed tag: $IMAGE_TAG"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Event: ${{ github.event_name }}"
+
+          IMAGE_TAG="latest"
+          echo "Using image tag: $IMAGE_TAG"
 
           if [ -z "${JENKINS_URL}" ] || [ -z "${JENKINS_USER}" ] || [ -z "${JENKINS_API_TOKEN}" ] || [ -z "${JENKINS_JOB}" ]; then
             echo "One or more Jenkins secrets are missing (JENKINS_URL/JENKINS_USER/JENKINS_API_TOKEN/JENKINS_JOB_NAME). Skipping Jenkins trigger.";
             exit 1;
           fi
 
-          # Step 1: Fetch CSRF crumb from Jenkins (required for CSRF protection)
-          echo "Fetching CSRF crumb from Jenkins..."
-          CRUMB_RESPONSE=$(curl -s -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" "${JENKINS_URL}/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\":\",//crumb)")
-          echo "Crumb response: $CRUMB_RESPONSE"
+          BRANCH_NAME="main"
+          ENCODED_BRANCH=$(echo "$BRANCH_NAME" | sed 's/\//%2F/g')
 
-          # Parse crumb response (format: Jenkins-Crumb:abc123def456)
-          CRUMB_FIELD=$(echo "$CRUMB_RESPONSE" | cut -d':' -f1)
-          CRUMB_VALUE=$(echo "$CRUMB_RESPONSE" | cut -d':' -f2-)
+          echo "Triggering Jenkins job for branch: ${BRANCH_NAME}"
+          echo "Encoded branch: ${ENCODED_BRANCH}"
 
-          if [ -z "$CRUMB_VALUE" ]; then
-            echo "Warning: Could not fetch CSRF crumb, attempting request without it..."
-            CRUMB_HEADER=""
-          else
-            echo "CSRF crumb fetched: ${CRUMB_FIELD}=${CRUMB_VALUE}"
-            CRUMB_HEADER="-H \"${CRUMB_FIELD}: ${CRUMB_VALUE}\""
-          fi
+          TRIGGER_URL="${JENKINS_URL}/job/${JENKINS_JOB}/job/${ENCODED_BRANCH}/build"
 
-          # Step 2: Trigger Jenkins job with CSRF crumb
-          TRIGGER_URL="${JENKINS_URL}/job/${JENKINS_JOB}/buildWithParameters?IMAGE_TAG=${IMAGE_TAG}"
           echo "Trigger URL: ${TRIGGER_URL}"
 
-          if [ -n "$CRUMB_HEADER" ]; then
-            curl -s -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" \
+          # Try to get CSRF crumb (if enabled)
+          echo "Attempting to fetch CSRF crumb..."
+          CRUMB=$(curl -s -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" \
+            "${JENKINS_URL}/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,%22:%22,//crumb)" 2>/dev/null || echo "")
+
+          if [ -n "$CRUMB" ] && [[ "$CRUMB" != *"{"* ]]; then
+            echo "CSRF crumb obtained: ${CRUMB}"
+            CRUMB_FIELD=$(echo "$CRUMB" | cut -d':' -f1)
+            CRUMB_VALUE=$(echo "$CRUMB" | cut -d':' -f2-)
+            
+            # Trigger with CSRF crumb
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+              -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" \
               -H "${CRUMB_FIELD}: ${CRUMB_VALUE}" \
-              -X POST "${TRIGGER_URL}" --fail || { echo "Failed to trigger Jenkins job"; exit 1; }
+              -X POST "${TRIGGER_URL}")
           else
-            curl -s -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" \
-              -X POST "${TRIGGER_URL}" --fail || { echo "Failed to trigger Jenkins job"; exit 1; }
+            echo "CSRF crumb not available or not required, triggering without it..."
+            
+            # Trigger without CSRF crumb
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+              -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" \
+              -X POST "${TRIGGER_URL}")
           fi
-          echo "✓ Jenkins job triggered"
+
+          echo "HTTP response code: ${HTTP_CODE}"
+
+          # Check if trigger was successful (201 = created, 200 = ok)
+          if [ "$HTTP_CODE" = "201" ] || [ "$HTTP_CODE" = "200" ]; then
+            echo "✓ Jenkins job triggered successfully"
+          else
+            echo "✗ Failed to trigger Jenkins job (HTTP ${HTTP_CODE})"
+            exit 1
+          fi
 
   # security:
   #   name: Security Scan
