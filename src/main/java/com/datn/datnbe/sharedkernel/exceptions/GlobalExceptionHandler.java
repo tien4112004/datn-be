@@ -19,10 +19,15 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AppException.class)
     public ResponseEntity<AppResponseDto<Object>> handleAppException(AppException ex) {
-        log.error("Application exception occurred: {}", ex.getMessage(), ex);
+        // Log authentication errors at debug level to reduce noise
+        if (ex.getErrorCode() == ErrorCode.AUTH_INVALID_CREDENTIALS
+                || ex.getErrorCode() == ErrorCode.AUTH_UNAUTHORIZED) {
+            log.debug("Authentication error: {}", ex.getMessage());
+        } else {
+            log.error("Application exception occurred: {}", ex.getMessage(), ex);
+        }
 
         var response = AppResponseDto.failure(ex);
-        log.error(response.getMessage());
         return ResponseEntity.status(ex.getStatusCode()).body(response);
     }
 

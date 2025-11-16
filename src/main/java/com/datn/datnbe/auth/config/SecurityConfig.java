@@ -50,7 +50,9 @@ public class SecurityConfig {
                         "/api/auth/signup",
                         "/api/auth/exchange",
                         "/api/resources/register",
-                        "/api/auth/google/signin")
+                        "/api/auth/google/signin",
+                        "/api/auth/google/authorize",
+                        "/v3/**")
                 .permitAll()
 
                 // Admin endpoints - requires ADMIN role
@@ -77,7 +79,6 @@ public class SecurityConfig {
                         oauth2 -> oauth2.bearerTokenResolver(new CookieBearerTokenResolver("access_token"))
                                 .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtConverter)))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
                 .exceptionHandling(
                         exceptions -> exceptions.authenticationEntryPoint(this::handleAuthenticationException)
                                 .accessDeniedHandler(this::handleAccessDeniedException));
