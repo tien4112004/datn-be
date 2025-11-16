@@ -54,7 +54,7 @@ jobs:
           tags: |
             type=ref,event=branch
             type=sha
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=latest
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -80,12 +80,7 @@ jobs:
           echo "Branch: ${{ github.ref_name }}"
           echo "Event: ${{ github.event_name }}"
 
-          # Use 'latest' for main branch, otherwise use branch name
-          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            IMAGE_TAG="latest"
-          else
-            IMAGE_TAG="${{ github.ref_name }}"
-          fi
+          IMAGE_TAG="latest"
           echo "Using image tag: $IMAGE_TAG"
 
           if [ -z "${JENKINS_URL}" ] || [ -z "${JENKINS_USER}" ] || [ -z "${JENKINS_API_TOKEN}" ] || [ -z "${JENKINS_JOB}" ]; then
