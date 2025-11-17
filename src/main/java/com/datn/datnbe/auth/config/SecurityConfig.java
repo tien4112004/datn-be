@@ -24,15 +24,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @EnableWebSecurity
 @Profile("!test & !integration-test")
 @RequiredArgsConstructor
+@Slf4j
 public class SecurityConfig {
     private final ClientRegistrationRepository clientRegistrationRepository;
     private final JwtConverter jwtConverter;
     private final ObjectMapper objectMapper;
+    private final JwtAuthenticationSuccessHandler jwtAuthenticationSuccessHandler;
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -52,6 +55,7 @@ public class SecurityConfig {
                         "/api/auth/google/signin",
                         "/api/auth/google/authorize",
                         "/api/auth/google/callback",
+                        "api/auth/exchange",
                         "/api/auth/google/callback-mobile",
                         "/v3/**")
                 .permitAll()
@@ -71,7 +75,9 @@ public class SecurityConfig {
                 // Default deny
                 .anyRequest()
                 .authenticated())
-                .oauth2Login(oauth2 -> oauth2.defaultSuccessUrl("/", true))
+                .oauth2Login(oauth2 -> oauth2
+                        .defaultSuccessUrl("/", true)
+                        .successHandler(jwtAuthenticationSuccessHandler))
                 .logout(logout -> logout.logoutSuccessHandler(oidcLogoutHandler)
                         .logoutUrl("/api/auth/logout")
                         .invalidateHttpSession(true)

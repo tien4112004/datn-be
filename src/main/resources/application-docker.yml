@@ -93,8 +93,8 @@ app:
           default-model: true
           model-type: image
   cors:
-    allowed-origins: "http://localhost:5173, http:localhost:3000, http:localhost:8080"
-    allowed-origin-patterns: ${ALLOWED_ORIGINS}
+    allowed-origins: ""
+    allowed-origin-patterns: "http://localhost:*,${ALLOWED_ORIGINS}"
     allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
     allow-credentials: true
     max-age: 3600
@@ -110,13 +110,14 @@ app:
       issuer: ${KEYCLOAK_ISSUER_URI:http://keycloak:8080/realms/ai-primary-dev}
       client-id: ${KEYCLOAK_CLIENT_ID:ai-primary}
       client-secret: ${KEYCLOAK_CLIENT_SECRET:change-me}
-      redirect-uri: http://keycloak:8080/login/oauth2/code/keycloak
+      redirect-uri: ${KEYCLOAK_REDIRECT_URI:http://datn-be:8080/login/oauth2/code/keycloak}
       signIn-uri: /oauth2/authorization/keycloak
       signup-uri: ${KEYCLOAK_ISSUER_URI}/login-actions/registration
       logout-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/logout
       token-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/token
       server-url: ${KEYCLOAK_SERVER_URL:http://keycloak:8080}
       google-callback-uri: ${GOOGLE_CALLBACK_URI:http://datn-be:8080/api/auth/google/callback}
+      fe-url: ${FE_URL:http://localhost:3000}
     authorization:
       server-url: ${KEYCLOAK_SERVER_URL:http://keycloak:8080}
       realm: ${KEYCLOAK_REALM:ai-primary-dev}
@@ -145,3 +146,5 @@ cloudflare:
 logging:
   level:
     "org.springframework.data.mongodb.core.MongoTemplate": DEBUG
+    com.datn.datnbe.sharedkernel.security.interceptor: DEBUG
+    com.datn.datnbe.auth.config.SecurityConfig: WARN

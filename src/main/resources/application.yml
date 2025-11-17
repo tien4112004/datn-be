@@ -3,6 +3,8 @@ spring:
     active: default
   application:
     name: 'datn-be'
+  config:
+    import: optional:file:.env[.properties]
   # AI MODULE CONFIGURATION
   ai:
     model:
@@ -49,11 +51,12 @@ spring:
             client-id: ${KEYCLOAK_CLIENT_ID:ai-primary}
             client-secret: ${KEYCLOAK_CLIENT_SECRET:change-me}
             authorization-grant-type: authorization_code
-            redirect-uri: ${KEYCLOAK_REDIRECT_URI:http://localhost:3000/login/oauth2/code/keycloak}
+            redirect-uri: ${KEYCLOAK_REDIRECT_URI:http://localhost:8080/login/oauth2/code/keycloak}
             scope: openid, profile, email
         provider:
           keycloak:
             issuer-uri: http://localhost:8082/realms/ai-primary-dev
+            user-info-authentication-method: header
       resourceserver:
         jwt:
           issuer-uri: http://localhost:8082/realms/ai-primary-dev
@@ -149,3 +152,5 @@ cloudflare:
 logging:
   level:
     "org.springframework.data.mongodb.core.MongoTemplate": DEBUG
+    com.datn.datnbe.auth.config.SecurityConfig: WARN
+    com.datn.datnbe.sharedkernel.security.filter: DEBUG

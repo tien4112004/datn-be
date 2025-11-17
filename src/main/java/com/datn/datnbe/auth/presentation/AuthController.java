@@ -89,16 +89,46 @@ public class AuthController {
         return "redirect:" + url;
     }
 
-    @GetMapping("/google/authorize")
-    public ResponseEntity<AppResponseDto<String>> googleLogin(
-            @RequestParam(defaultValue = "http://localhost:3000") String redirectUri,
-            @RequestParam(defaultValue = "false") boolean mobile) {
-        String state = UUID.randomUUID().toString();
+    @PostMapping("/exchange")
+    public ResponseEntity<AppResponseDto<SignInResponse>> keycloakCallback(
+            @Valid @RequestBody KeycloakCallbackRequest request,
+            HttpServletResponse response) {
 
-        // Use mobile callback URI for mobile apps, otherwise use default
-        String callbackUri = mobile
-                ? (authProperties.getGoogleCallbackUri() + "-mobile")
-                : authProperties.getGoogleCallbackUri();
+        // Exchange authorization code for tokens using existing KeycloakAuthService
+        AuthTokenResponse authTokenResponse = keycloakAuthService.exchangeAuthorizationCode(request);
+
+        JwtDecoder decoder = JwtDecoders.fromIssuerLocation(authProperties.getIssuer());
+        Jwt jwt = decoder.decode(authTokenResponse.getAccessToken());
+
+        // sync user profile if not exists
+        userProfileApi.createUserFromKeycloakUser(jwt.getSubject(),
+                jwt.getClaimAsString("email"),
+                jwt.getClaimAsString("given_name"),
+                jwt.getClaimAsString("family_name"));
+
+        // Add cookies to response
+        Cookie accessTokenCookie = createCookie("access_token",
+                authTokenResponse.getAccessToken(),
+                authTokenResponse.getExpiresIn());
+        Cookie refreshTokenCookie = createCookie("refresh_token", authTokenResponse.getRefreshToken(), MAX_AGE);
+
+        response.addCookie(accessTokenCookie);
+        response.addCookie(refreshTokenCookie);
+
+        // Map AuthTokenResponse to SignInResponse
+        SignInResponse signInResponse = SignInResponse.builder()
+                .accessToken(authTokenResponse.getAccessToken())
+                .refreshToken(authTokenResponse.getRefreshToken())
+                .tokenType(authTokenResponse.getTokenType())
+                .expiresIn(authTokenResponse.getExpiresIn())
+                .build();
+
+        return ResponseEntity.ok(AppResponseDto.success(signInResponse));
+    }
+
+    @GetMapping("/google/authorize")
+    public String googleAuthorize(HttpServletResponse response) throws IOException {
+        String state = UUID.randomUUID().toString();
 
         Map<String, String> params = Map.of("client_id",
                 authProperties.getClientId(),
@@ -107,7 +137,40 @@ public class AuthController {
                 "scope",
                 "openid profile email",
                 "redirect_uri",
-                callbackUri,
+                authProperties.getRedirectUri(),
+                "state",
+                state,
+                "kc_idp_hint",
+                "google",
+                "prompt",
+                "login");
+
+        String queryString = params.entrySet()
+                .stream()
+                .map(e -> e.getKey() + "=" + URLEncoder.encode(e.getValue(), java.nio.charset.StandardCharsets.UTF_8))
+                .collect(Collectors.joining("&"));
+
+        String googleLoginUrl = String.format("%s/realms/%s/protocol/openid-connect/auth?%s",
+                authProperties.getServerUrl(),
+                authProperties.getRealm(),
+                queryString);
+
+        response.sendRedirect(googleLoginUrl);
+        return null;
+    }
+
+    @GetMapping("/google/signin")
+    public ResponseEntity<AppResponseDto<String>> googleLogin() {
+        String state = UUID.randomUUID().toString();
+
+        Map<String, String> params = Map.of("client_id",
+                authProperties.getClientId(),
+                "response_type",
+                "code",
+                "scope",
+                "openid profile email",
+                "redirect_uri",
+                authProperties.getRedirectUri(),
                 "state",
                 state,
                 "kc_idp_hint",
@@ -126,6 +189,50 @@ public class AuthController {
                 queryString);
 
         return ResponseEntity.ok(AppResponseDto.success(googleLoginUrl));
+    }
+
+    @GetMapping("/google/callback/keycloak")
+    public void googleCallbackKeycloak(@RequestParam String state,
+            @RequestParam String code,
+            @RequestParam(required = false) String session_state,
+            HttpServletResponse response) throws IOException {
+        log.info("Received Keycloak broker callback with code: {}", code);
+
+        try {
+            // Exchange authorization code for tokens through Keycloak broker endpoint
+            KeycloakCallbackRequest callbackRequest = KeycloakCallbackRequest.builder()
+                    .code(code)
+                    .redirectUri(authProperties.getServerUrl() + "/realms/" + authProperties.getRealm() + "/broker/google/endpoint")
+                    .build();
+
+            AuthTokenResponse authTokenResponse = keycloakAuthService.exchangeAuthorizationCode(callbackRequest);
+
+            // Decode JWT to get user info
+            JwtDecoder decoder = JwtDecoders.fromIssuerLocation(authProperties.getIssuer());
+            Jwt jwt = decoder.decode(authTokenResponse.getAccessToken());
+
+            // Sync user profile if not exists
+            userProfileApi.createUserFromKeycloakUser(jwt.getSubject(),
+                    jwt.getClaimAsString("email"),
+                    jwt.getClaimAsString("given_name"),
+                    jwt.getClaimAsString("family_name"));
+
+            // Add cookies to response
+            Cookie accessTokenCookie = createCookie("access_token",
+                    authTokenResponse.getAccessToken(),
+                    authTokenResponse.getExpiresIn());
+            Cookie refreshTokenCookie = createCookie("refresh_token", authTokenResponse.getRefreshToken(), MAX_AGE);
+
+            response.addCookie(accessTokenCookie);
+            response.addCookie(refreshTokenCookie);
+
+            // Redirect to frontend with success
+            response.sendRedirect(authProperties.getFeUrl());
+
+        } catch (Exception e) {
+            log.error("Error during Keycloak broker callback: {}", e.getMessage(), e);
+            response.sendRedirect(authProperties.getFeUrl());
+        }
     }
 
     @GetMapping("/google/callback")
