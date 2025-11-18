@@ -56,6 +56,14 @@ spring:
         jwt:
           issuer-uri: ${KEYCLOAK_ISSUER_URI}
 server:
+  ssl:
+    enabled: true
+    key-store: /app/ssl/backend.p12
+    key-store-password: ${SSL_KEY_STORE_PASSWORD:change-me}
+    key-store-type: PKCS12
+  http2:
+    enabled: true
+  forward-headers-strategy: native
   servlet:
     encoding:
       charset: UTF-8

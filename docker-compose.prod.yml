@@ -53,6 +53,10 @@ services:
       - "8081:8080"
     networks:
       - network-aiprimary
+    volumes:
+      - /opt/datn-be/backend-selfsigned.crt:/app/ssl/backend.crt:ro
+      - /opt/datn-be/backend-selfsigned.key:/app/ssl/backend.key:ro
+      - /opt/datn-be/backend.p12:/app/ssl/backend.p12:ro
 
 networks:
   network-aiprimary:

@@ -52,19 +52,19 @@ public class CorsConfig implements WebMvcConfigurer {
         if (!allowedOrigins.isEmpty() || !allowedOriginPatterns.isEmpty()) {
             // Combine both explicit origins and patterns
             List<String> allPatterns = new ArrayList<>();
-            
+
             // Add explicit origins
             if (!allowedOrigins.isEmpty()) {
                 allPatterns.addAll(allowedOrigins);
                 log.info("CORS configured with allowed origins: {}", allowedOrigins);
             }
-            
+
             // Add patterns
             if (!allowedOriginPatterns.isEmpty()) {
                 allPatterns.addAll(allowedOriginPatterns);
                 log.info("CORS configured with allowed origin patterns: {}", allowedOriginPatterns);
             }
-            
+
             // Use setAllowedOriginPatterns instead of setAllowedOrigins
             // This method properly handles both exact origins and patterns
             configuration.setAllowedOriginPatterns(allPatterns);

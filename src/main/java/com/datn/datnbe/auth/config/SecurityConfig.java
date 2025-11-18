@@ -44,7 +44,7 @@ public class SecurityConfig {
         var oidcLogoutHandler = new OidcClientInitiatedLogoutSuccessHandler(clientRegistrationRepository);
 
         http.cors(cors -> cors.configurationSource(corsConfigurationSource))
-            .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         // Allow OPTIONS requests (CORS preflight) without authentication
                         .requestMatchers(HttpMethod.OPTIONS, "/**")
