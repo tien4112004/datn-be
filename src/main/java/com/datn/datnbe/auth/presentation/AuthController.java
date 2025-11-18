@@ -127,112 +127,38 @@ public class AuthController {
     }
 
     @GetMapping("/google/authorize")
-    public String googleAuthorize(HttpServletResponse response) throws IOException {
-        String state = UUID.randomUUID().toString();
-
-        Map<String, String> params = Map.of("client_id",
-                authProperties.getClientId(),
-                "response_type",
-                "code",
-                "scope",
-                "openid profile email",
-                "redirect_uri",
-                authProperties.getRedirectUri(),
-                "state",
-                state,
-                "kc_idp_hint",
-                "google",
-                "prompt",
-                "login");
-
-        String queryString = params.entrySet()
-                .stream()
-                .map(e -> e.getKey() + "=" + URLEncoder.encode(e.getValue(), java.nio.charset.StandardCharsets.UTF_8))
-                .collect(Collectors.joining("&"));
-
-        String googleLoginUrl = String.format("%s/realms/%s/protocol/openid-connect/auth?%s",
-                authProperties.getServerUrl(),
-                authProperties.getRealm(),
-                queryString);
-
-        response.sendRedirect(googleLoginUrl);
-        return null;
-    }
-
-    @GetMapping("/google/signin")
-    public ResponseEntity<AppResponseDto<String>> googleLogin() {
-        String state = UUID.randomUUID().toString();
-
-        Map<String, String> params = Map.of("client_id",
-                authProperties.getClientId(),
-                "response_type",
-                "code",
-                "scope",
-                "openid profile email",
-                "redirect_uri",
-                authProperties.getRedirectUri(),
-                "state",
-                state,
-                "kc_idp_hint",
-                "google",
-                "prompt",
-                "login");
-
-        String queryString = params.entrySet()
-                .stream()
-                .map(e -> e.getKey() + "=" + URLEncoder.encode(e.getValue(), java.nio.charset.StandardCharsets.UTF_8))
-                .collect(Collectors.joining("&"));
-
-        String googleLoginUrl = String.format("%s/realms/%s/protocol/openid-connect/auth?%s",
-                authProperties.getServerUrl(),
-                authProperties.getRealm(),
-                queryString);
-
-        return ResponseEntity.ok(AppResponseDto.success(googleLoginUrl));
-    }
-
-    @GetMapping("/google/callback/keycloak")
-    public void googleCallbackKeycloak(@RequestParam String state,
-            @RequestParam String code,
-            @RequestParam(required = false) String session_state,
+    public void googleAuthorize(@RequestParam(required = false, defaultValue = "web") String clientType,
             HttpServletResponse response) throws IOException {
-        log.info("Received Keycloak broker callback with code: {}", code);
+        // Encode client type in state parameter to track where to redirect after authentication
+        String state = clientType + ":" + UUID.randomUUID().toString();
 
-        try {
-            // Exchange authorization code for tokens through Keycloak broker endpoint
-            KeycloakCallbackRequest callbackRequest = KeycloakCallbackRequest.builder()
-                    .code(code)
-                    .redirectUri(authProperties.getServerUrl() + "/realms/" + authProperties.getRealm() + "/broker/google/endpoint")
-                    .build();
+        Map<String, String> params = Map.of("client_id",
+                authProperties.getClientId(),
+                "response_type",
+                "code",
+                "scope",
+                "openid profile email",
+                "redirect_uri",
+                authProperties.getGoogleCallbackUri(),
+                "state",
+                state,
+                "kc_idp_hint",
+                "google",
+                "prompt",
+                "login");
 
-            AuthTokenResponse authTokenResponse = keycloakAuthService.exchangeAuthorizationCode(callbackRequest);
+        String queryString = params.entrySet()
+                .stream()
+                .map(e -> e.getKey() + "=" + URLEncoder.encode(e.getValue(), java.nio.charset.StandardCharsets.UTF_8))
+                .collect(Collectors.joining("&"));
 
-            // Decode JWT to get user info
-            JwtDecoder decoder = JwtDecoders.fromIssuerLocation(authProperties.getIssuer());
-            Jwt jwt = decoder.decode(authTokenResponse.getAccessToken());
+        String googleLoginUrl = String.format("%s/realms/%s/protocol/openid-connect/auth?%s",
+                authProperties.getServerUrl(),
+                authProperties.getRealm(),
+                queryString);
 
-            // Sync user profile if not exists
-            userProfileApi.createUserFromKeycloakUser(jwt.getSubject(),
-                    jwt.getClaimAsString("email"),
-                    jwt.getClaimAsString("given_name"),
-                    jwt.getClaimAsString("family_name"));
-
-            // Add cookies to response
-            Cookie accessTokenCookie = createCookie("access_token",
-                    authTokenResponse.getAccessToken(),
-                    authTokenResponse.getExpiresIn());
-            Cookie refreshTokenCookie = createCookie("refresh_token", authTokenResponse.getRefreshToken(), MAX_AGE);
-
-            response.addCookie(accessTokenCookie);
-            response.addCookie(refreshTokenCookie);
-
-            // Redirect to frontend with success
-            response.sendRedirect(authProperties.getFeUrl());
-
-        } catch (Exception e) {
-            log.error("Error during Keycloak broker callback: {}", e.getMessage(), e);
-            response.sendRedirect(authProperties.getFeUrl());
-        }
+        log.info("Redirecting to Google login with clientType: {}", clientType);
+        response.sendRedirect(googleLoginUrl);
     }
 
     @GetMapping("/google/callback")
@@ -240,9 +166,15 @@ public class AuthController {
             @RequestParam String state,
             @RequestParam(required = false) String session_state,
             HttpServletResponse response) throws IOException {
-        log.info("Received Google OAuth callback for web with code: {}", code);
+        log.info("Received Google OAuth callback with code: {}, state: {}", code, state);
 
         try {
+            // Parse client type from state parameter
+            String clientType = "web"; // default
+            if (state != null && state.contains(":")) {
+                clientType = state.split(":")[0];
+            }
+
             // Exchange authorization code for tokens
             KeycloakCallbackRequest callbackRequest = KeycloakCallbackRequest.builder()
                     .code(code)
@@ -261,21 +193,46 @@ public class AuthController {
                     jwt.getClaimAsString("given_name"),
                     jwt.getClaimAsString("family_name"));
 
-            // Add cookies to response
-            Cookie accessTokenCookie = createCookie("access_token",
-                    authTokenResponse.getAccessToken(),
-                    authTokenResponse.getExpiresIn());
-            Cookie refreshTokenCookie = createCookie("refresh_token", authTokenResponse.getRefreshToken(), MAX_AGE);
+            if ("mobile".equalsIgnoreCase(clientType)) {
+                // For mobile, redirect to a deep link or custom scheme
+                String mobileRedirectUrl = String.format(
+                        "%s/auth/callback?access_token=%s&refresh_token=%s&expires_in=%d",
+                        authProperties.getFeUrl().replace("http://", "myapp://"),
+                        authTokenResponse.getAccessToken(),
+                        authTokenResponse.getRefreshToken(),
+                        authTokenResponse.getExpiresIn());
 
-            response.addCookie(accessTokenCookie);
-            response.addCookie(refreshTokenCookie);
+                log.info("Redirecting mobile client to: {}", mobileRedirectUrl);
+                response.sendRedirect(mobileRedirectUrl);
+            } else {
+                // For web, set cookies and redirect to FE URL
+                Cookie accessTokenCookie = createCookie("access_token",
+                        authTokenResponse.getAccessToken(),
+                        authTokenResponse.getExpiresIn());
+                Cookie refreshTokenCookie = createCookie("refresh_token", authTokenResponse.getRefreshToken(), MAX_AGE);
 
-            // Redirect to frontend with success flag
-            response.sendRedirect(authProperties.getFeUrl());
+                response.addCookie(accessTokenCookie);
+                response.addCookie(refreshTokenCookie);
+
+                // Redirect to frontend with success flag
+                log.info("Redirecting web client to: {}", authProperties.getFeUrl());
+                response.sendRedirect(authProperties.getFeUrl() + "/auth/success");
+            }
 
         } catch (Exception e) {
             log.error("Error during Google OAuth callback: {}", e.getMessage(), e);
-            response.sendRedirect(authProperties.getFeUrl());
+
+            // Parse client type from state for error redirect
+            String clientType = "web";
+            if (state != null && state.contains(":")) {
+                clientType = state.split(":")[0];
+            }
+
+            if ("mobile".equalsIgnoreCase(clientType)) {
+                response.sendRedirect(authProperties.getFeUrl().replace("http://", "myapp://") + "/auth/error");
+            } else {
+                response.sendRedirect(authProperties.getFeUrl() + "/auth/error");
+            }
         }
     }
 
