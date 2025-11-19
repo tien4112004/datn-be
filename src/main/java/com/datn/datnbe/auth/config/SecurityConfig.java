@@ -1,7 +1,6 @@
 package com.datn.datnbe.auth.config;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -94,9 +93,6 @@ public class SecurityConfig {
         response.setStatus(HttpStatus.NOT_FOUND.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-        // Add CORS headers to error response so browser can receive it
-        addCorsHeaders(request, response);
-
         AppResponseDto<?> errorResponse = AppResponseDto.builder()
                 .success(false)
                 .code(HttpStatus.NOT_FOUND.value())
@@ -105,51 +101,5 @@ public class SecurityConfig {
                 .build();
 
         objectMapper.writeValue(response.getOutputStream(), errorResponse);
-    }
-
-    private void addCorsHeaders(HttpServletRequest request, HttpServletResponse response) {
-        String origin = request.getHeader("Origin");
-        if (origin != null) {
-            // Check if origin matches any of the allowed patterns
-            org.springframework.web.cors.CorsConfiguration config = corsConfigurationSource
-                    .getCorsConfiguration(request);
-            if (config != null) {
-                boolean originAllowed = false;
-
-                // Check exact origins first
-                if (config.getAllowedOrigins() != null && config.getAllowedOrigins().contains(origin)) {
-                    originAllowed = true;
-                } else if (config.getAllowedOriginPatterns() != null) {
-                    // Check with Spring's pattern matcher (supports *, **, ?)
-                    org.springframework.util.AntPathMatcher matcher = new org.springframework.util.AntPathMatcher();
-                    for (String pattern : config.getAllowedOriginPatterns()) {
-                        if (pattern.equals("*") || matcher.match(pattern, origin)) {
-                            originAllowed = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (originAllowed) {
-                    response.setHeader("Access-Control-Allow-Origin", origin);
-                    response.setHeader("Access-Control-Allow-Methods", String.join(", ", config.getAllowedMethods()));
-                    response.setHeader("Access-Control-Allow-Headers",
-                            config.getAllowedHeaders() != null && config.getAllowedHeaders().contains("*")
-                                    ? request.getHeader("Access-Control-Request-Headers") != null
-                                            ? request.getHeader("Access-Control-Request-Headers")
-                                            : "*"
-                                    : String.join(", ", config.getAllowedHeaders()));
-
-                    if (config.getAllowCredentials()) {
-                        response.setHeader("Access-Control-Allow-Credentials", "true");
-                    }
-
-                    List<String> exposedHeaders = config.getExposedHeaders();
-                    if (exposedHeaders != null && !exposedHeaders.isEmpty()) {
-                        response.setHeader("Access-Control-Expose-Headers", String.join(", ", exposedHeaders));
-                    }
-                }
-            }
-        }
     }
 }
