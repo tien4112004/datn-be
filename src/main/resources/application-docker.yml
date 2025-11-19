@@ -101,8 +101,16 @@ app:
           default-model: true
           model-type: image
   cors:
-    allowed-origins: ""
-    allowed-origin-patterns: "http://localhost:*, https://*"
+    allowed-origins:
+      - "http://localhost:5173"
+      - "https://api.huy-devops.site"
+    allowed-origin-patterns:
+      - "http://localhost:*"
+      - "https://localhost:*"
+      - "https://datn-fe-*.vercel.app"  # Vercel preview deployments with any container ID
+      - "https://datn-fe.vercel.app"  # Production Vercel deployment
+      - "https://*.vercel.app"  # All Vercel apps (more permissive, use with caution)
+      - "https://*.huy-devops.site"  # Any subdomain on huy-devops.site
     allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
     allow-credentials: true
     max-age: 3600

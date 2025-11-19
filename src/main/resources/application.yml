@@ -98,8 +98,19 @@ app:
           default-model: true
           model-type: image
   cors:
-    allowed-origins: ""
-    allowed-origin-patterns: "http://localhost:*, https://*"
+    allowed-origins: 
+      - "http://localhost:5173"
+      - "http://localhost:8080"
+      - "https://datn-fe.vercel.app"
+      - "https://api.huy-devops.site"
+    # Use allowed-origin-patterns for wildcard matching with Spring AntPathMatcher syntax
+    # * matches any characters except /
+    # ** matches any characters including /
+    allowed-origin-patterns:
+      - "https://datn-fe-*.vercel.app"
+      - "http://localhost:*"
+      - "https://localhost:*"
+      - "https://*.huy-devops.site"
     allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
     allow-credentials: true
     max-age: 3600

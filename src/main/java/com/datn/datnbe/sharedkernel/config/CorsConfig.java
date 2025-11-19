@@ -1,11 +1,9 @@
 package com.datn.datnbe.sharedkernel.config;
 
 import java.util.Arrays;
-import java.util.List;
-import java.util.ArrayList;
 
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -19,73 +17,81 @@ import com.datn.datnbe.sharedkernel.security.response.PermissionHeaderResponseWr
 import lombok.extern.slf4j.Slf4j;
 
 @Configuration
+@EnableConfigurationProperties(CorsProperties.class)
 @Slf4j
 public class CorsConfig implements WebMvcConfigurer {
-    @Value("${app.cors.allowed-origins:}")
-    private List<String> allowedOrigins;
 
-    @Value("${app.cors.allowed-origin-patterns:}")
-    private List<String> allowedOriginPatterns;
-
-    @Value("${app.cors.allowed-methods:GET,POST,PUT,PATCH,DELETE,OPTIONS}")
-    private String methods;
-
-    @Value("${app.cors.allow-credentials:true}")
-    private boolean allowCredentials;
-
-    @Value("${app.cors.max-age:3600}")
-    private long maxAge;
-
-    @Value("${app.cors.exposed-headers:}")
-    private String exposedHeaders;
+    private final CorsProperties corsProperties;
 
     @Autowired
     private PermissionHeaderResponseWrapper permissionHeaderResponseWrapper;
 
+    public CorsConfig(CorsProperties corsProperties) {
+        this.corsProperties = corsProperties;
+        log.info("CorsProperties loaded - origins: {}, patterns: {}",
+                corsProperties.getAllowedOrigins(),
+                corsProperties.getAllowedOriginPatterns());
+    }
+
     /**
      * Bean for Spring Security CORS configuration
      * This is used by Spring Security filters and runs before authentication
+     *
+     * Spring Security's setAllowedOriginPatterns() expects Spring AntPathMatcher patterns:
+     * - ? matches one character
+     * - * matches zero or more characters within a segment
+     * - ** matches zero or more directory levels
+     *
+     * NOTE: For URLs like https://datn-fe-container-abc123-datn-fe.vercel.app,
+     * we use pattern like https://datn-fe-*.vercel.app
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        if (!allowedOrigins.isEmpty() || !allowedOriginPatterns.isEmpty()) {
-            // Combine both explicit origins and patterns
-            List<String> allPatterns = new ArrayList<>();
 
-            // Add explicit origins
-            if (!allowedOrigins.isEmpty()) {
-                allPatterns.addAll(allowedOrigins);
-                log.info("CORS configured with allowed origins: {}", allowedOrigins);
-            }
+        log.debug("CORS configuration - allowedOrigins: {}, allowedOriginPatterns: {}",
+                corsProperties.getAllowedOrigins(),
+                corsProperties.getAllowedOriginPatterns());
 
-            // Add patterns
-            if (!allowedOriginPatterns.isEmpty()) {
-                allPatterns.addAll(allowedOriginPatterns);
-                log.info("CORS configured with allowed origin patterns: {}", allowedOriginPatterns);
-            }
+        // Check if we have any patterns or origins configured
+        boolean hasOrigins = corsProperties.getAllowedOrigins() != null
+                && !corsProperties.getAllowedOrigins().isEmpty();
+        boolean hasPatterns = corsProperties.getAllowedOriginPatterns() != null
+                && !corsProperties.getAllowedOriginPatterns().isEmpty();
 
-            // Use setAllowedOriginPatterns instead of setAllowedOrigins
-            // This method properly handles both exact origins and patterns
-            configuration.setAllowedOriginPatterns(allPatterns);
-            configuration.setAllowCredentials(allowCredentials);
-        } else {
-            // No origins configured - block all CORS requests
-            configuration.setAllowedOrigins(Arrays.asList());
-            log.warn("CORS not configured - all cross-origin requests will be blocked");
+        if (hasOrigins) {
+            // Use setAllowedOrigins for exact matches
+            configuration.setAllowedOrigins(corsProperties.getAllowedOrigins());
+            log.info("✓ CORS configured with exact origins: {}", corsProperties.getAllowedOrigins());
         }
 
-        configuration.setAllowedMethods(Arrays.asList(methods.split(",")));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setMaxAge(maxAge);
+        if (hasPatterns) {
+            // Use setAllowedOriginPatterns for pattern-based matches
+            configuration.setAllowedOriginPatterns(corsProperties.getAllowedOriginPatterns());
+            log.info("✓ CORS configured with origin patterns: {}", corsProperties.getAllowedOriginPatterns());
+        }
 
-        if (exposedHeaders != null && !exposedHeaders.isBlank()) {
-            configuration.setExposedHeaders(Arrays.asList(exposedHeaders.split(",")));
+        if (!hasOrigins && !hasPatterns) {
+            // Allow all origins as fallback if nothing is configured
+            log.warn("⚠ No CORS origins configured - using fallback: allow all origins");
+            configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+        }
+
+        // Always allow credentials, headers, and all methods for preflight
+        configuration.setAllowCredentials(corsProperties.isAllowCredentials());
+        configuration.setAllowedMethods(Arrays.asList(corsProperties.getAllowedMethods().split(",")));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setExposedHeaders(Arrays.asList("*"));
+        configuration.setMaxAge(corsProperties.getMaxAge());
+
+        if (corsProperties.getExposedHeaders() != null && !corsProperties.getExposedHeaders().isBlank()) {
+            configuration.setExposedHeaders(Arrays.asList(corsProperties.getExposedHeaders().split(",")));
         }
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
 
+        log.info("✓ CORS configuration bean created and registered for all paths");
         return source;
     }
 
