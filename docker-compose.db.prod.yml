@@ -1,38 +1,54 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: postgres-aiprimary
+    container_name: postgres-aiprimary  
     environment:
-      - POSTGRES_DB=datn_monolith_db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    ports:
-      - "5433:5432" # Changed from 5432 to 5433 to avoid conflict
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    expose:
+      - "5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - /opt/datn-be/postgres-aiprimary:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
     networks:
       - network-aiprimary
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
+        reservations:
+          cpus: "1"
+          memory: 256M
 
   mongo:
     image: mongo:7-jammy
     container_name: mongodb-aiprimary
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=mongouser
-      - MONGO_INITDB_ROOT_PASSWORD=mongopassword
-      - MONGO_INITDB_DATABASE=presentation_db
-    ports:
-      - "27017:27017"
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
+    expose:
+      - "27017"
     volumes:
-      - mongo-data:/data/db
+      - /opt/datn-be/mongo-aiprimary:/data/db
     restart: unless-stopped
     networks:
       - network-aiprimary
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
+        reservations:
+          cpus: "1"
+          memory: 256M
 
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.5
@@ -45,8 +61,8 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
 
       # HTTP/HTTPS Configuration for production behind reverse proxy
       - KC_HTTP_ENABLED=true
@@ -61,9 +77,9 @@ services:
 
       # Database configuration
       - KC_DB=postgres
-      - KC_DB_URL=jdbc:postgresql://postgres-aiprimary:5432/datn_monolith_db
-      - KC_DB_USERNAME=postgres
-      - KC_DB_PASSWORD=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres-aiprimary:5432/${POSTGRES_DB}
+      - KC_DB_USERNAME=${POSTGRES_USER}
+      - KC_DB_PASSWORD=${POSTGRES_PASSWORD}
       - KC_DB_SCHEMA=public
 
       # Logging
@@ -83,6 +99,14 @@ services:
     restart: unless-stopped
     networks:
       - network-aiprimary
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1G
+        reservations:
+          cpus: "1"
+          memory: 256M
 
 volumes:
   postgres-data:
@@ -92,3 +116,4 @@ networks:
   network-aiprimary:
     name: network-aiprimary
     driver: bridge
+    external: true
