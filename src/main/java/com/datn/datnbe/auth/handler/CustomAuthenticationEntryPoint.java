@@ -105,8 +105,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
                 if (originAllowed) {
                     response.setHeader("Access-Control-Allow-Origin", origin);
-                    response.setHeader("Access-Control-Allow-Methods",
-                            String.join(", ", config.getAllowedMethods()));
+                    response.setHeader("Access-Control-Allow-Methods", String.join(", ", config.getAllowedMethods()));
                     response.setHeader("Access-Control-Allow-Headers",
                             config.getAllowedHeaders() != null && config.getAllowedHeaders().contains("*")
                                     ? request.getHeader("Access-Control-Request-Headers") != null

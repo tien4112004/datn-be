@@ -63,7 +63,7 @@ server:
     key-store-type: PKCS12
   http2:
     enabled: true
-  forward-headers-strategy: native
+  forward-headers-strategy: framework
   servlet:
     encoding:
       charset: UTF-8
