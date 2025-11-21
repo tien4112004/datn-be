@@ -11,6 +11,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @Slf4j
@@ -88,5 +89,11 @@ public class GlobalExceptionHandler {
         AppException appException = new AppException(ErrorCode.FILE_TOO_LARGE);
         AppResponseDto<Object> response = AppResponseDto.failure(appException);
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(response);
+    }
+
+    @ExceptionHandler(AsyncRequestNotUsableException.class)
+    public void handleAsyncRequestNotUsableException(AsyncRequestNotUsableException ex) {
+        // Client disconnected or cancelled the request - log at debug level to avoid noise
+        log.debug("Client disconnected or cancelled streaming request: {}", ex.getMessage());
     }
 }
