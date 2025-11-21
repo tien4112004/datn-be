@@ -56,6 +56,14 @@ spring:
         jwt:
           issuer-uri: ${KEYCLOAK_ISSUER_URI}
 server:
+  ssl:
+    enabled: true
+    key-store: /app/ssl/backend.p12
+    key-store-password: ${SSL_KEY_STORE_PASSWORD:change-me}
+    key-store-type: PKCS12
+  http2:
+    enabled: true
+  forward-headers-strategy: framework
   servlet:
     encoding:
       charset: UTF-8
@@ -93,8 +101,16 @@ app:
           default-model: true
           model-type: image
   cors:
-    allowed-origins: "http://localhost:5173, http:localhost:3000, http:localhost:8080"
-    allowed-origin-patterns: ${ALLOWED_ORIGINS}
+    allowed-origins:
+      - "http://localhost:5173"
+      - "https://api.huy-devops.site"
+    allowed-origin-patterns:
+      - "http://localhost:*"
+      - "https://localhost:*"
+      - "https://datn-fe-*.vercel.app"  # Vercel preview deployments with any container ID
+      - "https://datn-fe.vercel.app"  # Production Vercel deployment
+      - "https://*.vercel.app"  # All Vercel apps (more permissive, use with caution)
+      - "https://*.huy-devops.site"  # Any subdomain on huy-devops.site
     allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
     allow-credentials: true
     max-age: 3600
@@ -110,12 +126,14 @@ app:
       issuer: ${KEYCLOAK_ISSUER_URI:http://keycloak:8080/realms/ai-primary-dev}
       client-id: ${KEYCLOAK_CLIENT_ID:ai-primary}
       client-secret: ${KEYCLOAK_CLIENT_SECRET:change-me}
-      redirect-uri: http://keycloak:8080/login/oauth2/code/keycloak
+      redirect-uri: ${KEYCLOAK_REDIRECT_URI:http://datn-be:8080/login/oauth2/code/keycloak}
       signIn-uri: /oauth2/authorization/keycloak
       signup-uri: ${KEYCLOAK_ISSUER_URI}/login-actions/registration
       logout-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/logout
       token-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/token
       server-url: ${KEYCLOAK_SERVER_URL:http://keycloak:8080}
+      google-callback-uri: ${GOOGLE_CALLBACK_URI:http://datn-be:8080/api/auth/google/callback}
+      fe-url: ${FE_URL:http://localhost:3000}
     authorization:
       server-url: ${KEYCLOAK_SERVER_URL:http://keycloak:8080}
       realm: ${KEYCLOAK_REALM:ai-primary-dev}
@@ -124,6 +142,9 @@ app:
       client-uuid: ${KEYCLOAK_CLIENT_UUID}
       connection-timeout: 5000
       read-timeout: 30000
+  security:
+    document-permission:
+      enabled: ${DOCUMENT_PERMISSION_ENABLED:false}
 
 ai:
   api:
@@ -144,3 +165,5 @@ cloudflare:
 logging:
   level:
     "org.springframework.data.mongodb.core.MongoTemplate": DEBUG
+    com.datn.datnbe.sharedkernel.security.interceptor: DEBUG
+    com.datn.datnbe.auth.config.SecurityConfig: WARN

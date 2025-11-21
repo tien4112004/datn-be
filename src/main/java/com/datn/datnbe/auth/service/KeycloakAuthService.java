@@ -71,6 +71,11 @@ public class KeycloakAuthService {
                 assignRealmRole(keycloakUserId, role.toLowerCase());
 
                 return keycloakUserId;
+                // } else if(response.getStatus() >= 400) {
+                //     String errorMessage = response.getStatusInfo().getReasonPhrase();
+                //     log.error("Failed to create Keycloak user. Status: {}, Error: {}", response.getStatus(), errorMessage);
+                //     throw new AppException(ErrorCode.AUTH_INVALID_CREDENTIALS,
+                //             "Failed to create user in Keycloak: " + errorMessage);
             } else {
                 log.error("Failed to create Keycloak user. Status: {}", response.getStatus());
                 throw new AppException(ErrorCode.UNCATEGORIZED_ERROR,
@@ -148,18 +153,24 @@ public class KeycloakAuthService {
                     .onStatus(status -> status.value() == 400,
                             resp -> resp.bodyToMono(String.class)
                                     .defaultIfEmpty("")
-                                    .map(body -> new AppException(ErrorCode.AUTH_INVALID_CREDENTIALS, body)))
+                                    .flatMap(body -> reactor.core.publisher.Mono
+                                            .error(new AppException(ErrorCode.AUTH_INVALID_CREDENTIALS, body))))
                     .onStatus(status -> status.value() == 401,
                             resp -> resp.bodyToMono(String.class)
                                     .defaultIfEmpty("")
-                                    .map(body -> new AppException(ErrorCode.AUTH_UNAUTHORIZED, body)))
+                                    .flatMap(body -> reactor.core.publisher.Mono
+                                            .error(new AppException(ErrorCode.AUTH_UNAUTHORIZED, body))))
                     .onStatus(status -> status.value() >= 500,
                             resp -> resp.bodyToMono(String.class)
                                     .defaultIfEmpty("")
-                                    .map(body -> new AppException(ErrorCode.AUTH_SERVER_ERROR, body)))
+                                    .flatMap(body -> reactor.core.publisher.Mono
+                                            .error(new AppException(ErrorCode.AUTH_SERVER_ERROR, body))))
                     .bodyToMono(AuthTokenResponse.class)
                     .block();
 
+        } catch (AppException e) {
+            log.debug("Authentication error during {}: {}", errorContext, e.getMessage());
+            throw e;
         } catch (Exception e) {
             log.error("Error during {}: {}", errorContext, e.getMessage(), e);
             throw new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Authentication failed: " + e.getMessage());
