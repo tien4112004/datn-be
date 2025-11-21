@@ -160,6 +160,8 @@ public class AuthController {
                 "prompt",
                 "login");
 
+        log.info("Redriect to Google OAuth with params: {}", authProperties.getGoogleCallbackUri());
+
         String queryString = params.entrySet()
                 .stream()
                 .map(e -> e.getKey() + "=" + URLEncoder.encode(e.getValue(), StandardCharsets.UTF_8))
@@ -209,9 +211,8 @@ public class AuthController {
 
             if ("mobile".equalsIgnoreCase(clientType)) {
                 // For mobile, redirect to a deep link or custom scheme
-                String mobileRedirectUrl = String.format(
-                        "%s/auth/callback?access_token=%s&refresh_token=%s&expires_in=%d",
-                        authProperties.getFeUrl().replace("http://", "myapp://"),
+                String mobileRedirectUrl = String.format("%s?access_token=%s&refresh_token=%s&expires_in=%d",
+                        authProperties.getMobileRedirectUrl(),
                         authTokenResponse.getAccessToken(),
                         authTokenResponse.getRefreshToken(),
                         authTokenResponse.getExpiresIn());
@@ -249,7 +250,7 @@ public class AuthController {
             String feUrl = getOriginUrl(request);
 
             if ("mobile".equalsIgnoreCase(clientType)) {
-                response.sendRedirect(authProperties.getFeUrl().replace("http://", "myapp://") + "/auth/error");
+                response.sendRedirect(authProperties.getMobileRedirectUrl() + "/auth/error");
             } else {
                 response.sendRedirect(feUrl + "/auth/error");
             }
