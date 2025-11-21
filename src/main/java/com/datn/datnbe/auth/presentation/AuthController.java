@@ -33,6 +33,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -71,22 +72,34 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(AppResponseDto.success(response));
     }
 
-    @GetMapping("/logout")
-    public String logout(HttpServletRequest request, HttpServletResponse response, Authentication auth) {
+    @PostMapping("/logout")
+    public ResponseEntity<AppResponseDto<Map<String, String>>> logout(HttpServletRequest request,
+            HttpServletResponse response,
+            Authentication auth) {
 
+        // Clear cookies
+        Cookie accessTokenCookie = createCookie("access_token", "", 0);
+        Cookie refreshTokenCookie = createCookie("refresh_token", "", 0);
+        response.addCookie(accessTokenCookie);
+        response.addCookie(refreshTokenCookie);
+
+        // Invalidate session
         new SecurityContextLogoutHandler().logout(request, response, auth);
 
+        // Build Keycloak logout URL
         String idToken = null;
         if (auth instanceof OAuth2AuthenticationToken oauth && oauth.getPrincipal() instanceof OidcUser oidc) {
             idToken = oidc.getIdToken().getTokenValue();
         }
 
-        String url = UriComponentsBuilder.fromUriString(authProperties.getLogoutUri())
+        String keycloakLogoutUrl = UriComponentsBuilder.fromUriString(authProperties.getLogoutUri())
                 .queryParam("post_logout_redirect_uri", authProperties.getRedirectUri())
                 .queryParam("id_token_hint", idToken)
                 .toUriString();
 
-        return "redirect:" + url;
+        log.info("User logged out, Keycloak logout URL: {}", keycloakLogoutUrl);
+
+        return ResponseEntity.ok(AppResponseDto.success(Map.of("logoutUrl", keycloakLogoutUrl)));
     }
 
     @PostMapping("/exchange")
@@ -149,7 +162,7 @@ public class AuthController {
 
         String queryString = params.entrySet()
                 .stream()
-                .map(e -> e.getKey() + "=" + URLEncoder.encode(e.getValue(), java.nio.charset.StandardCharsets.UTF_8))
+                .map(e -> e.getKey() + "=" + URLEncoder.encode(e.getValue(), StandardCharsets.UTF_8))
                 .collect(Collectors.joining("&"));
 
         String googleLoginUrl = String.format("%s/realms/%s/protocol/openid-connect/auth?%s",
@@ -165,6 +178,7 @@ public class AuthController {
     public void googleCallback(@RequestParam String code,
             @RequestParam String state,
             @RequestParam(required = false) String session_state,
+            HttpServletRequest request,
             HttpServletResponse response) throws IOException {
         log.info("Received Google OAuth callback with code: {}, state: {}", code, state);
 
@@ -214,9 +228,12 @@ public class AuthController {
                 response.addCookie(accessTokenCookie);
                 response.addCookie(refreshTokenCookie);
 
+                // Get frontend URL from request origin
+                String feUrl = getOriginUrl(request);
+
                 // Redirect to frontend with success flag
-                log.info("Redirecting web client to: {}", authProperties.getFeUrl());
-                response.sendRedirect(authProperties.getFeUrl() + "/auth/success");
+                log.info("Redirecting web client to: {}", feUrl);
+                response.sendRedirect(feUrl + "/");
             }
 
         } catch (Exception e) {
@@ -228,10 +245,13 @@ public class AuthController {
                 clientType = state.split(":")[0];
             }
 
+            // Get frontend URL from request origin
+            String feUrl = getOriginUrl(request);
+
             if ("mobile".equalsIgnoreCase(clientType)) {
                 response.sendRedirect(authProperties.getFeUrl().replace("http://", "myapp://") + "/auth/error");
             } else {
-                response.sendRedirect(authProperties.getFeUrl() + "/auth/error");
+                response.sendRedirect(feUrl + "/auth/error");
             }
         }
     }
@@ -281,6 +301,29 @@ public class AuthController {
                             .message("Authentication failed: " + e.getMessage())
                             .build());
         }
+    }
+
+    private String getOriginUrl(HttpServletRequest request) {
+        String scheme = request.getHeader("X-Forwarded-Proto");
+        if (scheme == null || scheme.isEmpty()) {
+            scheme = request.getScheme();
+        }
+
+        String host = request.getHeader("X-Forwarded-Host");
+        if (host == null || host.isEmpty()) {
+            host = request.getHeader("Host");
+        }
+
+        if (host == null || host.isEmpty()) {
+            host = request.getServerName();
+            int port = request.getServerPort();
+            if ((scheme.equals("http") && port != 80) || (scheme.equals("https") && port != 443)) {
+                host = host + ":" + port;
+            }
+        }
+
+        log.debug("Extracted origin URL - scheme: {}, host: {}", scheme, host);
+        return scheme + "://" + host;
     }
 
     private Cookie createCookie(String name, String value, int maxAge) {

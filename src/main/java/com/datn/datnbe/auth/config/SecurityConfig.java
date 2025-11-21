@@ -12,8 +12,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -33,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class SecurityConfig {
-    private final ClientRegistrationRepository clientRegistrationRepository;
     private final JwtConverter jwtConverter;
     private final ObjectMapper objectMapper;
     private final CorsConfigurationSource corsConfigurationSource;
@@ -41,7 +38,6 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        var oidcLogoutHandler = new OidcClientInitiatedLogoutSuccessHandler(clientRegistrationRepository);
 
         http.cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(csrf -> csrf.disable())
@@ -73,10 +69,6 @@ public class SecurityConfig {
                         // Default deny
                         .anyRequest()
                         .authenticated())
-                .logout(logout -> logout.logoutSuccessHandler(oidcLogoutHandler)
-                        .logoutUrl("/api/auth/logout")
-                        .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID", "access_token", "refresh_token"))
                 .oauth2ResourceServer(
                         oauth2 -> oauth2.bearerTokenResolver(new CookieBearerTokenResolver("access_token"))
                                 .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtConverter)))
