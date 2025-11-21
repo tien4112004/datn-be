@@ -97,6 +97,12 @@ app:
           provider: "openRouter"
           default-model: true
           model-type: image
+        - model-name: "mistralai/mistral-small-3.2-24b-instruct:free"
+          display-name: "mistral-small-3.2-24b-instruct"
+          provider: "openRouter"
+          default-model: false
+          model-type: text
+
   cors:
     allowed-origins: 
       - "http://localhost:5173"
