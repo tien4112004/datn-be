@@ -142,6 +142,9 @@ app:
       client-uuid: ${KEYCLOAK_CLIENT_UUID}
       connection-timeout: 5000
       read-timeout: 30000
+  security:
+    document-permission:
+      enabled: ${DOCUMENT_PERMISSION_ENABLED:false}
 
 ai:
   api:
