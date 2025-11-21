@@ -9,6 +9,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -45,8 +46,18 @@ public class DocumentPermissionAspect {
     @Autowired
     private SecurityContextUtils securityContextUtils;
 
+    @Value("${app.security.document-permission.enabled:false}")
+    private boolean documentPermissionEnabled;
+
     @Before("@annotation(requirePermission)")
     public void checkDocumentPermission(JoinPoint joinPoint, RequireDocumentPermission requirePermission) {
+        // Skip permission check if disabled via configuration
+        if (!documentPermissionEnabled) {
+            log.debug("Document permission check is disabled. Skipping validation for method: {}",
+                    joinPoint.getSignature().getName());
+            return;
+        }
+
         log.debug("Checking document permissions for method: {}", joinPoint.getSignature().getName());
 
         String documentId = extractDocumentId(joinPoint, requirePermission.documentIdParam());

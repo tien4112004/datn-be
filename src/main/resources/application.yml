@@ -3,6 +3,8 @@ spring:
     active: default
   application:
     name: 'datn-be'
+  config:
+    import: optional:file:.env[.properties]
   # AI MODULE CONFIGURATION
   ai:
     model:
@@ -49,11 +51,12 @@ spring:
             client-id: ${KEYCLOAK_CLIENT_ID:ai-primary}
             client-secret: ${KEYCLOAK_CLIENT_SECRET:change-me}
             authorization-grant-type: authorization_code
-            redirect-uri: ${KEYCLOAK_REDIRECT_URI:http://localhost:3000/login/oauth2/code/keycloak}
+            redirect-uri: ${KEYCLOAK_REDIRECT_URI:http://localhost:8080/login/oauth2/code/keycloak}
             scope: openid, profile, email
         provider:
           keycloak:
             issuer-uri: http://localhost:8082/realms/ai-primary-dev
+            user-info-authentication-method: header
       resourceserver:
         jwt:
           issuer-uri: http://localhost:8082/realms/ai-primary-dev
@@ -95,8 +98,19 @@ app:
           default-model: true
           model-type: image
   cors:
-    allowed-origins: "http://localhost:5173, http:localhost:3000, http:localhost:8080"
-    allowed-origin-patterns: ${ALLOWED_ORIGINS}
+    allowed-origins: 
+      - "http://localhost:5173"
+      - "http://localhost:8080"
+      - "https://datn-fe.vercel.app"
+      - "https://api.huy-devops.site"
+    # Use allowed-origin-patterns for wildcard matching with Spring AntPathMatcher syntax
+    # * matches any characters except /
+    # ** matches any characters including /
+    allowed-origin-patterns:
+      - "https://datn-fe-*.vercel.app"
+      - "http://localhost:*"
+      - "https://localhost:*"
+      - "https://*.huy-devops.site"
     allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
     allow-credentials: true
     max-age: 3600
@@ -119,6 +133,8 @@ app:
       logout-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/logout
       token-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/token
       server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8082}
+      google-callback-uri: ${GOOGLE_CALLBACK_URI:http://localhost:8080/api/auth/google/callback}
+      fe-url: ${FE_URL:http://localhost:5173}
     authorization:
       server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8082}
       realm: ${KEYCLOAK_REALM:ai-primary-dev}
@@ -127,6 +143,9 @@ app:
       client-uuid: ${KEYCLOAK_CLIENT_UUID:}
       connection-timeout: 5000
       read-timeout: 30000
+  security:
+    document-permission:
+      enabled: ${DOCUMENT_PERMISSION_ENABLED:true}
 
 ai:
   api:
@@ -147,3 +166,5 @@ cloudflare:
 logging:
   level:
     "org.springframework.data.mongodb.core.MongoTemplate": DEBUG
+    com.datn.datnbe.auth.config.SecurityConfig: WARN
+    com.datn.datnbe.sharedkernel.security.filter: DEBUG

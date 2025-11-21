@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 @Slf4j
 @Service
@@ -39,7 +38,7 @@ public class AuthenticationService {
             AuthTokenResponse tokenResponse = keycloakAuthService.signIn(request, userKeycloakId);
             if (tokenResponse == null || tokenResponse.getAccessToken() == null) {
                 log.error("Failed to retrieve tokens from Keycloak for user: {}", request.getEmail());
-                throw new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Authentication failed");
+                throw new AppException(ErrorCode.AUTH_INVALID_CREDENTIALS, "Authentication failed");
             }
 
             return SignInResponse.builder()
@@ -48,12 +47,9 @@ public class AuthenticationService {
                     .expiresIn(tokenResponse.getExpiresIn())
                     .tokenType(tokenResponse.getTokenType())
                     .build();
-        } catch (WebClientResponseException e) {
-            log.error("Failed to authenticate with Keycloak: {}", e.getMessage());
-            if (e.getStatusCode().value() == 401) {
-                throw new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Invalid email or password");
-            }
-            throw new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Authentication failed");
+        } catch (AppException e) {
+            // Re-throw AppException as is - it already has the correct error code
+            throw e;
         } catch (Exception e) {
             log.error("Error during signin: {}", e.getMessage(), e);
             throw new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Authentication failed: " + e.getMessage());

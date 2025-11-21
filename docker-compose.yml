@@ -75,6 +75,14 @@ services:
       - KC_HOSTNAME_STRICT=false
       - KC_HOSTNAME_STRICT_HTTPS=false
       - KC_HEALTH_ENABLED=true
+      - KC_PROXY=edge
+      - KC_HTTP_RELATIVE_PATH=/
+      - KC_HOSTNAME_STRICT_BACKCHANNEL=false
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres:5432/datn_monolith_db
+      - KC_DB_USERNAME=postgres
+      - KC_DB_PASSWORD=postgres
+      - KC_DB_SCHEMA=public
     ports:
       - "8082:8080"
       - "8443:8443"
