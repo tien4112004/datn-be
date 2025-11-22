@@ -5,11 +5,11 @@ import com.datn.datnbe.auth.config.AuthProperties;
 import com.datn.datnbe.auth.dto.request.KeycloakCallbackRequest;
 import com.datn.datnbe.auth.dto.request.SigninRequest;
 import com.datn.datnbe.auth.dto.request.SignupRequest;
-import com.datn.datnbe.auth.dto.response.AuthTokenResponse;
 import com.datn.datnbe.auth.dto.response.SignInResponse;
 import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.auth.service.AuthenticationService;
 import com.datn.datnbe.auth.service.KeycloakAuthService;
+import com.datn.datnbe.auth.utils.CookieUtils;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,19 +24,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtDecoders;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -55,10 +48,10 @@ public class AuthController {
             HttpServletResponse response) {
         SignInResponse signInResponse = authenticationService.signIn(request);
 
-        Cookie accessTokenCookie = createCookie("access_token",
-                signInResponse.getAccessToken(),
-                signInResponse.getExpiresIn());
-        Cookie refreshTokenCookie = createCookie("refresh_token", signInResponse.getRefreshToken(), MAX_AGE);
+        Cookie accessTokenCookie = CookieUtils
+                .createCookie("access_token", signInResponse.getAccessToken(), signInResponse.getExpiresIn());
+        Cookie refreshTokenCookie = CookieUtils
+                .createCookie("refresh_token", signInResponse.getRefreshToken(), MAX_AGE);
 
         response.addCookie(accessTokenCookie);
         response.addCookie(refreshTokenCookie);
@@ -76,15 +69,31 @@ public class AuthController {
     public ResponseEntity<AppResponseDto<Map<String, String>>> logout(HttpServletRequest request,
             HttpServletResponse response,
             Authentication auth) {
-
-        // Clear cookies
-        Cookie accessTokenCookie = createCookie("access_token", "", 0);
-        Cookie refreshTokenCookie = createCookie("refresh_token", "", 0);
-        response.addCookie(accessTokenCookie);
-        response.addCookie(refreshTokenCookie);
-
         // Invalidate session
         new SecurityContextLogoutHandler().logout(request, response, auth);
+
+        // Extract refresh token from cookies and invalidate Keycloak session
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("refresh_token".equals(cookie.getName()) && cookie.getValue() != null
+                        && !cookie.getValue().isEmpty()) {
+                    try {
+                        keycloakAuthService.logoutByRefreshToken(cookie.getValue());
+                        log.info("Successfully invalidated Keycloak session");
+                    } catch (Exception e) {
+                        log.warn("Failed to invalidate Keycloak session: {}", e.getMessage());
+                        // Continue with logout even if Keycloak session invalidation fails
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Clear cookies
+        CookieUtils.deleteCookie(response, "access_token");
+        CookieUtils.deleteCookie(response, "refresh_token");
+        CookieUtils.deleteCookie(response, "JSESSIONID");
 
         // Build Keycloak logout URL
         String idToken = null;
@@ -107,34 +116,17 @@ public class AuthController {
             @Valid @RequestBody KeycloakCallbackRequest request,
             HttpServletResponse response) {
 
-        // Exchange authorization code for tokens using existing KeycloakAuthService
-        AuthTokenResponse authTokenResponse = keycloakAuthService.exchangeAuthorizationCode(request);
-
-        JwtDecoder decoder = JwtDecoders.fromIssuerLocation(authProperties.getIssuer());
-        Jwt jwt = decoder.decode(authTokenResponse.getAccessToken());
-
-        // sync user profile if not exists
-        userProfileApi.createUserFromKeycloakUser(jwt.getSubject(),
-                jwt.getClaimAsString("email"),
-                jwt.getClaimAsString("given_name"),
-                jwt.getClaimAsString("family_name"));
+        // Process login callback (exchange code, decode JWT, sync user)
+        SignInResponse signInResponse = keycloakAuthService.processLoginCallback(request);
 
         // Add cookies to response
-        Cookie accessTokenCookie = createCookie("access_token",
-                authTokenResponse.getAccessToken(),
-                authTokenResponse.getExpiresIn());
-        Cookie refreshTokenCookie = createCookie("refresh_token", authTokenResponse.getRefreshToken(), MAX_AGE);
+        Cookie accessTokenCookie = CookieUtils
+                .createCookie("access_token", signInResponse.getAccessToken(), signInResponse.getExpiresIn());
+        Cookie refreshTokenCookie = CookieUtils
+                .createCookie("refresh_token", signInResponse.getRefreshToken(), MAX_AGE);
 
         response.addCookie(accessTokenCookie);
         response.addCookie(refreshTokenCookie);
-
-        // Map AuthTokenResponse to SignInResponse
-        SignInResponse signInResponse = SignInResponse.builder()
-                .accessToken(authTokenResponse.getAccessToken())
-                .refreshToken(authTokenResponse.getRefreshToken())
-                .tokenType(authTokenResponse.getTokenType())
-                .expiresIn(authTokenResponse.getExpiresIn())
-                .build();
 
         return ResponseEntity.ok(AppResponseDto.success(signInResponse));
     }
@@ -142,35 +134,8 @@ public class AuthController {
     @GetMapping("/google/authorize")
     public void googleAuthorize(@RequestParam(required = false, defaultValue = "web") String clientType,
             HttpServletResponse response) throws IOException {
-        // Encode client type in state parameter to track where to redirect after authentication
-        String state = clientType + ":" + UUID.randomUUID().toString();
 
-        Map<String, String> params = Map.of("client_id",
-                authProperties.getClientId(),
-                "response_type",
-                "code",
-                "scope",
-                "openid profile email",
-                "redirect_uri",
-                authProperties.getGoogleCallbackUri(),
-                "state",
-                state,
-                "kc_idp_hint",
-                "google",
-                "prompt",
-                "login");
-
-        log.info("Redriect to Google OAuth with params: {}", authProperties.getGoogleCallbackUri());
-
-        String queryString = params.entrySet()
-                .stream()
-                .map(e -> e.getKey() + "=" + URLEncoder.encode(e.getValue(), StandardCharsets.UTF_8))
-                .collect(Collectors.joining("&"));
-
-        String googleLoginUrl = String.format("%s/realms/%s/protocol/openid-connect/auth?%s",
-                authProperties.getServerUrl(),
-                authProperties.getRealm(),
-                queryString);
+        String googleLoginUrl = keycloakAuthService.generateGoogleLoginUrl(clientType);
 
         log.info("Redirecting to Google login with clientType: {}", clientType);
         response.sendRedirect(googleLoginUrl);
@@ -191,40 +156,30 @@ public class AuthController {
                 clientType = state.split(":")[0];
             }
 
-            // Exchange authorization code for tokens
+            // Exchange authorization code for tokens and sync user
             KeycloakCallbackRequest callbackRequest = KeycloakCallbackRequest.builder()
                     .code(code)
                     .redirectUri(authProperties.getGoogleCallbackUri())
                     .build();
 
-            AuthTokenResponse authTokenResponse = keycloakAuthService.exchangeAuthorizationCode(callbackRequest);
-
-            // Decode JWT to get user info
-            JwtDecoder decoder = JwtDecoders.fromIssuerLocation(authProperties.getIssuer());
-            Jwt jwt = decoder.decode(authTokenResponse.getAccessToken());
-
-            // Sync user profile if not exists
-            userProfileApi.createUserFromKeycloakUser(jwt.getSubject(),
-                    jwt.getClaimAsString("email"),
-                    jwt.getClaimAsString("given_name"),
-                    jwt.getClaimAsString("family_name"));
+            SignInResponse signInResponse = keycloakAuthService.processLoginCallback(callbackRequest);
 
             if ("mobile".equalsIgnoreCase(clientType)) {
                 // For mobile, redirect to a deep link or custom scheme
                 String mobileRedirectUrl = String.format("%s?access_token=%s&refresh_token=%s&expires_in=%d",
                         authProperties.getMobileRedirectUrl(),
-                        authTokenResponse.getAccessToken(),
-                        authTokenResponse.getRefreshToken(),
-                        authTokenResponse.getExpiresIn());
+                        signInResponse.getAccessToken(),
+                        signInResponse.getRefreshToken(),
+                        signInResponse.getExpiresIn());
 
                 log.info("Redirecting mobile client to: {}", mobileRedirectUrl);
                 response.sendRedirect(mobileRedirectUrl);
             } else {
                 // For web, set cookies and redirect to FE URL
-                Cookie accessTokenCookie = createCookie("access_token",
-                        authTokenResponse.getAccessToken(),
-                        authTokenResponse.getExpiresIn());
-                Cookie refreshTokenCookie = createCookie("refresh_token", authTokenResponse.getRefreshToken(), MAX_AGE);
+                Cookie accessTokenCookie = CookieUtils
+                        .createCookie("access_token", signInResponse.getAccessToken(), signInResponse.getExpiresIn());
+                Cookie refreshTokenCookie = CookieUtils
+                        .createCookie("refresh_token", signInResponse.getRefreshToken(), MAX_AGE);
 
                 response.addCookie(accessTokenCookie);
                 response.addCookie(refreshTokenCookie);
@@ -257,6 +212,7 @@ public class AuthController {
         }
     }
 
+    @Deprecated
     @PostMapping("/google/callback/mobile")
     public ResponseEntity<AppResponseDto<SignInResponse>> googleCallbackMobile(
             @Valid @RequestBody KeycloakCallbackRequest request) {
@@ -270,26 +226,8 @@ public class AuthController {
                             : (authProperties.getGoogleCallbackUri() + "-mobile"))
                     .build();
 
-            // Exchange authorization code for tokens
-            AuthTokenResponse authTokenResponse = keycloakAuthService.exchangeAuthorizationCode(mobileRequest);
-
-            // Decode JWT to get user info
-            JwtDecoder decoder = JwtDecoders.fromIssuerLocation(authProperties.getIssuer());
-            Jwt jwt = decoder.decode(authTokenResponse.getAccessToken());
-
-            // Sync user profile if not exists
-            userProfileApi.createUserFromKeycloakUser(jwt.getSubject(),
-                    jwt.getClaimAsString("email"),
-                    jwt.getClaimAsString("given_name"),
-                    jwt.getClaimAsString("family_name"));
-
-            // Map AuthTokenResponse to SignInResponse
-            SignInResponse signInResponse = SignInResponse.builder()
-                    .accessToken(authTokenResponse.getAccessToken())
-                    .refreshToken(authTokenResponse.getRefreshToken())
-                    .tokenType(authTokenResponse.getTokenType())
-                    .expiresIn(authTokenResponse.getExpiresIn())
-                    .build();
+            // Process login callback (exchange code, decode JWT, sync user)
+            SignInResponse signInResponse = keycloakAuthService.processLoginCallback(mobileRequest);
 
             return ResponseEntity.ok(AppResponseDto.success(signInResponse));
 
@@ -325,18 +263,5 @@ public class AuthController {
 
         log.debug("Extracted origin URL - scheme: {}, host: {}", scheme, host);
         return scheme + "://" + host;
-    }
-
-    private Cookie createCookie(String name, String value, int maxAge) {
-        //TODO: when going production, set Secure to true
-        Cookie cookie = new Cookie(name, value);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(maxAge);
-        cookie.setAttribute("SameSite", "Lax");
-
-        log.info("Creating cookie: name={}, maxAge={}, httpOnly=true, sameSite=Lax", name, maxAge);
-
-        return cookie;
     }
 }

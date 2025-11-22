@@ -55,4 +55,14 @@ public class AuthenticationService {
             throw new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Authentication failed: " + e.getMessage());
         }
     }
+
+    public void signOut(String sessionId, boolean offline) {
+        try {
+            keycloakAuthService.signOut(sessionId, offline);
+            log.info("User signed out successfully");
+        } catch (Exception e) {
+            log.error("Error during signout: {}", e.getMessage(), e);
+            throw new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Sign out failed: " + e.getMessage());
+        }
+    }
 }
