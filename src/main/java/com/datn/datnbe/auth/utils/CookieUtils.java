@@ -26,7 +26,6 @@ public class CookieUtils {
         cookie.setHttpOnly(true);
         cookie.setPath("/");
         cookie.setMaxAge(maxAge);
-        cookie.setAttribute("SameSite", "Lax");
 
         log.info("Creating cookie: name={}, maxAge={}, httpOnly=true, sameSite=Lax", name, maxAge);
 

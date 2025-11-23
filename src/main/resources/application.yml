@@ -62,6 +62,10 @@ spring:
           issuer-uri: http://localhost:8082/realms/ai-primary-dev
 server:
   servlet:
+    session:
+      cookie:
+        secure: true
+        same-site: none
     encoding:
       charset: UTF-8
       enabled: true

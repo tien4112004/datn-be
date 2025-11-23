@@ -65,6 +65,11 @@ server:
     enabled: true
   forward-headers-strategy: framework
   servlet:
+    session:
+      cookie:
+        secure: true
+        same-site: none
+
     encoding:
       charset: UTF-8
       enabled: true
