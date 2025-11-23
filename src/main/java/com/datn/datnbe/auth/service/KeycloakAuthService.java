@@ -253,16 +253,6 @@ public class KeycloakAuthService {
         return exchangeToken(requestBody, "authorization code exchange");
     }
 
-    public void signOut(String sessionId, boolean offline) {
-        try {
-            realmResource.deleteSession(sessionId, offline);
-            log.info("Successfully logged out Keycloak session: {}", sessionId);
-        } catch (Exception e) {
-            log.error("Error logging out Keycloak session: {}", e.getMessage(), e);
-            throw new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Failed to logout session in authentication system");
-        }
-    }
-
     /**
      * Extract session ID from refresh token JWT
      * The refresh token contains 'sid' claim which is the session ID
@@ -291,10 +281,33 @@ public class KeycloakAuthService {
      * Logout user by refresh token
      * Extracts session ID from refresh token and invalidates the session in Keycloak
      */
-    public void logoutByRefreshToken(String refreshToken) {
+    public void signOut(String refreshToken) {
         log.info("Processing logout with refresh token");
-        String sessionId = extractSessionIdFromRefreshToken(refreshToken);
-        signOut(sessionId, false);
+        try {
+            var requestBody = "client_id=" + authProperties.getClientId() + "&refresh_token=" + refreshToken
+                    + "&client_secret=" + authProperties.getClientSecret();
+
+            webClient.post()
+                    .uri(authProperties.getLogoutUri())
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .onStatus(status -> status.value() >= 400,
+                            resp -> resp.bodyToMono(String.class)
+                                    .defaultIfEmpty("")
+                                    .flatMap(body -> reactor.core.publisher.Mono.error(new AppException(
+                                            ErrorCode.AUTH_SERVER_ERROR, "Failed to logout: " + body))))
+                    .bodyToMono(String.class)
+                    .block();
+
+            log.info("Successfully invalidated session via refresh token");
+        } catch (AppException e) {
+            log.warn("Failed to invalidate session via refresh token: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.warn("Failed to invalidate session via refresh token: {}", e.getMessage(), e);
+            throw new AppException(ErrorCode.AUTH_SERVER_ERROR, "Failed to logout: " + e.getMessage());
+        }
     }
 
     /**

@@ -79,7 +79,7 @@ public class AuthController {
                 if ("refresh_token".equals(cookie.getName()) && cookie.getValue() != null
                         && !cookie.getValue().isEmpty()) {
                     try {
-                        keycloakAuthService.logoutByRefreshToken(cookie.getValue());
+                        authenticationService.signOut(cookie.getValue());
                         log.info("Successfully invalidated Keycloak session");
                     } catch (Exception e) {
                         log.warn("Failed to invalidate Keycloak session: {}", e.getMessage());
@@ -133,7 +133,13 @@ public class AuthController {
 
     @GetMapping("/google/authorize")
     public void googleAuthorize(@RequestParam(required = false, defaultValue = "web") String clientType,
+            HttpServletRequest request,
             HttpServletResponse response) throws IOException {
+
+        // Extract and store frontend origin in session
+        String feOrigin = extractFeOrigin(request);
+        request.getSession().setAttribute("fe_origin", feOrigin);
+        log.info("Stored frontend origin in session: {}", feOrigin);
 
         String googleLoginUrl = keycloakAuthService.generateGoogleLoginUrl(clientType);
 
@@ -164,6 +170,13 @@ public class AuthController {
 
             SignInResponse signInResponse = keycloakAuthService.processLoginCallback(callbackRequest);
 
+            // Retrieve frontend origin from session
+            String feUrl = (String) request.getSession().getAttribute("fe_origin");
+            if (feUrl == null || feUrl.isEmpty()) {
+                feUrl = getOriginUrl(request); // fallback
+            }
+            log.info("Retrieved frontend origin from session: {}", feUrl);
+
             if ("mobile".equalsIgnoreCase(clientType)) {
                 // For mobile, redirect to a deep link or custom scheme
                 String mobileRedirectUrl = String.format("%s?access_token=%s&refresh_token=%s&expires_in=%d",
@@ -184,12 +197,9 @@ public class AuthController {
                 response.addCookie(accessTokenCookie);
                 response.addCookie(refreshTokenCookie);
 
-                // Get frontend URL from request origin
-                String feUrl = getOriginUrl(request);
-
                 // Redirect to frontend with success flag
                 log.info("Redirecting web client to: {}", feUrl);
-                response.sendRedirect(feUrl + "/");
+                response.sendRedirect(feUrl + "/auth/google/callback");
             }
 
         } catch (Exception e) {
@@ -201,8 +211,11 @@ public class AuthController {
                 clientType = state.split(":")[0];
             }
 
-            // Get frontend URL from request origin
-            String feUrl = getOriginUrl(request);
+            // Retrieve frontend origin from session
+            String feUrl = (String) request.getSession().getAttribute("fe_origin");
+            if (feUrl == null || feUrl.isEmpty()) {
+                feUrl = getOriginUrl(request); // fallback
+            }
 
             if ("mobile".equalsIgnoreCase(clientType)) {
                 response.sendRedirect(authProperties.getMobileRedirectUrl() + "/auth/error");
@@ -240,6 +253,27 @@ public class AuthController {
                             .message("Authentication failed: " + e.getMessage())
                             .build());
         }
+    }
+
+    private String extractFeOrigin(HttpServletRequest request) {
+        String referer = request.getHeader("Referer");
+        if (referer != null && !referer.isEmpty()) {
+            try {
+                // Extract origin from referer URL (e.g., "http://localhost:3000/..." -> "http://localhost:3000")
+                java.net.URI uri = java.net.URI.create(referer);
+                String origin = uri.getScheme() + "://" + uri.getHost();
+                if ((uri.getScheme().equals("http") && uri.getPort() != 80 && uri.getPort() != -1)
+                        || (uri.getScheme().equals("https") && uri.getPort() != 443 && uri.getPort() != -1)) {
+                    origin += ":" + uri.getPort();
+                }
+                log.debug("Extracted frontend origin from Referer: {}", origin);
+                return origin;
+            } catch (Exception e) {
+                log.warn("Failed to parse Referer header: {}", e.getMessage());
+            }
+        }
+        // Fallback to request origin if Referer is not available
+        return getOriginUrl(request);
     }
 
     private String getOriginUrl(HttpServletRequest request) {

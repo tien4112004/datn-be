@@ -6,10 +6,12 @@ import com.datn.datnbe.auth.dto.response.SignInResponse;
 import com.datn.datnbe.auth.repository.UserProfileRepo;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -56,9 +58,9 @@ public class AuthenticationService {
         }
     }
 
-    public void signOut(String sessionId, boolean offline) {
+    public void signOut(String refreshToken) {
         try {
-            keycloakAuthService.signOut(sessionId, offline);
+            keycloakAuthService.signOut(refreshToken);
             log.info("User signed out successfully");
         } catch (Exception e) {
             log.error("Error during signout: {}", e.getMessage(), e);
