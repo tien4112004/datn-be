@@ -111,6 +111,7 @@ public class AuthController {
         return ResponseEntity.ok(AppResponseDto.success(Map.of("logoutUrl", keycloakLogoutUrl)));
     }
 
+    @Deprecated
     @PostMapping("/exchange")
     public ResponseEntity<AppResponseDto<SignInResponse>> keycloakCallback(
             @Valid @RequestBody KeycloakCallbackRequest request,

@@ -87,11 +87,6 @@ public class KeycloakAuthService {
                 assignRealmRole(keycloakUserId, role.toLowerCase());
 
                 return keycloakUserId;
-                // } else if(response.getStatus() >= 400) {
-                //     String errorMessage = response.getStatusInfo().getReasonPhrase();
-                //     log.error("Failed to create Keycloak user. Status: {}, Error: {}", response.getStatus(), errorMessage);
-                //     throw new AppException(ErrorCode.AUTH_INVALID_CREDENTIALS,
-                //             "Failed to create user in Keycloak: " + errorMessage);
             } else {
                 log.error("Failed to create Keycloak user. Status: {}", response.getStatus());
                 throw new AppException(ErrorCode.UNCATEGORIZED_ERROR,
@@ -100,7 +95,8 @@ public class KeycloakAuthService {
 
         } catch (Exception e) {
             log.error("Error creating Keycloak user: {}", e.getMessage(), e);
-            throw new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Failed to create user in authentication system");
+            // Rethrow
+            throw e;
         }
     }
 
@@ -161,21 +157,17 @@ public class KeycloakAuthService {
     private AuthTokenResponse exchangeToken(String requestBody, String errorContext) {
 
         try {
-            return webClient.post()
+            var response = webClient.post()
                     .uri(authProperties.getTokenUri())
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                     .bodyValue(requestBody)
                     .retrieve()
-                    .onStatus(status -> status.value() == 400,
-                            resp -> resp.bodyToMono(String.class)
-                                    .defaultIfEmpty("")
-                                    .flatMap(body -> reactor.core.publisher.Mono
-                                            .error(new AppException(ErrorCode.AUTH_INVALID_CREDENTIALS, body))))
-                    .onStatus(status -> status.value() == 401,
-                            resp -> resp.bodyToMono(String.class)
-                                    .defaultIfEmpty("")
-                                    .flatMap(body -> reactor.core.publisher.Mono
-                                            .error(new AppException(ErrorCode.AUTH_UNAUTHORIZED, body))))
+                    .onStatus(status -> status.value() == 400 || status.value() == 401,
+                            resp -> resp.bodyToMono(String.class).defaultIfEmpty("").flatMap(body -> {
+                                log.error("Authentication server error during {}: {}", errorContext, body);
+                                return reactor.core.publisher.Mono
+                                        .error(new AppException(ErrorCode.AUTH_INVALID_CREDENTIALS));
+                            }))
                     .onStatus(status -> status.value() >= 500,
                             resp -> resp.bodyToMono(String.class)
                                     .defaultIfEmpty("")
@@ -184,6 +176,7 @@ public class KeycloakAuthService {
                     .bodyToMono(AuthTokenResponse.class)
                     .block();
 
+            return response;
         } catch (AppException e) {
             log.debug("Authentication error during {}: {}", errorContext, e.getMessage());
             throw e;
@@ -200,7 +193,11 @@ public class KeycloakAuthService {
                 + request.getPassword() + "&grant_type=password" + "&client_secret=" + authProperties.getClientSecret()
                 + "&user_id=" + userKeycloakId;
 
-        return exchangeToken(requestBody, "Keycloak signin");
+        final var result = exchangeToken(requestBody, "Keycloak signin");
+
+        log.info("result: {}", result);
+
+        return result;
     }
 
     /**
