@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 
 import com.datn.datnbe.auth.apiclient.KeycloakApiClient;
-import com.datn.datnbe.auth.config.KeycloakAuthorizationProperties;
 import com.datn.datnbe.auth.dto.keycloak.KeycloakGroupDto;
 import com.datn.datnbe.auth.dto.keycloak.KeycloakGroupPolicyDto;
 import com.datn.datnbe.auth.dto.keycloak.KeycloakPermissionDto;
@@ -29,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 public class KeycloakAuthorizationService {
 
     private final KeycloakApiClient apiClient;
-    private final KeycloakAuthorizationProperties authzProperties;
     private final ObjectMapper objectMapper;
     private final KeycloakDtoMapper keycloakMapper;
 

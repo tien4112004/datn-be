@@ -1,6 +1,7 @@
 package com.datn.datnbe.auth.utils;
 
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @UtilityClass
 public class CookieUtils {
+    public static final String ACCESS_TOKEN = "access_token";
+    public static final String REFRESH_TOKEN = "refresh_token";
+    public static final String JSESSIONID = "JSESSIONID";
+    public static final int REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
 
     /**
      * Create a secure HTTP-only cookie
@@ -46,5 +51,25 @@ public class CookieUtils {
         response.addCookie(cookie);
 
         log.debug("Deleting cookie: name={}", name);
+    }
+
+    public static String extractTokensFromCookies(HttpServletRequest request, String key) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("refresh_token".equals(cookie.getName()) && cookie.getValue() != null
+                        && !cookie.getValue().isEmpty()) {
+                    try {
+                        return cookie.getValue();
+                    } catch (Exception e) {
+                        log.warn("Failed to invalidate Keycloak session: {}", e.getMessage());
+                        // Continue with logout even if Keycloak session invalidation fails
+                    }
+                    break;
+                }
+            }
+        }
+
+        return null;
     }
 }

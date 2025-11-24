@@ -1,7 +1,6 @@
 package com.datn.datnbe.auth.service;
 
 import java.util.Collections;
-import java.util.List;
 
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UsersResource;
@@ -9,12 +8,23 @@ import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtDecoders;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.config.AuthProperties;
@@ -39,16 +49,18 @@ public class KeycloakAuthService {
     RealmResource realmResource;
     AuthProperties authProperties;
     WebClient webClient;
+    RestTemplate restTemplate;
 
     @Lazy
     UserProfileApi userProfileApi;
 
     public KeycloakAuthService(UsersResource usersResource, RealmResource realmResource, AuthProperties authProperties,
-            WebClient webClient, @Lazy UserProfileApi userProfileApi) {
+            WebClient webClient, RestTemplate restTemplate, @Lazy UserProfileApi userProfileApi) {
         this.usersResource = usersResource;
         this.realmResource = realmResource;
         this.authProperties = authProperties;
         this.webClient = webClient;
+        this.restTemplate = restTemplate;
         this.userProfileApi = userProfileApi;
     }
 
@@ -117,22 +129,6 @@ public class KeycloakAuthService {
             log.error("Error assigning realm role '{}' to user {}: {}", roleName, keycloakUserId, e.getMessage(), e);
             throw new AppException(ErrorCode.UNCATEGORIZED_ERROR,
                     "Failed to assign role '" + roleName + "' to user. Make sure the role exists in Keycloak realm.");
-        }
-    }
-
-    /**
-     * Get Keycloak user ID by email
-     */
-    public String getKeycloakUserIdByEmail(String email) {
-        try {
-            List<UserRepresentation> users = usersResource.searchByEmail(email, true);
-            if (users.isEmpty()) {
-                throw new AppException(ErrorCode.USER_PROFILE_NOT_FOUND, "User not found with email: " + email);
-            }
-            return users.get(0).getId();
-        } catch (Exception e) {
-            log.error("Error searching Keycloak user by email: {}", e.getMessage(), e);
-            throw new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Failed to find user by email");
         }
     }
 
@@ -254,22 +250,21 @@ public class KeycloakAuthService {
      * Extract session ID from refresh token JWT
      * The refresh token contains 'sid' claim which is the session ID
      */
-    public String extractSessionIdFromRefreshToken(String refreshToken) {
+    public String extractSubjectFromRefreshToken(String refreshToken) {
         try {
             JwtDecoder decoder = JwtDecoders.fromIssuerLocation(authProperties.getIssuer());
             Jwt jwt = decoder.decode(refreshToken);
-            String sessionId = jwt.getClaimAsString("sid");
+            String sessionId = jwt.getClaimAsString("sub");
 
             if (sessionId == null || sessionId.isEmpty()) {
-                log.warn("Session ID (sid) not found in refresh token");
-                throw new AppException(ErrorCode.AUTH_INVALID_CREDENTIALS,
-                        "Invalid refresh token: session ID not found");
+                log.warn("Subject (sub) not found in refresh token");
+                throw new AppException(ErrorCode.AUTH_INVALID_CREDENTIALS, "Invalid refresh token: Subject not found");
             }
 
-            log.debug("Extracted session ID from refresh token: {}", sessionId);
+            log.debug("Extracted Subject from refresh token: {}", sessionId);
             return sessionId;
         } catch (Exception e) {
-            log.error("Error extracting session ID from refresh token: {}", e.getMessage(), e);
+            log.error("Error extracting Subject from refresh token: {}", e.getMessage(), e);
             throw new AppException(ErrorCode.AUTH_INVALID_CREDENTIALS, "Failed to parse refresh token");
         }
     }
@@ -280,31 +275,36 @@ public class KeycloakAuthService {
      */
     public void signOut(String refreshToken) {
         log.info("Processing logout with refresh token");
+        var requestBody = "client_id=" + authProperties.getClientId() + "&refresh_token=" + refreshToken
+                + "&client_secret=" + authProperties.getClientSecret();
+
+        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+        formData.add("client_id", authProperties.getClientId());
+        formData.add("client_secret", authProperties.getClientSecret());
+        formData.add("refresh_token", refreshToken); // Crucial: Must be the Refresh Token, not Access Token
+
+        // 2. Prepare Headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        // 3. Send Request
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(formData, headers);
+
+        var logoutUrl = authProperties.getLogoutUri() + "?" + requestBody;
+        log.info("Logout URL: {}", logoutUrl);
         try {
-            var requestBody = "client_id=" + authProperties.getClientId() + "&refresh_token=" + refreshToken
-                    + "&client_secret=" + authProperties.getClientSecret();
-
-            webClient.post()
-                    .uri(authProperties.getLogoutUri())
-                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                    .bodyValue(requestBody)
-                    .retrieve()
-                    .onStatus(status -> status.value() >= 400,
-                            resp -> resp.bodyToMono(String.class)
-                                    .defaultIfEmpty("")
-                                    .flatMap(body -> reactor.core.publisher.Mono.error(new AppException(
-                                            ErrorCode.AUTH_SERVER_ERROR, "Failed to logout: " + body))))
-                    .bodyToMono(String.class)
-                    .block();
-
-            log.info("Successfully invalidated session via refresh token");
-        } catch (AppException e) {
-            log.warn("Failed to invalidate session via refresh token: {}", e.getMessage());
-            throw e;
+            ResponseEntity<Void> response = restTemplate.postForEntity(logoutUrl, request, Void.class);
+            if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Successfully logged out from Keycloak");
+            } else {
+                log.error("Keycloak logout failed. Status: {}", response.getStatusCode());
+            }
         } catch (Exception e) {
-            log.warn("Failed to invalidate session via refresh token: {}", e.getMessage(), e);
-            throw new AppException(ErrorCode.AUTH_SERVER_ERROR, "Failed to logout: " + e.getMessage());
+            log.error("Error calling Keycloak logout API", e);
+            // Decide: Throw exception or swallow it?
+            // Usually, if Keycloak is down, we still want to clear local cookies, so we might just log it.
         }
+
     }
 
     /**
@@ -349,7 +349,7 @@ public class KeycloakAuthService {
         log.info("Generating Google login URL for clientType: {}", clientType);
 
         // Encode client type in state parameter to track where to redirect after authentication
-        String state = clientType + ":" + java.util.UUID.randomUUID().toString();
+        String state = clientType + ":" + java.util.UUID.randomUUID();
 
         java.util.Map<String, String> params = java.util.Map.of("client_id",
                 authProperties.getClientId(),
@@ -376,5 +376,26 @@ public class KeycloakAuthService {
                 authProperties.getServerUrl(),
                 authProperties.getRealm(),
                 queryString);
+    }
+
+    /**
+     * Build Keycloak logout URL
+     *
+     * @param auth Authentication object
+     * @return Keycloak logout URL
+     */
+    public String buildLogoutUrl(Authentication auth) {
+        String idToken = null;
+        if (auth instanceof OAuth2AuthenticationToken oauth && oauth.getPrincipal() instanceof OidcUser oidc) {
+            idToken = oidc.getIdToken().getTokenValue();
+        }
+
+        String keycloakLogoutUrl = UriComponentsBuilder.fromUriString(authProperties.getLogoutUri())
+                .queryParam("post_logout_redirect_uri", authProperties.getRedirectUri())
+                .queryParam("id_token_hint", idToken)
+                .toUriString();
+
+        log.info("Built Keycloak logout URL: {}", keycloakLogoutUrl);
+        return keycloakLogoutUrl;
     }
 }

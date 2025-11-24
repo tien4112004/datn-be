@@ -12,6 +12,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
+import com.datn.datnbe.auth.utils.CookieUtils;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -58,13 +63,31 @@ public class AuthenticationService {
         }
     }
 
-    public void signOut(String refreshToken) {
-        try {
-            keycloakAuthService.signOut(refreshToken);
-            log.info("User signed out successfully");
-        } catch (Exception e) {
-            log.error("Error during signout: {}", e.getMessage(), e);
-            throw new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Sign out failed: " + e.getMessage());
+    /**
+     * Handles the complete logout process including local session invalidation,
+     * Keycloak session invalidation, and cookie clearing.
+     *
+     * @param request  the HTTP request
+     * @param response the HTTP response
+     * @param auth     the current user's authentication
+     */
+    public void logout(HttpServletRequest request, HttpServletResponse response, Authentication auth) {
+        // Invalidate local session
+        new SecurityContextLogoutHandler().logout(request, response, auth);
+        log.info("Local session invalidated for user: {}", auth != null ? auth.getName() : "unknown");
+
+        final String refreshToken = CookieUtils.extractTokensFromCookies(request, CookieUtils.REFRESH_TOKEN);
+        if (refreshToken == null || refreshToken.isEmpty()) {
+            log.warn("No refresh token found in cookies during logout.");
+            throw new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Invalid refresh token during logout");
         }
+
+        keycloakAuthService.signOut(refreshToken);
+
+        // Clear cookies
+        CookieUtils.deleteCookie(response, CookieUtils.ACCESS_TOKEN);
+        CookieUtils.deleteCookie(response, CookieUtils.REFRESH_TOKEN);
+        CookieUtils.deleteCookie(response, CookieUtils.JSESSIONID);
+        log.info("Authentication cookies cleared.");
     }
 }

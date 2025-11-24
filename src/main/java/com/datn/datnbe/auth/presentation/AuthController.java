@@ -22,14 +22,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.util.Map;
+
+import static com.datn.datnbe.auth.utils.OriginUtils.extractFeOrigin;
+import static com.datn.datnbe.auth.utils.OriginUtils.getOriginUrl;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -41,7 +40,6 @@ public class AuthController {
     UserProfileApi userProfileApi;
     AuthenticationService authenticationService;
     KeycloakAuthService keycloakAuthService;
-    Integer MAX_AGE = 604800; // 7 days
 
     @PostMapping("/signin")
     public ResponseEntity<AppResponseDto<SignInResponse>> signIn(@Valid @RequestBody SigninRequest request,
@@ -50,8 +48,9 @@ public class AuthController {
 
         Cookie accessTokenCookie = CookieUtils
                 .createCookie("access_token", signInResponse.getAccessToken(), signInResponse.getExpiresIn());
-        Cookie refreshTokenCookie = CookieUtils
-                .createCookie("refresh_token", signInResponse.getRefreshToken(), MAX_AGE);
+        Cookie refreshTokenCookie = CookieUtils.createCookie(CookieUtils.REFRESH_TOKEN,
+                signInResponse.getRefreshToken(),
+                CookieUtils.REFRESH_TOKEN_MAX_AGE);
 
         response.addCookie(accessTokenCookie);
         response.addCookie(refreshTokenCookie);
@@ -69,67 +68,8 @@ public class AuthController {
     public ResponseEntity<AppResponseDto<Map<String, String>>> logout(HttpServletRequest request,
             HttpServletResponse response,
             Authentication auth) {
-        // Invalidate session
-        new SecurityContextLogoutHandler().logout(request, response, auth);
-
-        // Extract refresh token from cookies and invalidate Keycloak session
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("refresh_token".equals(cookie.getName()) && cookie.getValue() != null
-                        && !cookie.getValue().isEmpty()) {
-                    try {
-                        authenticationService.signOut(cookie.getValue());
-                        log.info("Successfully invalidated Keycloak session");
-                    } catch (Exception e) {
-                        log.warn("Failed to invalidate Keycloak session: {}", e.getMessage());
-                        // Continue with logout even if Keycloak session invalidation fails
-                    }
-                    break;
-                }
-            }
-        }
-
-        // Clear cookies
-        CookieUtils.deleteCookie(response, "access_token");
-        CookieUtils.deleteCookie(response, "refresh_token");
-        CookieUtils.deleteCookie(response, "JSESSIONID");
-
-        // Build Keycloak logout URL
-        String idToken = null;
-        if (auth instanceof OAuth2AuthenticationToken oauth && oauth.getPrincipal() instanceof OidcUser oidc) {
-            idToken = oidc.getIdToken().getTokenValue();
-        }
-
-        String keycloakLogoutUrl = UriComponentsBuilder.fromUriString(authProperties.getLogoutUri())
-                .queryParam("post_logout_redirect_uri", authProperties.getRedirectUri())
-                .queryParam("id_token_hint", idToken)
-                .toUriString();
-
-        log.info("User logged out, Keycloak logout URL: {}", keycloakLogoutUrl);
-
-        return ResponseEntity.ok(AppResponseDto.success(Map.of("logoutUrl", keycloakLogoutUrl)));
-    }
-
-    @Deprecated
-    @PostMapping("/exchange")
-    public ResponseEntity<AppResponseDto<SignInResponse>> keycloakCallback(
-            @Valid @RequestBody KeycloakCallbackRequest request,
-            HttpServletResponse response) {
-
-        // Process login callback (exchange code, decode JWT, sync user)
-        SignInResponse signInResponse = keycloakAuthService.processLoginCallback(request);
-
-        // Add cookies to response
-        Cookie accessTokenCookie = CookieUtils
-                .createCookie("access_token", signInResponse.getAccessToken(), signInResponse.getExpiresIn());
-        Cookie refreshTokenCookie = CookieUtils
-                .createCookie("refresh_token", signInResponse.getRefreshToken(), MAX_AGE);
-
-        response.addCookie(accessTokenCookie);
-        response.addCookie(refreshTokenCookie);
-
-        return ResponseEntity.ok(AppResponseDto.success(signInResponse));
+        authenticationService.logout(request, response, auth);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/google/authorize")
@@ -192,8 +132,9 @@ public class AuthController {
                 // For web, set cookies and redirect to FE URL
                 Cookie accessTokenCookie = CookieUtils
                         .createCookie("access_token", signInResponse.getAccessToken(), signInResponse.getExpiresIn());
-                Cookie refreshTokenCookie = CookieUtils
-                        .createCookie("refresh_token", signInResponse.getRefreshToken(), MAX_AGE);
+                Cookie refreshTokenCookie = CookieUtils.createCookie(CookieUtils.REFRESH_TOKEN,
+                        signInResponse.getRefreshToken(),
+                        CookieUtils.REFRESH_TOKEN_MAX_AGE);
 
                 response.addCookie(accessTokenCookie);
                 response.addCookie(refreshTokenCookie);
@@ -226,77 +167,4 @@ public class AuthController {
         }
     }
 
-    @Deprecated
-    @PostMapping("/google/callback/mobile")
-    public ResponseEntity<AppResponseDto<SignInResponse>> googleCallbackMobile(
-            @Valid @RequestBody KeycloakCallbackRequest request) {
-        log.info("Received Google OAuth callback for mobile");
-
-        try {
-            KeycloakCallbackRequest mobileRequest = KeycloakCallbackRequest.builder()
-                    .code(request.getCode())
-                    .redirectUri(request.getRedirectUri() != null
-                            ? request.getRedirectUri()
-                            : (authProperties.getGoogleCallbackUri() + "-mobile"))
-                    .build();
-
-            // Process login callback (exchange code, decode JWT, sync user)
-            SignInResponse signInResponse = keycloakAuthService.processLoginCallback(mobileRequest);
-
-            return ResponseEntity.ok(AppResponseDto.success(signInResponse));
-
-        } catch (Exception e) {
-            log.error("Error during Google OAuth mobile callback: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(AppResponseDto.<SignInResponse>builder()
-                            .success(false)
-                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                            .message("Authentication failed: " + e.getMessage())
-                            .build());
-        }
-    }
-
-    private String extractFeOrigin(HttpServletRequest request) {
-        String referer = request.getHeader("Referer");
-        if (referer != null && !referer.isEmpty()) {
-            try {
-                // Extract origin from referer URL (e.g., "http://localhost:3000/..." -> "http://localhost:3000")
-                java.net.URI uri = java.net.URI.create(referer);
-                String origin = uri.getScheme() + "://" + uri.getHost();
-                if ((uri.getScheme().equals("http") && uri.getPort() != 80 && uri.getPort() != -1)
-                        || (uri.getScheme().equals("https") && uri.getPort() != 443 && uri.getPort() != -1)) {
-                    origin += ":" + uri.getPort();
-                }
-                log.debug("Extracted frontend origin from Referer: {}", origin);
-                return origin;
-            } catch (Exception e) {
-                log.warn("Failed to parse Referer header: {}", e.getMessage());
-            }
-        }
-        // Fallback to request origin if Referer is not available
-        return getOriginUrl(request);
-    }
-
-    private String getOriginUrl(HttpServletRequest request) {
-        String scheme = request.getHeader("X-Forwarded-Proto");
-        if (scheme == null || scheme.isEmpty()) {
-            scheme = request.getScheme();
-        }
-
-        String host = request.getHeader("X-Forwarded-Host");
-        if (host == null || host.isEmpty()) {
-            host = request.getHeader("Host");
-        }
-
-        if (host == null || host.isEmpty()) {
-            host = request.getServerName();
-            int port = request.getServerPort();
-            if ((scheme.equals("http") && port != 80) || (scheme.equals("https") && port != 443)) {
-                host = host + ":" + port;
-            }
-        }
-
-        log.debug("Extracted origin URL - scheme: {}, host: {}", scheme, host);
-        return scheme + "://" + host;
-    }
 }

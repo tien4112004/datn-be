@@ -1,4 +1,4 @@
-package com.datn.datnbe.auth.utils;
+package com.datn.datnbe.auth.config;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
