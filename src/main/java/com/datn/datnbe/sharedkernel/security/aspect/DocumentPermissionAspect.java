@@ -75,7 +75,7 @@ public class DocumentPermissionAspect {
         log.debug("Checking permissions for user {} on document {}", userId, documentId);
 
         // Get the permission service dynamically to avoid circular dependency
-        Object permissionService = applicationContext.getBean("resourcePermissionService");
+        Object permissionService = applicationContext.getBean("resourcePermissionManagement");
         Set<String> userPermissions;
 
         try {
