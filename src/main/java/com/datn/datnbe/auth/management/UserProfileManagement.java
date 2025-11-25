@@ -67,6 +67,12 @@ public class UserProfileManagement implements UserProfileApi {
     public UserProfileResponse createUserProfile(SignupRequest request) {
         log.info("Creating user profile for email: {}", request.getEmail());
 
+        if (userProfileRepo.existsByEmail(request.getEmail())) {
+            log.error("User profile already exists for email: {}", request.getEmail());
+            throw new AppException(ErrorCode.RESOURCE_ALREADY_EXISTS,
+                    "User with email '" + request.getEmail() + "' already exists in authentication system.");
+        }
+
         String keycloakUserId = null;
 
         try {

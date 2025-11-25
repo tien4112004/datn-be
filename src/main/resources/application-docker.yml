@@ -65,6 +65,11 @@ server:
     enabled: true
   forward-headers-strategy: framework
   servlet:
+    session:
+      cookie:
+        secure: true
+        same-site: none
+
     encoding:
       charset: UTF-8
       enabled: true
@@ -133,7 +138,9 @@ app:
       token-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/token
       server-url: ${KEYCLOAK_SERVER_URL:http://keycloak:8080}
       google-callback-uri: ${GOOGLE_CALLBACK_URI:http://datn-be:8080/api/auth/google/callback}
-      fe-url: ${FE_URL:http://localhost:3000}
+      fe-redirect-url: ${FE_REDIRECT_URI:http://localhost:5173}
+      mobile-redirect-url: ${MOBILE_REDIRECT_URI:aiprimary://auth-callback}
+
     authorization:
       server-url: ${KEYCLOAK_SERVER_URL:http://keycloak:8080}
       realm: ${KEYCLOAK_REALM:ai-primary-dev}

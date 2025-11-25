@@ -16,7 +16,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 import com.datn.datnbe.auth.handler.CustomAuthenticationEntryPoint;
-import com.datn.datnbe.auth.utils.CookieBearerTokenResolver;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

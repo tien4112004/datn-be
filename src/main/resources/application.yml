@@ -62,10 +62,15 @@ spring:
           issuer-uri: http://localhost:8082/realms/ai-primary-dev
 server:
   servlet:
+    session:
+      cookie:
+        secure: true
+        same-site: none
     encoding:
       charset: UTF-8
       enabled: true
       force: true
+  address: 0.0.0.0
 app:
   models:
     configurations:
@@ -133,14 +138,16 @@ app:
       issuer: ${KEYCLOAK_ISSUER_URI:http://localhost:8082/realms/ai-primary-dev}
       client-id: ${KEYCLOAK_CLIENT_ID:ai-primary}
       client-secret: ${KEYCLOAK_CLIENT_SECRET:change-me}
-      redirect-uri: http://localhost:8080/login/oauth2/code/keycloak
+      redirect-uri: ${KEYCLOAK_REDIRECT_URI:https://adequately-sharing-imp.ngrok-free.app/login/oauth2/code/keycloak} # Command line: ngrok http 8080 --url=adequately-sharing-imp.ngrok-free.app
       signIn-uri: /oauth2/authorization/keycloak
       signup-uri: ${KEYCLOAK_ISSUER_URI}/login-actions/registration
       logout-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/logout
       token-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/token
       server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8082}
       google-callback-uri: ${GOOGLE_CALLBACK_URI:http://localhost:8080/api/auth/google/callback}
-      fe-url: ${FE_URL:http://localhost:5173}
+      fe-redirect-url: ${FE_REDIRECT_URI:http://localhost:5173}
+      mobile-redirect-url: ${MOBILE_REDIRECT_URI:aiprimary://auth-callback}
+
     authorization:
       server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8082}
       realm: ${KEYCLOAK_REALM:ai-primary-dev}
