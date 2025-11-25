@@ -24,5 +24,6 @@ public class AuthProperties {
     String logoutUri;
     String tokenUri;
     String googleCallbackUri;
-    String feUrl;
+    String feRedirectUrl;
+    String mobileRedirectUrl;
 }

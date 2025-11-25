@@ -27,4 +27,6 @@ public interface UserProfileRepo
                 WHERE id = ?1 OR keycloak_user_id = ?1
             """, nativeQuery = true)
     Optional<UserProfile> findByIdOrKeycloakUserId(String id);
+
+    boolean existsByEmail(String email);
 }

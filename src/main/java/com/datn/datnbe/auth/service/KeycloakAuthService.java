@@ -1,17 +1,24 @@
 package com.datn.datnbe.auth.service;
 
 import java.util.Collections;
-import java.util.List;
 
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.config.AuthProperties;
 import com.datn.datnbe.auth.dto.request.KeycloakCallbackRequest;
 import com.datn.datnbe.auth.dto.request.SigninRequest;
@@ -22,19 +29,31 @@ import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 
 import jakarta.ws.rs.core.Response;
 import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class KeycloakAuthService {
     UsersResource usersResource;
     RealmResource realmResource;
     AuthProperties authProperties;
     WebClient webClient;
+    RestTemplate restTemplate;
+
+    @Lazy
+    UserProfileApi userProfileApi;
+
+    public KeycloakAuthService(UsersResource usersResource, RealmResource realmResource, AuthProperties authProperties,
+            WebClient webClient, RestTemplate restTemplate, @Lazy UserProfileApi userProfileApi) {
+        this.usersResource = usersResource;
+        this.realmResource = realmResource;
+        this.authProperties = authProperties;
+        this.webClient = webClient;
+        this.restTemplate = restTemplate;
+        this.userProfileApi = userProfileApi;
+    }
 
     /**
      * Create user in Keycloak
@@ -71,11 +90,6 @@ public class KeycloakAuthService {
                 assignRealmRole(keycloakUserId, role.toLowerCase());
 
                 return keycloakUserId;
-                // } else if(response.getStatus() >= 400) {
-                //     String errorMessage = response.getStatusInfo().getReasonPhrase();
-                //     log.error("Failed to create Keycloak user. Status: {}, Error: {}", response.getStatus(), errorMessage);
-                //     throw new AppException(ErrorCode.AUTH_INVALID_CREDENTIALS,
-                //             "Failed to create user in Keycloak: " + errorMessage);
             } else {
                 log.error("Failed to create Keycloak user. Status: {}", response.getStatus());
                 throw new AppException(ErrorCode.UNCATEGORIZED_ERROR,
@@ -84,7 +98,8 @@ public class KeycloakAuthService {
 
         } catch (Exception e) {
             log.error("Error creating Keycloak user: {}", e.getMessage(), e);
-            throw new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Failed to create user in authentication system");
+            // Rethrow
+            throw e;
         }
     }
 
@@ -109,22 +124,6 @@ public class KeycloakAuthService {
     }
 
     /**
-     * Get Keycloak user ID by email
-     */
-    public String getKeycloakUserIdByEmail(String email) {
-        try {
-            List<UserRepresentation> users = usersResource.searchByEmail(email, true);
-            if (users.isEmpty()) {
-                throw new AppException(ErrorCode.USER_PROFILE_NOT_FOUND, "User not found with email: " + email);
-            }
-            return users.get(0).getId();
-        } catch (Exception e) {
-            log.error("Error searching Keycloak user by email: {}", e.getMessage(), e);
-            throw new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Failed to find user by email");
-        }
-    }
-
-    /**
      * Get user email from Keycloak
      */
     public String getUserEmail(String keycloakUserId) {
@@ -145,21 +144,17 @@ public class KeycloakAuthService {
     private AuthTokenResponse exchangeToken(String requestBody, String errorContext) {
 
         try {
-            return webClient.post()
+            var response = webClient.post()
                     .uri(authProperties.getTokenUri())
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                     .bodyValue(requestBody)
                     .retrieve()
-                    .onStatus(status -> status.value() == 400,
-                            resp -> resp.bodyToMono(String.class)
-                                    .defaultIfEmpty("")
-                                    .flatMap(body -> reactor.core.publisher.Mono
-                                            .error(new AppException(ErrorCode.AUTH_INVALID_CREDENTIALS, body))))
-                    .onStatus(status -> status.value() == 401,
-                            resp -> resp.bodyToMono(String.class)
-                                    .defaultIfEmpty("")
-                                    .flatMap(body -> reactor.core.publisher.Mono
-                                            .error(new AppException(ErrorCode.AUTH_UNAUTHORIZED, body))))
+                    .onStatus(status -> status.value() == 400 || status.value() == 401,
+                            resp -> resp.bodyToMono(String.class).defaultIfEmpty("").flatMap(body -> {
+                                log.error("Authentication server error during {}: {}", errorContext, body);
+                                return reactor.core.publisher.Mono
+                                        .error(new AppException(ErrorCode.AUTH_INVALID_CREDENTIALS));
+                            }))
                     .onStatus(status -> status.value() >= 500,
                             resp -> resp.bodyToMono(String.class)
                                     .defaultIfEmpty("")
@@ -168,6 +163,7 @@ public class KeycloakAuthService {
                     .bodyToMono(AuthTokenResponse.class)
                     .block();
 
+            return response;
         } catch (AppException e) {
             log.debug("Authentication error during {}: {}", errorContext, e.getMessage());
             throw e;
@@ -184,7 +180,11 @@ public class KeycloakAuthService {
                 + request.getPassword() + "&grant_type=password" + "&client_secret=" + authProperties.getClientSecret()
                 + "&user_id=" + userKeycloakId;
 
-        return exchangeToken(requestBody, "Keycloak signin");
+        final var result = exchangeToken(requestBody, "Keycloak signin");
+
+        log.info("result: {}", result);
+
+        return result;
     }
 
     /**
@@ -236,4 +236,36 @@ public class KeycloakAuthService {
 
         return exchangeToken(requestBody, "authorization code exchange");
     }
+
+    /**
+     * Logout user by refresh token
+     * Invalidates the session in Keycloak by sending the refresh token to the logout endpoint.
+     */
+    public void signOut(String refreshToken) {
+        log.info("Processing logout with refresh token");
+        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+        formData.add("client_id", authProperties.getClientId());
+        formData.add("client_secret", authProperties.getClientSecret());
+        formData.add("refresh_token", refreshToken); // Crucial: Must be the Refresh Token, not Access Token
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(formData, headers);
+
+        var logoutUrl = authProperties.getLogoutUri();
+        try {
+            ResponseEntity<Void> response = restTemplate.postForEntity(logoutUrl, request, Void.class);
+            if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Successfully logged out from Keycloak");
+            } else {
+                log.error("Keycloak logout failed. Status: {}", response.getStatusCode());
+            }
+        } catch (Exception e) {
+            log.error("Error calling Keycloak logout API", e);
+            // if Keycloak is down, we still want to clear local cookies, so we might just log it.
+        }
+
+    }
+
 }
