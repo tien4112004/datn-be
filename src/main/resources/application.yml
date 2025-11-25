@@ -138,7 +138,7 @@ app:
       issuer: ${KEYCLOAK_ISSUER_URI:http://localhost:8082/realms/ai-primary-dev}
       client-id: ${KEYCLOAK_CLIENT_ID:ai-primary}
       client-secret: ${KEYCLOAK_CLIENT_SECRET:change-me}
-      redirect-uri: https://adequately-sharing-imp.ngrok-free.app/login/oauth2/code/keycloak # Command line: ngrok http 8080 --url=adequately-sharing-imp.ngrok-free.app
+      redirect-uri: ${KEYCLOAK_REDIRECT_URI:https://adequately-sharing-imp.ngrok-free.app/login/oauth2/code/keycloak} # Command line: ngrok http 8080 --url=adequately-sharing-imp.ngrok-free.app
       signIn-uri: /oauth2/authorization/keycloak
       signup-uri: ${KEYCLOAK_ISSUER_URI}/login-actions/registration
       logout-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/logout

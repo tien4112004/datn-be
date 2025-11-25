@@ -47,7 +47,7 @@ public class AuthController {
         SignInResponse signInResponse = authenticationService.signIn(request);
 
         Cookie accessTokenCookie = CookieUtils
-                .createCookie("access_token", signInResponse.getAccessToken(), signInResponse.getExpiresIn());
+                .createCookie(CookieUtils.ACCESS_TOKEN, signInResponse.getAccessToken(), signInResponse.getExpiresIn());
         Cookie refreshTokenCookie = CookieUtils.createCookie(CookieUtils.REFRESH_TOKEN,
                 signInResponse.getRefreshToken(),
                 CookieUtils.REFRESH_TOKEN_MAX_AGE);

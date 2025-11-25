@@ -21,11 +21,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.web.util.UriComponentsBuilder;
-
 import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.config.AuthProperties;
 import com.datn.datnbe.auth.dto.request.KeycloakCallbackRequest;
@@ -247,51 +242,22 @@ public class KeycloakAuthService {
     }
 
     /**
-     * Extract session ID from refresh token JWT
-     * The refresh token contains 'sid' claim which is the session ID
-     */
-    public String extractSubjectFromRefreshToken(String refreshToken) {
-        try {
-            JwtDecoder decoder = JwtDecoders.fromIssuerLocation(authProperties.getIssuer());
-            Jwt jwt = decoder.decode(refreshToken);
-            String sessionId = jwt.getClaimAsString("sub");
-
-            if (sessionId == null || sessionId.isEmpty()) {
-                log.warn("Subject (sub) not found in refresh token");
-                throw new AppException(ErrorCode.AUTH_INVALID_CREDENTIALS, "Invalid refresh token: Subject not found");
-            }
-
-            log.debug("Extracted Subject from refresh token: {}", sessionId);
-            return sessionId;
-        } catch (Exception e) {
-            log.error("Error extracting Subject from refresh token: {}", e.getMessage(), e);
-            throw new AppException(ErrorCode.AUTH_INVALID_CREDENTIALS, "Failed to parse refresh token");
-        }
-    }
-
-    /**
      * Logout user by refresh token
-     * Extracts session ID from refresh token and invalidates the session in Keycloak
+     * Invalidates the session in Keycloak by sending the refresh token to the logout endpoint.
      */
     public void signOut(String refreshToken) {
         log.info("Processing logout with refresh token");
-        var requestBody = "client_id=" + authProperties.getClientId() + "&refresh_token=" + refreshToken
-                + "&client_secret=" + authProperties.getClientSecret();
-
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("client_id", authProperties.getClientId());
         formData.add("client_secret", authProperties.getClientSecret());
         formData.add("refresh_token", refreshToken); // Crucial: Must be the Refresh Token, not Access Token
 
-        // 2. Prepare Headers
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        // 3. Send Request
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(formData, headers);
 
-        var logoutUrl = authProperties.getLogoutUri() + "?" + requestBody;
-        log.info("Logout URL: {}", logoutUrl);
+        var logoutUrl = authProperties.getLogoutUri();
         try {
             ResponseEntity<Void> response = restTemplate.postForEntity(logoutUrl, request, Void.class);
             if (response.getStatusCode().is2xxSuccessful()) {
@@ -301,8 +267,7 @@ public class KeycloakAuthService {
             }
         } catch (Exception e) {
             log.error("Error calling Keycloak logout API", e);
-            // Decide: Throw exception or swallow it?
-            // Usually, if Keycloak is down, we still want to clear local cookies, so we might just log it.
+            // if Keycloak is down, we still want to clear local cookies, so we might just log it.
         }
 
     }
@@ -376,26 +341,5 @@ public class KeycloakAuthService {
                 authProperties.getServerUrl(),
                 authProperties.getRealm(),
                 queryString);
-    }
-
-    /**
-     * Build Keycloak logout URL
-     *
-     * @param auth Authentication object
-     * @return Keycloak logout URL
-     */
-    public String buildLogoutUrl(Authentication auth) {
-        String idToken = null;
-        if (auth instanceof OAuth2AuthenticationToken oauth && oauth.getPrincipal() instanceof OidcUser oidc) {
-            idToken = oidc.getIdToken().getTokenValue();
-        }
-
-        String keycloakLogoutUrl = UriComponentsBuilder.fromUriString(authProperties.getLogoutUri())
-                .queryParam("post_logout_redirect_uri", authProperties.getRedirectUri())
-                .queryParam("id_token_hint", idToken)
-                .toUriString();
-
-        log.info("Built Keycloak logout URL: {}", keycloakLogoutUrl);
-        return keycloakLogoutUrl;
     }
 }

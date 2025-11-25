@@ -26,15 +26,12 @@ public class CookieUtils {
      * @return Configured Cookie object
      */
     public static Cookie createCookie(String name, String value, int maxAge) {
-        //TODO: when going production, set Secure to true
         Cookie cookie = new Cookie(name, value);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
         cookie.setMaxAge(maxAge);
         cookie.setSecure(true);
         cookie.setAttribute("sameSite", "None");
-
-        log.info("Creating cookie: name={}, maxAge={}, httpOnly=true, sameSite=Lax", name, maxAge);
 
         return cookie;
     }
@@ -59,15 +56,8 @@ public class CookieUtils {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
-                if ("refresh_token".equals(cookie.getName()) && cookie.getValue() != null
-                        && !cookie.getValue().isEmpty()) {
-                    try {
-                        return cookie.getValue();
-                    } catch (Exception e) {
-                        log.warn("Failed to invalidate Keycloak session: {}", e.getMessage());
-                        // Continue with logout even if Keycloak session invalidation fails
-                    }
-                    break;
+                if (key.equals(cookie.getName()) && cookie.getValue() != null && !cookie.getValue().isEmpty()) {
+                    return cookie.getValue();
                 }
             }
         }

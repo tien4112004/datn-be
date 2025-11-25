@@ -1,11 +1,13 @@
 package com.datn.datnbe.auth.utils;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
 
 @Slf4j
+@UtilityClass
 public class OriginUtils {
 
     public static String extractFeOrigin(HttpServletRequest request) {
@@ -14,9 +16,11 @@ public class OriginUtils {
             try {
                 // Extract origin from referer URL (e.g., "http://localhost:3000/..." -> "http://localhost:3000")
                 URI uri = java.net.URI.create(referer);
-                String origin = uri.getScheme() + "://" + uri.getHost();
-                if ((uri.getScheme().equals("http") && uri.getPort() != 80 && uri.getPort() != -1)
-                        || (uri.getScheme().equals("https") && uri.getPort() != 443 && uri.getPort() != -1)) {
+                String scheme = uri.getScheme() != null ? uri.getScheme() : "";
+                String origin = scheme + "://" + uri.getHost();
+
+                if ((scheme.equals("http") && uri.getPort() != 80 && uri.getPort() != -1)
+                        || (scheme.equals("https") && uri.getPort() != 443 && uri.getPort() != -1)) {
                     origin += ":" + uri.getPort();
                 }
                 log.debug("Extracted frontend origin from Referer: {}", origin);
