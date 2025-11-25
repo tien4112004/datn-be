@@ -6,6 +6,7 @@ import java.util.Set;
 
 import com.datn.datnbe.auth.entity.UserProfile;
 import com.datn.datnbe.auth.repository.UserProfileRepo;
+import lombok.Getter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,7 +62,7 @@ public class ResourcePermissionService {
                 ownerId,
                 true,
                 Set.of(resourcePath),
-                Set.of("read", "write", "share"));
+                Set.of("read", "comment", "share"));
 
         String keycloakResourceId = keycloakAuthzService.createResource(resourceDto).getId();
         log.info("Created Keycloak resource {} with ID {} and path {}", name, keycloakResourceId, resourcePath);
@@ -79,7 +80,7 @@ public class ResourcePermissionService {
                 "Owner permissions for " + name,
                 "AFFIRMATIVE",
                 Set.of(keycloakResourceId),
-                Set.of("read", "write", "share"),
+                Set.of("read", "comment", "share"),
                 Set.of(ownerPolicyId));
 
         keycloakAuthzService.createPermission(ownerPermission);
@@ -149,7 +150,7 @@ public class ResourcePermissionService {
     private void removeUserFromOtherGroups(String userId,
             PermissionLevel targetLevel,
             DocumentResourceMapping mapping) {
-        // Remove from readers group if upgrading to writer or removing access
+        // Remove from readers group if upgrading to commentr or removing access
         if (targetLevel != PermissionLevel.READER && mapping.getReadersGroupId() != null) {
             try {
                 keycloakAuthzService.removeUserFromGroup(userId, mapping.getReadersGroupId());
@@ -159,21 +160,21 @@ public class ResourcePermissionService {
             }
         }
 
-        // Remove from writers group if downgrading to reader or removing access
-        if (targetLevel != PermissionLevel.WRITER && mapping.getWritersGroupId() != null) {
+        // Remove from commentrs group if downgrading to reader or removing access
+        if (targetLevel != PermissionLevel.COMMENTER && mapping.getCommentersGroupId() != null) {
             try {
-                keycloakAuthzService.removeUserFromGroup(userId, mapping.getWritersGroupId());
-                log.info("Removed user {} from writers group", userId);
+                keycloakAuthzService.removeUserFromGroup(userId, mapping.getCommentersGroupId());
+                log.info("Removed user {} from commentrs group", userId);
             } catch (Exception e) {
-                log.debug("User {} was not in writers group", userId);
+                log.debug("User {} was not in commentrs group", userId);
             }
         }
     }
 
     private PermissionLevel determinePermissionLevel(Set<String> scopes) {
         // Determine the highest permission level based on scopes
-        if (scopes.contains("write")) {
-            return PermissionLevel.WRITER; // read + write
+        if (scopes.contains("comment")) {
+            return PermissionLevel.COMMENTER; // read + comment
         } else if (scopes.contains("read")) {
             return PermissionLevel.READER; // read only
         }
@@ -185,7 +186,7 @@ public class ResourcePermissionService {
             DocumentResourceMapping mapping) {
         String groupId = switch (level) {
             case READER -> mapping.getReadersGroupId();
-            case WRITER -> mapping.getWritersGroupId();
+            case COMMENTER -> mapping.getCommentersGroupId();
         };
 
         // If group already exists, return it
@@ -223,7 +224,7 @@ public class ResourcePermissionService {
         // Update mapping with new group ID
         switch (level) {
             case READER -> mapping.setReadersGroupId(groupId);
-            case WRITER -> mapping.setWritersGroupId(groupId);
+            case COMMENTER -> mapping.setCommentersGroupId(groupId);
         }
         mappingRepository.save(mapping);
 
@@ -234,9 +235,10 @@ public class ResourcePermissionService {
     /**
      * Permission levels following Google Drive model
      */
+    @Getter
     private enum PermissionLevel {
         READER("readers", "Read-only access", Set.of("read")),
-        WRITER("writers", "Read and write access", Set.of("read", "write"));
+        COMMENTER("commentrs", "Read and comment access", Set.of("read", "comment"));
 
         private final String groupSuffix;
         private final String description;
@@ -246,18 +248,6 @@ public class ResourcePermissionService {
             this.groupSuffix = groupSuffix;
             this.description = description;
             this.scopes = scopes;
-        }
-
-        public String getGroupSuffix() {
-            return groupSuffix;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-
-        public Set<String> getScopes() {
-            return scopes;
         }
     }
 
@@ -283,12 +273,12 @@ public class ResourcePermissionService {
         }
 
         // Check if resource has been shared (has any groups)
-        if (mapping.getReadersGroupId() == null && mapping.getWritersGroupId() == null) {
+        if (mapping.getReadersGroupId() == null && mapping.getCommentersGroupId() == null) {
             log.warn("Resource {} has not been shared with anyone", documentId);
             return;
         }
 
-        // Remove user from both groups (readers and writers) if they exist
+        // Remove user from both groups (readers and commentrs) if they exist
         boolean removed = false;
         if (mapping.getReadersGroupId() != null) {
             try {
@@ -300,13 +290,13 @@ public class ResourcePermissionService {
             }
         }
 
-        if (mapping.getWritersGroupId() != null) {
+        if (mapping.getCommentersGroupId() != null) {
             try {
-                keycloakAuthzService.removeUserFromGroup(keycloakUserId, mapping.getWritersGroupId());
+                keycloakAuthzService.removeUserFromGroup(keycloakUserId, mapping.getCommentersGroupId());
                 removed = true;
-                log.info("Removed user {} from writers group", targetUserId);
+                log.info("Removed user {} from commentrs group", targetUserId);
             } catch (Exception e) {
-                log.debug("User {} was not in writers group", targetUserId);
+                log.debug("User {} was not in commentrs group", targetUserId);
             }
         }
 

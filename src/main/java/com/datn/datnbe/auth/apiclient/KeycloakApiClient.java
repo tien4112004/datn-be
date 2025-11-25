@@ -285,7 +285,7 @@ public class KeycloakApiClient {
         body.add("grant_type", "urn:ietf:params:oauth:grant-type:uma-ticket");
         body.add("audience", authzProperties.getClientId());
         body.add("permission", resourceName + "#read");
-        body.add("permission", resourceName + "#write");
+        body.add("permission", resourceName + "#comment");
         body.add("permission", resourceName + "#share");
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
