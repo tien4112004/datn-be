@@ -37,6 +37,7 @@ public class ResourcePermissionService {
     private final ResourcePermissionMapper mapper;
     private final KeycloakDtoMapper keycloakMapper;
     private final UserProfileRepo userProfileRepo;
+    private final ResourceAccessService resourceAccessService;
 
     @Transactional
     public DocumentRegistrationResponse registerResource(ResourceRegistrationRequest request, String ownerId) {
@@ -98,20 +99,10 @@ public class ResourcePermissionService {
     }
 
     public ResourcePermissionResponse checkUserPermissions(String documentId, String userToken, String userId) {
-        log.debug("Checking permissions for document {} by user", documentId);
+        log.debug("Checking permissions for document {} by user {}", documentId, userId);
 
-        // 1. Look up the Keycloak resource ID from mapping table
-        DocumentResourceMapping mapping = mappingRepository.findByDocumentId(documentId)
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND,
-                        "document " + documentId + " not found in Keycloak registry"));
-
-        // 2. Check permissions via Keycloak API using resource ID (not name)
-        List<String> permissions = keycloakAuthzService.checkUserPermissions(userToken,
-                mapping.getKeycloakResourceId());
-
-        log.debug("User has permissions {} on document {}", permissions, documentId);
-
-        return mapper.toResourcePermissionResponse(documentId, userId, permissions);
+        // Delegate to ResourceAccessService for permission checking
+        return resourceAccessService.checkUserPermissions(documentId, userToken, userId);
     }
 
     @Transactional
@@ -126,10 +117,8 @@ public class ResourcePermissionService {
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND,
                         "document " + documentId + " not found in Keycloak registry"));
 
-        // 2. Get resource details to check ownership
-        KeycloakResourceDto resource = keycloakAuthzService.getResource(mapping.getKeycloakResourceId());
-
-        if (!resource.getOwner().equals(currentUserId)) {
+        // 2. Verify ownership using ResourceAccessService
+        if (!resourceAccessService.isResourceOwner(documentId, currentUserId)) {
             throw new AppException(ErrorCode.UNAUTHORIZED, "Only the resource owner can share this resource");
         }
 
@@ -288,9 +277,8 @@ public class ResourcePermissionService {
         }
         String keycloakUserId = userProfile.get().getKeycloakUserId();
 
-        // Verify ownership
-        KeycloakResourceDto resource = keycloakAuthzService.getResource(mapping.getKeycloakResourceId());
-        if (!resource.getOwner().equals(currentUserId)) {
+        // Verify ownership using ResourceAccessService
+        if (!resourceAccessService.isResourceOwner(documentId, currentUserId)) {
             throw new AppException(ErrorCode.UNAUTHORIZED, "Only the resource owner can revoke access");
         }
 

@@ -12,9 +12,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtDecoders;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -26,7 +23,6 @@ import com.datn.datnbe.auth.config.AuthProperties;
 import com.datn.datnbe.auth.dto.request.KeycloakCallbackRequest;
 import com.datn.datnbe.auth.dto.request.SigninRequest;
 import com.datn.datnbe.auth.dto.response.AuthTokenResponse;
-import com.datn.datnbe.auth.dto.response.SignInResponse;
 import com.datn.datnbe.auth.utils.KeycloakUtils;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
@@ -272,74 +268,4 @@ public class KeycloakAuthService {
 
     }
 
-    /**
-     * Centralized method to process login callback from OAuth providers
-     * Exchanges authorization code for tokens, decodes JWT, and syncs user profile
-     *
-     * @param request KeycloakCallbackRequest containing code and redirect URI
-     * @return SignInResponse with tokens ready for cookie creation
-     */
-    public SignInResponse processLoginCallback(KeycloakCallbackRequest request) {
-        log.info("Processing login callback - exchanging code for tokens");
-
-        // Exchange authorization code for tokens
-        AuthTokenResponse authTokenResponse = exchangeAuthorizationCode(request);
-
-        // Decode JWT to get user info
-        JwtDecoder decoder = JwtDecoders.fromIssuerLocation(authProperties.getIssuer());
-        Jwt jwt = decoder.decode(authTokenResponse.getAccessToken());
-
-        // Sync user profile if not exists
-        userProfileApi.createUserFromKeycloakUser(jwt.getSubject(),
-                jwt.getClaimAsString("email"),
-                jwt.getClaimAsString("given_name"),
-                jwt.getClaimAsString("family_name"));
-
-        // Map AuthTokenResponse to SignInResponse
-        return SignInResponse.builder()
-                .accessToken(authTokenResponse.getAccessToken())
-                .refreshToken(authTokenResponse.getRefreshToken())
-                .tokenType(authTokenResponse.getTokenType())
-                .expiresIn(authTokenResponse.getExpiresIn())
-                .build();
-    }
-
-    /**
-     * Generate Google login URL for OAuth authorization
-     *
-     * @param clientType Type of client (web, mobile, etc.)
-     * @return Complete Google OAuth authorization URL
-     */
-    public String generateGoogleLoginUrl(String clientType) {
-        log.info("Generating Google login URL for clientType: {}", clientType);
-
-        // Encode client type in state parameter to track where to redirect after authentication
-        String state = clientType + ":" + java.util.UUID.randomUUID();
-
-        java.util.Map<String, String> params = java.util.Map.of("client_id",
-                authProperties.getClientId(),
-                "response_type",
-                "code",
-                "scope",
-                "openid profile email",
-                "redirect_uri",
-                authProperties.getGoogleCallbackUri(),
-                "state",
-                state,
-                "kc_idp_hint",
-                "google",
-                "prompt",
-                "login");
-
-        String queryString = params.entrySet()
-                .stream()
-                .map(e -> e.getKey() + "="
-                        + java.net.URLEncoder.encode(e.getValue(), java.nio.charset.StandardCharsets.UTF_8))
-                .collect(java.util.stream.Collectors.joining("&"));
-
-        return String.format("%s/realms/%s/protocol/openid-connect/auth?%s",
-                authProperties.getServerUrl(),
-                authProperties.getRealm(),
-                queryString);
-    }
 }

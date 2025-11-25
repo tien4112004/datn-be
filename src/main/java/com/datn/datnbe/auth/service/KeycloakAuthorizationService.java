@@ -14,10 +14,8 @@ import com.datn.datnbe.auth.dto.keycloak.KeycloakPermissionDto;
 import com.datn.datnbe.auth.dto.keycloak.KeycloakResourceDto;
 import com.datn.datnbe.auth.dto.keycloak.KeycloakUserPolicyDto;
 import com.datn.datnbe.auth.mapper.KeycloakDtoMapper;
-import com.datn.datnbe.auth.utils.KeycloakJsonParser;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,23 +26,14 @@ import lombok.extern.slf4j.Slf4j;
 public class KeycloakAuthorizationService {
 
     private final KeycloakApiClient apiClient;
-    private final ObjectMapper objectMapper;
+    private final KeycloakResponseParser responseParser;
     private final KeycloakDtoMapper keycloakMapper;
-
-    private KeycloakJsonParser jsonParser;
-
-    private KeycloakJsonParser getJsonParser() {
-        if (jsonParser == null) {
-            jsonParser = new KeycloakJsonParser(objectMapper);
-        }
-        return jsonParser;
-    }
 
     // ========== Resource Management ==========
 
     public KeycloakResourceDto createResource(KeycloakResourceDto resource) {
         String responseBody = apiClient.createResource(resource);
-        String resourceId = getJsonParser().extractResourceIdFromResponse(responseBody);
+        String resourceId = responseParser.extractResourceIdFromResponse(responseBody);
         resource.setId(resourceId);
 
         log.info("Successfully created resource: {} with ID: {}", resource.getName(), resourceId);
@@ -53,7 +42,7 @@ public class KeycloakAuthorizationService {
 
     public KeycloakResourceDto getResource(String resourceId) {
         String responseBody = apiClient.getResource(resourceId);
-        KeycloakResourceDto resource = getJsonParser().parseResourceFromJson(responseBody, resourceId);
+        KeycloakResourceDto resource = responseParser.parseResourceFromJson(responseBody, resourceId);
 
         if (resource.getOwner() == null) {
             log.error("Failed to extract owner from Keycloak response: {}", responseBody);
@@ -83,16 +72,11 @@ public class KeycloakAuthorizationService {
 
     private KeycloakUserPolicyDto parseUserPolicyResponse(String responseBody) {
         try {
-            return getJsonParser().parseUserPolicyFromJson(responseBody);
+            return responseParser.parseUserPolicyFromJson(responseBody);
         } catch (Exception e) {
-            log.warn("Manual parsing failed, trying Jackson deserializer", e);
-            try {
-                return objectMapper.readValue(responseBody, KeycloakUserPolicyDto.class);
-            } catch (Exception ex) {
-                log.error("Jackson parsing also failed: {}", ex.getMessage());
-                throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR,
-                        "Failed to parse policy response: " + ex.getMessage());
-            }
+            log.error("Failed to parse user policy response: {}", e.getMessage());
+            throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR,
+                    "Failed to parse policy response: " + e.getMessage());
         }
     }
 
@@ -107,7 +91,7 @@ public class KeycloakAuthorizationService {
 
         try {
             String responseBody = apiClient.createGroupPolicy(policy);
-            KeycloakGroupPolicyDto createdPolicy = getJsonParser().parseGroupPolicyFromJson(responseBody);
+            KeycloakGroupPolicyDto createdPolicy = responseParser.parseGroupPolicyFromJson(responseBody);
 
             if (createdPolicy.getId() == null) {
                 log.error("Failed to extract policy ID from response: {}", responseBody);
@@ -156,7 +140,7 @@ public class KeycloakAuthorizationService {
 
         try {
             String responseBody = apiClient.createPermission(permission);
-            KeycloakPermissionDto createdPermission = getJsonParser().parsePermissionFromJson(responseBody);
+            KeycloakPermissionDto createdPermission = responseParser.parsePermissionFromJson(responseBody);
 
             if (createdPermission.getId() == null) {
                 log.error("Failed to extract permission ID from response: {}", responseBody);
@@ -220,7 +204,7 @@ public class KeycloakAuthorizationService {
 
             if (tokenResponse != null && tokenResponse.getAccessToken() != null) {
                 log.info("User has access to resource: {}", resourceId);
-                List<String> permissions = getJsonParser().extractPermissionsFromToken(tokenResponse.getAccessToken(),
+                List<String> permissions = responseParser.extractPermissionsFromToken(tokenResponse.getAccessToken(),
                         resourceId);
                 log.info("Extracted permissions from RPT: {}", permissions);
                 return permissions;

@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
-import com.datn.datnbe.auth.utils.CookieUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.Authentication;
@@ -27,6 +26,7 @@ public class AuthenticationService {
 
     UserProfileRepo userProfileRepo;
     KeycloakAuthService keycloakAuthService;
+    SessionManagementService sessionService;
 
     /**
      * Authenticate user with email and password and return tokens with user profile
@@ -64,8 +64,9 @@ public class AuthenticationService {
     }
 
     /**
-     * Handles the complete logout process including local session invalidation,
-     * Keycloak session invalidation, and cookie clearing.
+     * Handles the complete logout process including local session invalidation
+     * and Keycloak session invalidation.
+     * Note: Cookie clearing is handled separately by SessionManagementService
      *
      * @param request  the HTTP request
      * @param response the HTTP response
@@ -76,18 +77,15 @@ public class AuthenticationService {
         new SecurityContextLogoutHandler().logout(request, response, auth);
         log.info("Local session invalidated for user: {}", auth != null ? auth.getName() : "unknown");
 
-        final String refreshToken = CookieUtils.extractTokensFromCookies(request, CookieUtils.REFRESH_TOKEN);
+        // Extract refresh token from cookies
+        final String refreshToken = sessionService.extractRefreshToken(request);
         if (refreshToken == null || refreshToken.isEmpty()) {
             log.warn("No refresh token found in cookies during logout.");
             throw new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Invalid refresh token during logout");
         }
 
+        // Logout from Keycloak
         keycloakAuthService.signOut(refreshToken);
-
-        // Clear cookies
-        CookieUtils.deleteCookie(response, CookieUtils.ACCESS_TOKEN);
-        CookieUtils.deleteCookie(response, CookieUtils.REFRESH_TOKEN);
-        CookieUtils.deleteCookie(response, CookieUtils.JSESSIONID);
-        log.info("Authentication cookies cleared.");
+        log.info("Successfully logged out from Keycloak");
     }
 }
