@@ -1,0 +1,53 @@
+package com.datn.datnbe.document.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import jakarta.persistence.Convert;
+import com.datn.datnbe.sharedkernel.jpa.JsonbConverter;
+
+@Entity
+@Table(name = "slide_templates")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@EntityListeners(AuditingEntityListener.class)
+public class SlideTemplate {
+
+    @Id
+    @Column(name = "id", nullable = false, length = 50)
+    String id;
+
+    @Column(name = "name", nullable = false, length = 255)
+    String name;
+
+    @Column(name = "layout", length = 100)
+    String layout;
+
+    @Column(name = "is_enabled", nullable = false)
+    @Builder.Default
+    Boolean isEnabled = true;
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    LocalDateTime createdAt;
+
+    @LastModifiedDate
+    @Column(name = "updated_at", nullable = false)
+    LocalDateTime updatedAt;
+
+    @Column(name = "data", columnDefinition = "jsonb")
+    @Convert(converter = JsonbConverter.class)
+    @Builder.Default
+    Map<String, Object> data = new HashMap<>();
+}
