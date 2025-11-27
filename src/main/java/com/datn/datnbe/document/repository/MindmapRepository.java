@@ -1,6 +1,7 @@
 package com.datn.datnbe.document.repository;
 
 import com.datn.datnbe.document.entity.Mindmap;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -15,4 +16,7 @@ public interface MindmapRepository extends MongoRepository<Mindmap, String> {
     Page<Mindmap> findAll(Pageable pageable);
 
     boolean existsByTitle(String title);
+
+    @Query("{ '_id': { $in: ?0 }, 'deleted_at': null }")
+    Page<Mindmap> findByIdIn(Iterable<String> ids, Pageable pageable);
 }

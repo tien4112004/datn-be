@@ -319,4 +319,10 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
             log.warn("User {} did not have access to resource {}", targetUserId, documentId);
         }
     }
+
+    @Override
+    public List<String> getAllResourceByTypeOfOwner(String ownerId, String resourceType) {
+        log.info("Getting all resources of type {} for owner {}", resourceType, ownerId);
+        return mappingRepository.findResourcesByTypeOfOwner(resourceType, ownerId);
+    }
 }
