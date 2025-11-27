@@ -59,6 +59,20 @@ public class SecurityConfig {
                                 "/api/slide-templates/**")
                         .permitAll()
 
+                        // TODO: Remove this - Temporary allow POST/PUT for slide-themes and slide-templates
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/slide-themes",
+                                "/api/slide-themes/**",
+                                "/api/slide-templates",
+                                "/api/slide-templates/**")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/slide-themes",
+                                "/api/slide-themes/**",
+                                "/api/slide-templates",
+                                "/api/slide-templates/**")
+                        .permitAll()
+
                         // Admin endpoints - requires ADMIN role
                         .requestMatchers("/api/admin/**")
                         .hasRole("admin")

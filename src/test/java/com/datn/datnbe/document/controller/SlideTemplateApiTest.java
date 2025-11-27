@@ -2,10 +2,13 @@ package com.datn.datnbe.document.controller;
 
 import com.datn.datnbe.document.api.SlideTemplateApi;
 import com.datn.datnbe.document.dto.request.SlideTemplateCollectionRequest;
+import com.datn.datnbe.document.dto.request.SlideTemplateCreateRequest;
+import com.datn.datnbe.document.dto.request.SlideTemplateUpdateRequest;
 import com.datn.datnbe.document.dto.response.SlideTemplateResponseDto;
 import com.datn.datnbe.document.presentation.SlideTemplateController;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
+import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,8 +27,9 @@ import java.util.List;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(value = SlideTemplateController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class,
@@ -192,5 +196,105 @@ class SlideTemplateApiTest {
         mockMvc.perform(get("/api/slide-templates").param("pageSize", "100").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.pagination.pageSize").value(100));
+    }
+
+    @Test
+    void createSlideTemplate_ShouldReturnCreatedTemplate() throws Exception {
+        // Given
+        SlideTemplateCreateRequest request = SlideTemplateCreateRequest.builder()
+                .id("new-template")
+                .name("New Template")
+                .layout("grid")
+                .isEnabled(true)
+                .data(Map.of("config", Map.of("imageRatio", 16)))
+                .build();
+
+        SlideTemplateResponseDto response = SlideTemplateResponseDto.builder()
+                .id("new-template")
+                .name("New Template")
+                .layout("grid")
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .additionalProperties(Map.of("config", Map.of("imageRatio", 16)))
+                .build();
+
+        when(slideTemplateApi.createSlideTemplate(any(SlideTemplateCreateRequest.class))).thenReturn(response);
+
+        // When & Then
+        mockMvc.perform(post("/api/slide-templates").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.id").value("new-template"))
+                .andExpect(jsonPath("$.data.name").value("New Template"))
+                .andExpect(jsonPath("$.data.layout").value("grid"));
+    }
+
+    @Test
+    void createSlideTemplate_WithMissingId_ShouldReturnBadRequest() throws Exception {
+        // Given
+        Map<String, Object> request = new HashMap<>();
+        request.put("name", "Test Template");
+        request.put("layout", "grid");
+
+        // When & Then
+        mockMvc.perform(post("/api/slide-templates").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createSlideTemplate_WithMissingName_ShouldReturnBadRequest() throws Exception {
+        // Given
+        Map<String, Object> request = new HashMap<>();
+        request.put("id", "test-template");
+        request.put("layout", "grid");
+
+        // When & Then
+        mockMvc.perform(post("/api/slide-templates").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateSlideTemplate_ShouldReturnUpdatedTemplate() throws Exception {
+        // Given
+        SlideTemplateUpdateRequest request = SlideTemplateUpdateRequest.builder()
+                .name("Updated Template Name")
+                .layout("newLayout")
+                .data(Map.of("config", Map.of("imageRatio", 9)))
+                .build();
+
+        SlideTemplateResponseDto response = SlideTemplateResponseDto.builder()
+                .id("template-1")
+                .name("Updated Template Name")
+                .layout("newLayout")
+                .createdAt(LocalDateTime.now().minusDays(10))
+                .updatedAt(LocalDateTime.now())
+                .additionalProperties(Map.of("config", Map.of("imageRatio", 9)))
+                .build();
+
+        when(slideTemplateApi.updateSlideTemplate(eq("template-1"), any(SlideTemplateUpdateRequest.class)))
+                .thenReturn(response);
+
+        // When & Then
+        mockMvc.perform(put("/api/slide-templates/template-1").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.id").value("template-1"))
+                .andExpect(jsonPath("$.data.name").value("Updated Template Name"))
+                .andExpect(jsonPath("$.data.layout").value("newLayout"));
+    }
+
+    @Test
+    void updateSlideTemplate_WithNonExistentId_ShouldReturn404() throws Exception {
+        // Given
+        SlideTemplateUpdateRequest request = SlideTemplateUpdateRequest.builder().name("Updated Name").build();
+
+        when(slideTemplateApi.updateSlideTemplate(eq("non-existent"), any(SlideTemplateUpdateRequest.class)))
+                .thenThrow(new ResourceNotFoundException("Slide template not found"));
+
+        // When & Then
+        mockMvc.perform(put("/api/slide-templates/non-existent").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))).andExpect(status().isNotFound());
     }
 }

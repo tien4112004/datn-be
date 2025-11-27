@@ -2,10 +2,13 @@ package com.datn.datnbe.document.controller;
 
 import com.datn.datnbe.document.api.SlideThemeApi;
 import com.datn.datnbe.document.dto.request.SlideThemeCollectionRequest;
+import com.datn.datnbe.document.dto.request.SlideThemeCreateRequest;
+import com.datn.datnbe.document.dto.request.SlideThemeUpdateRequest;
 import com.datn.datnbe.document.dto.response.SlideThemeResponseDto;
 import com.datn.datnbe.document.presentation.SlideThemeController;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
+import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,8 +27,9 @@ import java.util.List;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(value = SlideThemeController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class,
@@ -171,5 +175,96 @@ class SlideThemeApiTest {
         mockMvc.perform(get("/api/slide-themes").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
+    }
+
+    @Test
+    void createSlideTheme_ShouldReturnCreatedTheme() throws Exception {
+        // Given
+        SlideThemeCreateRequest request = SlideThemeCreateRequest.builder()
+                .id("new-theme")
+                .name("New Theme")
+                .isEnabled(true)
+                .data(Map.of("backgroundColor", "#ffffff"))
+                .build();
+
+        SlideThemeResponseDto response = SlideThemeResponseDto.builder()
+                .id("new-theme")
+                .name("New Theme")
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .additionalProperties(Map.of("backgroundColor", "#ffffff"))
+                .build();
+
+        when(slideThemeApi.createSlideTheme(any(SlideThemeCreateRequest.class))).thenReturn(response);
+
+        // When & Then
+        mockMvc.perform(post("/api/slide-themes").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.id").value("new-theme"))
+                .andExpect(jsonPath("$.data.name").value("New Theme"));
+    }
+
+    @Test
+    void createSlideTheme_WithMissingId_ShouldReturnBadRequest() throws Exception {
+        // Given
+        Map<String, Object> request = new HashMap<>();
+        request.put("name", "Test Theme");
+
+        // When & Then
+        mockMvc.perform(post("/api/slide-themes").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createSlideTheme_WithMissingName_ShouldReturnBadRequest() throws Exception {
+        // Given
+        Map<String, Object> request = new HashMap<>();
+        request.put("id", "test-theme");
+
+        // When & Then
+        mockMvc.perform(post("/api/slide-themes").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateSlideTheme_ShouldReturnUpdatedTheme() throws Exception {
+        // Given
+        SlideThemeUpdateRequest request = SlideThemeUpdateRequest.builder()
+                .name("Updated Theme Name")
+                .data(Map.of("backgroundColor", "#000000"))
+                .build();
+
+        SlideThemeResponseDto response = SlideThemeResponseDto.builder()
+                .id("theme-1")
+                .name("Updated Theme Name")
+                .createdAt(LocalDateTime.now().minusDays(5))
+                .updatedAt(LocalDateTime.now())
+                .additionalProperties(Map.of("backgroundColor", "#000000"))
+                .build();
+
+        when(slideThemeApi.updateSlideTheme(eq("theme-1"), any(SlideThemeUpdateRequest.class))).thenReturn(response);
+
+        // When & Then
+        mockMvc.perform(put("/api/slide-themes/theme-1").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.id").value("theme-1"))
+                .andExpect(jsonPath("$.data.name").value("Updated Theme Name"));
+    }
+
+    @Test
+    void updateSlideTheme_WithNonExistentId_ShouldReturn404() throws Exception {
+        // Given
+        SlideThemeUpdateRequest request = SlideThemeUpdateRequest.builder().name("Updated Name").build();
+
+        when(slideThemeApi.updateSlideTheme(eq("non-existent"), any(SlideThemeUpdateRequest.class)))
+                .thenThrow(new ResourceNotFoundException("Slide theme not found"));
+
+        // When & Then
+        mockMvc.perform(put("/api/slide-themes/non-existent").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))).andExpect(status().isNotFound());
     }
 }

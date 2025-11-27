@@ -2,16 +2,16 @@ package com.datn.datnbe.document.presentation;
 
 import com.datn.datnbe.document.api.SlideThemeApi;
 import com.datn.datnbe.document.dto.request.SlideThemeCollectionRequest;
+import com.datn.datnbe.document.dto.request.SlideThemeCreateRequest;
+import com.datn.datnbe.document.dto.request.SlideThemeUpdateRequest;
 import com.datn.datnbe.document.dto.response.SlideThemeResponseDto;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -35,5 +35,27 @@ public class SlideThemeController {
 
         return ResponseEntity.ok(
                 AppResponseDto.successWithPagination(paginatedResponse.getData(), paginatedResponse.getPagination()));
+    }
+
+    @PostMapping({"", "/"})
+    public ResponseEntity<AppResponseDto<SlideThemeResponseDto>> createSlideTheme(
+            @Valid @RequestBody SlideThemeCreateRequest request) {
+
+        log.info("POST /api/slide-themes - Creating slide theme with id: {}", request.getId());
+
+        var response = slideThemeApi.createSlideTheme(request);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(AppResponseDto.success(response));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<AppResponseDto<SlideThemeResponseDto>> updateSlideTheme(@PathVariable String id,
+            @Valid @RequestBody SlideThemeUpdateRequest request) {
+
+        log.info("PUT /api/slide-themes/{} - Updating slide theme", id);
+
+        var response = slideThemeApi.updateSlideTheme(id, request);
+
+        return ResponseEntity.ok(AppResponseDto.success(response));
     }
 }

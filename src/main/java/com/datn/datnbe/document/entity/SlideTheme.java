@@ -3,6 +3,8 @@ package com.datn.datnbe.document.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -10,8 +12,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import jakarta.persistence.Convert;
-import com.datn.datnbe.sharedkernel.jpa.JsonbConverter;
 
 @Entity
 @Table(name = "slide_themes")
@@ -43,8 +43,8 @@ public class SlideTheme {
     @Column(name = "updated_at", nullable = false)
     LocalDateTime updatedAt;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "data", columnDefinition = "jsonb")
-    @Convert(converter = JsonbConverter.class)
     @Builder.Default
     Map<String, Object> data = new HashMap<>();
 }

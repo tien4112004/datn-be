@@ -2,16 +2,16 @@ package com.datn.datnbe.document.presentation;
 
 import com.datn.datnbe.document.api.SlideTemplateApi;
 import com.datn.datnbe.document.dto.request.SlideTemplateCollectionRequest;
+import com.datn.datnbe.document.dto.request.SlideTemplateCreateRequest;
+import com.datn.datnbe.document.dto.request.SlideTemplateUpdateRequest;
 import com.datn.datnbe.document.dto.response.SlideTemplateResponseDto;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -35,5 +35,27 @@ public class SlideTemplateController {
 
         return ResponseEntity.ok(
                 AppResponseDto.successWithPagination(paginatedResponse.getData(), paginatedResponse.getPagination()));
+    }
+
+    @PostMapping({"", "/"})
+    public ResponseEntity<AppResponseDto<SlideTemplateResponseDto>> createSlideTemplate(
+            @Valid @RequestBody SlideTemplateCreateRequest request) {
+
+        log.info("POST /api/slide-templates - Creating slide template with id: {}", request.getId());
+
+        var response = slideTemplateApi.createSlideTemplate(request);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(AppResponseDto.success(response));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<AppResponseDto<SlideTemplateResponseDto>> updateSlideTemplate(@PathVariable String id,
+            @Valid @RequestBody SlideTemplateUpdateRequest request) {
+
+        log.info("PUT /api/slide-templates/{} - Updating slide template", id);
+
+        var response = slideTemplateApi.updateSlideTemplate(id, request);
+
+        return ResponseEntity.ok(AppResponseDto.success(response));
     }
 }

@@ -2,12 +2,15 @@ package com.datn.datnbe.document.management;
 
 import com.datn.datnbe.document.api.SlideTemplateApi;
 import com.datn.datnbe.document.dto.request.SlideTemplateCollectionRequest;
+import com.datn.datnbe.document.dto.request.SlideTemplateCreateRequest;
+import com.datn.datnbe.document.dto.request.SlideTemplateUpdateRequest;
 import com.datn.datnbe.document.dto.response.SlideTemplateResponseDto;
 import com.datn.datnbe.document.entity.SlideTemplate;
 import com.datn.datnbe.document.mapper.SlideTemplateMapper;
 import com.datn.datnbe.document.repository.SlideTemplateRepository;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
+import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +19,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -61,5 +65,37 @@ public class SlideTemplateManagement implements SlideTemplateApi {
         log.info("Retrieved {} slide templates out of {} total", responseDtos.size(), templatePage.getTotalElements());
 
         return new PaginatedResponseDto<>(responseDtos, pagination);
+    }
+
+    @Override
+    @Transactional
+    public SlideTemplateResponseDto createSlideTemplate(SlideTemplateCreateRequest request) {
+        log.info("Creating slide template with id: {}", request.getId());
+
+        // Check if template with same ID already exists
+        if (slideTemplateRepository.existsById(request.getId())) {
+            throw new IllegalArgumentException("Slide template with ID '" + request.getId() + "' already exists");
+        }
+
+        SlideTemplate entity = slideTemplateMapper.toEntity(request);
+        SlideTemplate savedEntity = slideTemplateRepository.save(entity);
+
+        log.info("Created slide template with id: {}", savedEntity.getId());
+        return slideTemplateMapper.toResponseDto(savedEntity);
+    }
+
+    @Override
+    @Transactional
+    public SlideTemplateResponseDto updateSlideTemplate(String id, SlideTemplateUpdateRequest request) {
+        log.info("Updating slide template with id: {}", id);
+
+        SlideTemplate entity = slideTemplateRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Slide template not found with id: " + id));
+
+        slideTemplateMapper.updateEntity(entity, request);
+        SlideTemplate savedEntity = slideTemplateRepository.save(entity);
+
+        log.info("Updated slide template with id: {}", savedEntity.getId());
+        return slideTemplateMapper.toResponseDto(savedEntity);
     }
 }
