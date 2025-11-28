@@ -5,11 +5,13 @@ import com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest;
 import com.datn.datnbe.auth.dto.response.UpdateAvatarResponse;
 import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+//@PreAuthorize(value = "hasAuthority('USER')")
 public class UserProfileController {
 
     UserProfileApi userProfileApi;
@@ -41,27 +44,12 @@ public class UserProfileController {
     }
 
     /**
-     * Endpoint to delete the current logged-in user's profile.
-     *
-     * @param jwt the JWT token containing the authenticated user's information
-     * @return ResponseEntity with no content
-     */
-    @DeleteMapping("/me")
-    public ResponseEntity<AppResponseDto<Void>> deleteCurrentUserProfile(@AuthenticationPrincipal Jwt jwt) {
-        String userId = jwt.getSubject();
-        log.info("Deleting profile for current user with Keycloak user ID: {}", userId);
-        userProfileApi.deleteUserProfile(userId);
-        return ResponseEntity.ok(AppResponseDto.success());
-    }
-
-    /**
      * Endpoint to update a user profile by Keycloak user ID.
      *
-     * @param jwt the JWT token containing the authenticated user's information
+     * @param jwt     the JWT token containing the authenticated user's information
      * @param request the UserProfileUpdateRequest containing updated data
      * @return ResponseEntity containing the updated user profile
      */
-    @Deprecated(forRemoval = true)
     @PatchMapping("/me")
     public ResponseEntity<AppResponseDto<UserProfileResponse>> updateUserProfile(@AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody UserProfileUpdateRequest request) {
@@ -74,17 +62,25 @@ public class UserProfileController {
     /**
      * Endpoint to update the current logged-in user's avatar.
      *
-     * @param jwt the JWT token containing the authenticated user's information
-     * @param avatar the avatar image file (JPG, PNG, GIF). Maximum size 5MB.
+     * @param jwt  the JWT token containing the authenticated user's information
+     * @param file the avatar image file (JPG, PNG, GIF). Maximum size 5MB.
      * @return ResponseEntity containing the URL of the updated avatar
      */
-    @PatchMapping("/me/avatar")
-    public ResponseEntity<AppResponseDto<UpdateAvatarResponse>> updateCurrentUserAvatar(
+    @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<AppResponseDto<UpdateAvatarResponse>> modifyCurrentUserAvatar(HttpServletRequest request,
             @AuthenticationPrincipal Jwt jwt,
-            @RequestParam("avatar") MultipartFile avatar) {
+            @RequestPart("file") MultipartFile file) {
         String userId = jwt.getSubject();
         log.info("Updating avatar for current user with Keycloak user ID: {}", userId);
-        UpdateAvatarResponse response = userProfileApi.updateUserAvatar(userId, avatar);
+        UpdateAvatarResponse response = userProfileApi.updateUserAvatar(userId, file);
         return ResponseEntity.ok(AppResponseDto.success(response));
+    }
+
+    @DeleteMapping("/me/avatar")
+    public ResponseEntity<AppResponseDto<Void>> removeCurrentUserAvatar(@AuthenticationPrincipal Jwt jwt) {
+        String userId = jwt.getSubject();
+        log.info("Deleting avatar for current user with Keycloak user ID: {}", userId);
+        userProfileApi.removeUserAvatar(userId);
+        return ResponseEntity.ok(AppResponseDto.success());
     }
 }

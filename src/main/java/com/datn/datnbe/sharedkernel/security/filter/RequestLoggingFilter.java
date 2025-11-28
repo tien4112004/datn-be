@@ -182,8 +182,9 @@ public class RequestLoggingFilter {
         public CachedBodyHttpServletRequest(HttpServletRequest request) throws IOException {
             super(request);
             // Read and cache the body immediately
-            InputStream requestInputStream = request.getInputStream();
-            this.cachedBody = requestInputStream.readAllBytes();
+            //            InputStream requestInputStream = request.getInputStream();
+            //            this.cachedBody = requestInputStream.readAllBytes();
+            cachedBody = null;
         }
 
         @Override
