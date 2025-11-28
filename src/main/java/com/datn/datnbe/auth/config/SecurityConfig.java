@@ -50,7 +50,27 @@ public class SecurityConfig {
                         .permitAll()
 
                         // Public GET endpoints - allow anonymous access
-                        .requestMatchers(HttpMethod.GET, "/api/models", "/api/models/**")
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/models",
+                                "/api/models/**",
+                                "/api/slide-themes",
+                                "/api/slide-themes/**",
+                                "/api/slide-templates",
+                                "/api/slide-templates/**")
+                        .permitAll()
+
+                        // TODO: Remove this - Temporary allow POST/PUT for slide-themes and slide-templates
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/slide-themes",
+                                "/api/slide-themes/**",
+                                "/api/slide-templates",
+                                "/api/slide-templates/**")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/slide-themes",
+                                "/api/slide-themes/**",
+                                "/api/slide-templates",
+                                "/api/slide-templates/**")
                         .permitAll()
 
                         // Admin endpoints - requires ADMIN role
