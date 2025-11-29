@@ -74,8 +74,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<AppResponseDto<Object>> handleGenericException(Exception ex) {
-        log.error("An unexpected error occurred: {}", ex.getMessage(), ex);
-
         AppException appException = new AppException(ErrorCode.UNCATEGORIZED_ERROR, ex.getMessage());
         log.error("An unexpected error occurred: {}", ex.getMessage(), ex);
         AppResponseDto<Object> response = AppResponseDto.failure(appException);

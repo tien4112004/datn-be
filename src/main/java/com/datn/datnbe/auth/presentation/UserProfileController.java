@@ -5,7 +5,6 @@ import com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest;
 import com.datn.datnbe.auth.dto.response.UpdateAvatarResponse;
 import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -66,10 +65,10 @@ public class UserProfileController {
      * @param file the avatar image file (JPG, PNG, GIF). Maximum size 5MB.
      * @return ResponseEntity containing the URL of the updated avatar
      */
-    @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<AppResponseDto<UpdateAvatarResponse>> modifyCurrentUserAvatar(HttpServletRequest request,
+    @PostMapping(value = "/me/avatar", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<AppResponseDto<UpdateAvatarResponse>> modifyCurrentUserAvatar(
             @AuthenticationPrincipal Jwt jwt,
-            @RequestPart("file") MultipartFile file) {
+            MultipartFile file) {
         String userId = jwt.getSubject();
         log.info("Updating avatar for current user with Keycloak user ID: {}", userId);
         UpdateAvatarResponse response = userProfileApi.updateUserAvatar(userId, file);
