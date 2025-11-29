@@ -2,10 +2,7 @@ package com.datn.datnbe.sharedkernel.security.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletInputStream;
-import jakarta.servlet.ReadListener;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -13,7 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.*;
+import java.io.IOException;
 import java.util.Enumeration;
 
 @Slf4j
@@ -39,8 +36,6 @@ public class RequestLoggingFilter {
                 FilterChain filterChain) throws ServletException, IOException {
 
             // Use custom wrapper that caches body on first read
-            CachedBodyHttpServletRequest wrappedRequest = new CachedBodyHttpServletRequest(request);
-
             long startTime = System.currentTimeMillis();
 
             String method = request.getMethod();
@@ -50,38 +45,20 @@ public class RequestLoggingFilter {
             String contentType = request.getContentType();
             String remoteAddr = getClientIp(request);
 
-            // Log incoming request with body if applicable
-            String bodyStr = "";
-            if (shouldLogBody(method, contentType)) {
-                bodyStr = wrappedRequest.getBody();
-            }
-
             String pathWithQuery = path + (queryString != null ? "?" + queryString : "");
             String headers = getHeadersAsString(request);
 
-            if (!bodyStr.isEmpty()) {
-                log.info(
-                        ">>> INCOMING REQUEST - Method: {}, Path: {}, Origin: {}, RemoteAddr: {}, ContentType: {}, Headers: {}, Body: {}",
-                        method,
-                        pathWithQuery,
-                        origin != null ? origin : "N/A",
-                        remoteAddr,
-                        contentType != null ? contentType : "N/A",
-                        headers,
-                        bodyStr);
-            } else {
-                log.info(
-                        ">>> INCOMING REQUEST - Method: {}, Path: {}, Origin: {}, RemoteAddr: {}, ContentType: {}, Headers: {}",
-                        method,
-                        pathWithQuery,
-                        origin != null ? origin : "N/A",
-                        remoteAddr,
-                        contentType != null ? contentType : "N/A",
-                        headers);
-            }
+            log.info(
+                    ">>> INCOMING REQUEST - Method: {}, Path: {}, Origin: {}, RemoteAddr: {}, ContentType: {}, Headers: {}, Body: {}",
+                    method,
+                    pathWithQuery,
+                    origin != null ? origin : "N/A",
+                    remoteAddr,
+                    contentType != null ? contentType : "N/A",
+                    headers);
 
             try {
-                filterChain.doFilter(wrappedRequest, response);
+                filterChain.doFilter(request, response);
             } finally {
                 long duration = System.currentTimeMillis() - startTime;
                 int status = response.getStatus();
@@ -173,77 +150,4 @@ public class RequestLoggingFilter {
         }
     }
 
-    /**
-     * Custom request wrapper that caches the body immediately when the wrapper is created
-     */
-    private static class CachedBodyHttpServletRequest extends HttpServletRequestWrapper {
-        private final byte[] cachedBody;
-
-        public CachedBodyHttpServletRequest(HttpServletRequest request) throws IOException {
-            super(request);
-            // Read and cache the body immediately
-            InputStream requestInputStream = request.getInputStream();
-            this.cachedBody = requestInputStream.readAllBytes();
-        }
-
-        @Override
-        public ServletInputStream getInputStream() {
-            return new CachedBodyServletInputStream(this.cachedBody);
-        }
-
-        @Override
-        public BufferedReader getReader() {
-            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(this.cachedBody);
-            return new BufferedReader(new InputStreamReader(byteArrayInputStream));
-        }
-
-        public String getBody() {
-            try {
-                String charset = this.getCharacterEncoding() != null ? this.getCharacterEncoding() : "UTF-8";
-                String bodyStr = new String(this.cachedBody, charset);
-
-                // Remove newlines and extra whitespace for inline logging
-                bodyStr = bodyStr.replaceAll("\\s+", " ").trim();
-
-                // Limit body size for logging
-                if (bodyStr.length() > 1000) {
-                    return bodyStr.substring(0, 1000) + "... [truncated]";
-                }
-                return bodyStr;
-            } catch (UnsupportedEncodingException e) {
-                return "[Unable to decode body]";
-            }
-        }
-    }
-
-    /**
-     * Custom ServletInputStream that reads from cached byte array
-     */
-    private static class CachedBodyServletInputStream extends ServletInputStream {
-        private final ByteArrayInputStream byteArrayInputStream;
-
-        public CachedBodyServletInputStream(byte[] cachedBody) {
-            this.byteArrayInputStream = new ByteArrayInputStream(cachedBody);
-        }
-
-        @Override
-        public boolean isFinished() {
-            return byteArrayInputStream.available() == 0;
-        }
-
-        @Override
-        public boolean isReady() {
-            return true;
-        }
-
-        @Override
-        public void setReadListener(ReadListener readListener) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public int read() {
-            return byteArrayInputStream.read();
-        }
-    }
 }

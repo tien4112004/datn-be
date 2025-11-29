@@ -225,8 +225,7 @@ public class UserProfileManagement implements UserProfileApi {
 
         // Find user profile
         UserProfile userProfile = userProfileRepo.findByIdOrKeycloakUserId(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_PROFILE_NOT_FOUND,
-                        "User profile not found for user ID: " + userId));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_PROFILE_NOT_FOUND, "User profile not found"));
 
         // Prepare file metadata
         String originalFilename = getOriginalFilename(avatar);
@@ -261,5 +260,36 @@ public class UserProfileManagement implements UserProfileApi {
         log.info("Successfully updated avatar for user ID: {}", userId);
 
         return UpdateAvatarResponse.builder().avatarUrl(avatarUrl).build();
+    }
+
+    @Override
+    public void removeUserAvatar(String userId) {
+        log.info("Removing avatar for user ID: {}", userId);
+
+        // Find user profile
+        UserProfile userProfile = userProfileRepo.findByIdOrKeycloakUserId(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_PROFILE_NOT_FOUND,
+                        "User profile not found for user ID: " + userId));
+
+        // Delete avatar from R2 storage if exists
+        if (userProfile.getAvatarUrl() != null && !userProfile.getAvatarUrl().isEmpty()) {
+            try {
+                String storageKey = MediaStorageUtils.extractStorageKeyFromUrl(userProfile.getAvatarUrl(), cdnDomain);
+                r2StorageService.deleteFile(storageKey);
+                log.info("Successfully deleted avatar from R2 with key: {}", storageKey);
+            } catch (Exception e) {
+                log.error("Failed to delete avatar from R2 for user ID: {}. Error: {}", userId, e.getMessage());
+                throw new AppException(ErrorCode.FILE_PROCESSING_ERROR,
+                        "Failed to delete avatar from storage: " + e.getMessage());
+            }
+        } else {
+            log.info("No avatar to delete");
+        }
+
+        // Update user profile to remove avatar URL
+        userProfile.setAvatarUrl(null);
+        userProfileRepo.save(userProfile);
+
+        log.info("Successfully removed avatar for user ID: {}", userId);
     }
 }
