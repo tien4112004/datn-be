@@ -55,11 +55,14 @@ spring:
             scope: openid, profile, email
         provider:
           keycloak:
-            issuer-uri: http://localhost:8082/realms/ai-primary-dev
+            issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8082/realms/ai-primary-dev }
             user-info-authentication-method: header
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8082/realms/ai-primary-dev
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8082/realms/ai-primary-dev }
+  servlet:
+    multipart:
+      enabled: true
 server:
   servlet:
     session:

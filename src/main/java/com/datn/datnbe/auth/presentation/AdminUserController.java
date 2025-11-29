@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -31,7 +30,6 @@ public class AdminUserController {
      * @return ResponseEntity containing the created user profile
      */
     @PostMapping
-    @PreAuthorize(value = "hasRole('ADMIN')")
     public ResponseEntity<AppResponseDto<UserProfileResponse>> createUserProfile(
             @Valid @RequestBody SignupRequest request) {
         UserProfileResponse response = userProfileApi.createUserProfile(request);
@@ -45,7 +43,6 @@ public class AdminUserController {
      * @return ResponseEntity containing the user profile
      */
     @GetMapping("/{userId}")
-    @PreAuthorize(value = "hasRole('ADMIN')")
     public ResponseEntity<AppResponseDto<UserProfileResponse>> getUserProfile(@PathVariable String userId) {
         log.info("Fetching user profile for Keycloak user ID: {}", userId);
         UserProfileResponse response = userProfileApi.getUserProfile(userId);
@@ -58,7 +55,6 @@ public class AdminUserController {
      * @return ResponseEntity containing the list of user profiles
      */
     @GetMapping("")
-    @PreAuthorize(value = "hasRole('ADMIN')")
     public ResponseEntity<AppResponseDto> getAllUsers(Pageable pageable) {
         var response = userProfileApi.getUserProfiles(pageable);
         return ResponseEntity.ok(AppResponseDto.successWithPagination(response.getData(), response.getPagination()));
@@ -72,7 +68,6 @@ public class AdminUserController {
      */
     @Deprecated(forRemoval = true)
     @DeleteMapping("/{userId}")
-    @PreAuthorize(value = "hasRole('ADMIN')")
     public ResponseEntity<AppResponseDto<Void>> deleteUserProfile(@PathVariable String userId) {
         log.info("Deleting user profile for Keycloak user ID: {}", userId);
         userProfileApi.deleteUserProfile(userId);

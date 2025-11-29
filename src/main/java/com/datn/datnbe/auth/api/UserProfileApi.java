@@ -68,4 +68,12 @@ public interface UserProfileApi {
      * @return UpdateAvatarResponse containing the CDN URL of the uploaded avatar
      */
     UpdateAvatarResponse updateUserAvatar(String userId, MultipartFile avatar);
+
+    /**
+     * Removes the avatar of a user profile.
+     *
+     * @param userId the user ID
+     */
+    void removeUserAvatar(String userId);
+
 }
