@@ -2,6 +2,7 @@ package com.datn.datnbe.student.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -19,74 +20,142 @@ class CsvParserServiceTest {
         csvParserService = new CsvParserService();
     }
 
-    @Test
-    void parseStudentCsv_withValidCsv_returnsStudents() {
-        String csvContent = "fullName,dateOfBirth,gender,address,parentName,parentPhone,parentContactEmail,classId,enrollmentDate,status\nNguyen Van A,2008-01-15,male,123 Main St,Nguyen Van X,+84987654321,parent1@example.com,cls_001,2024-01-15,active\nTran Thi B,2008-05-20,female,456 Oak Ave,Tran Van Y,+84912345678,parent2@example.com,cls_001,2024-01-20,active";
-        MockMultipartFile file = new MockMultipartFile("file", "students.csv", "text/csv",
-                csvContent.getBytes(StandardCharsets.UTF_8));
+    @Nested
+    @DisplayName("Valid CSV parsing tests")
+    class ValidCsvTests {
 
-        CsvParserService.ParseResult result = csvParserService.parseStudentCsv(file);
+        @Test
+        void parseStudentCsv_withValidCsv_returnsStudents() {
+            // Given
+            String csvContent = """
+                    id,fullName,dateOfBirth,gender,address,parentName,parentPhone,classId,enrollmentDate,status
+                    std_001,Nguyen Van A,2008-01-15,male,123 Main St,Nguyen Van X,+84987654321,cls_001,2024-01-15,active
+                    std_002,Tran Thi B,2008-05-20,female,456 Oak Ave,Tran Van Y,+84912345678,cls_001,2024-01-15,active
+                    """;
+            MockMultipartFile file = new MockMultipartFile("file", "students.csv", "text/csv",
+                    csvContent.getBytes(StandardCharsets.UTF_8));
 
-        assertThat(result.hasErrors()).isFalse();
-        assertThat(result.rows()).hasSize(2);
-        assertThat(result.rows().get(0).getFullName()).isEqualTo("Nguyen Van A");
-        assertThat(result.rows().get(0).getAddress()).isEqualTo("123 Main St");
-        assertThat(result.rows().get(0).getParentContactEmail()).isEqualTo("parent1@example.com");
-        assertThat(result.rows().get(1).getFullName()).isEqualTo("Tran Thi B");
+            // When
+            CsvParserService.ParseResult result = csvParserService.parseStudentCsv(file);
+
+            // Then
+            assertThat(result.hasErrors()).isFalse();
+            assertThat(result.rows()).hasSize(2);
+            assertThat(result.rows().get(0).getId()).isEqualTo("std_001");
+            assertThat(result.rows().get(0).getFullName()).isEqualTo("Nguyen Van A");
+            assertThat(result.rows().get(1).getId()).isEqualTo("std_002");
+        }
+
+        @Test
+        void parseStudentCsv_withMinimalRequiredFields_returnsStudents() {
+            // Given
+            String csvContent = """
+                    id,fullName
+                    std_001,Nguyen Van A
+                    """;
+            MockMultipartFile file = new MockMultipartFile("file", "students.csv", "text/csv",
+                    csvContent.getBytes(StandardCharsets.UTF_8));
+
+            // When
+            CsvParserService.ParseResult result = csvParserService.parseStudentCsv(file);
+
+            // Then
+            assertThat(result.hasErrors()).isFalse();
+            assertThat(result.rows()).hasSize(1);
+            assertThat(result.rows().get(0).getDateOfBirth()).isNull();
+        }
+
+        @Test
+        void parseStudentCsv_withQuotedValues_handlesCorrectly() {
+            // Given
+            String csvContent = """
+                    id,fullName,address
+                    std_001,"Nguyen Van A","123 Main St, City, Country"
+                    """;
+            MockMultipartFile file = new MockMultipartFile("file", "students.csv", "text/csv",
+                    csvContent.getBytes(StandardCharsets.UTF_8));
+
+            // When
+            CsvParserService.ParseResult result = csvParserService.parseStudentCsv(file);
+
+            // Then
+            assertThat(result.hasErrors()).isFalse();
+            assertThat(result.rows()).hasSize(1);
+            assertThat(result.rows().get(0).getAddress()).isEqualTo("123 Main St, City, Country");
+        }
     }
 
-    @Test
-    void parseStudentCsv_withMinimalRequiredFields_returnsStudents() {
-        String csvContent = "fullName,dateOfBirth,gender,address,parentName,parentPhone,parentContactEmail,classId,enrollmentDate,status\nNguyen Van A,2008-01-15,male,123 Main St,Nguyen Van X,+84987654321,parent1@example.com,cls_001,2024-01-15,active";
-        MockMultipartFile file = new MockMultipartFile("file", "students.csv", "text/csv",
-                csvContent.getBytes(StandardCharsets.UTF_8));
+    @Nested
+    @DisplayName("Invalid CSV parsing tests")
+    class InvalidCsvTests {
 
-        CsvParserService.ParseResult result = csvParserService.parseStudentCsv(file);
+        @Test
+        void parseStudentCsv_withEmptyFile_returnsError() {
+            // Given
+            MockMultipartFile file = new MockMultipartFile("file", "students.csv", "text/csv", new byte[0]);
 
-        assertThat(result.hasErrors()).isFalse();
-        assertThat(result.rows()).hasSize(1);
-        assertThat(result.rows().get(0).getFullName()).isEqualTo("Nguyen Van A");
-    }
+            // When
+            CsvParserService.ParseResult result = csvParserService.parseStudentCsv(file);
 
-    @Test
-    void parseStudentCsv_withEmptyFile_returnsError() {
-        MockMultipartFile file = new MockMultipartFile("file", "students.csv", "text/csv", new byte[0]);
+            // Then
+            assertThat(result.hasErrors()).isTrue();
+            assertThat(result.errors()).contains("CSV file is empty or not provided");
+        }
 
-        CsvParserService.ParseResult result = csvParserService.parseStudentCsv(file);
+        @Test
+        void parseStudentCsv_withMissingRequiredHeader_returnsError() {
+            // Given
+            String csvContent = """
+                    id,dateOfBirth
+                    std_001,2008-01-15
+                    """;
+            MockMultipartFile file = new MockMultipartFile("file", "students.csv", "text/csv",
+                    csvContent.getBytes(StandardCharsets.UTF_8));
 
-        assertThat(result.hasErrors()).isTrue();
-    }
+            // When
+            CsvParserService.ParseResult result = csvParserService.parseStudentCsv(file);
 
-    @Test
-    @DisplayName("Parse CSV with escaped quotes within quoted fields")
-    void parseStudentCsv_withEscapedQuotes_parsesCorrectly() {
-        // CSV content with escaped quotes (double quotes within quoted fields)
-        // Format: "field with ""quotes"" inside"
-        String csvContent = "fullName,dateOfBirth,gender,address,parentName,parentPhone,parentContactEmail,classId,enrollmentDate,status\n"
-                + "\"Nguyen Van A\",2008-01-15,male,\"123 Main St, \"\"Downtown\"\" District\",Nguyen Van X,+84987654321,parent1@example.com,cls_001,2024-01-15,active\n"
-                + "\"Tran Thi B\",2008-05-20,female,\"456 Oak Ave, \"\"Central\"\" Zone\",Tran Van Y,+84912345678,parent2@example.com,cls_002,2024-01-20,active\n"
-                + "\"Le Van C\",2008-03-10,male,\"789 Pine Rd - \"\"Old City\"\"\",Le Van Z,+84934567890,parent3@example.com,cls_001,2024-02-01,active";
+            // Then
+            assertThat(result.hasErrors()).isTrue();
+            assertThat(result.errors()).anyMatch(e -> e.contains("Missing required column: fullName"));
+        }
 
-        MockMultipartFile file = new MockMultipartFile("file", "students.csv", "text/csv",
-                csvContent.getBytes(StandardCharsets.UTF_8));
+        @Test
+        void parseStudentCsv_withMissingRequiredValue_returnsError() {
+            // Given
+            String csvContent = """
+                    id,fullName
+                    ,Nguyen Van A
+                    """;
+            MockMultipartFile file = new MockMultipartFile("file", "students.csv", "text/csv",
+                    csvContent.getBytes(StandardCharsets.UTF_8));
 
-        CsvParserService.ParseResult result = csvParserService.parseStudentCsv(file);
+            // When
+            CsvParserService.ParseResult result = csvParserService.parseStudentCsv(file);
 
-        // Verify no parsing errors occurred
-        assertThat(result.hasErrors()).isFalse();
-        assertThat(result.rows()).hasSize(3);
+            // Then
+            assertThat(result.hasErrors()).isTrue();
+            assertThat(result.errors()).anyMatch(e -> e.contains("Row 2: id is required"));
+        }
 
-        // Verify first row with escaped quotes in address
-        assertThat(result.rows().get(0).getFullName()).isEqualTo("Nguyen Van A");
-        assertThat(result.rows().get(0).getAddress()).isEqualTo("123 Main St, \"Downtown\" District");
-        assertThat(result.rows().get(0).getParentContactEmail()).isEqualTo("parent1@example.com");
+        @Test
+        void parseStudentCsv_withBlankRows_skipsBlankRows() {
+            // Given
+            String csvContent = """
+                    id,fullName
+                    std_001,Nguyen Van A
 
-        // Verify second row
-        assertThat(result.rows().get(1).getFullName()).isEqualTo("Tran Thi B");
-        assertThat(result.rows().get(1).getAddress()).isEqualTo("456 Oak Ave, \"Central\" Zone");
+                    std_002,Tran Thi B
+                    """;
+            MockMultipartFile file = new MockMultipartFile("file", "students.csv", "text/csv",
+                    csvContent.getBytes(StandardCharsets.UTF_8));
 
-        // Verify third row with escaped quotes at the end
-        assertThat(result.rows().get(2).getFullName()).isEqualTo("Le Van C");
-        assertThat(result.rows().get(2).getAddress()).isEqualTo("789 Pine Rd - \"Old City\"");
+            // When
+            CsvParserService.ParseResult result = csvParserService.parseStudentCsv(file);
+
+            // Then
+            assertThat(result.hasErrors()).isFalse();
+            assertThat(result.rows()).hasSize(2);
+        }
     }
 }

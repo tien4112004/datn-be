@@ -9,7 +9,6 @@ import java.util.List;
 
 /**
  * Response DTO for student CSV import operation.
- * Includes credentials (username/password) for newly created students.
  */
 @Getter
 @Setter
@@ -27,17 +26,13 @@ public class StudentImportResponseDto {
     String message;
 
     @Builder.Default
-    List<StudentCredentialDto> credentials = new ArrayList<>();
-
-    @Builder.Default
     List<String> errors = new ArrayList<>();
 
-    public static StudentImportResponseDto success(int studentsCreated, List<StudentCredentialDto> credentials) {
+    public static StudentImportResponseDto success(int studentsCreated) {
         return StudentImportResponseDto.builder()
                 .success(true)
                 .studentsCreated(studentsCreated)
                 .message("Students imported successfully")
-                .credentials(credentials != null ? credentials : new ArrayList<>())
                 .errors(new ArrayList<>())
                 .build();
     }
@@ -47,7 +42,6 @@ public class StudentImportResponseDto {
                 .success(false)
                 .studentsCreated(0)
                 .message("Student import failed with errors")
-                .credentials(new ArrayList<>())
                 .errors(errors)
                 .build();
     }

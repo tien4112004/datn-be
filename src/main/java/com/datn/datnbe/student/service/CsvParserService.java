@@ -4,28 +4,22 @@ import com.datn.datnbe.student.dto.request.StudentCsvRow;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
  * Service for parsing CSV files for student import.
- * Uses Apache Commons CSV for robust handling of escaped quotes and complex CSV format variations.
  */
 @Service
 @Slf4j
 public class CsvParserService {
 
-    private static final Set<String> REQUIRED_HEADERS = Set.of("fullName");
+    private static final Set<String> REQUIRED_HEADERS = Set.of("id", "fullName");
 
     private static final Set<String> VALID_HEADERS = Set.of("id",
             "fullName",
@@ -43,7 +37,6 @@ public class CsvParserService {
 
     /**
      * Parse CSV file and return list of StudentCsvRow objects with any parsing errors.
-     * Uses Apache Commons CSV for robust handling of escaped quotes within quoted fields.
      *
      * @param file the CSV file to parse
      * @return ParseResult containing parsed rows and any errors
@@ -71,20 +64,21 @@ public class CsvParserService {
                         .withIgnoreEmptyLines()
                         .parse(reader)) {
 
-            Map<String, Integer> headerMap = buildHeaderMap(csvParser.getHeaderMap(), errors);
+            Map<String, Integer> headerMap = parseHeaderLine(headerLine, errors);
             if (!errors.isEmpty()) {
                 return new ParseResult(rows, errors);
             }
 
-            int rowNumber = 1; // Data starts at row 1 (row 0 is header)
-            for (CSVRecord record : csvParser) {
+            String line;
+            int rowNumber = 1; // Header is row 0, data starts at row 1
+            while ((line = reader.readLine()) != null) {
                 rowNumber++;
-                if (record.size() == 0 || record.get(0).isBlank()) {
+                if (line.isBlank()) {
                     continue;
                 }
 
                 try {
-                    StudentCsvRow row = parseDataLine(record, headerMap, rowNumber, errors);
+                    StudentCsvRow row = parseDataLine(line, headerMap, rowNumber, errors);
                     if (row != null) {
                         rows.add(row);
                     }
@@ -101,13 +95,13 @@ public class CsvParserService {
         return new ParseResult(rows, errors);
     }
 
-    private Map<String, Integer> buildHeaderMap(Map<String, Integer> csvHeaderMap, List<String> errors) {
+    private Map<String, Integer> parseHeaderLine(String headerLine, List<String> errors) {
         Map<String, Integer> headerMap = new HashMap<>();
 
         for (Map.Entry<String, Integer> entry : csvHeaderMap.entrySet()) {
             String header = entry.getKey().trim();
             if (VALID_HEADERS.contains(header)) {
-                headerMap.put(header, entry.getValue());
+                headerMap.put(header, i);
             }
         }
 
@@ -121,7 +115,7 @@ public class CsvParserService {
         return headerMap;
     }
 
-    private StudentCsvRow parseDataLine(CSVRecord record,
+    private StudentCsvRow parseDataLine(String line,
             Map<String, Integer> headerMap,
             int rowNumber,
             List<String> errors) {
@@ -139,28 +133,11 @@ public class CsvParserService {
 
         // Validate required fields
         List<String> rowErrors = new ArrayList<>();
+        if (id == null || id.isBlank()) {
+            rowErrors.add("id is required");
+        }
         if (fullName == null || fullName.isBlank()) {
             rowErrors.add("fullName is required");
-        }
-
-        // Parse dateOfBirth if provided
-        LocalDate dateOfBirth = null;
-        if (dateOfBirthStr != null && !dateOfBirthStr.isBlank()) {
-            try {
-                dateOfBirth = LocalDate.parse(dateOfBirthStr, DATE_FORMATTER);
-            } catch (Exception e) {
-                rowErrors.add("Invalid dateOfBirth format (expected YYYY-MM-DD): " + dateOfBirthStr);
-            }
-        }
-
-        // Parse enrollment date if provided
-        LocalDate enrollmentDate = null;
-        if (enrollmentDateStr != null && !enrollmentDateStr.isBlank()) {
-            try {
-                enrollmentDate = LocalDate.parse(enrollmentDateStr, DATE_FORMATTER);
-            } catch (Exception e) {
-                rowErrors.add("Invalid enrollmentDate format (expected YYYY-MM-DD): " + enrollmentDateStr);
-            }
         }
 
         if (!rowErrors.isEmpty()) {
@@ -169,29 +146,50 @@ public class CsvParserService {
         }
 
         return StudentCsvRow.builder()
+                .id(id)
                 .fullName(fullName)
-                .dateOfBirth(dateOfBirth)
-                .gender(gender)
-                .address(address)
-                .parentName(parentName)
-                .parentPhone(parentPhone)
-                .parentContactEmail(parentContactEmail)
-                .classId(classId)
-                .enrollmentDate(enrollmentDate)
-                .status(status)
+                .dateOfBirth(getValueOrNull(values, headerMap.get("dateOfBirth")))
+                .gender(getValueOrNull(values, headerMap.get("gender")))
+                .address(getValueOrNull(values, headerMap.get("address")))
+                .parentName(getValueOrNull(values, headerMap.get("parentName")))
+                .parentPhone(getValueOrNull(values, headerMap.get("parentPhone")))
+                .classId(getValueOrNull(values, headerMap.get("classId")))
+                .enrollmentDate(getValueOrNull(values, headerMap.get("enrollmentDate")))
+                .status(getValueOrNull(values, headerMap.get("status")))
+                .createdAt(getValueOrNull(values, headerMap.get("createdAt")))
+                .updatedAt(getValueOrNull(values, headerMap.get("updatedAt")))
                 .build();
     }
 
-    private String getValueFromRecord(CSVRecord record, String columnName) {
-        try {
-            if (!record.isMapped(columnName)) {
-                return null;
-            }
-            String value = record.get(columnName).trim();
-            return value.isEmpty() ? null : value;
-        } catch (IllegalArgumentException e) {
+    private String getValueOrNull(String[] values, Integer index) {
+        if (index == null || index >= values.length) {
             return null;
         }
+        String value = values[index].trim().replace("\"", "");
+        return value.isEmpty() ? null : value;
+    }
+
+    /**
+     * Split CSV line handling quoted values with commas.
+     */
+    private String[] splitCsvLine(String line) {
+        List<String> values = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        boolean inQuotes = false;
+
+        for (char c : line.toCharArray()) {
+            if (c == '"') {
+                inQuotes = !inQuotes;
+            } else if (c == ',' && !inQuotes) {
+                values.add(current.toString());
+                current = new StringBuilder();
+            } else {
+                current.append(c);
+            }
+        }
+        values.add(current.toString());
+
+        return values.toArray(new String[0]);
     }
 
     /**

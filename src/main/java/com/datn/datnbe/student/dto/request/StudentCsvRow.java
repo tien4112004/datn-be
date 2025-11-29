@@ -5,6 +5,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -12,16 +13,18 @@ import java.time.LocalDate;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class StudentCsvRow {
+    String id;
     String fullName;
-    LocalDate dateOfBirth;
+    String dateOfBirth;
     String gender;
+    String address;
     String parentName;
     String parentPhone;
-
-    String address;
     String classId;
-    LocalDate enrollmentDate;
+    String enrollmentDate;
     String status;
+    String createdAt;
+    String updatedAt;
 
     String parentContactEmail;
 

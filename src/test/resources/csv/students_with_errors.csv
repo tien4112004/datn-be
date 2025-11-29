@@ -1,11 +1,11 @@
-id,fullName,dateOfBirth,gender,address,parentName,parentPhone,parentContactEmail,classId,enrollmentDate,status
-std_001,Nguyen Van A,2008-01-15,male,123 Main Street,Nguyen Van X,+84987654321,parent1@example.com,cls_001,2024-01-15,active
-std_002,Tran Thi B,2008-05-20,female,456 Oak Avenue,Tran Van Y,+84912345678,parent2@example.com,cls_001,2024-01-15,active
-,Missing ID Student,2008-03-10,male,789 Pine Road,Parent Name,+84999888777,parent3@example.com,cls_002,2024-01-15,active
-std_004,,2008-07-25,female,321 Elm Street,Parent Four,+84111222333,parent4@example.com,cls_002,2024-01-15,active
-std_005,Invalid Date Format,15-01-2008,male,555 Cedar Lane,Parent Five,+84444555666,parent5@example.com,cls_003,2024-01-15,active
-std_006,Invalid Gender,2008-09-30,unknown,666 Maple Drive,Parent Six,+84777888999,parent6@example.com,cls_003,2024-01-15,active
-std_007,Invalid Status,2008-11-11,female,777 Birch Way,Parent Seven,+84123456789,parent7@example.com,cls_004,2024-01-15,invalid_status
-std_008,Invalid Phone,2008-02-28,male,888 Willow Court,Parent Eight,invalid-phone!@#,parent8@example.com,cls_004,2024-01-15,active
-std_009,Multiple Errors,invalid-date,invalid_gender,999 Spruce Ave,Parent Nine,bad!phone,invalid-email,cls_005,bad-date,bad_status
-std_001,Duplicate ID,2008-04-15,male,111 Duplicate St,Parent Dup,+84555666777,parent10@example.com,cls_005,2024-01-15,active
+id,fullName,dateOfBirth,gender,address,parentName,parentPhone,classId,enrollmentDate,status
+std_001,Nguyen Van A,2008-01-15,male,123 Main Street,Nguyen Van X,+84987654321,cls_001,2024-01-15,active
+std_002,Tran Thi B,2008-05-20,female,456 Oak Avenue,Tran Van Y,+84912345678,cls_001,2024-01-15,active
+,Missing ID Student,2008-03-10,male,789 Pine Road,Parent Name,+84999888777,cls_002,2024-01-15,active
+std_004,,2008-07-25,female,321 Elm Street,Parent Four,+84111222333,cls_002,2024-01-15,active
+std_005,Invalid Date Format,15-01-2008,male,555 Cedar Lane,Parent Five,+84444555666,cls_003,2024-01-15,active
+std_006,Invalid Gender,2008-09-30,unknown,666 Maple Drive,Parent Six,+84777888999,cls_003,2024-01-15,active
+std_007,Invalid Status,2008-11-11,female,777 Birch Way,Parent Seven,+84123456789,cls_004,2024-01-15,invalid_status
+std_008,Invalid Phone,2008-02-28,male,888 Willow Court,Parent Eight,invalid-phone!@#,cls_004,2024-01-15,active
+std_009,Multiple Errors,invalid-date,invalid_gender,999 Spruce Ave,Parent Nine,bad!phone,cls_005,bad-date,bad_status
+std_001,Duplicate ID,2008-04-15,male,111 Duplicate St,Parent Dup,+84555666777,cls_005,2024-01-15,active

@@ -1,32 +1,25 @@
 package com.datn.datnbe.student.management;
 
-import com.datn.datnbe.auth.api.UserProfileApi;
-import com.datn.datnbe.auth.dto.request.SignupRequest;
-import com.datn.datnbe.auth.dto.response.UserProfileResponse;
-import com.datn.datnbe.student.api.StudentApi;
 import com.datn.datnbe.student.api.StudentImportApi;
 import com.datn.datnbe.student.dto.request.StudentCsvRow;
-import com.datn.datnbe.student.dto.response.StudentCredentialDto;
 import com.datn.datnbe.student.dto.response.StudentImportResponseDto;
 import com.datn.datnbe.student.entity.Student;
 import com.datn.datnbe.student.mapper.StudentMapper;
 import com.datn.datnbe.student.repository.StudentRepository;
 import com.datn.datnbe.student.service.CsvParserService;
-import com.datn.datnbe.student.utils.StudentCredentialGenerator;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Management service for student import operations.
- * Implements two-phase creation:
- * 1) Create user via UserProfileAPI
- * 2) Create student linked to that user
  */
 @Service
 @RequiredArgsConstructor
@@ -37,12 +30,11 @@ public class StudentImportManagement implements StudentImportApi {
     CsvParserService csvParserService;
     StudentMapper studentMapper;
     StudentRepository studentRepository;
-    UserProfileApi userProfileApi;
-    StudentApi studentApi;
 
     @Override
-    public StudentImportResponseDto importStudentsFromCsv(String classId, MultipartFile file) {
-        log.info("Starting student import from CSV file: {} for class: {}", file.getOriginalFilename(), classId);
+    @Transactional
+    public StudentImportResponseDto importStudentsFromCsv(MultipartFile file) {
+        log.info("Starting student import from CSV file: {}", file.getOriginalFilename());
 
         // Step 1: Parse CSV file
         CsvParserService.ParseResult parseResult = csvParserService.parseStudentCsv(file);
@@ -50,48 +42,12 @@ public class StudentImportManagement implements StudentImportApi {
 
         if (parseResult.rows().isEmpty() && errors.isEmpty()) {
             errors.add("No valid student data found in the CSV file");
-            return StudentImportResponseDto.failure(errors);
         }
 
-        // Return early if parsing errors exist
-        if (!errors.isEmpty()) {
-            return StudentImportResponseDto.failure(errors);
-        }
-
-        // Step 2: Create users first (Phase 1) - each user creation is independent
-        List<StudentCredentialDto> createdCredentials = new ArrayList<>();
-        List<StudentCsvRow> successfulRows = new ArrayList<>();
-        int rowNumber = 0;
-
-        for (StudentCsvRow csvRow : parseResult.rows()) {
-            rowNumber++;
-            try {
-                StudentCredentialDto credential = createUserAndGetCredentials(csvRow, rowNumber, errors);
-                if (credential != null) {
-                    createdCredentials.add(credential);
-                    csvRow.setUserId(credential.getStudentId());
-                    successfulRows.add(csvRow);
-                }
-            } catch (Exception e) {
-                errors.add(String.format("Row %d: Failed to create user - %s", rowNumber, e.getMessage()));
-                log.error("Error creating user for row {}: {}", rowNumber, e.getMessage(), e);
-            }
-        }
-
-        // Step 3: If all user creations failed, return failure
-        if (successfulRows.isEmpty()) {
-            log.warn("Student import failed - no users were created successfully");
-            if (errors.isEmpty()) {
-                errors.add("No users were created successfully");
-            }
-            return StudentImportResponseDto.failure(errors);
-        }
-
-        // Step 4: Convert successful CSV rows to Student entities
+        // Step 2: Convert CSV rows to entities with validation
         List<Student> students = new ArrayList<>();
-        rowNumber = 0;
-
-        for (StudentCsvRow csvRow : successfulRows) {
+        int rowNumber = 1; // Starting after header
+        for (StudentCsvRow csvRow : parseResult.rows()) {
             rowNumber++;
             Student student = studentMapper.toEntity(csvRow, rowNumber, errors);
             if (student != null) {
@@ -99,60 +55,32 @@ public class StudentImportManagement implements StudentImportApi {
             }
         }
 
-        // Step 5: Check for existing students in database
-        // Step 5: Detect duplicate user IDs within the CSV (should fail fast)
-        Set<String> seenUserIds = new HashSet<>();
-        Set<String> duplicateUserIds = new HashSet<>();
+        // Step 3: Check for duplicate IDs within the CSV
+        Set<String> seenIds = new HashSet<>();
+        Set<String> duplicateIds = new HashSet<>();
         for (Student student : students) {
-            if (!seenUserIds.add(student.getUserId())) {
-                duplicateUserIds.add(student.getUserId());
+            if (!seenIds.add(student.getId())) {
+                duplicateIds.add(student.getId());
             }
         }
-        if (!duplicateUserIds.isEmpty()) {
-            log.warn("Duplicate user IDs found in CSV: {}", duplicateUserIds);
-            errors.add(String.format("Duplicate user IDs found in CSV: %s", String.join(", ", duplicateUserIds)));
-            return StudentImportResponseDto.failure(errors);
+        if (!duplicateIds.isEmpty()) {
+            errors.add(String.format("Duplicate student IDs found in CSV: %s", String.join(", ", duplicateIds)));
         }
 
-        List<Student> newStudents = new ArrayList<>();
-        for (Student student : students) {
-            if (studentRepository.existsByUserId(student.getUserId())) {
-                log.warn("Student already exists for user ID: {}, skipping", student.getUserId());
-                errors.add(String.format("Student already exists for user ID: %s (skipped)", student.getUserId()));
-            } else {
-                newStudents.add(student);
-            }
-        }
+        // Step 4: Check for existing IDs in database
+        if (!students.isEmpty()) {
+            Set<String> studentIds = students.stream().map(Student::getId).collect(Collectors.toSet());
 
-        // Step 6: Save new students
-        List<Student> savedStudents = new ArrayList<>();
-        if (!newStudents.isEmpty()) {
-            try {
-                savedStudents = studentRepository.saveAll(newStudents);
-                log.info("Successfully saved {} students to database", savedStudents.size());
-            } catch (Exception e) {
-                log.error("Error saving students to database", e);
-                errors.add("Database error while saving students: " + e.getMessage());
-                return StudentImportResponseDto.failure(errors);
+            List<Student> existingStudents = studentRepository.findByIdIn(studentIds);
+            if (!existingStudents.isEmpty()) {
+                Set<String> existingIds = existingStudents.stream().map(Student::getId).collect(Collectors.toSet());
+                errors.add(String.format("Student IDs already exist in database: %s", String.join(", ", existingIds)));
             }
         }
 
-        // Step 7: Enroll students in the class
-        int enrolledCount = 0;
-        for (Student student : savedStudents) {
-            try {
-                studentApi.enrollStudent(classId, student.getId());
-                enrolledCount++;
-                log.info("Enrolled student {} in class {}", student.getId(), classId);
-            } catch (Exception e) {
-                log.error("Error enrolling student {} in class {}: {}", student.getId(), classId, e.getMessage());
-                errors.add(String.format("Failed to enroll student %s in class: %s", student.getId(), e.getMessage()));
-            }
-        }
-        log.info("Successfully enrolled {} students in class {}", enrolledCount, classId);
-
-        // Return success with any non-fatal warnings
-        if (savedStudents.isEmpty() && !errors.isEmpty()) {
+        // Step 5: If any errors, abort and return failure response
+        if (!errors.isEmpty()) {
+            log.warn("Student import failed with {} errors", errors.size());
             return StudentImportResponseDto.failure(errors);
         }
 
@@ -218,9 +146,9 @@ public class StudentImportManagement implements StudentImportApi {
                     .build();
 
         } catch (Exception e) {
-            log.error("Error creating user for row {}: {}", rowNumber, e.getMessage(), e);
-            errors.add(String.format("Row %d: Failed to create user - %s", rowNumber, e.getMessage()));
-            return null;
+            log.error("Error saving students to database", e);
+            errors.add("Database error: " + e.getMessage());
+            return StudentImportResponseDto.failure(errors);
         }
     }
 }

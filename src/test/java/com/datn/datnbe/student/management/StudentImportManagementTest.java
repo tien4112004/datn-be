@@ -14,14 +14,13 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import com.datn.datnbe.student.api.StudentApi;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,12 +39,6 @@ class StudentImportManagementTest {
     @Mock
     private StudentRepository studentRepository;
 
-    @Mock
-    private UserProfileApi userProfileApi;
-
-    @Mock
-    private StudentApi studentApi;
-
     @InjectMocks
     private StudentImportManagement studentImportManagement;
 
@@ -53,7 +46,7 @@ class StudentImportManagementTest {
 
     @BeforeEach
     void setUp() {
-        String csvContent = "fullName,dateOfBirth,gender,address,parentName,parentPhone,parentContactEmail,classId\nNguyen Van A,2008-01-15,male,123 Main St,Nguyen Van X,+84987654321,parent@example.com,cls_001";
+        String csvContent = "id,fullName\nstd_001,Nguyen Van A";
         validFile = new MockMultipartFile("file", "students.csv", "text/csv",
                 csvContent.getBytes(StandardCharsets.UTF_8));
     }
@@ -63,96 +56,49 @@ class StudentImportManagementTest {
     class SuccessfulImportTests {
 
         @Test
-        void importStudentsFromCsv_withValidData_returnsSuccessWithCredentials() {
-            StudentCsvRow csvRow = StudentCsvRow.builder()
-                    .fullName("Nguyen Van A")
-                    .dateOfBirth(LocalDate.of(2008, 1, 15))
-                    .gender("male")
-                    .address("123 Main St")
-                    .parentName("Nguyen Van X")
-                    .parentPhone("+84987654321")
-                    .parentContactEmail("parent@example.com")
-                    .classId("cls_001")
-                    .enrollmentDate(LocalDate.of(2024, 1, 15))
-                    .status("active")
-                    .build();
-
-            UserProfileResponse createdUser = UserProfileResponse.builder()
-                    .id("user_001")
-                    .email("nguyen.van.a@example.com")
-                    .firstName("Nguyen")
-                    .lastName("Van A")
-                    .build();
-
-            Student student = Student.builder()
-                    .userId("user_001")
-                    .enrollmentDate(LocalDate.of(2024, 1, 15))
-                    .address("123 Main St")
-                    .parentContactEmail("parent@example.com")
-                    .build();
+        void importStudentsFromCsv_withValidData_returnsSuccess() {
+            // Given
+            StudentCsvRow csvRow = StudentCsvRow.builder().id("std_001").fullName("Nguyen Van A").build();
+            Student student = Student.builder().id("std_001").fullName("Nguyen Van A").build();
 
             when(csvParserService.parseStudentCsv(any()))
                     .thenReturn(new CsvParserService.ParseResult(List.of(csvRow), new ArrayList<>()));
-            when(userProfileApi.createUserProfile(any())).thenReturn(createdUser);
             when(studentMapper.toEntity(eq(csvRow), anyInt(), anyList())).thenReturn(student);
-            when(studentRepository.existsByUserId(anyString())).thenReturn(false);
+            when(studentRepository.findByIdIn(anySet())).thenReturn(Collections.emptyList());
             when(studentRepository.saveAll(anyList())).thenReturn(List.of(student));
 
-            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv("cls_001", validFile);
+            // When
+            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv(validFile);
 
+            // Then
             assertThat(result.isSuccess()).isTrue();
             assertThat(result.getStudentsCreated()).isEqualTo(1);
             assertThat(result.getErrors()).isEmpty();
-            assertThat(result.getCredentials()).hasSize(1);
-            assertThat(result.getCredentials().get(0).getFullName()).isEqualTo("Nguyen Van A");
             verify(studentRepository).saveAll(anyList());
         }
 
         @Test
-        void importStudentsFromCsv_withMultipleStudents_savesAllAndReturnsCredentials() {
-            StudentCsvRow csvRow1 = StudentCsvRow.builder()
-                    .fullName("Nguyen Van A")
-                    .dateOfBirth(LocalDate.of(2008, 1, 15))
-                    .gender("male")
-                    .classId("cls_001")
-                    .build();
-            StudentCsvRow csvRow2 = StudentCsvRow.builder()
-                    .fullName("Tran Thi B")
-                    .dateOfBirth(LocalDate.of(2008, 5, 20))
-                    .gender("female")
-                    .classId("cls_001")
-                    .build();
-
-            UserProfileResponse createdUser1 = UserProfileResponse.builder()
-                    .id("user_001")
-                    .email("nguyen.van.a@example.com")
-                    .firstName("Nguyen")
-                    .lastName("Van A")
-                    .build();
-
-            UserProfileResponse createdUser2 = UserProfileResponse.builder()
-                    .id("user_002")
-                    .email("tran.thi.b@example.com")
-                    .firstName("Tran")
-                    .lastName("Thi B")
-                    .build();
-
-            Student student1 = Student.builder().userId("user_001").build();
-            Student student2 = Student.builder().userId("user_002").build();
+        void importStudentsFromCsv_withMultipleStudents_savesAll() {
+            // Given
+            StudentCsvRow csvRow1 = StudentCsvRow.builder().id("std_001").fullName("A").build();
+            StudentCsvRow csvRow2 = StudentCsvRow.builder().id("std_002").fullName("B").build();
+            Student student1 = Student.builder().id("std_001").fullName("A").build();
+            Student student2 = Student.builder().id("std_002").fullName("B").build();
 
             when(csvParserService.parseStudentCsv(any()))
                     .thenReturn(new CsvParserService.ParseResult(List.of(csvRow1, csvRow2), new ArrayList<>()));
             when(userProfileApi.createUserProfile(any())).thenReturn(createdUser1).thenReturn(createdUser2);
             when(studentMapper.toEntity(eq(csvRow1), anyInt(), anyList())).thenReturn(student1);
             when(studentMapper.toEntity(eq(csvRow2), anyInt(), anyList())).thenReturn(student2);
-            when(studentRepository.existsByUserId(anyString())).thenReturn(false);
+            when(studentRepository.findByIdIn(anySet())).thenReturn(Collections.emptyList());
             when(studentRepository.saveAll(anyList())).thenReturn(List.of(student1, student2));
 
-            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv("cls_001", validFile);
+            // When
+            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv(validFile);
 
+            // Then
             assertThat(result.isSuccess()).isTrue();
             assertThat(result.getStudentsCreated()).isEqualTo(2);
-            assertThat(result.getCredentials()).hasSize(2);
         }
     }
 
@@ -162,149 +108,104 @@ class StudentImportManagementTest {
 
         @Test
         void importStudentsFromCsv_withParseErrors_returnsFailure() {
-            List<String> parseErrors = List.of("Row 2: fullName is required");
+            // Given
+            List<String> parseErrors = List.of("Row 2: id is required");
             when(csvParserService.parseStudentCsv(any()))
                     .thenReturn(new CsvParserService.ParseResult(new ArrayList<>(), new ArrayList<>(parseErrors)));
 
-            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv("cls_001", validFile);
+            // When
+            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv(validFile);
 
+            // Then
             assertThat(result.isSuccess()).isFalse();
             assertThat(result.getStudentsCreated()).isEqualTo(0);
-            assertThat(result.getErrors()).contains("Row 2: fullName is required");
-            assertThat(result.getCredentials()).isEmpty();
+            assertThat(result.getErrors()).contains("Row 2: id is required");
             verify(studentRepository, never()).saveAll(anyList());
         }
 
         @Test
-        void importStudentsFromCsv_withDuplicateUserIdsInCsv_returnsFailure() {
-            StudentCsvRow csvRow1 = StudentCsvRow.builder()
-                    .fullName("Nguyen Van A")
-                    .dateOfBirth(LocalDate.of(2008, 1, 15))
-                    .gender("male")
-                    .classId("cls_001")
-                    .build();
-            StudentCsvRow csvRow2 = StudentCsvRow.builder()
-                    .fullName("Tran Thi B")
-                    .dateOfBirth(LocalDate.of(2008, 5, 20))
-                    .gender("female")
-                    .classId("cls_001")
-                    .build();
-
-            UserProfileResponse createdUser = UserProfileResponse.builder()
-                    .id("user_001")
-                    .email("test@example.com")
-                    .firstName("Test")
-                    .lastName("User")
-                    .build();
-
-            Student student1 = Student.builder().userId("user_001").build();
-            Student student2 = Student.builder().userId("user_001").build();
+        void importStudentsFromCsv_withDuplicateIdsInCsv_returnsFailure() {
+            // Given
+            StudentCsvRow csvRow1 = StudentCsvRow.builder().id("std_001").fullName("A").build();
+            StudentCsvRow csvRow2 = StudentCsvRow.builder().id("std_001").fullName("B").build();
+            Student student1 = Student.builder().id("std_001").fullName("A").build();
+            Student student2 = Student.builder().id("std_001").fullName("B").build();
 
             when(csvParserService.parseStudentCsv(any()))
                     .thenReturn(new CsvParserService.ParseResult(List.of(csvRow1, csvRow2), new ArrayList<>()));
-            // These stubbings may not be exercised if duplicate user ids are detected early
-            lenient().when(userProfileApi.createUserProfile(any())).thenReturn(createdUser);
-            lenient().when(studentMapper.toEntity(eq(csvRow1), anyInt(), anyList())).thenReturn(student1);
-            lenient().when(studentMapper.toEntity(eq(csvRow2), anyInt(), anyList())).thenReturn(student2);
+            when(studentMapper.toEntity(eq(csvRow1), anyInt(), anyList())).thenReturn(student1);
+            when(studentMapper.toEntity(eq(csvRow2), anyInt(), anyList())).thenReturn(student2);
 
-            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv("cls_001", validFile);
+            // When
+            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv(validFile);
 
+            // Then
             assertThat(result.isSuccess()).isFalse();
-            assertThat(result.getErrors()).anyMatch(e -> e.contains("Duplicate user IDs found in CSV"));
-            assertThat(result.getCredentials()).isEmpty();
+            assertThat(result.getErrors()).anyMatch(e -> e.contains("Duplicate student IDs"));
             verify(studentRepository, never()).saveAll(anyList());
         }
 
         @Test
-        void importStudentsFromCsv_withExistingUserIdsInDb_returnsFailure() {
-            StudentCsvRow csvRow = StudentCsvRow.builder()
-                    .fullName("Nguyen Van A")
-                    .dateOfBirth(LocalDate.of(2008, 1, 15))
-                    .gender("male")
-                    .classId("cls_001")
-                    .build();
-
-            UserProfileResponse createdUser = UserProfileResponse.builder()
-                    .id("user_001")
-                    .email("nguyen.van.a@example.com")
-                    .firstName("Nguyen")
-                    .lastName("Van A")
-                    .build();
-
-            Student student = Student.builder().userId("user_001").build();
+        void importStudentsFromCsv_withExistingIdsInDb_returnsFailure() {
+            // Given
+            StudentCsvRow csvRow = StudentCsvRow.builder().id("std_001").fullName("A").build();
+            Student student = Student.builder().id("std_001").fullName("A").build();
+            Student existingStudent = Student.builder().id("std_001").fullName("Existing").build();
 
             when(csvParserService.parseStudentCsv(any()))
                     .thenReturn(new CsvParserService.ParseResult(List.of(csvRow), new ArrayList<>()));
-            when(userProfileApi.createUserProfile(any())).thenReturn(createdUser);
             when(studentMapper.toEntity(eq(csvRow), anyInt(), anyList())).thenReturn(student);
-            when(studentRepository.existsByUserId("user_001")).thenReturn(true);
+            when(studentRepository.findByIdIn(anySet())).thenReturn(List.of(existingStudent));
 
-            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv("cls_001", validFile);
+            // When
+            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv(validFile);
 
+            // Then
             assertThat(result.isSuccess()).isFalse();
-            assertThat(result.getErrors()).anyMatch(e -> e.contains("Student already exists for user ID"));
-            assertThat(result.getCredentials()).isEmpty();
+            assertThat(result.getErrors()).anyMatch(e -> e.contains("already exist in database"));
             verify(studentRepository, never()).saveAll(anyList());
         }
 
         @Test
         void importStudentsFromCsv_withMappingErrors_returnsFailure() {
-            StudentCsvRow csvRow = StudentCsvRow.builder().fullName("Test Student").build();
-
-            UserProfileResponse createdUser = UserProfileResponse.builder()
-                    .id("user_001")
-                    .email("test.student@example.com")
-                    .firstName("Test")
-                    .lastName("Student")
-                    .build();
+            // Given
+            StudentCsvRow csvRow = StudentCsvRow.builder().id("std_001").fullName("A").gender("invalid").build();
 
             when(csvParserService.parseStudentCsv(any()))
                     .thenReturn(new CsvParserService.ParseResult(List.of(csvRow), new ArrayList<>()));
-            when(userProfileApi.createUserProfile(any())).thenReturn(createdUser);
             when(studentMapper.toEntity(eq(csvRow), anyInt(), anyList())).thenAnswer(invocation -> {
                 List<String> errors = invocation.getArgument(2);
-                errors.add("Row 2: userId is required");
+                errors.add("Row 2: Invalid gender value");
                 return null;
             });
 
-            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv("cls_001", validFile);
+            // When
+            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv(validFile);
 
+            // Then
             assertThat(result.isSuccess()).isFalse();
-            assertThat(result.getErrors()).anyMatch(e -> e.contains("userId is required"));
-            assertThat(result.getCredentials()).isEmpty();
+            assertThat(result.getErrors()).anyMatch(e -> e.contains("Invalid gender value"));
             verify(studentRepository, never()).saveAll(anyList());
         }
 
         @Test
         void importStudentsFromCsv_withDatabaseError_returnsFailure() {
-            StudentCsvRow csvRow = StudentCsvRow.builder()
-                    .fullName("Nguyen Van A")
-                    .dateOfBirth(LocalDate.of(2008, 1, 15))
-                    .gender("male")
-                    .classId("cls_001")
-                    .build();
-
-            UserProfileResponse createdUser = UserProfileResponse.builder()
-                    .id("user_001")
-                    .email("nguyen.van.a@example.com")
-                    .firstName("Nguyen")
-                    .lastName("Van A")
-                    .build();
-
-            Student student = Student.builder().userId("user_001").build();
+            // Given
+            StudentCsvRow csvRow = StudentCsvRow.builder().id("std_001").fullName("A").build();
+            Student student = Student.builder().id("std_001").fullName("A").build();
 
             when(csvParserService.parseStudentCsv(any()))
                     .thenReturn(new CsvParserService.ParseResult(List.of(csvRow), new ArrayList<>()));
-            when(userProfileApi.createUserProfile(any())).thenReturn(createdUser);
             when(studentMapper.toEntity(eq(csvRow), anyInt(), anyList())).thenReturn(student);
-            when(studentRepository.existsByUserId(anyString())).thenReturn(false);
+            when(studentRepository.findByIdIn(anySet())).thenReturn(Collections.emptyList());
             when(studentRepository.saveAll(anyList())).thenThrow(new RuntimeException("DB Error"));
 
-            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv("cls_001", validFile);
+            // When
+            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv(validFile);
 
+            // Then
             assertThat(result.isSuccess()).isFalse();
             assertThat(result.getErrors()).anyMatch(e -> e.contains("Database error"));
-            assertThat(result.getCredentials()).isEmpty();
         }
     }
 }
