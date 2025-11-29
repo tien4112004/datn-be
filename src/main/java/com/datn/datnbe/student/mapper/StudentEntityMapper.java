@@ -1,6 +1,5 @@
 package com.datn.datnbe.student.mapper;
 
-import com.datn.datnbe.student.dto.request.StudentCreateRequest;
 import com.datn.datnbe.student.dto.request.StudentUpdateRequest;
 import com.datn.datnbe.student.dto.response.StudentResponseDto;
 import com.datn.datnbe.student.entity.Student;
@@ -22,30 +21,17 @@ public class StudentEntityMapper {
 
         return StudentResponseDto.builder()
                 .id(entity.getId())
-                .userId(entity.getUserId())
-                .enrollmentDate(entity.getEnrollmentDate())
+                .fullName(entity.getFullName())
+                .dateOfBirth(entity.getDateOfBirth())
+                .gender(entity.getGender())
                 .address(entity.getAddress())
-                .parentContactEmail(entity.getParentContactEmail())
+                .parentName(entity.getParentName())
+                .parentPhone(entity.getParentPhone())
+                .classId(entity.getClassId())
+                .enrollmentDate(entity.getEnrollmentDate())
                 .status(entity.getStatus())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
-                .build();
-    }
-
-    /**
-     * Convert StudentCreateRequest to Student entity.
-     * Note: userId should be set separately after user creation.
-     * This method is kept for reference but not used in the create flow.
-     */
-    public Student toEntity(StudentCreateRequest request) {
-        if (request == null) {
-            return null;
-        }
-
-        return Student.builder()
-                .enrollmentDate(request.getEnrollmentDate())
-                .address(request.getAddress())
-                .parentContactEmail(request.getParentContactEmail())
                 .build();
     }
 
@@ -57,14 +43,29 @@ public class StudentEntityMapper {
             return;
         }
 
-        if (request.getEnrollmentDate() != null) {
-            entity.setEnrollmentDate(request.getEnrollmentDate());
+        if (request.getFullName() != null) {
+            entity.setFullName(request.getFullName());
+        }
+        if (request.getDateOfBirth() != null) {
+            entity.setDateOfBirth(request.getDateOfBirth());
+        }
+        if (request.getGender() != null) {
+            entity.setGender(request.getGender());
         }
         if (request.getAddress() != null) {
             entity.setAddress(request.getAddress());
         }
-        if (request.getParentContactEmail() != null) {
-            entity.setParentContactEmail(request.getParentContactEmail());
+        if (request.getParentName() != null) {
+            entity.setParentName(request.getParentName());
+        }
+        if (request.getParentPhone() != null) {
+            entity.setParentPhone(request.getParentPhone());
+        }
+        if (request.getClassId() != null) {
+            entity.setClassId(request.getClassId());
+        }
+        if (request.getEnrollmentDate() != null) {
+            entity.setEnrollmentDate(request.getEnrollmentDate());
         }
         if (request.getStatus() != null) {
             entity.setStatus(request.getStatus());

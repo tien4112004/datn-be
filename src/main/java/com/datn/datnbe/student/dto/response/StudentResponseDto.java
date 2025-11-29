@@ -1,5 +1,6 @@
 package com.datn.datnbe.student.dto.response;
 
+import com.datn.datnbe.student.enums.Gender;
 import com.datn.datnbe.student.enums.StudentStatus;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
@@ -10,7 +11,6 @@ import java.time.LocalDateTime;
 
 /**
  * Response DTO for student data.
- * Includes optional credentials (username/password) when returned from create operations.
  */
 @Getter
 @Setter
@@ -22,10 +22,14 @@ import java.time.LocalDateTime;
 public class StudentResponseDto {
 
     String id;
-    String userId;
-    LocalDate enrollmentDate;
+    String fullName;
+    LocalDate dateOfBirth;
+    Gender gender;
     String address;
-    String parentContactEmail;
+    String parentName;
+    String parentPhone;
+    String classId;
+    LocalDate enrollmentDate;
     StudentStatus status;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;

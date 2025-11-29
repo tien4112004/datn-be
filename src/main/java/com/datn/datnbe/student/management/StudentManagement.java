@@ -1,33 +1,18 @@
 package com.datn.datnbe.student.management;
 
 import com.datn.datnbe.student.api.StudentApi;
-import com.datn.datnbe.student.dto.request.StudentCreateRequest;
 import com.datn.datnbe.student.dto.request.StudentUpdateRequest;
 import com.datn.datnbe.student.dto.response.StudentResponseDto;
-import com.datn.datnbe.student.entity.ClassEnrollment;
 import com.datn.datnbe.student.entity.Student;
-import com.datn.datnbe.student.enums.EnrollmentStatus;
 import com.datn.datnbe.student.mapper.StudentEntityMapper;
-import com.datn.datnbe.student.repository.ClassEnrollmentRepository;
 import com.datn.datnbe.student.repository.StudentRepository;
-import com.datn.datnbe.student.utils.StudentCredentialGenerator;
 import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
-import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
-import com.datn.datnbe.sharedkernel.dto.PaginationDto;
-import com.datn.datnbe.auth.api.UserProfileApi;
-import com.datn.datnbe.auth.dto.request.SignupRequest;
-import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Management service for student CRUD operations.
@@ -39,76 +24,14 @@ import java.util.stream.Collectors;
 public class StudentManagement implements StudentApi {
 
     StudentRepository studentRepository;
-    ClassEnrollmentRepository classEnrollmentRepository;
     StudentEntityMapper studentEntityMapper;
-    UserProfileApi userProfileApi;
 
     @Override
     public StudentResponseDto getStudentById(String id) {
         log.info("Getting student by ID: {}", id);
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + id));
-        StudentResponseDto dto = studentEntityMapper.toResponseDto(student);
-        enrichWithUserProfile(dto, student.getUserId());
-        return dto;
-    }
-
-    @Override
-    @Transactional
-    public StudentResponseDto createStudent(StudentCreateRequest request) {
-        log.info("Creating new student with full name: {}", request.getFullName());
-
-        // Phase 1: Create user via UserProfileAPI
-        String username = StudentCredentialGenerator.generateUsername(request.getFullName(), request.getDateOfBirth());
-        String password = StudentCredentialGenerator.generatePassword();
-
-        // Parse fullName into firstName and lastName
-        String[] names = request.getFullName().trim().split("\\s+", 2);
-        String firstName = names[0];
-        String lastName = names.length > 1 ? names[1] : firstName;
-
-        SignupRequest signupRequest = SignupRequest.builder()
-                .username(username)
-                .password(password)
-                .firstName(firstName)
-                .lastName(lastName)
-                .build();
-
-        UserProfileResponse createdUser = userProfileApi.createUserProfileByUsername(signupRequest);
-        String userId = createdUser.getId();
-
-        log.info("User created via UserProfileAPI with ID: {}", userId);
-
-        // Phase 2: Create student entity linked to the user
-        Student student = Student.builder()
-                .userId(userId)
-                .enrollmentDate(request.getEnrollmentDate())
-                .address(request.getAddress())
-                .parentContactEmail(request.getParentContactEmail())
-                .build();
-
-        Student savedStudent = studentRepository.save(student);
-
-        log.info("Successfully created student with ID: {}", savedStudent.getId());
-
-        // Build response with credentials
-        StudentResponseDto response = studentEntityMapper.toResponseDto(savedStudent);
-        response.setUsername(username);
-        response.setPassword(password);
-        // populate profile fields from created user
-        try {
-            var profile = userProfileApi.getUserProfile(createdUser.getId());
-            if (profile != null) {
-                response.setFirstName(profile.getFirstName());
-                response.setLastName(profile.getLastName());
-                response.setAvatarUrl(profile.getAvatarUrl());
-                response.setPhoneNumber(profile.getPhoneNumber());
-            }
-        } catch (Exception e) {
-            log.debug("Unable to fetch user profile for created student: {}", e.getMessage());
-        }
-
-        return response;
+        return studentEntityMapper.toResponseDto(student);
     }
 
     @Override
@@ -123,9 +46,7 @@ public class StudentManagement implements StudentApi {
         Student savedStudent = studentRepository.save(student);
 
         log.info("Successfully updated student with ID: {}", id);
-        StudentResponseDto dto = studentEntityMapper.toResponseDto(savedStudent);
-        enrichWithUserProfile(dto, savedStudent.getUserId());
-        return dto;
+        return studentEntityMapper.toResponseDto(savedStudent);
     }
 
     @Override
@@ -136,12 +57,6 @@ public class StudentManagement implements StudentApi {
         if (!studentRepository.existsById(id)) {
             throw new ResourceNotFoundException("Student not found with ID: " + id);
         }
-
-        // Also remove from all class enrollments
-        classEnrollmentRepository.deleteAllInBatch(classEnrollmentRepository.findAll()
-                .stream()
-                .filter(e -> e.getStudentId().equals(id))
-                .collect(Collectors.toList()));
 
         studentRepository.deleteById(id);
         log.info("Successfully deleted student with ID: {}", id);
