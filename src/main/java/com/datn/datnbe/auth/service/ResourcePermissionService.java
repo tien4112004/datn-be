@@ -150,7 +150,7 @@ public class ResourcePermissionService {
     private void removeUserFromOtherGroups(String userId,
             PermissionLevel targetLevel,
             DocumentResourceMapping mapping) {
-        // Remove from readers group if upgrading to commentr or removing access
+        // Remove from readers group if upgrading to commenter or removing access
         if (targetLevel != PermissionLevel.READER && mapping.getReadersGroupId() != null) {
             try {
                 keycloakAuthzService.removeUserFromGroup(userId, mapping.getReadersGroupId());
@@ -160,13 +160,13 @@ public class ResourcePermissionService {
             }
         }
 
-        // Remove from commentrs group if downgrading to reader or removing access
+        // Remove from commenters group if downgrading to reader or removing access
         if (targetLevel != PermissionLevel.COMMENTER && mapping.getCommentersGroupId() != null) {
             try {
                 keycloakAuthzService.removeUserFromGroup(userId, mapping.getCommentersGroupId());
-                log.info("Removed user {} from commentrs group", userId);
+                log.info("Removed user {} from commenters group", userId);
             } catch (Exception e) {
-                log.debug("User {} was not in commentrs group", userId);
+                log.debug("User {} was not in commenters group", userId);
             }
         }
     }
@@ -238,7 +238,7 @@ public class ResourcePermissionService {
     @Getter
     private enum PermissionLevel {
         READER("readers", "Read-only access", Set.of("read")),
-        COMMENTER("commentrs", "Read and comment access", Set.of("read", "comment"));
+        COMMENTER("commenters", "Read and comment access", Set.of("read", "comment"));
 
         private final String groupSuffix;
         private final String description;
@@ -278,7 +278,7 @@ public class ResourcePermissionService {
             return;
         }
 
-        // Remove user from both groups (readers and commentrs) if they exist
+        // Remove user from both groups (readers and commenters) if they exist
         boolean removed = false;
         if (mapping.getReadersGroupId() != null) {
             try {
@@ -294,9 +294,9 @@ public class ResourcePermissionService {
             try {
                 keycloakAuthzService.removeUserFromGroup(keycloakUserId, mapping.getCommentersGroupId());
                 removed = true;
-                log.info("Removed user {} from commentrs group", targetUserId);
+                log.info("Removed user {} from commenters group", targetUserId);
             } catch (Exception e) {
-                log.debug("User {} was not in commentrs group", targetUserId);
+                log.debug("User {} was not in commenters group", targetUserId);
             }
         }
 

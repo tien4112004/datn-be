@@ -28,7 +28,7 @@ public interface MediaRepository extends JpaRepository<Media, Long> {
     @Query(value = """
                 SELECT *
                 FROM medias
-                WHERE id IN (:ids) AND LOWER(media_type) IN (:mediaType)
+                WHERE id IN (:ids) AND media_type LIKE %:mediaType%
             """, nativeQuery = true)
-    Page<Media> findByMediaTypeWhereIn(Iterable<String> mediaType, Iterable<String> ids, Pageable pageable);
+    Page<Media> findByMediaTypeWhereIn(Iterable<String> ids, String mediaType, Pageable pageable);
 }

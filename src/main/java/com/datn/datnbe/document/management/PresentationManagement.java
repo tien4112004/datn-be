@@ -92,7 +92,11 @@ public class PresentationManagement implements PresentationApi {
         Presentation savedPresentation = presentationRepository.save(presentation);
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String ownerId = ((Jwt) authentication.getPrincipal()).getSubject();
+        Object principal = authentication.getPrincipal();
+        if (!(principal instanceof Jwt)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED, "Invalid authentication type");
+        }
+        String ownerId = ((Jwt) principal).getSubject();
         ResourceRegistrationRequest resourceRegistrationRequest = ResourceRegistrationRequest.builder()
                 .id(savedPresentation.getId())
                 .name(savedPresentation.getTitle())
@@ -122,16 +126,15 @@ public class PresentationManagement implements PresentationApi {
         Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sortOrder);
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String ownerId = ((Jwt) authentication.getPrincipal()).getSubject();
+        Object principal = authentication.getPrincipal();
+        if (!(principal instanceof Jwt)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED, "Invalid authentication type");
+        }
+        String ownerId = ((Jwt) principal).getSubject();
         List<String> resourceIds = resourcePermissionApi.getAllResourceByTypeOfOwner(ownerId, "presentation");
 
         // Fetch data based on filter
         Page<Presentation> presentationPage;
-        // if (StringUtils.hasText(request.getFilter())) {
-        //     presentationPage = presentationRepository.findByTitleContainingIgnoreCase(request.getFilter(), pageable);
-        // } else {
-        //     presentationPage = presentationRepository.findAll(pageable);
-        // }
         presentationPage = presentationRepository.findByIdInWithOptionalTitle(resourceIds,
                 StringUtils.hasText(request.getFilter()) ? request.getFilter() : "",
                 pageable);

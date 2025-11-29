@@ -16,6 +16,8 @@ import com.datn.datnbe.document.repository.MindmapRepository;
 import com.datn.datnbe.document.management.validation.MindmapValidation;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
+import com.datn.datnbe.sharedkernel.exceptions.AppException;
+import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -54,7 +56,11 @@ public class MindmapManagement implements MindmapApi {
             Mindmap savedMindmap = mindmapRepository.save(mindmap);
 
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String ownerId = ((Jwt) authentication.getPrincipal()).getSubject();
+            Object principal = authentication.getPrincipal();
+            if (!(principal instanceof Jwt)) {
+                throw new AppException(ErrorCode.UNAUTHORIZED, "Invalid authentication type");
+            }
+            String ownerId = ((Jwt) principal).getSubject();
             ResourceRegistrationRequest resourceRegistrationRequest = ResourceRegistrationRequest.builder()
                     .id(savedMindmap.getId())
                     .name(savedMindmap.getTitle())
@@ -80,7 +86,11 @@ public class MindmapManagement implements MindmapApi {
                     .of(request.getPage(), request.getSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
 
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String ownerId = ((Jwt) authentication.getPrincipal()).getSubject();
+            Object principal = authentication.getPrincipal();
+            if (!(principal instanceof Jwt)) {
+                throw new AppException(ErrorCode.UNAUTHORIZED, "Invalid authentication type");
+            }
+            String ownerId = ((Jwt) principal).getSubject();
             List<String> resourceIds = resourcePermissionApi.getAllResourceByTypeOfOwner(ownerId, "mindmap");
 
             // Page<Mindmap> mindmapPage = mindmapRepository.findAll(pageable);

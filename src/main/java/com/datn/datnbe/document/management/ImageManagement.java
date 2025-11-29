@@ -35,10 +35,14 @@ public class ImageManagement implements ImagesApi {
         //        var medias = mediaRepository.findByMediaType(MediaType.IMAGE, pageable);
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String ownerId = ((Jwt) authentication.getPrincipal()).getSubject();
+        Object principal = authentication.getPrincipal();
+        if (!(principal instanceof Jwt)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED, "Invalid authentication type");
+        }
+        String ownerId = ((Jwt) principal).getSubject();
         List<String> resourceIds = resourcePermissionApi.getAllResourceByTypeOfOwner(ownerId, "image");
 
-        var medias = mediaRepository.findByMediaTypeWhereIn(MediaType.IMAGE.getExtensions(), resourceIds, pageable);
+        var medias = mediaRepository.findByMediaTypeWhereIn(resourceIds, MediaType.IMAGE.name(), pageable);
 
         var paginationDto = PaginationDto.getFromPageable(pageable);
         paginationDto.setTotalItems(medias.getTotalElements());
