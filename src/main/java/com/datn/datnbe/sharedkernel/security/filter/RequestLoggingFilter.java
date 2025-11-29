@@ -38,8 +38,16 @@ public class RequestLoggingFilter {
                 HttpServletResponse response,
                 FilterChain filterChain) throws ServletException, IOException {
 
-            // Use custom wrapper that caches body on first read
-            CachedBodyHttpServletRequest wrappedRequest = new CachedBodyHttpServletRequest(request);
+            String contentType = request.getContentType();
+
+            // Skip body caching for multipart requests to allow Spring's multipart resolver to work
+            boolean isMultipart = contentType != null && contentType.toLowerCase().contains("multipart/");
+
+            HttpServletRequest requestToUse = request;
+            if (!isMultipart) {
+                // Use custom wrapper that caches body on first read (only for non-multipart)
+                requestToUse = new CachedBodyHttpServletRequest(request);
+            }
 
             long startTime = System.currentTimeMillis();
 
@@ -47,13 +55,12 @@ public class RequestLoggingFilter {
             String path = request.getRequestURI();
             String queryString = request.getQueryString();
             String origin = request.getHeader("Origin");
-            String contentType = request.getContentType();
             String remoteAddr = getClientIp(request);
 
             // Log incoming request with body if applicable
             String bodyStr = "";
-            if (shouldLogBody(method, contentType)) {
-                bodyStr = wrappedRequest.getBody();
+            if (!isMultipart && shouldLogBody(method, contentType)) {
+                bodyStr = ((CachedBodyHttpServletRequest) requestToUse).getBody();
             }
 
             String pathWithQuery = path + (queryString != null ? "?" + queryString : "");
@@ -81,7 +88,7 @@ public class RequestLoggingFilter {
             }
 
             try {
-                filterChain.doFilter(wrappedRequest, response);
+                filterChain.doFilter(requestToUse, response);
             } finally {
                 long duration = System.currentTimeMillis() - startTime;
                 int status = response.getStatus();
