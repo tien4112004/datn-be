@@ -103,7 +103,7 @@ public class UserProfileManagement implements UserProfileApi {
 
     @Override
     public UserProfileResponse getUserProfile(String userId) {
-        log.debug("Retrieving user profile");
+        log.debug("Retrieving user profile for user ID: {}", userId);
         UserProfile userProfile = userProfileRepo.findByIdOrKeycloakUserId(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_PROFILE_NOT_FOUND,
                         "User profile not found for user ID: " + userId));
@@ -257,14 +257,14 @@ public class UserProfileManagement implements UserProfileApi {
         userProfile.setAvatarUrl(avatarUrl);
         userProfileRepo.save(userProfile);
 
-        log.info("Successfully updated avatar");
+        log.info("Successfully updated avatar for user ID: {}", userId);
 
         return UpdateAvatarResponse.builder().avatarUrl(avatarUrl).build();
     }
 
     @Override
     public void removeUserAvatar(String userId) {
-        log.info("Removing avatar");
+        log.info("Removing avatar for user ID: {}", userId);
 
         // Find user profile
         UserProfile userProfile = userProfileRepo.findByIdOrKeycloakUserId(userId)
@@ -290,6 +290,6 @@ public class UserProfileManagement implements UserProfileApi {
         userProfile.setAvatarUrl(null);
         userProfileRepo.save(userProfile);
 
-        log.info("Successfully removed avatar");
+        log.info("Successfully removed avatar for user ID: {}", userId);
     }
 }

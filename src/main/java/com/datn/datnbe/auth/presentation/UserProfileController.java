@@ -23,7 +23,6 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-//@PreAuthorize(value = "hasAuthority('USER')")
 public class UserProfileController {
 
     UserProfileApi userProfileApi;
@@ -66,7 +65,7 @@ public class UserProfileController {
      * @return ResponseEntity containing the URL of the updated avatar
      */
     @PostMapping(value = "/me/avatar", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<AppResponseDto<UpdateAvatarResponse>> modifyCurrentUserAvatar(
+    public ResponseEntity<AppResponseDto<UpdateAvatarResponse>> upsertCurrentUserAvatar(
             @AuthenticationPrincipal Jwt jwt,
             MultipartFile file) {
         String userId = jwt.getSubject();

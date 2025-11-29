@@ -84,7 +84,10 @@ public class SecurityConfig {
     private void handleAccessDeniedException(HttpServletRequest request,
             HttpServletResponse response,
             AccessDeniedException accessDeniedException) throws IOException {
-        log.warn("Access denied: {}", accessDeniedException);
+        log.warn("Access denied for path: {} by user {} - {}",
+                request.getRequestURI(),
+                request.getRemoteUser(),
+                accessDeniedException.getMessage());
 
         response.setStatus(HttpStatus.NOT_FOUND.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
