@@ -39,6 +39,57 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
     private final KeycloakDtoMapper keycloakMapper;
     private final UserProfileRepo userProfileRepo;
 
+    // Constants for naming conventions
+    private static final String OWNER_POLICY_SUFFIX = "-owner-policy";
+    private static final String OWNER_PERMISSION_SUFFIX = "-permission";
+    private static final String USER_PREFIX = "-user-";
+    private static final String POLICY_SUFFIX = "-policy";
+    private static final String RESOURCE_PREFIX = "resource-";
+    private static final String API_PATH_PREFIX = "/api/";
+
+    // Description templates
+    private static final String OWNER_POLICY_DESC_TEMPLATE = "Owner policy for %s";
+    private static final String OWNER_PERMISSION_DESC_TEMPLATE = "Owner permissions for %s";
+    private static final String LEVEL_DESC_TEMPLATE = "%s for %s";
+    private static final String LEVEL_PERMISSION_DESC_TEMPLATE = "%s permissions for %s";
+
+    // Scopes
+    private static final String EDIT_SCOPE = "edit";
+
+    // Error messages
+    private static final String RESOURCE_ALREADY_EXISTS_MSG = "Document %s is already registered";
+    private static final String RESOURCE_NOT_FOUND_MSG = "document %s not found in Keycloak registry";
+    private static final String DOCUMENT_NOT_FOUND_MSG = "Document %s not found in Keycloak registry";
+    private static final String USER_NOT_FOUND_MSG = "User %s not found";
+    private static final String INVALID_PERMISSION_MSG = "Invalid permission: %s. Allowed values: read, comment";
+    private static final String UNAUTHORIZED_SHARE_MSG = "Only users with edit permission can share this resource";
+    private static final String UNAUTHORIZED_REVOKE_MSG = "Only users with edit permission can revoke access";
+
+    // Helper methods for naming
+    private String buildOwnerPolicyName(String resourceName) {
+        return resourceName + OWNER_POLICY_SUFFIX;
+    }
+
+    private String buildOwnerPermissionName(String resourceName, String ownerId) {
+        return resourceName + USER_PREFIX + ownerId + OWNER_PERMISSION_SUFFIX;
+    }
+
+    private String buildResourcePath(String resourceType, String resourceId) {
+        return API_PATH_PREFIX + resourceType + "/" + resourceId;
+    }
+
+    private String buildGroupName(String documentId, PermissionLevel level) {
+        return RESOURCE_PREFIX + documentId + "-" + level.getGroupSuffix();
+    }
+
+    private String buildPolicyName(String groupName) {
+        return groupName + POLICY_SUFFIX;
+    }
+
+    private String buildPermissionName(String groupName) {
+        return groupName + OWNER_PERMISSION_SUFFIX;
+    }
+
     @Transactional
     @Override
     public DocumentRegistrationResponse registerResource(ResourceRegistrationRequest request, String ownerId) {
@@ -50,41 +101,37 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
 
         // Check if already registered
         if (mappingRepository.existsByDocumentId(id)) {
-            throw new AppException(ErrorCode.RESOURCE_ALREADY_EXISTS, "Document " + id + " is already registered");
+            throw new AppException(ErrorCode.RESOURCE_ALREADY_EXISTS, String.format(RESOURCE_ALREADY_EXISTS_MSG, id));
         }
 
         // Create resource in Keycloak
-        String resourcePath = "/api/" + resourceType + "/" + id;
+        String resourcePath = buildResourcePath(resourceType, id);
 
-        KeycloakResourceDto resourceDto = keycloakMapper.toKeycloakResourceDto(id,
-                resourceType,
-                name,
-                ownerId,
-                true,
-                Set.of(resourcePath),
-                Set.of("read", "comment", "share"));
+        KeycloakResourceDto resourceDto = keycloakMapper
+                .toKeycloakResourceDto(id, resourceType, name, ownerId, true, Set.of(resourcePath), Set.of(EDIT_SCOPE));
 
         String keycloakResourceId = keycloakAuthzService.createResource(resourceDto).getId();
         log.info("Created Keycloak resource {} with ID {} and path {}", name, keycloakResourceId, resourcePath);
 
         // Create owner policy
-        String ownerPolicyName = name + "-owner-policy";
-        KeycloakUserPolicyDto ownerPolicy = keycloakMapper
-                .toKeycloakUserPolicyDto(ownerPolicyName, "Owner policy for " + name, Set.of(ownerId));
+        String ownerPolicyName = buildOwnerPolicyName(name);
+        KeycloakUserPolicyDto ownerPolicy = keycloakMapper.toKeycloakUserPolicyDto(ownerPolicyName,
+                String.format(OWNER_POLICY_DESC_TEMPLATE, name),
+                Set.of(ownerId));
 
         String ownerPolicyId = keycloakAuthzService.createUserPolicy(ownerPolicy).getId();
 
-        // Create ONE permission for owner with ALL scopes
-        String ownerPermissionName = name + "-user-" + ownerId + "-permission";
+        // Create edit permission for owner (only edit scope)
+        String ownerPermissionName = buildOwnerPermissionName(name, ownerId);
         KeycloakPermissionDto ownerPermission = keycloakMapper.toKeycloakPermissionDto(ownerPermissionName,
-                "Owner permissions for " + name,
+                String.format(OWNER_PERMISSION_DESC_TEMPLATE, name),
                 "AFFIRMATIVE",
                 Set.of(keycloakResourceId),
-                Set.of("read", "comment", "share"),
+                Set.of(EDIT_SCOPE),
                 Set.of(ownerPolicyId));
 
         keycloakAuthzService.createPermission(ownerPermission);
-        log.info("Created owner permission {} with all scopes for owner {}", ownerPermissionName, ownerId);
+        log.info("Created owner permission {} with edit scopes for owner {}", ownerPermissionName, ownerId);
 
         // Save mapping
         DocumentResourceMapping mapping = DocumentResourceMapping.builder()
@@ -106,7 +153,7 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
         // 1. Look up the Keycloak resource ID from mapping table
         DocumentResourceMapping mapping = mappingRepository.findByDocumentId(documentId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND,
-                        "document " + documentId + " not found in Keycloak registry"));
+                        String.format(RESOURCE_NOT_FOUND_MSG, documentId)));
 
         // 2. Check permissions via Keycloak API using resource ID (not name)
         List<String> permissions = keycloakAuthzService.checkUserPermissions(userToken,
@@ -120,51 +167,83 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
     @Transactional
     @Override
     public ResourceShareResponse shareDocument(String documentId, ResourceShareRequest request, String currentUserId) {
-        log.info("Sharing resource {} with user {} - permissions: {}",
+        log.info("Sharing resource {} with {} users - permission: {}",
                 documentId,
-                request.getTargetUserId(),
-                request.getPermissions());
+                request.getTargetUserIds().size(),
+                request.getPermission());
 
         // 1. Look up the Keycloak resource from mapping table
         DocumentResourceMapping mapping = mappingRepository.findByDocumentId(documentId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND,
-                        "document " + documentId + " not found in Keycloak registry"));
+                        String.format(RESOURCE_NOT_FOUND_MSG, documentId)));
 
-        // 2. Get resource details to check ownership
+        // 2. Verify user has edit permission (only owner has edit permission)
         KeycloakResourceDto resource = keycloakAuthzService.getResource(mapping.getKeycloakResourceId());
-
         if (!resource.getOwner().equals(currentUserId)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED, "Only the resource owner can share this resource");
+            throw new AppException(ErrorCode.UNAUTHORIZED, UNAUTHORIZED_SHARE_MSG);
         }
 
-        // 3. Determine permission level from scopes
-        Set<String> requestedScopes = request.getPermissions();
-        ResourcePermissionManagement.PermissionLevel level = determinePermissionLevel(requestedScopes);
+        // 3. Determine permission level from the single permission
+        ResourcePermissionManagement.PermissionLevel level = determinePermissionLevelFromString(
+                request.getPermission());
 
-        // Retrieve target user's Keycloak ID
-        Optional<UserProfile> userProfile = userProfileRepo.findByIdOrKeycloakUserId(request.getTargetUserId());
-
-        // 4. Remove user from OTHER permission groups to avoid conflicts
-        removeUserFromOtherGroups(userProfile.get().getKeycloakUserId(), level, mapping);
-
-        // 5. Get or create the appropriate group based on permission level
+        // 4. Get or create the appropriate group based on permission level
         String groupId = getOrCreatePermissionGroup(documentId, level, mapping);
 
-        // 6. Add the user to the appropriate group
-        keycloakAuthzService.addUserToGroup(userProfile.get().getKeycloakUserId(), groupId);
+        // 5. Share with all target users
+        int successCount = 0;
+        int failedCount = 0;
 
-        log.info("Successfully shared resource {} with user {} at {} level",
-                documentId,
-                request.getTargetUserId(),
-                level);
+        for (String targetUserId : request.getTargetUserIds()) {
+            try {
+                // Retrieve target user's Keycloak ID
+                Optional<UserProfile> userProfile = userProfileRepo.findByIdOrKeycloakUserId(targetUserId);
 
-        return mapper.toResourceShareResponse(documentId, request.getTargetUserId(), requestedScopes);
+                if (userProfile.isEmpty()) {
+                    log.warn("User {} not found, skipping", targetUserId);
+                    failedCount++;
+                    continue;
+                }
+
+                String keycloakUserId = userProfile.get().getKeycloakUserId();
+
+                // Remove user from OTHER permission groups to avoid conflicts
+                removeUserFromOtherGroups(keycloakUserId, level, mapping);
+
+                // Add the user to the appropriate group
+                keycloakAuthzService.addUserToGroup(keycloakUserId, groupId);
+
+                log.info("Successfully shared resource {} with user {} at {} level", documentId, targetUserId, level);
+                successCount++;
+
+            } catch (Exception e) {
+                log.error("Failed to share resource {} with user {}: {}", documentId, targetUserId, e.getMessage());
+                failedCount++;
+            }
+        }
+
+        log.info("Sharing completed for resource {}: {} succeeded, {} failed", documentId, successCount, failedCount);
+
+        return mapper.toResourceShareResponse(documentId,
+                request.getTargetUserIds(),
+                request.getPermission(),
+                successCount,
+                failedCount);
+    }
+
+    private ResourcePermissionManagement.PermissionLevel determinePermissionLevelFromString(String permission) {
+        return switch (permission.toLowerCase()) {
+            case "read" -> ResourcePermissionManagement.PermissionLevel.READER;
+            case "comment" -> ResourcePermissionManagement.PermissionLevel.COMMENTER;
+            default ->
+                throw new AppException(ErrorCode.VALIDATION_ERROR, String.format(INVALID_PERMISSION_MSG, permission));
+        };
     }
 
     private void removeUserFromOtherGroups(String userId,
             ResourcePermissionManagement.PermissionLevel targetLevel,
             DocumentResourceMapping mapping) {
-        // Remove from readers group if upgrading to commenter or removing access
+        // Remove from readers group if not targeting reader level
         if (targetLevel != ResourcePermissionManagement.PermissionLevel.READER && mapping.getReadersGroupId() != null) {
             try {
                 keycloakAuthzService.removeUserFromGroup(userId, mapping.getReadersGroupId());
@@ -174,7 +253,7 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
             }
         }
 
-        // Remove from commenters group if downgrading to reader or removing access
+        // Remove from commenters group if not targeting commenter level
         if (targetLevel != ResourcePermissionManagement.PermissionLevel.COMMENTER
                 && mapping.getCommentersGroupId() != null) {
             try {
@@ -186,22 +265,13 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
         }
     }
 
-    private ResourcePermissionManagement.PermissionLevel determinePermissionLevel(Set<String> scopes) {
-        // Determine the highest permission level based on scopes
-        if (scopes.contains("comment")) {
-            return ResourcePermissionManagement.PermissionLevel.COMMENTER; // read + comment
-        } else if (scopes.contains("read")) {
-            return ResourcePermissionManagement.PermissionLevel.READER; // read only
-        }
-        throw new AppException(ErrorCode.VALIDATION_ERROR, "Invalid permission scopes: " + scopes);
-    }
-
     private String getOrCreatePermissionGroup(String documentId,
             ResourcePermissionManagement.PermissionLevel level,
             DocumentResourceMapping mapping) {
         String groupId = switch (level) {
             case READER -> mapping.getReadersGroupId();
             case COMMENTER -> mapping.getCommentersGroupId();
+            default -> throw new AppException(ErrorCode.VALIDATION_ERROR, "Edit permission cannot be shared");
         };
 
         // If group already exists, return it
@@ -213,22 +283,22 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
         // Create new group for this permission level
         log.info("Creating new {} group for resource {}", level, documentId);
 
-        String groupName = "resource-" + documentId + "-" + level.getGroupSuffix();
+        String groupName = buildGroupName(documentId, level);
         var group = keycloakAuthzService.createGroup(groupName);
         groupId = group.getId();
 
         // Create group-based policy
-        String policyName = groupName + "-policy";
+        String policyName = buildPolicyName(groupName);
         KeycloakGroupPolicyDto policyDto = keycloakMapper.toKeycloakGroupPolicyDto(policyName,
-                level.getDescription() + " for " + documentId,
+                String.format(LEVEL_DESC_TEMPLATE, level.getDescription(), documentId),
                 List.of(keycloakMapper.toGroupDefinition(groupId)));
 
         var policy = keycloakAuthzService.createGroupPolicy(policyDto);
 
         // Create permission with appropriate scopes
-        String permissionName = groupName + "-permission";
+        String permissionName = buildPermissionName(groupName);
         KeycloakPermissionDto permissionDto = keycloakMapper.toKeycloakPermissionDto(permissionName,
-                level.getDescription() + " permissions for " + documentId,
+                String.format(LEVEL_PERMISSION_DESC_TEMPLATE, level.getDescription(), documentId),
                 "AFFIRMATIVE",
                 Set.of(mapping.getKeycloakResourceId()),
                 level.getScopes(),
@@ -240,6 +310,7 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
         switch (level) {
             case READER -> mapping.setReadersGroupId(groupId);
             case COMMENTER -> mapping.setCommentersGroupId(groupId);
+            default -> throw new AppException(ErrorCode.VALIDATION_ERROR, "Edit permission cannot be shared");
         }
         mappingRepository.save(mapping);
 
@@ -248,12 +319,14 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
     }
 
     /**
-     * Permission levels following Google Drive model
+     * Permission levels: read, comment (shareable), edit (owner only, not shareable)
+     * Edit permission only belongs to owner and allows sharing other permissions
      */
     @Getter
     private enum PermissionLevel {
         READER("readers", "Read-only access", Set.of("read")),
-        COMMENTER("commenters", "Read and comment access", Set.of("read", "comment"));
+        COMMENTER("commenters", "Read and comment access", Set.of("read", "comment")),
+        EDITOR("editors", "Edit access (owner only, not shareable)", Set.of(EDIT_SCOPE));
 
         private final String groupSuffix;
         private final String description;
@@ -274,28 +347,29 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
         // Look up the resource mapping
         DocumentResourceMapping mapping = mappingRepository.findByDocumentId(documentId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND,
-                        "Document " + documentId + " not found in Keycloak registry"));
+                        String.format(DOCUMENT_NOT_FOUND_MSG, documentId)));
 
         // retrieve keycloak user id of target user
         Optional<UserProfile> userProfile = userProfileRepo.findByIdOrKeycloakUserId(targetUserId);
         if (userProfile.isEmpty()) {
-            throw new AppException(ErrorCode.USER_NOT_FOUND, "User " + targetUserId + " not found");
+            throw new AppException(ErrorCode.USER_NOT_FOUND, String.format(USER_NOT_FOUND_MSG, targetUserId));
         }
         String keycloakUserId = userProfile.get().getKeycloakUserId();
 
-        // Verify ownership
+        // Verify user has edit permission (only owner)
         KeycloakResourceDto resource = keycloakAuthzService.getResource(mapping.getKeycloakResourceId());
         if (!resource.getOwner().equals(currentUserId)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED, "Only the resource owner can revoke access");
+            throw new AppException(ErrorCode.UNAUTHORIZED, UNAUTHORIZED_REVOKE_MSG);
         }
 
         // Check if resource has been shared (has any groups)
-        if (mapping.getReadersGroupId() == null && mapping.getCommentersGroupId() == null) {
+        if (mapping.getReadersGroupId() == null && mapping.getCommentersGroupId() == null
+                && mapping.getEditorsGroupId() == null) {
             log.warn("Resource {} has not been shared with anyone", documentId);
             return;
         }
 
-        // Remove user from both groups (readers and commenters) if they exist
+        // Remove user from all groups (readers, commenters, editors) if they exist
         boolean removed = false;
         if (mapping.getReadersGroupId() != null) {
             try {
@@ -314,6 +388,16 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
                 log.info("Removed user {} from commenters group", targetUserId);
             } catch (Exception e) {
                 log.debug("User {} was not in commenters group", targetUserId);
+            }
+        }
+
+        if (mapping.getEditorsGroupId() != null) {
+            try {
+                keycloakAuthzService.removeUserFromGroup(keycloakUserId, mapping.getEditorsGroupId());
+                removed = true;
+                log.info("Removed user {} from editors group", targetUserId);
+            } catch (Exception e) {
+                log.debug("User {} was not in editors group", targetUserId);
             }
         }
 

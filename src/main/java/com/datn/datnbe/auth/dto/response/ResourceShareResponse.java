@@ -1,6 +1,6 @@
 package com.datn.datnbe.auth.dto.response;
 
-import java.util.Set;
+import java.util.List;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -20,11 +20,13 @@ public class ResourceShareResponse {
 
     String resourceId;
 
-    String sharedWithUserId;
+    List<String> sharedWithUserIds;
 
-    String sharedWithUsername;
+    String grantedPermission;
 
-    Set<String> grantedPermissions;
+    int successCount;
+
+    int failedCount;
 
     String message;
 }

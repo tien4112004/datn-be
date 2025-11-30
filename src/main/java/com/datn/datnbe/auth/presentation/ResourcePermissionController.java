@@ -55,7 +55,10 @@ public class ResourcePermissionController {
             @Valid @RequestBody ResourceShareRequest request,
             Authentication authentication) {
 
-        log.info("Sharing document {} with user {}", documentId, request.getTargetUserId());
+        log.info("Sharing document {} with {} users with permission {}",
+                documentId,
+                request.getTargetUserIds().size(),
+                request.getPermission());
 
         // Extract current user ID from JWT
         Jwt jwt = (Jwt) authentication.getPrincipal();
@@ -63,7 +66,11 @@ public class ResourcePermissionController {
 
         // Share the resource (will look up mapping table internally)
         var response = resourcePermissionApi.shareDocument(documentId, request, currentUserId);
-        log.info("Successfully shared resource {} with user {}", documentId, request.getTargetUserId());
+        log.info("Successfully shared resource {} with {} users (success: {}, failed: {})",
+                documentId,
+                request.getTargetUserIds().size(),
+                response.getSuccessCount(),
+                response.getFailedCount());
 
         return ResponseEntity.ok(AppResponseDto.success(response));
     }

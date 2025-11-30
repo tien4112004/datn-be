@@ -47,6 +47,9 @@ public class DocumentResourceMapping {
     @Column
     String commentersGroupId; // Group for users with read+comment access
 
+    @Column
+    String editorsGroupId; // Group for users with edit access (owner only)
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     LocalDateTime createdAt;
