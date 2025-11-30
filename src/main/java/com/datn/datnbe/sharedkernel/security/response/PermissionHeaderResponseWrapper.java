@@ -32,7 +32,7 @@ public class PermissionHeaderResponseWrapper implements HandlerInterceptor {
                         ServletRequestAttributes.SCOPE_REQUEST);
 
                 if (permissions != null && !permissions.isEmpty()) {
-                    // Format: "read, comment, write" (sorted, comma-space separated)
+                    // Format: "read, comment" (sorted, comma-space separated)
                     String permissionsHeader = permissions.stream().sorted().collect(Collectors.joining(", "));
                     response.setHeader(PERMISSION_HEADER, permissionsHeader);
                     log.debug("Added permissions header to response: {}", permissionsHeader);

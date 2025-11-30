@@ -1,15 +1,6 @@
-package com.datn.datnbe.auth.service;
+package com.datn.datnbe.auth.management;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
-import com.datn.datnbe.auth.entity.UserProfile;
-import com.datn.datnbe.auth.repository.UserProfileRepo;
-import lombok.Getter;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import com.datn.datnbe.auth.api.ResourcePermissionApi;
 import com.datn.datnbe.auth.dto.keycloak.KeycloakGroupPolicyDto;
 import com.datn.datnbe.auth.dto.keycloak.KeycloakPermissionDto;
 import com.datn.datnbe.auth.dto.keycloak.KeycloakResourceDto;
@@ -20,27 +11,36 @@ import com.datn.datnbe.auth.dto.response.DocumentRegistrationResponse;
 import com.datn.datnbe.auth.dto.response.ResourcePermissionResponse;
 import com.datn.datnbe.auth.dto.response.ResourceShareResponse;
 import com.datn.datnbe.auth.entity.DocumentResourceMapping;
+import com.datn.datnbe.auth.entity.UserProfile;
 import com.datn.datnbe.auth.mapper.KeycloakDtoMapper;
 import com.datn.datnbe.auth.mapper.ResourcePermissionMapper;
 import com.datn.datnbe.auth.repository.DocumentResourceMappingRepository;
+import com.datn.datnbe.auth.repository.UserProfileRepo;
+import com.datn.datnbe.auth.service.KeycloakAuthorizationService;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
-
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ResourcePermissionService {
+public class ResourcePermissionManagement implements ResourcePermissionApi {
     private final DocumentResourceMappingRepository mappingRepository;
     private final KeycloakAuthorizationService keycloakAuthzService;
     private final ResourcePermissionMapper mapper;
     private final KeycloakDtoMapper keycloakMapper;
     private final UserProfileRepo userProfileRepo;
-    private final ResourceAccessService resourceAccessService;
 
     @Transactional
+    @Override
     public DocumentRegistrationResponse registerResource(ResourceRegistrationRequest request, String ownerId) {
         String id = request.getId();
         String name = request.getName();
@@ -99,14 +99,26 @@ public class ResourcePermissionService {
         return mapper.toDocumentRegistrationResponse(saved, name, ownerId);
     }
 
+    @Override
     public ResourcePermissionResponse checkUserPermissions(String documentId, String userToken, String userId) {
-        log.debug("Checking permissions for document {} by user {}", documentId, userId);
+        log.debug("Checking permissions for document {} by user", documentId);
 
-        // Delegate to ResourceAccessService for permission checking
-        return resourceAccessService.checkUserPermissions(documentId, userToken, userId);
+        // 1. Look up the Keycloak resource ID from mapping table
+        DocumentResourceMapping mapping = mappingRepository.findByDocumentId(documentId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND,
+                        "document " + documentId + " not found in Keycloak registry"));
+
+        // 2. Check permissions via Keycloak API using resource ID (not name)
+        List<String> permissions = keycloakAuthzService.checkUserPermissions(userToken,
+                mapping.getKeycloakResourceId());
+
+        log.debug("User has permissions {} on document {}", permissions, documentId);
+
+        return mapper.toResourcePermissionResponse(documentId, userId, permissions);
     }
 
     @Transactional
+    @Override
     public ResourceShareResponse shareDocument(String documentId, ResourceShareRequest request, String currentUserId) {
         log.info("Sharing resource {} with user {} - permissions: {}",
                 documentId,
@@ -118,14 +130,16 @@ public class ResourcePermissionService {
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND,
                         "document " + documentId + " not found in Keycloak registry"));
 
-        // 2. Verify ownership using ResourceAccessService
-        if (!resourceAccessService.isResourceOwner(documentId, currentUserId)) {
+        // 2. Get resource details to check ownership
+        KeycloakResourceDto resource = keycloakAuthzService.getResource(mapping.getKeycloakResourceId());
+
+        if (!resource.getOwner().equals(currentUserId)) {
             throw new AppException(ErrorCode.UNAUTHORIZED, "Only the resource owner can share this resource");
         }
 
         // 3. Determine permission level from scopes
         Set<String> requestedScopes = request.getPermissions();
-        PermissionLevel level = determinePermissionLevel(requestedScopes);
+        ResourcePermissionManagement.PermissionLevel level = determinePermissionLevel(requestedScopes);
 
         // Retrieve target user's Keycloak ID
         Optional<UserProfile> userProfile = userProfileRepo.findByIdOrKeycloakUserId(request.getTargetUserId());
@@ -148,10 +162,10 @@ public class ResourcePermissionService {
     }
 
     private void removeUserFromOtherGroups(String userId,
-            PermissionLevel targetLevel,
+            ResourcePermissionManagement.PermissionLevel targetLevel,
             DocumentResourceMapping mapping) {
         // Remove from readers group if upgrading to commenter or removing access
-        if (targetLevel != PermissionLevel.READER && mapping.getReadersGroupId() != null) {
+        if (targetLevel != ResourcePermissionManagement.PermissionLevel.READER && mapping.getReadersGroupId() != null) {
             try {
                 keycloakAuthzService.removeUserFromGroup(userId, mapping.getReadersGroupId());
                 log.info("Removed user {} from readers group", userId);
@@ -161,7 +175,8 @@ public class ResourcePermissionService {
         }
 
         // Remove from commenters group if downgrading to reader or removing access
-        if (targetLevel != PermissionLevel.COMMENTER && mapping.getCommentersGroupId() != null) {
+        if (targetLevel != ResourcePermissionManagement.PermissionLevel.COMMENTER
+                && mapping.getCommentersGroupId() != null) {
             try {
                 keycloakAuthzService.removeUserFromGroup(userId, mapping.getCommentersGroupId());
                 log.info("Removed user {} from commenters group", userId);
@@ -171,18 +186,18 @@ public class ResourcePermissionService {
         }
     }
 
-    private PermissionLevel determinePermissionLevel(Set<String> scopes) {
+    private ResourcePermissionManagement.PermissionLevel determinePermissionLevel(Set<String> scopes) {
         // Determine the highest permission level based on scopes
         if (scopes.contains("comment")) {
-            return PermissionLevel.COMMENTER; // read + comment
+            return ResourcePermissionManagement.PermissionLevel.COMMENTER; // read + comment
         } else if (scopes.contains("read")) {
-            return PermissionLevel.READER; // read only
+            return ResourcePermissionManagement.PermissionLevel.READER; // read only
         }
         throw new AppException(ErrorCode.VALIDATION_ERROR, "Invalid permission scopes: " + scopes);
     }
 
     private String getOrCreatePermissionGroup(String documentId,
-            PermissionLevel level,
+            ResourcePermissionManagement.PermissionLevel level,
             DocumentResourceMapping mapping) {
         String groupId = switch (level) {
             case READER -> mapping.getReadersGroupId();
@@ -252,6 +267,7 @@ public class ResourcePermissionService {
     }
 
     @Transactional
+    @Override
     public void revokeDocumentAccess(String documentId, String targetUserId, String currentUserId) {
         log.info("Revoking access to resource {} from user {}", documentId, targetUserId);
 
@@ -267,8 +283,9 @@ public class ResourcePermissionService {
         }
         String keycloakUserId = userProfile.get().getKeycloakUserId();
 
-        // Verify ownership using ResourceAccessService
-        if (!resourceAccessService.isResourceOwner(documentId, currentUserId)) {
+        // Verify ownership
+        KeycloakResourceDto resource = keycloakAuthzService.getResource(mapping.getKeycloakResourceId());
+        if (!resource.getOwner().equals(currentUserId)) {
             throw new AppException(ErrorCode.UNAUTHORIZED, "Only the resource owner can revoke access");
         }
 
@@ -305,5 +322,11 @@ public class ResourcePermissionService {
         } else {
             log.warn("User {} did not have access to resource {}", targetUserId, documentId);
         }
+    }
+
+    @Override
+    public List<String> getAllResourceByTypeOfOwner(String ownerId, String resourceType) {
+        log.info("Getting all resources of type {} for owner {}", resourceType, ownerId);
+        return mappingRepository.findResourcesByTypeOfOwner(resourceType, ownerId);
     }
 }

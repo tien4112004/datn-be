@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import com.datn.datnbe.auth.api.ResourcePermissionApi;
 import com.datn.datnbe.document.dto.SlideDto;
 import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.document.entity.Presentation;
@@ -35,6 +36,9 @@ class GetPresentationTest {
     @MockitoBean
     private PresentationRepository presentationRepository;
 
+    @MockitoBean
+    private ResourcePermissionApi resourcePermissionApi;
+
     @Autowired
     private PresentationEntityMapper presentationEntityMapper;
 
@@ -50,7 +54,7 @@ class GetPresentationTest {
     @BeforeEach
     void setUp() {
         presentationService = new PresentationManagement(presentationRepository, presentationEntityMapper,
-                presentationValidation);
+                presentationValidation, resourcePermissionApi);
 
         backgroundDto = SlideDto.SlideBackgroundDto.builder().type("color").color("#ffffff").build();
 

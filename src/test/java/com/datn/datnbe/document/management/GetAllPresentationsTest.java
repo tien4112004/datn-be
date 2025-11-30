@@ -2,9 +2,12 @@ package com.datn.datnbe.document.management;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
+import com.datn.datnbe.auth.api.ResourcePermissionApi;
 import com.datn.datnbe.document.dto.request.PresentationCollectionRequest;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
 import com.datn.datnbe.document.entity.Presentation;
@@ -15,19 +18,39 @@ import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 @ExtendWith(MockitoExtension.class)
 class GetAllPresentationsTest {
 
     @Mock
     private PresentationRepository presentationRepository;
+
+    @Mock
+    private ResourcePermissionApi resourcePermissionApi;
+
+    @Mock
+    private SecurityContext securityContext;
+
+    @Mock
+    private Authentication authentication;
+
+    @Mock
+    private Jwt jwt;
+
+    private MockedStatic<SecurityContextHolder> securityContextHolderMock;
 
     private PresentationEntityMapper mapper;
 
@@ -43,7 +66,19 @@ class GetAllPresentationsTest {
     @BeforeEach
     void setUp() {
         mapper = Mappers.getMapper(PresentationEntityMapper.class);
-        presentationService = new PresentationManagement(presentationRepository, mapper, validation);
+        presentationService = new PresentationManagement(presentationRepository, mapper, validation,
+                resourcePermissionApi);
+
+        // Setup security context mock
+        securityContextHolderMock = mockStatic(SecurityContextHolder.class);
+        securityContextHolderMock.when(SecurityContextHolder::getContext).thenReturn(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        when(jwt.getSubject()).thenReturn("test-user-id");
+
+        // Mock resource permission API to return presentation IDs
+        when(resourcePermissionApi.getAllResourceByTypeOfOwner(anyString(), eq("presentation")))
+                .thenReturn(Arrays.asList("presentation-1", "presentation-2"));
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -76,6 +111,11 @@ class GetAllPresentationsTest {
                 .build();
     }
 
+    @AfterEach
+    void tearDown() {
+        securityContextHolderMock.close();
+    }
+
     @Test
     void getAllPresentations_WithPagination_ShouldReturnPaginatedResponse() {
         // Given
@@ -89,7 +129,8 @@ class GetAllPresentationsTest {
         Page<Presentation> presentationPage = new PageImpl<>(presentations,
                 PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "createdAt")), 2);
 
-        when(presentationRepository.findAll(any(Pageable.class))).thenReturn(presentationPage);
+        when(presentationRepository.findByIdInWithOptionalTitle(any(), eq(""), any(Pageable.class)))
+                .thenReturn(presentationPage);
 
         // When
         PaginatedResponseDto<PresentationListResponseDto> result = presentationService.getAllPresentations(request);
@@ -118,7 +159,7 @@ class GetAllPresentationsTest {
         Page<Presentation> presentationPage = new PageImpl<>(filteredPresentations,
                 PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt")), 1);
 
-        when(presentationRepository.findByTitleContainingIgnoreCase(eq("First"), any(Pageable.class)))
+        when(presentationRepository.findByIdInWithOptionalTitle(any(), eq("First"), any(Pageable.class)))
                 .thenReturn(presentationPage);
 
         // When
@@ -144,7 +185,8 @@ class GetAllPresentationsTest {
         Page<Presentation> presentationPage = new PageImpl<>(presentations,
                 PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt")), 2);
 
-        when(presentationRepository.findAll(any(Pageable.class))).thenReturn(presentationPage);
+        when(presentationRepository.findByIdInWithOptionalTitle(any(), eq(""), any(Pageable.class)))
+                .thenReturn(presentationPage);
 
         // When
         PaginatedResponseDto<PresentationListResponseDto> result = presentationService.getAllPresentations(request);
@@ -169,7 +211,8 @@ class GetAllPresentationsTest {
         Page<Presentation> presentationPage = new PageImpl<>(presentations,
                 PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "createdAt")), 2);
 
-        when(presentationRepository.findAll(any(Pageable.class))).thenReturn(presentationPage);
+        when(presentationRepository.findByIdInWithOptionalTitle(any(), eq(""), any(Pageable.class)))
+                .thenReturn(presentationPage);
 
         // When
         PaginatedResponseDto<PresentationListResponseDto> result = presentationService.getAllPresentations(request);
@@ -193,7 +236,7 @@ class GetAllPresentationsTest {
         Page<Presentation> emptyPage = new PageImpl<>(List.of(),
                 PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "createdAt")), 0);
 
-        when(presentationRepository.findByTitleContainingIgnoreCase(eq("NonExistent"), any(Pageable.class)))
+        when(presentationRepository.findByIdInWithOptionalTitle(any(), eq("NonExistent"), any(Pageable.class)))
                 .thenReturn(emptyPage);
 
         // When
@@ -219,7 +262,8 @@ class GetAllPresentationsTest {
         Page<Presentation> presentationPage = new PageImpl<>(secondPagePresentations,
                 PageRequest.of(1, 1, Sort.by(Sort.Direction.ASC, "createdAt")), 2);
 
-        when(presentationRepository.findAll(any(Pageable.class))).thenReturn(presentationPage);
+        when(presentationRepository.findByIdInWithOptionalTitle(any(), eq(""), any(Pageable.class)))
+                .thenReturn(presentationPage);
 
         // When
         PaginatedResponseDto<PresentationListResponseDto> result = presentationService.getAllPresentations(request);

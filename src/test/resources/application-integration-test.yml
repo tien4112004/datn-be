@@ -100,6 +100,9 @@ app:
     allowed-methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
     allow-credentials: false
     max-age: 3600
+  security:
+    document-permission:
+      enabled: true
 
 logging:
   level:

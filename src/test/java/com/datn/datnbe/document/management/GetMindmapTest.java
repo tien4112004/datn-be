@@ -1,22 +1,30 @@
 package com.datn.datnbe.document.management;
 
+import com.datn.datnbe.auth.api.ResourcePermissionApi;
 import com.datn.datnbe.document.dto.request.MindmapCollectionRequest;
 import com.datn.datnbe.document.dto.response.MindmapListResponseDto;
 import com.datn.datnbe.document.entity.Mindmap;
 import com.datn.datnbe.document.mapper.MindmapEntityMapper;
 import com.datn.datnbe.document.repository.MindmapRepository;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -26,10 +34,17 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class GetMindmapTest {
 
     @Mock
@@ -38,11 +53,39 @@ class GetMindmapTest {
     @Mock
     MindmapEntityMapper mapper;
 
+    @Mock
+    ResourcePermissionApi resourcePermissionApi;
+
     @InjectMocks
     MindmapManagement management;
 
     @Captor
     ArgumentCaptor<Pageable> pageableCaptor;
+
+    private MockedStatic<SecurityContextHolder> securityContextHolderMock;
+
+    @BeforeEach
+    void setUp() {
+        // Setup security context
+        SecurityContext securityContext = mock(SecurityContext.class);
+        Authentication authentication = mock(Authentication.class);
+        Jwt jwt = mock(Jwt.class);
+
+        securityContextHolderMock = mockStatic(SecurityContextHolder.class);
+        securityContextHolderMock.when(SecurityContextHolder::getContext).thenReturn(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        when(jwt.getSubject()).thenReturn("test-user-id");
+
+        // Mock ResourcePermissionApi
+        when(resourcePermissionApi.getAllResourceByTypeOfOwner(anyString(), eq("mindmap")))
+                .thenReturn(List.of("1", "2", "3", "4", "5"));
+    }
+
+    @AfterEach
+    void tearDown() {
+        securityContextHolderMock.close();
+    }
 
     @Test
     void getAllMindmaps_paginated_returnsPaginationMetadata() {
@@ -58,7 +101,7 @@ class GetMindmapTest {
         PageImpl<Mindmap> page = new PageImpl<>(List.of(entity),
                 PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt")), 1);
 
-        when(mindmapRepository.findAll(any(PageRequest.class))).thenReturn(page);
+        when(mindmapRepository.findByIdIn(any(), any(Pageable.class))).thenReturn(page);
 
         MindmapListResponseDto dto = new MindmapListResponseDto();
         dto.setId("1");
@@ -81,7 +124,7 @@ class GetMindmapTest {
         List<Mindmap> entities = createMindmapList(10);
         PageImpl<Mindmap> page = new PageImpl<>(entities, PageRequest.of(0, 10), 25);
 
-        when(mindmapRepository.findAll(any(PageRequest.class))).thenReturn(page);
+        when(mindmapRepository.findByIdIn(any(), any(Pageable.class))).thenReturn(page);
         when(mapper.entityToListResponse(any(Mindmap.class))).thenAnswer(inv -> {
             Mindmap m = inv.getArgument(0);
             MindmapListResponseDto dto = new MindmapListResponseDto();
@@ -108,7 +151,7 @@ class GetMindmapTest {
         List<Mindmap> entities = createMindmapList(10);
         PageImpl<Mindmap> page = new PageImpl<>(entities, PageRequest.of(1, 10), 25);
 
-        when(mindmapRepository.findAll(any(PageRequest.class))).thenReturn(page);
+        when(mindmapRepository.findByIdIn(any(), any(Pageable.class))).thenReturn(page);
         when(mapper.entityToListResponse(any(Mindmap.class))).thenAnswer(inv -> {
             Mindmap m = inv.getArgument(0);
             MindmapListResponseDto dto = new MindmapListResponseDto();
@@ -135,7 +178,7 @@ class GetMindmapTest {
         List<Mindmap> entities = createMindmapList(5);
         PageImpl<Mindmap> page = new PageImpl<>(entities, PageRequest.of(2, 10), 25);
 
-        when(mindmapRepository.findAll(any(PageRequest.class))).thenReturn(page);
+        when(mindmapRepository.findByIdIn(any(), any(Pageable.class))).thenReturn(page);
         when(mapper.entityToListResponse(any(Mindmap.class))).thenAnswer(inv -> {
             Mindmap m = inv.getArgument(0);
             MindmapListResponseDto dto = new MindmapListResponseDto();
@@ -159,7 +202,7 @@ class GetMindmapTest {
         // Arrange
         PageImpl<Mindmap> page = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10), 0);
 
-        when(mindmapRepository.findAll(any(PageRequest.class))).thenReturn(page);
+        when(mindmapRepository.findByIdIn(any(), any(Pageable.class))).thenReturn(page);
 
         MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(0).size(10).build();
 
@@ -179,7 +222,7 @@ class GetMindmapTest {
         PageRequest expectedPageRequest = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
         PageImpl<Mindmap> page = new PageImpl<>(entities, expectedPageRequest, 10);
 
-        when(mindmapRepository.findAll(any(PageRequest.class))).thenReturn(page);
+        when(mindmapRepository.findByIdIn(any(), any(Pageable.class))).thenReturn(page);
         when(mapper.entityToListResponse(any(Mindmap.class))).thenAnswer(inv -> {
             Mindmap m = inv.getArgument(0);
             MindmapListResponseDto dto = new MindmapListResponseDto();
@@ -193,7 +236,7 @@ class GetMindmapTest {
         management.getAllMindmaps(request);
 
         // Assert
-        verify(mindmapRepository).findAll(pageableCaptor.capture());
+        verify(mindmapRepository).findByIdIn(any(), pageableCaptor.capture());
         Pageable captured = pageableCaptor.getValue();
         assertThat(captured.getSort()).isEqualTo(Sort.by(Sort.Direction.DESC, "createdAt"));
     }
@@ -204,7 +247,7 @@ class GetMindmapTest {
         List<Mindmap> entities = createMindmapList(100);
         PageImpl<Mindmap> page = new PageImpl<>(entities, PageRequest.of(0, 100), 100);
 
-        when(mindmapRepository.findAll(any(PageRequest.class))).thenReturn(page);
+        when(mindmapRepository.findByIdIn(any(), any(Pageable.class))).thenReturn(page);
         when(mapper.entityToListResponse(any(Mindmap.class))).thenAnswer(inv -> {
             Mindmap m = inv.getArgument(0);
             MindmapListResponseDto dto = new MindmapListResponseDto();
@@ -236,7 +279,7 @@ class GetMindmapTest {
 
         PageImpl<Mindmap> page = new PageImpl<>(List.of(entity), PageRequest.of(0, 10), 1);
 
-        when(mindmapRepository.findAll(any(PageRequest.class))).thenReturn(page);
+        when(mindmapRepository.findByIdIn(any(), any(Pageable.class))).thenReturn(page);
 
         MindmapListResponseDto dto = new MindmapListResponseDto();
         dto.setId("single");
@@ -258,7 +301,7 @@ class GetMindmapTest {
     void getAllMindmaps_paginated_verifyCorrectPageableParameters() {
         // Arrange
         PageImpl<Mindmap> page = new PageImpl<>(Collections.emptyList(), PageRequest.of(3, 20), 0);
-        when(mindmapRepository.findAll(any(PageRequest.class))).thenReturn(page);
+        when(mindmapRepository.findByIdIn(any(), any(Pageable.class))).thenReturn(page);
 
         MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(3).size(20).build();
 
@@ -266,7 +309,7 @@ class GetMindmapTest {
         management.getAllMindmaps(request);
 
         // Assert
-        verify(mindmapRepository).findAll(pageableCaptor.capture());
+        verify(mindmapRepository).findByIdIn(any(), pageableCaptor.capture());
         Pageable captured = pageableCaptor.getValue();
         assertThat(captured.getPageNumber()).isEqualTo(3);
         assertThat(captured.getPageSize()).isEqualTo(20);
@@ -278,7 +321,7 @@ class GetMindmapTest {
         List<Mindmap> entities = createMindmapList(3);
         PageImpl<Mindmap> page = new PageImpl<>(entities, PageRequest.of(0, 10), 3);
 
-        when(mindmapRepository.findAll(any(PageRequest.class))).thenReturn(page);
+        when(mindmapRepository.findByIdIn(any(), any(Pageable.class))).thenReturn(page);
         when(mapper.entityToListResponse(any(Mindmap.class))).thenAnswer(inv -> {
             Mindmap m = inv.getArgument(0);
             MindmapListResponseDto dto = new MindmapListResponseDto();
@@ -305,7 +348,7 @@ class GetMindmapTest {
         // Arrange - 25 total items, page size 10 should give 3 pages
         PageImpl<Mindmap> page = new PageImpl<>(createMindmapList(10), PageRequest.of(0, 10), 25);
 
-        when(mindmapRepository.findAll(any(PageRequest.class))).thenReturn(page);
+        when(mindmapRepository.findByIdIn(any(), any(Pageable.class))).thenReturn(page);
         when(mapper.entityToListResponse(any(Mindmap.class))).thenAnswer(inv -> {
             MindmapListResponseDto dto = new MindmapListResponseDto();
             dto.setId("id");
@@ -329,7 +372,7 @@ class GetMindmapTest {
         List<Mindmap> lastPageItems = createMindmapList(5);
         PageImpl<Mindmap> page = new PageImpl<>(lastPageItems, PageRequest.of(2, 10), 25);
 
-        when(mindmapRepository.findAll(any(PageRequest.class))).thenReturn(page);
+        when(mindmapRepository.findByIdIn(any(), any(Pageable.class))).thenReturn(page);
         when(mapper.entityToListResponse(any(Mindmap.class))).thenAnswer(inv -> {
             MindmapListResponseDto dto = new MindmapListResponseDto();
             dto.setId("id");
@@ -360,7 +403,7 @@ class GetMindmapTest {
 
         PageImpl<Mindmap> page = new PageImpl<>(List.of(entity), PageRequest.of(0, 10), 1);
 
-        when(mindmapRepository.findAll(any(PageRequest.class))).thenReturn(page);
+        when(mindmapRepository.findByIdIn(any(), any(Pageable.class))).thenReturn(page);
 
         MindmapListResponseDto dto = new MindmapListResponseDto();
         dto.setId("single");
@@ -383,7 +426,7 @@ class GetMindmapTest {
         // Arrange - Request page 100 when only 3 pages exist
         PageImpl<Mindmap> page = new PageImpl<>(Collections.emptyList(), PageRequest.of(100, 10), 25);
 
-        when(mindmapRepository.findAll(any(PageRequest.class))).thenReturn(page);
+        when(mindmapRepository.findByIdIn(any(), any(Pageable.class))).thenReturn(page);
 
         MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(100).size(10).build();
 
@@ -403,7 +446,7 @@ class GetMindmapTest {
         List<Mindmap> entities = createMindmapList(5);
         PageImpl<Mindmap> page = new PageImpl<>(entities, PageRequest.of(0, 5), 25);
 
-        when(mindmapRepository.findAll(any(PageRequest.class))).thenReturn(page);
+        when(mindmapRepository.findByIdIn(any(), any(Pageable.class))).thenReturn(page);
         when(mapper.entityToListResponse(any(Mindmap.class))).thenAnswer(inv -> {
             MindmapListResponseDto dto = new MindmapListResponseDto();
             return dto;
@@ -415,7 +458,7 @@ class GetMindmapTest {
         management.getAllMindmaps(request);
 
         // Assert - Verify the correct page size was used
-        verify(mindmapRepository).findAll(pageableCaptor.capture());
+        verify(mindmapRepository).findByIdIn(any(), pageableCaptor.capture());
         Pageable captured = pageableCaptor.getValue();
         assertThat(captured.getPageSize()).isEqualTo(5);
     }
@@ -425,7 +468,7 @@ class GetMindmapTest {
         // Arrange
         PageImpl<Mindmap> page = new PageImpl<>(createMindmapList(10), PageRequest.of(5, 10), 100);
 
-        when(mindmapRepository.findAll(any(PageRequest.class))).thenReturn(page);
+        when(mindmapRepository.findByIdIn(any(), any(Pageable.class))).thenReturn(page);
         when(mapper.entityToListResponse(any(Mindmap.class))).thenAnswer(inv -> new MindmapListResponseDto());
 
         MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(5).size(10).build();

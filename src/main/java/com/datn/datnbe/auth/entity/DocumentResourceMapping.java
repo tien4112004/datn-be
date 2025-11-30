@@ -45,7 +45,7 @@ public class DocumentResourceMapping {
     String readersGroupId; // Group for users with read-only access
 
     @Column
-    String writersGroupId; // Group for users with read+write access
+    String commentersGroupId; // Group for users with read+comment access
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
