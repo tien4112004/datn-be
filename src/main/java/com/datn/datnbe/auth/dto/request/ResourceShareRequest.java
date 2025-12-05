@@ -1,6 +1,6 @@
 package com.datn.datnbe.auth.dto.request;
 
-import java.util.Set;
+import java.util.List;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -21,10 +21,10 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ResourceShareRequest {
 
-    @NotBlank(message = "Target user ID is required")
-    String targetUserId;
+    @NotNull(message = "Target user IDs are required")
+    @NotEmpty(message = "At least one target user must be specified")
+    List<String> targetUserIds;
 
-    @NotNull(message = "Permissions are required")
-    @NotEmpty(message = "At least one permission must be specified")
-    Set<String> permissions;
+    @NotBlank(message = "Permission is required")
+    String permission;
 }

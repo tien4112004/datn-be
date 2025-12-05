@@ -24,4 +24,11 @@ public interface MediaRepository extends JpaRepository<Media, Long> {
     List<Media> findByOriginalFilenameContaining(String filename);
 
     boolean existsByStorageKey(String storageKey);
+
+    @Query(value = """
+                SELECT *
+                FROM medias
+                WHERE id IN (:ids) AND media_type LIKE %:mediaType%
+            """, nativeQuery = true)
+    Page<Media> findByMediaTypeWhereIn(Iterable<String> ids, String mediaType, Pageable pageable);
 }

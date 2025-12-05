@@ -65,4 +65,7 @@ public interface PresentationRepository extends MongoRepository<Presentation, St
 
     @Query(value = "{ 'title': ?0, 'deleted_at': null }", exists = true)
     boolean existsByTitle(String title);
+
+    @Query("{ '_id': { $in: ?0 }, 'title': { $regex: ?1, $options: 'i' }, 'deleted_at': null }")
+    Page<Presentation> findByIdInWithOptionalTitle(Iterable<String> ids, String title, Pageable pageable);
 }

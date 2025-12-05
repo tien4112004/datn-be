@@ -1,5 +1,6 @@
 package com.datn.datnbe.auth.presentation;
 
+import com.datn.datnbe.auth.api.ResourcePermissionApi;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -16,7 +17,6 @@ import com.datn.datnbe.auth.dto.request.RevokeAccessRequest;
 import com.datn.datnbe.auth.dto.response.DocumentRegistrationResponse;
 import com.datn.datnbe.auth.dto.response.ResourceShareResponse;
 import com.datn.datnbe.auth.dto.response.ResourcePermissionResponse;
-import com.datn.datnbe.auth.service.ResourcePermissionService;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 
 import jakarta.validation.Valid;
@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/api/resources")
 @RequiredArgsConstructor
 public class ResourcePermissionController {
-    private final ResourcePermissionService resourcePermissionService;
+    private final ResourcePermissionApi resourcePermissionApi;
 
     @PostMapping("/register")
     public ResponseEntity<AppResponseDto<DocumentRegistrationResponse>> registerResource(
@@ -42,7 +42,7 @@ public class ResourcePermissionController {
         String ownerId = jwt.getSubject();
 
         // Register resource in Keycloak with resource type
-        var response = resourcePermissionService.registerResource(request, ownerId);
+        var response = resourcePermissionApi.registerResource(request, ownerId);
         log.info("Successfully registered resource {} with Keycloak resource ID {}",
                 response.getId(),
                 response.getKeycloakResourceId());
@@ -55,15 +55,22 @@ public class ResourcePermissionController {
             @Valid @RequestBody ResourceShareRequest request,
             Authentication authentication) {
 
-        log.info("Sharing document {} with user {}", documentId, request.getTargetUserId());
+        log.info("Sharing document {} with {} users with permission {}",
+                documentId,
+                request.getTargetUserIds().size(),
+                request.getPermission());
 
         // Extract current user ID from JWT
         Jwt jwt = (Jwt) authentication.getPrincipal();
         String currentUserId = jwt.getSubject();
 
         // Share the resource (will look up mapping table internally)
-        var response = resourcePermissionService.shareDocument(documentId, request, currentUserId);
-        log.info("Successfully shared resource {} with user {}", documentId, request.getTargetUserId());
+        var response = resourcePermissionApi.shareDocument(documentId, request, currentUserId);
+        log.info("Successfully shared resource {} with {} users (success: {}, failed: {})",
+                documentId,
+                request.getTargetUserIds().size(),
+                response.getSuccessCount(),
+                response.getFailedCount());
 
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
@@ -80,7 +87,7 @@ public class ResourcePermissionController {
         String token = jwt.getTokenValue();
 
         // Check permissions (will look up mapping table internally)
-        var response = resourcePermissionService.checkUserPermissions(documentId, token, userId);
+        var response = resourcePermissionApi.checkUserPermissions(documentId, token, userId);
         log.info("User {} has permissions {} on resource {}", userId, response.getPermissions(), documentId);
 
         return ResponseEntity.ok(AppResponseDto.success(response));
@@ -96,7 +103,7 @@ public class ResourcePermissionController {
         Jwt jwt = (Jwt) authentication.getPrincipal();
         String currentUserId = jwt.getSubject();
 
-        resourcePermissionService.revokeDocumentAccess(documentId, request.getTargetUserId(), currentUserId);
+        resourcePermissionApi.revokeDocumentAccess(documentId, request.getTargetUserId(), currentUserId);
 
         return ResponseEntity.ok(AppResponseDto.success("Access revoked successfully"));
     }

@@ -75,7 +75,7 @@ public class DocumentPermissionAspect {
         log.debug("Checking permissions for user {} on document {}", userId, documentId);
 
         // Get the permission service dynamically to avoid circular dependency
-        Object permissionService = applicationContext.getBean("resourcePermissionService");
+        Object permissionService = applicationContext.getBean("resourcePermissionManagement");
         Set<String> userPermissions;
 
         try {
@@ -105,7 +105,7 @@ public class DocumentPermissionAspect {
         storePermissionsInRequest(userPermissions);
 
         List<String> requiredScopes = Arrays.asList(requirePermission.scopes());
-        boolean hasAllPermissions = requiredScopes.stream().allMatch(userPermissions::contains);
+        boolean hasAllPermissions = hasRequiredPermissions(userPermissions, requiredScopes);
 
         if (!hasAllPermissions) {
             log.warn("User {} lacks required permissions {} on document {}. User has: {}",
@@ -121,6 +121,50 @@ public class DocumentPermissionAspect {
         }
 
         log.debug("Permission check passed for user {} on document {}", userId, documentId);
+    }
+
+    /**
+     * Check if user has required permissions based on hierarchical permission model:
+     * - edit: includes read, comment, edit
+     * - comment: includes read, comment
+     * - read: includes read only
+     */
+    private boolean hasRequiredPermissions(Set<String> userPermissions, List<String> requiredScopes) {
+        for (String requiredScope : requiredScopes) {
+            if (!hasPermission(userPermissions, requiredScope)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Check if user has a specific permission considering hierarchy
+     */
+    private boolean hasPermission(Set<String> userPermissions, String requiredScope) {
+        // If user has edit, they have all permissions
+        if (userPermissions.contains("edit")) {
+            return true;
+        }
+
+        // If requiring comment, user must have comment or edit
+        if ("comment".equals(requiredScope)) {
+            return userPermissions.contains("comment") || userPermissions.contains("edit");
+        }
+
+        // If requiring read, user must have read, comment, or edit
+        if ("read".equals(requiredScope)) {
+            return userPermissions.contains("read") || userPermissions.contains("comment")
+                    || userPermissions.contains("edit");
+        }
+
+        // For edit permission, must explicitly have edit
+        if ("edit".equals(requiredScope)) {
+            return userPermissions.contains("edit");
+        }
+
+        // Default: check direct permission
+        return userPermissions.contains(requiredScope);
     }
 
     /**

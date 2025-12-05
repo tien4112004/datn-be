@@ -1,5 +1,6 @@
 package com.datn.datnbe.document.integration;
 
+import com.datn.datnbe.auth.api.ResourcePermissionApi;
 import com.datn.datnbe.document.dto.MindmapNodeDto;
 import com.datn.datnbe.document.dto.MindmapEdgeDto;
 import com.datn.datnbe.document.dto.request.MindmapCollectionRequest;
@@ -16,12 +17,18 @@ import com.datn.datnbe.document.repository.MindmapRepository;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -38,6 +45,11 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @Testcontainers
@@ -58,9 +70,34 @@ public class MindmapIntegrationTest {
     @Autowired
     MindmapRepository repository;
 
+    @MockBean
+    ResourcePermissionApi resourcePermissionApi;
+
+    @BeforeEach
+    void setup() {
+        // Setup security context
+        SecurityContext securityContext = mock(SecurityContext.class);
+        Authentication authentication = mock(Authentication.class);
+        Jwt jwt = mock(Jwt.class);
+
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        when(jwt.getSubject()).thenReturn("test-user-id");
+
+        SecurityContextHolder.setContext(securityContext);
+
+        // Mock ResourcePermissionApi
+        when(resourcePermissionApi.registerResource(any(), anyString())).thenReturn(null);
+        when(resourcePermissionApi.getAllResourceByTypeOfOwner(anyString(), eq("mindmap"))).thenAnswer(invocation -> {
+            // Return all mindmap IDs from repository
+            return repository.findAll().stream().map(Mindmap::getId).toList();
+        });
+    }
+
     @AfterEach
     void cleanup() {
         repository.deleteAll();
+        SecurityContextHolder.clearContext();
     }
 
     // ========== CREATE TESTS ==========
