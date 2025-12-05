@@ -60,6 +60,23 @@ public class ContentGenerationController {
                 .cache();
     }
 
+    @PostMapping(value = "presentations/outline-generate/batch", produces = "application/json")
+    public ResponseEntity<AppResponseDto<JsonNode>> generateOutlineBatch(@RequestBody OutlinePromptRequest request) {
+        log.info("Received batch outline generation request: {}", request);
+        String result;
+
+        try {
+            result = contentGenerationExternalApi.generateOutlineBatch(request);
+            log.info("Batch outline generation completed successfully");
+        } catch (Exception error) {
+            log.error("Error generating outline in batch mode", error);
+            throw new AppException(ErrorCode.GENERATION_ERROR,
+                    "Failed to generate outline in batch mode: " + error.getMessage());
+        }
+
+        return ResponseEntity.ok().body(AppResponseDto.success(result));
+    }
+
     @PostMapping(value = "presentations/generate", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<Flux<String>> generateSlides(@RequestBody PresentationPromptRequest request) {
         String presentationId = (new ObjectId()).toString();
@@ -106,11 +123,7 @@ public class ContentGenerationController {
         String result;
 
         try {
-            result = contentGenerationExternalApi.generateSlides(request)
-                    .doOnSubscribe(subscription -> log.info("Starting batch slide generation"))
-                    .collectList()
-                    .map(list -> String.join("", list))
-                    .block();
+            result = contentGenerationExternalApi.generateSlidesBatch(request);
 
             log.info("Batch slide generation completed successfully");
 
@@ -135,9 +148,7 @@ public class ContentGenerationController {
         data.put("aiResult", result);
         data.set("presentation", mapper.valueToTree(newPresentation));
 
-        return ResponseEntity.ok()
-                .header("X-Presentation", presentationId)
-                .body(AppResponseDto.<JsonNode>builder().data(data).build());
+        return ResponseEntity.ok().header("X-Presentation", presentationId).body(AppResponseDto.success(result));
     }
 
     private Map<String, Object> convertToMap(Object object) {
