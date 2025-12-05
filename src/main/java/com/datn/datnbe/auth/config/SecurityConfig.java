@@ -44,7 +44,8 @@ public class SecurityConfig {
         http.cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        // Allow OPTIONS requests (CORS preflight) without authentication - MUST be first
+                        // Allow OPTIONS requests (CORS preflight) without authentication - MUST be
+                        // first
                         .requestMatchers(HttpMethod.OPTIONS, "/**")
                         .permitAll()
 
@@ -62,7 +63,8 @@ public class SecurityConfig {
                                 "/api/slide-templates/**")
                         .permitAll()
 
-                        // TODO: Remove this - Temporary allow POST/PUT for slide-themes and slide-templates
+                        // TODO: Remove this - Temporary allow POST/PUT for slide-themes and
+                        // slide-templates
                         .requestMatchers(HttpMethod.POST,
                                 "/api/slide-themes",
                                 "/api/slide-themes/**",
@@ -81,7 +83,7 @@ public class SecurityConfig {
                         .hasRole("admin")
 
                         // Resource endpoints - authenticated users only
-                        .requestMatchers("/api/resources/**")
+                        .requestMatchers("/api/resources/**", "/api/classes/**")
                         .authenticated()
 
                         // API endpoints - requires USER role
