@@ -17,7 +17,6 @@ import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,8 +32,7 @@ public class ClassController {
     private final ClassApi classApi;
     private final SeatingLayoutApi seatingLayoutApi;
 
-    @Autowired
-    private SecurityContextUtils securityContextUtils;
+    private final SecurityContextUtils securityContextUtils;
 
     @GetMapping({"", "/"})
     public ResponseEntity<AppResponseDto<List<ClassListResponseDto>>> getClasses(
@@ -63,22 +61,22 @@ public class ClassController {
                         .build());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<AppResponseDto<ClassResponseDto>> getClassById(@PathVariable String id) {
-        log.debug("GET /api/classes/{}", id);
+    @GetMapping("/{classId}")
+    public ResponseEntity<AppResponseDto<ClassResponseDto>> getClassById(@PathVariable String classId) {
+        log.debug("GET /api/classes/{}", classId);
 
-        ClassResponseDto response = classApi.getClassById(id);
+        ClassResponseDto response = classApi.getClassById(classId);
 
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{classId}")
     @RequireTeacherPermission
-    public ResponseEntity<AppResponseDto<ClassResponseDto>> updateClass(@PathVariable String id,
+    public ResponseEntity<AppResponseDto<ClassResponseDto>> updateClass(@PathVariable String classId,
             @Valid @RequestBody ClassUpdateRequest request) {
-        log.debug("PUT /api/classes/{} with body: {}", id, request);
+        log.debug("PUT /api/classes/{} with body: {}", classId, request);
 
-        ClassResponseDto response = classApi.updateClass(id, request);
+        ClassResponseDto response = classApi.updateClass(classId, request);
 
         return ResponseEntity.ok(AppResponseDto.success(response));
     }

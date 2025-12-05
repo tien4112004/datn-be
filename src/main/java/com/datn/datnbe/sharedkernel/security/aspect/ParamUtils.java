@@ -15,6 +15,6 @@ public class ParamUtils {
                 return args[i];
             }
         }
-        return null;
+        throw new IllegalArgumentException("Parameter '" + paramName + "' not found in method signature.");
     }
 }
