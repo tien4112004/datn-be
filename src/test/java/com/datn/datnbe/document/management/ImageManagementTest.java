@@ -1,5 +1,6 @@
 package com.datn.datnbe.document.management;
 
+import com.datn.datnbe.auth.api.ResourcePermissionApi;
 import com.datn.datnbe.document.dto.response.MediaResponseDto;
 import com.datn.datnbe.document.entity.Media;
 import com.datn.datnbe.sharedkernel.enums.MediaType;
@@ -8,16 +9,22 @@ import com.datn.datnbe.document.repository.MediaRepository;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,9 +32,17 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class ImageManagementTest {
 
     @Mock
@@ -35,6 +50,9 @@ class ImageManagementTest {
 
     @Mock
     private MediaEntityMapper mediaEntityMapper;
+
+    @Mock
+    private ResourcePermissionApi resourcePermissionApi;
 
     @InjectMocks
     private ImageManagement imageManagement;
@@ -44,8 +62,24 @@ class ImageManagementTest {
     private MediaResponseDto testMediaDto1;
     private MediaResponseDto testMediaDto2;
 
+    private MockedStatic<SecurityContextHolder> securityContextHolderMock;
+
     @BeforeEach
     void setUp() {
+        // Setup security context
+        SecurityContext securityContext = mock(SecurityContext.class);
+        Authentication authentication = mock(Authentication.class);
+        Jwt jwt = mock(Jwt.class);
+
+        securityContextHolderMock = mockStatic(SecurityContextHolder.class);
+        securityContextHolderMock.when(SecurityContextHolder::getContext).thenReturn(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        when(jwt.getSubject()).thenReturn("test-user-id");
+
+        // Mock ResourcePermissionApi
+        when(resourcePermissionApi.getAllResourceByTypeOfOwner(anyString(), eq("image"))).thenReturn(List.of("1", "2"));
+
         LocalDateTime now = LocalDateTime.now();
 
         testMedia1 = Media.builder()
@@ -91,13 +125,18 @@ class ImageManagementTest {
         testMediaDto2.setUpdatedAt(now);
     }
 
+    @AfterEach
+    void tearDown() {
+        securityContextHolderMock.close();
+    }
+
     @Test
     void getImages_WithValidPageable_ShouldReturnPaginatedImages() {
         // Given
         Pageable pageable = PageRequest.of(0, 10);
         Page<Media> mediaPage = new PageImpl<>(List.of(testMedia1, testMedia2), pageable, 2);
 
-        when(mediaRepository.findByMediaType(MediaType.IMAGE, pageable)).thenReturn(mediaPage);
+        when(mediaRepository.findByMediaTypeWhereIn(any(), any(), any(Pageable.class))).thenReturn(mediaPage);
         when(mediaEntityMapper.toResponseDto(testMedia1)).thenReturn(testMediaDto1);
         when(mediaEntityMapper.toResponseDto(testMedia2)).thenReturn(testMediaDto2);
 
@@ -118,7 +157,7 @@ class ImageManagementTest {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Media> mediaPage = new PageImpl<>(List.of(), pageable, 0);
 
-        when(mediaRepository.findByMediaType(MediaType.IMAGE, pageable)).thenReturn(mediaPage);
+        when(mediaRepository.findByMediaTypeWhereIn(any(), any(), any(Pageable.class))).thenReturn(mediaPage);
 
         // When
         PaginatedResponseDto<MediaResponseDto> result = imageManagement.getImages(pageable);
@@ -134,7 +173,7 @@ class ImageManagementTest {
         Pageable pageable = PageRequest.of(1, 1);
         Page<Media> mediaPage = new PageImpl<>(List.of(testMedia2), pageable, 2);
 
-        when(mediaRepository.findByMediaType(MediaType.IMAGE, pageable)).thenReturn(mediaPage);
+        when(mediaRepository.findByMediaTypeWhereIn(any(), any(), any(Pageable.class))).thenReturn(mediaPage);
         when(mediaEntityMapper.toResponseDto(testMedia2)).thenReturn(testMediaDto2);
 
         // When
@@ -196,7 +235,7 @@ class ImageManagementTest {
         Pageable pageable = PageRequest.of(0, 100);
         Page<Media> mediaPage = new PageImpl<>(List.of(testMedia1, testMedia2), pageable, 2);
 
-        when(mediaRepository.findByMediaType(MediaType.IMAGE, pageable)).thenReturn(mediaPage);
+        when(mediaRepository.findByMediaTypeWhereIn(any(), any(), any(Pageable.class))).thenReturn(mediaPage);
         when(mediaEntityMapper.toResponseDto(testMedia1)).thenReturn(testMediaDto1);
         when(mediaEntityMapper.toResponseDto(testMedia2)).thenReturn(testMediaDto2);
 
@@ -214,7 +253,7 @@ class ImageManagementTest {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Media> mediaPage = new PageImpl<>(List.of(testMedia1), pageable, 1);
 
-        when(mediaRepository.findByMediaType(MediaType.IMAGE, pageable)).thenReturn(mediaPage);
+        when(mediaRepository.findByMediaTypeWhereIn(any(), any(), any(Pageable.class))).thenReturn(mediaPage);
         when(mediaEntityMapper.toResponseDto(testMedia1)).thenReturn(testMediaDto1);
 
         // When

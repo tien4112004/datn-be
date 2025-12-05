@@ -1,5 +1,7 @@
 package com.datn.datnbe.document.management;
 
+import com.datn.datnbe.auth.api.ResourcePermissionApi;
+import com.datn.datnbe.auth.dto.request.ResourceRegistrationRequest;
 import com.datn.datnbe.document.api.MindmapApi;
 import com.datn.datnbe.document.dto.request.MindmapCollectionRequest;
 import com.datn.datnbe.document.dto.request.MindmapCreateRequest;
@@ -14,6 +16,8 @@ import com.datn.datnbe.document.repository.MindmapRepository;
 import com.datn.datnbe.document.management.validation.MindmapValidation;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
+import com.datn.datnbe.sharedkernel.exceptions.AppException;
+import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,6 +29,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -38,6 +45,7 @@ public class MindmapManagement implements MindmapApi {
     private final MindmapRepository mindmapRepository;
     private final MindmapEntityMapper mapper;
     private final MindmapValidation validation;
+    private final ResourcePermissionApi resourcePermissionApi;
 
     @Override
     public MindmapCreateResponseDto createMindmap(MindmapCreateRequest request) {
@@ -46,6 +54,19 @@ public class MindmapManagement implements MindmapApi {
         try {
             Mindmap mindmap = buildMindmapFromRequest(request);
             Mindmap savedMindmap = mindmapRepository.save(mindmap);
+
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            Object principal = authentication.getPrincipal();
+            if (!(principal instanceof Jwt)) {
+                throw new AppException(ErrorCode.UNAUTHORIZED, "Invalid authentication type");
+            }
+            String ownerId = ((Jwt) principal).getSubject();
+            ResourceRegistrationRequest resourceRegistrationRequest = ResourceRegistrationRequest.builder()
+                    .id(savedMindmap.getId())
+                    .name(savedMindmap.getTitle())
+                    .resourceType("mindmap")
+                    .build();
+            resourcePermissionApi.registerResource(resourceRegistrationRequest, ownerId);
 
             log.info("Successfully created mindmap with id: '{}'", savedMindmap.getId());
             return MindmapCreateResponseDto.builder().id(savedMindmap.getId()).build();
@@ -64,7 +85,16 @@ public class MindmapManagement implements MindmapApi {
             Pageable pageable = PageRequest
                     .of(request.getPage(), request.getSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
 
-            Page<Mindmap> mindmapPage = mindmapRepository.findAll(pageable);
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            Object principal = authentication.getPrincipal();
+            if (!(principal instanceof Jwt)) {
+                throw new AppException(ErrorCode.UNAUTHORIZED, "Invalid authentication type");
+            }
+            String ownerId = ((Jwt) principal).getSubject();
+            List<String> resourceIds = resourcePermissionApi.getAllResourceByTypeOfOwner(ownerId, "mindmap");
+
+            // Page<Mindmap> mindmapPage = mindmapRepository.findAll(pageable);
+            Page<Mindmap> mindmapPage = mindmapRepository.findByIdIn(resourceIds, pageable);
 
             List<MindmapListResponseDto> content = mindmapPage.getContent()
                     .stream()

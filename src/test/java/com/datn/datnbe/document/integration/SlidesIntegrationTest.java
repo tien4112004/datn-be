@@ -14,7 +14,8 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -27,8 +28,11 @@ import org.springframework.web.context.WebApplicationContext;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+
+import com.datn.datnbe.auth.api.ResourcePermissionApi;
+import com.datn.datnbe.auth.dto.request.ResourceRegistrationRequest;
 import com.datn.datnbe.auth.dto.response.ResourcePermissionResponse;
-import com.datn.datnbe.auth.service.ResourcePermissionService;
 import com.datn.datnbe.document.dto.SlideDto;
 import com.datn.datnbe.document.dto.SlideDto.SlideBackgroundDto;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
@@ -46,7 +50,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
         org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration.class,
         org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration.class,
         org.springframework.boot.autoconfigure.http.client.HttpClientAutoConfiguration.class})
-@WithMockUser(username = "test-user-id", roles = "USER")
 public class SlidesIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
@@ -58,27 +61,47 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private IdempotencyRepository idempotencyRepository;
 
-    @MockBean
-    private ResourcePermissionService resourcePermissionService;
+    @MockBean(name = "resourcePermissionManagement")
+    private ResourcePermissionApi resourcePermissionApi;
 
     private MockMvc mockMvc;
     private String presentationId;
+    private List<String> registeredPresentations = new ArrayList<>();
+    private Jwt testJwt;
 
     @BeforeEach
     void setUp() throws Exception {
+        // Create a test JWT
+        testJwt = Jwt.withTokenValue("test-token")
+                .header("alg", "none")
+                .claim("sub", "test-user-id")
+                .claim("scope", "read write")
+                .build();
+
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
                 .apply(SecurityMockMvcConfigurers.springSecurity())
                 .build();
         idempotencyRepository.deleteAll();
+        registeredPresentations.clear();
 
-        // Mock permission service to always grant full permissions
-        when(resourcePermissionService.checkUserPermissions(anyString(), anyString(), anyString()))
+        // Mock permission API to always grant full permissions
+        when(resourcePermissionApi.checkUserPermissions(anyString(), anyString(), anyString()))
                 .thenReturn(ResourcePermissionResponse.builder()
                         .resourceId("test-resource")
                         .userId("test-user-id")
                         .permissions(Set.of("read", "write", "share"))
                         .hasAccess(true)
                         .build());
+
+        // Mock ResourcePermissionApi to track registered resources
+        when(resourcePermissionApi.registerResource(org.mockito.ArgumentMatchers.any(), anyString()))
+                .thenAnswer(invocation -> {
+                    ResourceRegistrationRequest request = invocation.getArgument(0);
+                    registeredPresentations.add(request.getId());
+                    return null;
+                });
+        when(resourcePermissionApi.getAllResourceByTypeOfOwner(anyString(), anyString()))
+                .thenAnswer(invocation -> new ArrayList<>(registeredPresentations));
 
         presentationId = createTestPresentation();
     }
@@ -110,7 +133,8 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
                 .build();
 
         MvcResult result = mockMvc
-                .perform(post("/api/presentations").contentType(MediaType.APPLICATION_JSON)
+                .perform(post("/api/presentations").with(SecurityMockMvcRequestPostProcessors.jwt().jwt(testJwt))
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRequest)))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -152,7 +176,9 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
         SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(List.of(newSlide)).build();
 
         // When & Then - First request
-        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId).contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
+                .with(SecurityMockMvcRequestPostProcessors.jwt().jwt(testJwt))
+                .contentType(MediaType.APPLICATION_JSON)
                 .header("idempotency-key", idempotencyKey)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().isNoContent());
 
@@ -162,7 +188,9 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
         assertThat(idempotencyRecord.get().getStatus()).isEqualTo(IdempotencyStatus.COMPLETED);
 
         // When & Then - Second request with same idempotency key (should be idempotent)
-        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId).contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
+                .with(SecurityMockMvcRequestPostProcessors.jwt().jwt(testJwt))
+                .contentType(MediaType.APPLICATION_JSON)
                 .header("idempotency-key", idempotencyKey)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().isNoContent());
 
@@ -204,7 +232,9 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
         SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(Arrays.asList(slide1, slide2)).build();
 
         // When & Then
-        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId).contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
+                .with(SecurityMockMvcRequestPostProcessors.jwt().jwt(testJwt))
+                .contentType(MediaType.APPLICATION_JSON)
                 .header("idempotency-key", idempotencyKey)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().isNoContent());
 
@@ -260,7 +290,9 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
         SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(List.of(complexSlide)).build();
 
         // When & Then
-        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId).contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
+                .with(SecurityMockMvcRequestPostProcessors.jwt().jwt(testJwt))
+                .contentType(MediaType.APPLICATION_JSON)
                 .header("idempotency-key", idempotencyKey)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().isNoContent());
 
@@ -279,7 +311,9 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
         SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(List.of(slide)).build();
 
         // When & Then
-        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId).contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
+                .with(SecurityMockMvcRequestPostProcessors.jwt().jwt(testJwt))
+                .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().isBadRequest());
     }
 
@@ -296,7 +330,9 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
         SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(List.of(invalidSlide)).build();
 
         // When & Then
-        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId).contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
+                .with(SecurityMockMvcRequestPostProcessors.jwt().jwt(testJwt))
+                .contentType(MediaType.APPLICATION_JSON)
                 .header("idempotency-key", idempotencyKey)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -318,7 +354,9 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
         SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(List.of()).build();
 
         // When & Then
-        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId).contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
+                .with(SecurityMockMvcRequestPostProcessors.jwt().jwt(testJwt))
+                .contentType(MediaType.APPLICATION_JSON)
                 .header("idempotency-key", idempotencyKey)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().isNoContent());
 
@@ -344,11 +382,15 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
         SlidesUpsertRequest request2 = SlidesUpsertRequest.builder().slides(List.of(slide2)).build();
 
         // When & Then - Process both requests
-        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId).contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
+                .with(SecurityMockMvcRequestPostProcessors.jwt().jwt(testJwt))
+                .contentType(MediaType.APPLICATION_JSON)
                 .header("idempotency-key", idempotencyKey1)
                 .content(objectMapper.writeValueAsString(request1))).andExpect(status().isNoContent());
 
-        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId).contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
+                .with(SecurityMockMvcRequestPostProcessors.jwt().jwt(testJwt))
+                .contentType(MediaType.APPLICATION_JSON)
                 .header("idempotency-key", idempotencyKey2)
                 .content(objectMapper.writeValueAsString(request2))).andExpect(status().isNoContent());
 
@@ -370,7 +412,9 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
         String malformedJson = "{\"slides\": [\"id\": \"broken-json\"}";
 
         // When & Then
-        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId).contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
+                .with(SecurityMockMvcRequestPostProcessors.jwt().jwt(testJwt))
+                .contentType(MediaType.APPLICATION_JSON)
                 .header("idempotency-key", idempotencyKey)
                 .content(malformedJson)).andExpect(status().is4xxClientError());
     }
@@ -383,7 +427,9 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
         String nullSlidesJson = "{\"slides\": null}";
 
         // When & Then
-        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId).contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/presentations/{id}/slides", presentationId)
+                .with(SecurityMockMvcRequestPostProcessors.jwt().jwt(testJwt))
+                .contentType(MediaType.APPLICATION_JSON)
                 .header("idempotency-key", idempotencyKey)
                 .content(nullSlidesJson))
                 .andExpect(status().isBadRequest())

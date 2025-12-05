@@ -37,13 +37,26 @@ public interface ResourcePermissionMapper {
     }
 
     @Mapping(target = "resourceId", source = "documentId")
-    @Mapping(target = "sharedWithUserId", source = "targetUserId")
-    @Mapping(target = "sharedWithUsername", source = "targetUserId")
-    @Mapping(target = "grantedPermissions", source = "permissions")
-    @Mapping(target = "message", expression = "java(buildShareMessage(permissions))")
-    ResourceShareResponse toResourceShareResponse(String documentId, String targetUserId, Set<String> permissions);
+    @Mapping(target = "sharedWithUserIds", source = "targetUserIds")
+    @Mapping(target = "grantedPermission", source = "permission")
+    @Mapping(target = "successCount", source = "successCount")
+    @Mapping(target = "failedCount", source = "failedCount")
+    @Mapping(target = "message", expression = "java(buildShareMessage(successCount, failedCount, permission))")
+    ResourceShareResponse toResourceShareResponse(String documentId,
+            List<String> targetUserIds,
+            String permission,
+            int successCount,
+            int failedCount);
 
-    default String buildShareMessage(Set<String> permissions) {
-        return "Successfully shared resource with " + String.join(", ", permissions) + " permissions";
+    default String buildShareMessage(int successCount, int failedCount, String permission) {
+        if (failedCount == 0) {
+            return String
+                    .format("Successfully shared resource with %s permission to %d user(s)", permission, successCount);
+        } else {
+            return String.format("Shared resource with %s permission: %d succeeded, %d failed",
+                    permission,
+                    successCount,
+                    failedCount);
+        }
     }
 }

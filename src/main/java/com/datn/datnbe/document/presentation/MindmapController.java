@@ -73,7 +73,7 @@ public class MindmapController {
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @RequireDocumentPermission(scopes = {"write"})
+    @RequireDocumentPermission
     public ResponseEntity<Void> updateMindmap(@PathVariable String id,
             @Valid @RequestBody MindmapUpdateRequest request) {
         log.info("Received request to update mindmap with id: {}", id);
@@ -82,7 +82,7 @@ public class MindmapController {
     }
 
     @PatchMapping(value = "/{id}/title", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @RequireDocumentPermission(scopes = {"write"})
+    @RequireDocumentPermission
     public ResponseEntity<Void> updateMindmapTitle(@PathVariable String id,
             @Valid @RequestBody MindmapUpdateTitleAndDescriptionRequest request) {
         log.info("Received request to update mindmap title with id: {}", id);
