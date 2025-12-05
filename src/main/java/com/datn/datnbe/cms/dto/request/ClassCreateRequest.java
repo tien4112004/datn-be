@@ -17,7 +17,7 @@ public class ClassCreateRequest {
 
     @NotNull(message = "Grade is required")
     @Min(value = 1, message = "Grade must be at least 1")
-    @Max(value = 12, message = "Grade cannot exceed 12")
+    @Max(value = 5, message = "Grade cannot exceed 5")
     Integer grade;
 
     @NotBlank(message = "Academic year is required")

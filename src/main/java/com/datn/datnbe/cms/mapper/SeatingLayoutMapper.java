@@ -18,7 +18,7 @@ public interface SeatingLayoutMapper {
         LayoutConfig config = seatingLayout.getLayoutConfig();
         SeatingLayoutResponseDto responseDto = new SeatingLayoutResponseDto();
         if (config.getData() != null) {
-            config.getData().forEach(responseDto::setData);
+            config.getData().forEach((key, value) -> responseDto.setData(key, value));
         }
         return responseDto;
     }
@@ -31,7 +31,7 @@ public interface SeatingLayoutMapper {
 
         LayoutConfig layoutConfig = new LayoutConfig();
         if (requestDto.getData() != null) {
-            requestDto.getData().forEach(layoutConfig::setData);
+            requestDto.getData().forEach((key, value) -> layoutConfig.setData(key, value));
         }
         return layoutConfig;
     }
