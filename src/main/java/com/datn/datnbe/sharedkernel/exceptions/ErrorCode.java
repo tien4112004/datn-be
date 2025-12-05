@@ -50,7 +50,16 @@ public enum ErrorCode {
     FORBIDDEN("Forbidden: You don't have permission to access this resource", 403),
 
     INTERNAL_SERVER_ERROR("Internal server error", 500),
-    USER_PROFILE_CREATION_FAILED("Failed to create user profile", 500);
+    USER_PROFILE_CREATION_FAILED("Failed to create user profile", 500),
+
+    // CMS Module - Class errors
+    CLASS_NOT_FOUND("Class not found", 404),
+    CLASS_NAME_ALREADY_EXISTS("Class name already exists for this academic year", 409),
+    INVALID_CLASS_DATA("Invalid class data", 400), CLASS_CREATION_FAILED("Failed to create class", 500),
+
+    // CMS Module - Seating Layout errors
+    SEATING_LAYOUT_NOT_FOUND("Seating layout not found", 404),
+    INVALID_SEATING_LAYOUT("Invalid seating layout configuration", 400);
 
     private final String defaultMessage;
     private final Integer statusCode;
