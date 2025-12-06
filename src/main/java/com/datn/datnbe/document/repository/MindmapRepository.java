@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.UUID;
+
 @Repository
 public interface MindmapRepository extends JpaRepository<Mindmap, String> {
     @Query("SELECT m FROM Mindmap m WHERE LOWER(m.title) LIKE LOWER(CONCAT('%', :title, '%'))")
