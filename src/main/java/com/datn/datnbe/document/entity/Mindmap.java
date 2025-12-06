@@ -2,44 +2,55 @@ package com.datn.datnbe.document.entity;
 
 import com.datn.datnbe.document.entity.valueobject.MindmapNode;
 import com.datn.datnbe.document.entity.valueobject.MindmapEdge;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.UuidGenerator;
+import org.hibernate.type.SqlTypes;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
+@Entity
+@Table(name = "mindmaps")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Document(collection = "mindmaps")
+@EntityListeners(AuditingEntityListener.class)
 public class Mindmap {
 
     @Id
-    String id;
+    @UuidGenerator
+    @Column(name = "id", columnDefinition = "UUID")
+    UUID id;
 
-    @Field("title")
+    @Column(name = "title", nullable = false)
     String title;
 
-    @Field("description")
+    @Column(name = "description")
     String description;
 
-    @Field("nodes")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "nodes", columnDefinition = "jsonb")
     List<MindmapNode> nodes;
 
-    @Field("edges")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "edges", columnDefinition = "jsonb")
     List<MindmapEdge> edges;
 
-    @Field("createdAt")
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
     LocalDateTime createdAt;
 
-    @Field("updatedAt")
-    @LastModifiedDate
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
     LocalDateTime updatedAt;
 
 }
