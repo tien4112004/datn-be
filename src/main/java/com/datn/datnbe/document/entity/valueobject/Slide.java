@@ -1,5 +1,7 @@
 package com.datn.datnbe.document.entity.valueobject;
 
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,21 +10,18 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.springframework.data.mongodb.core.mapping.Field;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Slide {
-    @Field("id")
+public class Slide implements Serializable {
     String id;
 
-    @Field("elements")
-    List<SlideElement> elements;
+    @Builder.Default
+    List<SlideElement> elements = new ArrayList<>();
 
-    @Field("background")
     SlideBackground background;
 
     @Builder.Default

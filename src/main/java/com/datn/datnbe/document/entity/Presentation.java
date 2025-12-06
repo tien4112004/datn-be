@@ -3,15 +3,16 @@ package com.datn.datnbe.document.entity;
 import com.datn.datnbe.document.entity.valueobject.Slide;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,33 +21,56 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Document(collection = "presentations")
+@Entity
+@Table(name = "presentations")
 public class Presentation {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", updatable = false, nullable = false, length = 36)
     String id;
 
-    @Field("title")
+    @Column(name = "title", nullable = false)
     String title;
 
-    @Field("slides")
-    List<Slide> slides;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "slides", columnDefinition = "jsonb", nullable = false)
+    @Builder.Default
+    List<Slide> slides = new ArrayList<>();
 
-    @Field("createdAt")
+    @Column(name = "created_at", nullable = false, updatable = false)
     LocalDateTime createdAt;
 
-    @Field("updatedAt")
-    @LastModifiedDate
+    @Column(name = "updated_at", nullable = false)
     LocalDateTime updatedAt;
 
-    @Field("isParsed")
+    @Column(name = "is_parsed")
     Boolean isParsed;
 
-    @Field("metadata")
-    private Map<String, Object> metadata = new java.util.HashMap<>();
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "metadata", columnDefinition = "jsonb", nullable = false)
+    @Builder.Default
+    Map<String, Object> metadata = new HashMap<>();
 
-    @Field(name = "deleted_at")
+    @Column(name = "deleted_at")
     LocalDate deletedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+        if (slides == null) {
+            slides = new ArrayList<>();
+        }
+        if (metadata == null) {
+            metadata = new HashMap<>();
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 
     @JsonAnySetter
     public void setMetadata(String key, Object value) {
@@ -54,7 +78,7 @@ public class Presentation {
     }
 
     @JsonAnyGetter
-    public java.util.Map<String, Object> getMetadata() {
+    public Map<String, Object> getMetadata() {
         return metadata;
     }
 }

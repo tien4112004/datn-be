@@ -32,10 +32,6 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     defer-datasource-initialization: false
     
-  data:
-    mongodb:
-      database: testdb
-
   security:
     oauth2:
       client:

@@ -19,25 +19,5 @@ services:
       timeout: 10s
       retries: 3
 
-  mongo:
-    image: mongo:6
-    container_name: mongo
-    restart: unless-stopped
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: mongouser
-      MONGO_INITDB_ROOT_PASSWORD: mongopassword
-      MONGO_INITDB_DATABASE: presentationdb
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodata:/data/db
-      - ./src/main/resources/docker/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
 volumes:
   pgdata-monolith:
-  mongodata:

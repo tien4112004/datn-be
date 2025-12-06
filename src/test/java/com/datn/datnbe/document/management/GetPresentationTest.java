@@ -6,7 +6,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -85,7 +84,7 @@ class GetPresentationTest {
                 .updatedAt(createdAt)
                 .build();
 
-        when(presentationRepository.findById(any(ObjectId.class))).thenReturn(Optional.of(presentation));
+        when(presentationRepository.findByIdActive(any(String.class))).thenReturn(Optional.of(presentation));
 
         // When
         PresentationDto result = presentationService.getPresentation(presentationId);
@@ -101,7 +100,7 @@ class GetPresentationTest {
         // Given
         String nonExistentId = "507f1f77bcf86cd799439011"; // Valid ObjectId format but non-existent
 
-        when(presentationRepository.findById(any(ObjectId.class))).thenReturn(Optional.empty());
+        when(presentationRepository.findByIdActive(any(String.class))).thenReturn(Optional.empty());
 
         // When & Then
         assertThatThrownBy(() -> presentationService.getPresentation(nonExistentId)).isInstanceOf(AppException.class)
@@ -128,7 +127,7 @@ class GetPresentationTest {
                 .updatedAt(createdAt)
                 .build();
 
-        when(presentationRepository.findById(any(ObjectId.class))).thenReturn(Optional.of(mockPresentation));
+        when(presentationRepository.findByIdActive(any(String.class))).thenReturn(Optional.of(mockPresentation));
 
         // When
         PresentationDto result = presentationService.getPresentation(presentationId);
@@ -147,8 +146,8 @@ class GetPresentationTest {
         String nullId = null;
 
         // When & Then
-        assertThatThrownBy(() -> presentationService.getPresentation(nullId))
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> presentationService.getPresentation(nullId)).isInstanceOf(AppException.class)
+                .hasMessageContaining("Presentation not found");
     }
 
     @Test
@@ -175,7 +174,7 @@ class GetPresentationTest {
                 .updatedAt(createdAt)
                 .build();
 
-        when(presentationRepository.findById(any(ObjectId.class))).thenReturn(Optional.of(presentation));
+        when(presentationRepository.findByIdActive(any(String.class))).thenReturn(Optional.of(presentation));
 
         // When
         PresentationDto result = presentationService.getPresentation(presentationId);
@@ -193,12 +192,6 @@ class GetPresentationTest {
         String presentationId = "68d1f7cb4828f3a0d4a432ec";
         LocalDateTime createdAt = LocalDateTime.now();
 
-        SlideDto slide2 = SlideDto.builder()
-                .id("slide-2")
-                .elements(List.of(elementDto))
-                .background(backgroundDto)
-                .build();
-
         Slide slideEntity1 = Slide.builder().id("slide-1").build();
         Slide slideEntity2 = Slide.builder().id("slide-2").build();
 
@@ -210,7 +203,7 @@ class GetPresentationTest {
                 .updatedAt(createdAt)
                 .build();
 
-        when(presentationRepository.findById(any(ObjectId.class))).thenReturn(Optional.of(mockPresentation));
+        when(presentationRepository.findByIdActive(any(String.class))).thenReturn(Optional.of(mockPresentation));
 
         // When
         PresentationDto result = presentationService.getPresentation(presentationId);

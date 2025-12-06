@@ -3,8 +3,8 @@ package com.datn.datnbe.ai.presentation;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.UUID;
 
-import org.bson.types.ObjectId;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -79,7 +79,7 @@ public class ContentGenerationController {
 
     @PostMapping(value = "presentations/generate", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<Flux<String>> generateSlides(@RequestBody PresentationPromptRequest request) {
-        String presentationId = (new ObjectId()).toString();
+        String presentationId = UUID.randomUUID().toString();
         StringBuilder result = new StringBuilder();
 
         PresentationCreateRequest createRequest = PresentationCreateRequest.builder()
@@ -132,7 +132,7 @@ public class ContentGenerationController {
             throw new AppException(ErrorCode.GENERATION_ERROR,
                     "Failed to generate slides in batch mode: " + error.getMessage());
         }
-        String presentationId = (new ObjectId()).toString();
+        String presentationId = UUID.randomUUID().toString();
         aiResultApi.saveAIResult(result, presentationId);
 
         PresentationCreateRequest createRequest = PresentationCreateRequest.builder()

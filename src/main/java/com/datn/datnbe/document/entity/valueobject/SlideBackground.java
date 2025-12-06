@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,12 +14,10 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class SlideBackground {
-    @Field("type")
+public class SlideBackground implements Serializable {
     @NonNull
     String type;
 
-    @Field("color")
     String color;
 
     @Builder.Default
