@@ -54,6 +54,8 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
     private static final String LEVEL_PERMISSION_DESC_TEMPLATE = "%s permissions for %s";
 
     // Scopes
+    private static final String READ_SCOPE = "read";
+    private static final String COMMENT_SCOPE = "comment";
     private static final String EDIT_SCOPE = "edit";
 
     // Error messages
@@ -104,34 +106,41 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
             throw new AppException(ErrorCode.RESOURCE_ALREADY_EXISTS, String.format(RESOURCE_ALREADY_EXISTS_MSG, id));
         }
 
-        // Create resource in Keycloak
+        // Create resource in Keycloak with all scopes
         String resourcePath = buildResourcePath(resourceType, id);
 
-        KeycloakResourceDto resourceDto = keycloakMapper
-                .toKeycloakResourceDto(id, resourceType, name, ownerId, true, Set.of(resourcePath), Set.of(EDIT_SCOPE));
+        KeycloakResourceDto resourceDto = keycloakMapper.toKeycloakResourceDto(id,
+                resourceType,
+                name,
+                ownerId,
+                true,
+                Set.of(resourcePath),
+                Set.of(READ_SCOPE, COMMENT_SCOPE, EDIT_SCOPE));
 
         String keycloakResourceId = keycloakAuthzService.createResource(resourceDto).getId();
         log.info("Created Keycloak resource {} with ID {} and path {}", name, keycloakResourceId, resourcePath);
 
-        // Create owner policy
-        String ownerPolicyName = buildOwnerPolicyName(name);
+        // Create owner policy - use document ID instead of name to avoid conflicts
+        String ownerPolicyName = buildOwnerPolicyName(id);
         KeycloakUserPolicyDto ownerPolicy = keycloakMapper.toKeycloakUserPolicyDto(ownerPolicyName,
                 String.format(OWNER_POLICY_DESC_TEMPLATE, name),
                 Set.of(ownerId));
 
         String ownerPolicyId = keycloakAuthzService.createUserPolicy(ownerPolicy).getId();
 
-        // Create edit permission for owner (only edit scope)
-        String ownerPermissionName = buildOwnerPermissionName(name, ownerId);
+        // Create permission for owner with all scopes (read, comment, edit) - use document ID
+        String ownerPermissionName = buildOwnerPermissionName(id, ownerId);
         KeycloakPermissionDto ownerPermission = keycloakMapper.toKeycloakPermissionDto(ownerPermissionName,
                 String.format(OWNER_PERMISSION_DESC_TEMPLATE, name),
                 "AFFIRMATIVE",
                 Set.of(keycloakResourceId),
-                Set.of(EDIT_SCOPE),
+                Set.of(READ_SCOPE, COMMENT_SCOPE, EDIT_SCOPE),
                 Set.of(ownerPolicyId));
 
         keycloakAuthzService.createPermission(ownerPermission);
-        log.info("Created owner permission {} with edit scopes for owner {}", ownerPermissionName, ownerId);
+        log.info("Created owner permission {} with all scopes (read, comment, edit) for owner {}",
+                ownerPermissionName,
+                ownerId);
 
         // Save mapping
         DocumentResourceMapping mapping = DocumentResourceMapping.builder()
