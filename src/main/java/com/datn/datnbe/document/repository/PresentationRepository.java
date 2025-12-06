@@ -1,71 +1,33 @@
 package com.datn.datnbe.document.repository;
 
 import com.datn.datnbe.document.entity.Presentation;
-import org.bson.types.ObjectId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
-import org.springframework.data.mongodb.repository.Update;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface PresentationRepository extends MongoRepository<Presentation, String> {
+public interface PresentationRepository extends JpaRepository<Presentation, UUID> {
 
-    @Query("{ 'title': { $regex: ?0, $options: 'i' }, 'deleted_at': null }")
-    Page<Presentation> findByTitleContainingIgnoreCase(String title, Pageable pageable);
+    @Query("SELECT p FROM Presentation p WHERE LOWER(p.title) LIKE LOWER(CONCAT('%', :title, '%')) AND p.deletedAt IS NULL")
+    Page<Presentation> findByTitleContainingIgnoreCase(@Param("title") String title, Pageable pageable);
 
-    @Query("{ 'deleted_at': null }")
-    Page<Presentation> findAll(Pageable pageable);
+    @Query("SELECT p FROM Presentation p WHERE p.deletedAt IS NULL")
+    Page<Presentation> findAllActive(Pageable pageable);
 
-    @Query("{ '_id': ?0, 'deleted_at': null }")
-    Optional<Presentation> findById(ObjectId id);
+    @Query("SELECT p FROM Presentation p WHERE p.id = :id AND p.deletedAt IS NULL")
+    Optional<Presentation> findByIdActive(@Param("id") UUID id);
 
-    @Query("{ '_id': ?0, 'deleted_at': null }")
-    @Update(pipeline = {"""
-            { $set: {
-                slides: { $map: {
-                    input: "$slides", as: "s",
-                    in: { $cond: [
-                        { $eq: [ "$$s.id", ?1 ] },
-                        { $mergeObjects: [
-                            "$$s",
-                            { elements: { $map: {
-                                input: "$$s.elements", as: "e",
-                                in: { $cond: [
-                                    { $and: [
-                                        { $eq: [ "$$e.id", ?2 ] },
-                                        { $eq: [ { $toLower: "$$e.type" }, "image" ] }
-                                    ] },
-                                    { $mergeObjects: [
-                                        "$$e",
-                                        { extraFields: { $mergeObjects: [
-                                            { $ifNull: [ "$$e.extraFields", {} ] },
-                                            { src: ?3 },
-                                            { clip: ?4 }
-                                        ] } }
-                                    ] },
-                                    "$$e"
-                                ] }
-                            } } }
-                        ] },
-                        "$$s"
-                    ] }
-                } }
-            } }
-            """})
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Presentation p WHERE p.title = :title AND p.deletedAt IS NULL")
+    boolean existsByTitle(@Param("title") String title);
 
-    long insertImageToPresentation(ObjectId presentationId,
-            String slideId,
-            String elementId,
-            String imageUrl,
-            Object clip);
-
-    @Query(value = "{ 'title': ?0, 'deleted_at': null }", exists = true)
-    boolean existsByTitle(String title);
-
-    @Query("{ '_id': { $in: ?0 }, 'title': { $regex: ?1, $options: 'i' }, 'deleted_at': null }")
-    Page<Presentation> findByIdInWithOptionalTitle(Iterable<String> ids, String title, Pageable pageable);
+    @Query("SELECT p FROM Presentation p WHERE p.id IN :ids AND LOWER(p.title) LIKE LOWER(CONCAT('%', :title, '%')) AND p.deletedAt IS NULL")
+    Page<Presentation> findByIdInWithOptionalTitle(@Param("ids") Iterable<UUID> ids,
+            @Param("title") String title,
+            Pageable pageable);
 }

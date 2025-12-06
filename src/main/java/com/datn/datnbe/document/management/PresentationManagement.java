@@ -21,7 +21,6 @@ import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.types.ObjectId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -98,7 +97,7 @@ public class PresentationManagement implements PresentationApi {
         }
         String ownerId = ((Jwt) principal).getSubject();
         ResourceRegistrationRequest resourceRegistrationRequest = ResourceRegistrationRequest.builder()
-                .id(savedPresentation.getId())
+                .id(savedPresentation.getId().toString())
                 .name(savedPresentation.getTitle())
                 .resourceType("presentation")
                 .build();
@@ -131,7 +130,8 @@ public class PresentationManagement implements PresentationApi {
             throw new AppException(ErrorCode.UNAUTHORIZED, "Invalid authentication type");
         }
         String ownerId = ((Jwt) principal).getSubject();
-        List<String> resourceIds = resourcePermissionApi.getAllResourceByTypeOfOwner(ownerId, "presentation");
+        List<String> resourceIdsStr = resourcePermissionApi.getAllResourceByTypeOfOwner(ownerId, "presentation");
+        List<UUID> resourceIds = resourceIdsStr.stream().map(UUID::fromString).collect(Collectors.toList());
 
         // Fetch data based on filter
         Page<Presentation> presentationPage;
@@ -160,7 +160,8 @@ public class PresentationManagement implements PresentationApi {
     public void updatePresentation(String id, PresentationUpdateRequest request) {
         log.info("Updating presentation with ID: {}", id);
 
-        Optional<Presentation> presentation = presentationRepository.findById(id);
+        UUID presentationId = UUID.fromString(id);
+        Optional<Presentation> presentation = presentationRepository.findById(presentationId);
 
         validation.validatePresentationExists(presentation, id);
 
@@ -177,7 +178,8 @@ public class PresentationManagement implements PresentationApi {
     public void updateTitlePresentation(String id, PresentationUpdateTitleRequest request) {
         log.info("Updating title of presentation with ID: {} to title: {}", id, request.getTitle());
 
-        Optional<Presentation> presentation = presentationRepository.findById(id);
+        UUID presentationId = UUID.fromString(id);
+        Optional<Presentation> presentation = presentationRepository.findById(presentationId);
 
         validation.validatePresentationExists(presentation, id);
 
@@ -191,14 +193,9 @@ public class PresentationManagement implements PresentationApi {
     @Override
     public PresentationDto getPresentation(String id) {
         log.info("Fetching presentation with ID: {}", id);
-        Optional<Presentation> presentationOpt;
+        UUID presentationId = UUID.fromString(id);
+        Optional<Presentation> presentationOpt = presentationRepository.findByIdActive(presentationId);
 
-        if (ObjectId.isValid(id)) {
-            ObjectId oId = new ObjectId(id);
-            presentationOpt = presentationRepository.findById(oId);
-        } else {
-            presentationOpt = presentationRepository.findById(id);
-        }
         validation.validatePresentationExists(presentationOpt, id);
 
         Presentation presentation = presentationOpt.get();
@@ -211,7 +208,8 @@ public class PresentationManagement implements PresentationApi {
 
     @Override
     public void updatePresentationParsingStatus(String id) {
-        Optional<Presentation> presentationOpt = presentationRepository.findById(id);
+        UUID presentationId = UUID.fromString(id);
+        Optional<Presentation> presentationOpt = presentationRepository.findById(presentationId);
         validation.validatePresentationExists(presentationOpt, id);
 
         Presentation existingPresentation = presentationOpt.get();
@@ -222,7 +220,8 @@ public class PresentationManagement implements PresentationApi {
     @Override
     public void deletePresentation(String id) {
         log.info("Deleting presentation with ID: {}", id);
-        Optional<Presentation> presentationOpt = presentationRepository.findById(id);
+        UUID presentationId = UUID.fromString(id);
+        Optional<Presentation> presentationOpt = presentationRepository.findById(presentationId);
         validation.validatePresentationExists(presentationOpt, id);
         Presentation presentation = presentationOpt.get();
         presentation.setDeletedAt(java.time.LocalDate.now());
@@ -231,17 +230,18 @@ public class PresentationManagement implements PresentationApi {
 
     @Override
     public long insertImageToPresentation(String presentationId, String slideId, String elementId, String imageUrl) {
-        ObjectId presentationIdObj = new ObjectId(presentationId);
+        UUID presentationUUID = UUID.fromString(presentationId);
 
-        var presentation = presentationRepository.findById(presentationIdObj);
+        var presentation = presentationRepository.findById(presentationUUID);
 
         if (presentation.isEmpty()) {
             throw new AppException(ErrorCode.PRESENTATION_NOT_FOUND);
         }
 
+        Presentation existingPresentation = presentation.get();
+
         // Get Image
-        var imageElement = presentation.get()
-                .getSlides()
+        var imageElement = existingPresentation.getSlides()
                 .stream()
                 .filter(slide -> slide.getId().equals(slideId))
                 .flatMap(slide -> slide.getElements().stream())
@@ -257,8 +257,20 @@ public class PresentationManagement implements PresentationApi {
                 imageUrl,
                 finalClip);
 
-        return presentationRepository
-                .insertImageToPresentation(presentationIdObj, slideId, elementId, imageUrl, finalClip);
+        // Update the slide element in memory
+        existingPresentation.getSlides().forEach(slide -> {
+            if (slide.getId().equals(slideId)) {
+                slide.getElements().forEach(element -> {
+                    if (element.getId().equals(elementId)) {
+                        element.getExtraFields().put("src", imageUrl);
+                        element.getExtraFields().put("clip", finalClip);
+                    }
+                });
+            }
+        });
+
+        presentationRepository.save(existingPresentation);
+        return 1; // Return 1 to indicate success
     }
 
     private static Object getClip(Optional<SlideElement> imageElement) {
