@@ -21,6 +21,10 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
         format_sql: false
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
   h2:
     console:
       enabled: false
@@ -31,18 +35,6 @@ spring:
           issuer-uri: http://localhost:8080/realms/test
           jwk-set-uri: http://localhost:8080/realms/test/protocol/openid-connect/certs
   ai:
-    openai:
-      api-key: "test-key"
-      base-url: "http://test-url"
-    vertex:
-      ai:
-        gemini:
-          project-id: "test-project-id"
-          location: "us-central1"
-  data:
-    mongodb:
-      uri: mongodb://localhost:27017/test-db
-
 
 server:
   port: 0

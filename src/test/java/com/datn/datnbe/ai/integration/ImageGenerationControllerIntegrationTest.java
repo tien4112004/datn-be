@@ -108,7 +108,8 @@ public class ImageGenerationControllerIntegrationTest extends BaseIntegrationTes
 
     private Presentation createTestPresentation() {
         Presentation presentation = new Presentation();
-        presentation.setId(UUID.randomUUID().toString());
+        // Let Hibernate generate the UUID, don't set it manually
+        presentation.setTitle("Test Presentation");
         presentation.setCreatedAt(LocalDateTime.now());
         presentation.setUpdatedAt(LocalDateTime.now());
 

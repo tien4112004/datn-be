@@ -184,20 +184,6 @@ pipeline {
                             done
                             echo "✓ PostgreSQL is ready"
                             
-                            # Wait for MongoDB
-                            echo "Checking MongoDB..."
-                            counter=0
-                            until docker exec mongodb-aiprimary mongosh --eval "db.adminCommand('ping')" > /dev/null 2>&1; do
-                                counter=$((counter + 1))
-                                if [ $counter -gt $timeout ]; then
-                                    echo "ERROR: MongoDB failed to become ready within ${timeout} seconds"
-                                    exit 1
-                                fi
-                                echo "Waiting for MongoDB... ($counter/$timeout)"
-                                sleep 1
-                            done
-                            echo "✓ MongoDB is ready"
-                            
                             # Wait for Keycloak
                             echo "Checking Keycloak..."
                             counter=0
