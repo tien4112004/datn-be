@@ -15,7 +15,6 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class MindmapNode implements Serializable {
-    private static final long serialVersionUID = 1L;
 
     String id;
 

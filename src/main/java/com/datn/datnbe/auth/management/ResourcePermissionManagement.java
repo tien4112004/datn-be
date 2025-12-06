@@ -120,7 +120,7 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
         String keycloakResourceId = keycloakAuthzService.createResource(resourceDto).getId();
         log.info("Created Keycloak resource {} with ID {} and path {}", name, keycloakResourceId, resourcePath);
 
-        // Create owner policy - use document ID instead of name to avoid conflicts
+        // Create owner policy
         String ownerPolicyName = buildOwnerPolicyName(id);
         KeycloakUserPolicyDto ownerPolicy = keycloakMapper.toKeycloakUserPolicyDto(ownerPolicyName,
                 String.format(OWNER_POLICY_DESC_TEMPLATE, name),

@@ -17,7 +17,7 @@ import org.mapstruct.*;
 @Named("PresentationEntityMapper")
 public interface PresentationEntityMapper {
 
-    @Mapping(target = "id", expression = "java(request.getId() != null && !request.getId().isEmpty() ? java.util.UUID.fromString(request.getId()) : null)")
+    @Mapping(target = "id", source = "request.id")
     @Mapping(target = "title", expression = "java((request.getTitle() == null || request.getTitle().isEmpty()) ? \"Untitled Presentation\" : request.getTitle())")
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)

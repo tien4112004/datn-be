@@ -8,10 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.UUID;
-
 @Repository
-public interface MindmapRepository extends JpaRepository<Mindmap, UUID> {
+public interface MindmapRepository extends JpaRepository<Mindmap, String> {
     @Query("SELECT m FROM Mindmap m WHERE LOWER(m.title) LIKE LOWER(CONCAT('%', :title, '%'))")
     Page<Mindmap> findByTitleContainingIgnoreCase(String title, Pageable pageable);
 
@@ -20,5 +18,5 @@ public interface MindmapRepository extends JpaRepository<Mindmap, UUID> {
     boolean existsByTitle(String title);
 
     @Query("SELECT m FROM Mindmap m WHERE m.id IN :ids")
-    Page<Mindmap> findByIdIn(Iterable<UUID> ids, Pageable pageable);
+    Page<Mindmap> findByIdIn(Iterable<String> ids, Pageable pageable);
 }
