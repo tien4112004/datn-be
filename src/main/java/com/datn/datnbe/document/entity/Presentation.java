@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -54,6 +55,23 @@ public class Presentation {
 
     @Column(name = "deleted_at")
     LocalDate deletedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+        if (slides == null) {
+            slides = new ArrayList<>();
+        }
+        if (metadata == null) {
+            metadata = new HashMap<>();
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 
     @PrePersist
     protected void onCreate() {
