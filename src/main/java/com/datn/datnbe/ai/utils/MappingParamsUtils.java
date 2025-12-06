@@ -16,7 +16,7 @@ public class MappingParamsUtils {
                 "model",
                 request.getModel(),
                 "provider",
-                request.getProvider());
+                request.getProvider().toLowerCase());
     }
 
     public static Map<String, Object> constructParams(PresentationPromptRequest request) {
@@ -25,7 +25,7 @@ public class MappingParamsUtils {
                 "model",
                 request.getModel(),
                 "provider",
-                request.getProvider(),
+                request.getProvider().toLowerCase(),
                 "language",
                 request.getLanguage(),
                 "slide_count",
@@ -38,7 +38,7 @@ public class MappingParamsUtils {
                 "model",
                 request.getModel(),
                 "provider",
-                request.getProvider(),
+                request.getProvider().toLowerCase(),
                 "aspect_ratio",
                 request.getAspectRatio());
 
