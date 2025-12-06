@@ -97,7 +97,7 @@ public class PresentationManagement implements PresentationApi {
         }
         String ownerId = ((Jwt) principal).getSubject();
         ResourceRegistrationRequest resourceRegistrationRequest = ResourceRegistrationRequest.builder()
-                .id(savedPresentation.getId().toString())
+                .id(savedPresentation.getId())
                 .name(savedPresentation.getTitle())
                 .resourceType("presentation")
                 .build();
@@ -130,8 +130,7 @@ public class PresentationManagement implements PresentationApi {
             throw new AppException(ErrorCode.UNAUTHORIZED, "Invalid authentication type");
         }
         String ownerId = ((Jwt) principal).getSubject();
-        List<String> resourceIdsStr = resourcePermissionApi.getAllResourceByTypeOfOwner(ownerId, "presentation");
-        List<UUID> resourceIds = resourceIdsStr.stream().map(UUID::fromString).collect(Collectors.toList());
+        List<String> resourceIds = resourcePermissionApi.getAllResourceByTypeOfOwner(ownerId, "presentation");
 
         // Fetch data based on filter
         Page<Presentation> presentationPage;
@@ -160,8 +159,7 @@ public class PresentationManagement implements PresentationApi {
     public void updatePresentation(String id, PresentationUpdateRequest request) {
         log.info("Updating presentation with ID: {}", id);
 
-        UUID presentationId = UUID.fromString(id);
-        Optional<Presentation> presentation = presentationRepository.findById(presentationId);
+        Optional<Presentation> presentation = presentationRepository.findById(id);
 
         validation.validatePresentationExists(presentation, id);
 
@@ -178,8 +176,7 @@ public class PresentationManagement implements PresentationApi {
     public void updateTitlePresentation(String id, PresentationUpdateTitleRequest request) {
         log.info("Updating title of presentation with ID: {} to title: {}", id, request.getTitle());
 
-        UUID presentationId = UUID.fromString(id);
-        Optional<Presentation> presentation = presentationRepository.findById(presentationId);
+        Optional<Presentation> presentation = presentationRepository.findById(id);
 
         validation.validatePresentationExists(presentation, id);
 

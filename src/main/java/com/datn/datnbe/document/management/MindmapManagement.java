@@ -61,14 +61,14 @@ public class MindmapManagement implements MindmapApi {
             }
             String ownerId = ((Jwt) principal).getSubject();
             ResourceRegistrationRequest resourceRegistrationRequest = ResourceRegistrationRequest.builder()
-                    .id(savedMindmap.getId().toString())
+                    .id(savedMindmap.getId())
                     .name(savedMindmap.getTitle())
                     .resourceType("mindmap")
                     .build();
             resourcePermissionApi.registerResource(resourceRegistrationRequest, ownerId);
 
             log.info("Successfully created mindmap with id: '{}'", savedMindmap.getId());
-            return MindmapCreateResponseDto.builder().id(savedMindmap.getId().toString()).build();
+            return MindmapCreateResponseDto.builder().id(savedMindmap.getId()).build();
         } catch (Exception e) {
             log.error("Failed to create mindmap with title: '{}'. Error: {}", request.getTitle(), e.getMessage());
             throw e;
@@ -92,11 +92,8 @@ public class MindmapManagement implements MindmapApi {
             String ownerId = ((Jwt) principal).getSubject();
             List<String> resourceIds = resourcePermissionApi.getAllResourceByTypeOfOwner(ownerId, "mindmap");
 
-            // Convert String IDs to UUID
-            List<UUID> uuidList = resourceIds.stream().map(UUID::fromString).collect(Collectors.toList());
-
             // Page<Mindmap> mindmapPage = mindmapRepository.findAll(pageable);
-            Page<Mindmap> mindmapPage = mindmapRepository.findByIdIn(uuidList, pageable);
+            Page<Mindmap> mindmapPage = mindmapRepository.findByIdIn(resourceIds, pageable);
 
             List<MindmapListResponseDto> content = mindmapPage.getContent()
                     .stream()
@@ -125,8 +122,7 @@ public class MindmapManagement implements MindmapApi {
         try {
             validation.validateMindmapExists(id);
 
-            UUID uuid = UUID.fromString(id);
-            Mindmap existingMindmap = findMindmapById(uuid);
+            Mindmap existingMindmap = findMindmapById(id);
             mapper.updateEntityFromRequest(request, existingMindmap);
 
             mindmapRepository.save(existingMindmap);
@@ -147,8 +143,7 @@ public class MindmapManagement implements MindmapApi {
         try {
             validation.validateMindmapExists(id);
 
-            UUID uuid = UUID.fromString(id);
-            Mindmap existingMindmap = findMindmapById(uuid);
+            Mindmap existingMindmap = findMindmapById(id);
 
             if (StringUtils.hasText(request.getTitle())) {
                 existingMindmap.setTitle(request.getTitle());
@@ -177,8 +172,7 @@ public class MindmapManagement implements MindmapApi {
         try {
             validation.validateMindmapExists(id);
 
-            UUID uuid = UUID.fromString(id);
-            Mindmap mindmap = findMindmapById(uuid);
+            Mindmap mindmap = findMindmapById(id);
             MindmapDto response = mapper.entityToDto(mindmap);
 
             log.info("Successfully retrieved mindmap with id: '{}'", id);
@@ -214,7 +208,7 @@ public class MindmapManagement implements MindmapApi {
         return mindmap;
     }
 
-    private Mindmap findMindmapById(UUID id) {
+    private Mindmap findMindmapById(String id) {
         return mindmapRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Mindmap not found with id: " + id));
     }

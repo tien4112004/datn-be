@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -28,8 +27,7 @@ public class SlidesManagement implements SlidesApi {
                 id,
                 request.getSlides() != null ? request.getSlides().size() : 0);
 
-        UUID presentationId = UUID.fromString(id);
-        Optional<Presentation> presentation = presentationRepository.findById(presentationId);
+        Optional<Presentation> presentation = presentationRepository.findById(id);
         validation.validatePresentationExists(presentation, id);
         Presentation existingPresentation = presentation.get();
 
