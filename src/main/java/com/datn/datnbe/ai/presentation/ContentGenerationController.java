@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.datn.datnbe.ai.api.AIResultApi;
 import com.datn.datnbe.ai.api.ContentGenerationApi;
+import com.datn.datnbe.ai.dto.request.MindmapPromptRequest;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
 import com.datn.datnbe.document.api.PresentationApi;
@@ -155,4 +156,23 @@ public class ContentGenerationController {
         ObjectMapper mapper = new ObjectMapper();
         return mapper.convertValue(object, Map.class);
     }
+
+    @PostMapping(value = "mindmaps/generate", produces = "application/json")
+    public ResponseEntity<AppResponseDto<String>> generateMindmap(@RequestBody MindmapPromptRequest request) {
+        log.info("Received mindmap generation request: {}", request);
+        String result;
+
+        try {
+            result = contentGenerationExternalApi.generateMindmap(request);
+
+            log.info("Mindmap generation completed successfully");
+
+        } catch (Exception error) {
+            log.error("Error generating mindmap", error);
+            throw new AppException(ErrorCode.GENERATION_ERROR, "Failed to generate mindmap: " + error.getMessage());
+        }
+
+        return ResponseEntity.ok().body(AppResponseDto.success(result));
+    }
+
 }

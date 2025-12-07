@@ -1,7 +1,9 @@
 package com.datn.datnbe.ai.api;
 
+import com.datn.datnbe.ai.dto.request.MindmapPromptRequest;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
+
 import reactor.core.publisher.Flux;
 
 public interface ContentGenerationApi {
@@ -13,4 +15,6 @@ public interface ContentGenerationApi {
     String generateOutlineBatch(OutlinePromptRequest request);
 
     String generateSlidesBatch(PresentationPromptRequest request);
+
+    String generateMindmap(MindmapPromptRequest request);
 }

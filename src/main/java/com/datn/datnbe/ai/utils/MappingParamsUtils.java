@@ -1,6 +1,7 @@
 package com.datn.datnbe.ai.utils;
 
 import com.datn.datnbe.ai.dto.request.ImagePromptRequest;
+import com.datn.datnbe.ai.dto.request.MindmapPromptRequest;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
 import java.util.Map;
@@ -42,6 +43,21 @@ public class MappingParamsUtils {
                 "aspect_ratio",
                 request.getAspectRatio());
 
+    }
+
+    public static Map<String, Object> constructParams(MindmapPromptRequest request) {
+        return Map.of("topic",
+                request.getTopic(),
+                "language",
+                request.getLanguage(),
+                "max_depth",
+                request.getMaxDepth(),
+                "max_branches_per_node",
+                request.getMaxBranchesPerNode(),
+                "model",
+                request.getModel(),
+                "provider",
+                request.getProvider());
     }
 
     private static String createPrompt(ImagePromptRequest request) {
