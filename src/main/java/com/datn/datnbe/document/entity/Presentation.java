@@ -27,7 +27,6 @@ public class Presentation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false, length = 36)
     String id;
 
     @Column(name = "title", nullable = false)

@@ -35,10 +35,6 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-  # DOCUMENTS MODULE CONFIGURATION
-  data:
-    mongodb:
-      uri: ${MONGODB_URI:mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DATABASE}?authSource=${MONGODB_AUTH_DATABASE}}
   security:
     oauth2:
       client:
@@ -160,6 +156,8 @@ ai:
     outline-endpoint: ${AI_API_OUTLINE_ENDPOINT:/api/outline/generate/stream/mock}
     presentation-endpoint: ${AI_API_PRESENTATION_ENDPOINT:/api/presentations/generate/stream/mock}
     image-endpoint: ${AI_API_IMAGE_ENDPOINT:/api/image/generate/mock}
+    mindmap-endpoint: ${AI_API_MINDMAP_ENDPOINT:/api/mindmap/generate/mock}
+
 
 cloudflare:
   r2:

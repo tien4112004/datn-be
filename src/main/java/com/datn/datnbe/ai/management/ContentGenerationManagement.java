@@ -3,6 +3,7 @@ package com.datn.datnbe.ai.management;
 import com.datn.datnbe.ai.api.ContentGenerationApi;
 import com.datn.datnbe.ai.api.ModelSelectionApi;
 import com.datn.datnbe.ai.apiclient.AIApiClient;
+import com.datn.datnbe.ai.dto.request.MindmapPromptRequest;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
 import com.datn.datnbe.ai.utils.MappingParamsUtils;
@@ -43,7 +44,10 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     @Value("${ai.api.presentation-batch-endpoint}")
     @NonFinal
     String PRESENTATION_BATCH_API_ENDPOINT;
-    // AIEventPublisher aiEventPublisher;
+
+    @Value("${ai.api.mindmap-endpoint}")
+    @NonFinal
+    String MINDMAP_API_ENDPOINT;
 
     @Override
     public Flux<String> generateOutline(OutlinePromptRequest request) {
@@ -112,6 +116,26 @@ public class ContentGenerationManagement implements ContentGenerationApi {
             return result;
         } catch (Exception e) {
             log.error("Error during batch presentation generation", e);
+            throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    @Override
+    public String generateMindmap(MindmapPromptRequest request) {
+        log.info("Starting mindmap generation");
+
+        if (!modelSelectionApi.isModelEnabled(request.getModel())) {
+            throw new AppException(ErrorCode.MODEL_NOT_ENABLED);
+        }
+
+        log.info("Calling AI to generate mindmap");
+        try {
+            String result = aiApiClient
+                    .post(MINDMAP_API_ENDPOINT, MappingParamsUtils.constructParams(request), String.class);
+            log.info("Mindmap generation completed successfully");
+            return result;
+        } catch (Exception e) {
+            log.error("Error during mindmap generation", e);
             throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
         }
     }
