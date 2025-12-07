@@ -27,7 +27,6 @@ public class Presentation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false, length = 36)
     String id;
 
     @Column(name = "title", nullable = false)
@@ -54,23 +53,6 @@ public class Presentation {
 
     @Column(name = "deleted_at")
     LocalDate deletedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-        if (slides == null) {
-            slides = new ArrayList<>();
-        }
-        if (metadata == null) {
-            metadata = new HashMap<>();
-        }
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
 
     @PrePersist
     protected void onCreate() {

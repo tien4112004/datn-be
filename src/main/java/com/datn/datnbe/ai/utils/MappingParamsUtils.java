@@ -37,9 +37,9 @@ public class MappingParamsUtils {
         return Map.of("prompt",
                 createPrompt(request),
                 "model",
-                request.getModel(),
+                request.getModel().toLowerCase(),
                 "provider",
-                request.getProvider(),
+                request.getProvider().toLowerCase(),
                 "aspect_ratio",
                 request.getAspectRatio());
 
@@ -50,9 +50,9 @@ public class MappingParamsUtils {
                 request.getTopic(),
                 "language",
                 request.getLanguage(),
-                "max_depth",
+                "maxDepth",
                 request.getMaxDepth(),
-                "max_branches_per_node",
+                "maxBranchesPerNode",
                 request.getMaxBranchesPerNode(),
                 "model",
                 request.getModel(),
