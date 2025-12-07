@@ -39,10 +39,6 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-  # DOCUMENTS MODULE CONFIGURATION
-  data:
-    mongodb:
-      uri: ${MONGODB_URI:mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DATABASE}?authSource=${MONGODB_AUTH_DATABASE}}
   security:
     oauth2:
       client:

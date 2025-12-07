@@ -15,10 +15,7 @@ services:
       - POSTGRES_DB_URL=jdbc:postgresql://postgres:5432/datn_monolith_db
       - POSTGRES_DB_USERNAME=postgres
       - POSTGRES_DB_PASSWORD=postgres
-
-      # MongoDB connection for document persistence
-      - MONGODB_URI=mongodb://mongouser:mongopassword@mongo:27017/presentation_db?authSource=admin
-
+      
       # Keycloak configuration
       - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
       - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
