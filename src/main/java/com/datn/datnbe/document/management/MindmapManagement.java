@@ -19,7 +19,6 @@ import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -153,8 +152,6 @@ public class MindmapManagement implements MindmapApi {
             if (StringUtils.hasText(request.getDescription())) {
                 existingMindmap.setDescription(request.getDescription());
             }
-
-            existingMindmap.setUpdatedAt(LocalDateTime.now());
 
             mindmapRepository.save(existingMindmap);
             log.info("Successfully updated mindmap title with id: '{}'", id);

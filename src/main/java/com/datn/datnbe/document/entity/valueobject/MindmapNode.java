@@ -1,5 +1,6 @@
 package com.datn.datnbe.document.entity.valueobject;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -7,18 +8,16 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.springframework.data.mongodb.core.mapping.Field;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class MindmapNode {
-    @Field("id")
+public class MindmapNode implements Serializable {
+
     String id;
 
-    @Field("type")
     String type;
 
     @Builder.Default

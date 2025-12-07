@@ -27,29 +27,6 @@ services:
           cpus: "1"
           memory: 256M
 
-  mongo:
-    image: mongo:7-jammy
-    container_name: mongodb-aiprimary
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
-      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
-    expose:
-      - "27017"
-    volumes:
-      - /opt/datn-be/mongo-aiprimary:/data/db
-    restart: unless-stopped
-    networks:
-      - network-aiprimary
-    deploy:
-      resources:
-        limits:
-          cpus: "1"
-          memory: 512M
-        reservations:
-          cpus: "1"
-          memory: 256M
-
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.5
     container_name: keycloak-aiprimary
@@ -110,7 +87,6 @@ services:
 
 volumes:
   postgres-data:
-  mongo-data:
 
 networks:
   network-aiprimary:

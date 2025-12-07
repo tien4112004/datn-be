@@ -145,7 +145,6 @@ docker run -p 8080:8080 \
   -e POSTGRES_DB_URL=jdbc:postgresql://postgres-monolith:5432/datn_monolith_db \
   -e POSTGRES_DB_USERNAME=postgres \
   -e POSTGRES_DB_PASSWORD=postgres \
-  -e MONGODB_URI=mongodb://mongouser:mongopassword@mongo:27017/presentation_db?authSource=admin \
   -v ${VERTEX_SERVICE_ACCOUNT_KEY_PATH}:/secrets/key.json:ro \
   datn-be:latest
 ```
@@ -244,8 +243,7 @@ The application supports two database setup modes:
 
 Uses containerized databases - **no database environment variables needed** in `.env`.
 
-- PostgreSQL containers for auth and model configuration databases
-- MongoDB container for document storage
+- PostgreSQL containers for all application data
 - All connection details are handled automatically via Docker networking
 
 To start with databases:
@@ -265,25 +263,6 @@ For connecting to local or external databases, configure these variables in `.en
 POSTGRES_DB_URL=jdbc:postgresql://localhost:5432/datn_monolith_db
 POSTGRES_DB_USERNAME=postgres
 POSTGRES_DB_PASSWORD=postgres
-```
-
-**MongoDB (Document Service):**
-
-Option A - Using connection URI:
-
-```bash
-MONGODB_URI=mongodb://localhost:27017/presentation_db?authSource=admin
-```
-
-Option B - Using individual variables:
-
-```bash
-MONGODB_USERNAME=mongouser
-MONGODB_PASSWORD=mongopassword
-MONGODB_HOST=localhost
-MONGODB_PORT=27017
-MONGODB_DATABASE=presentation_db
-MONGODB_AUTH_DATABASE=admin
 ```
 
 **AI Services Configuration:**
@@ -503,7 +482,7 @@ docker-compose -f docker-compose.db.yml up -d
 This application is built as a **modular monolith** using **Spring Modulith**. The main modules are:
 
 - **Auth Module** (`com.datn.datnbe.auth`): Handles user authentication and authorization using PostgreSQL
-- **Document Module** (`com.datn.datnbe.document`): Manages document storage, retrieval, and presentation generation using MongoDB  
+- **Document Module** (`com.datn.datnbe.document`): Manages document storage, retrieval, and presentation generation using PostgreSQL JSONB  
 - **AI Module** (`com.datn.datnbe.ai`): Provides AI-powered features using OpenAI GPT and Google Vertex AI Gemini
 - **Shared Kernel** (`com.datn.datnbe.sharedkernel`): Common DTOs, events, exceptions, and cross-module utilities
 
@@ -511,7 +490,7 @@ This application is built as a **modular monolith** using **Spring Modulith**. T
 Each module is self-contained with its own:
 - **Domain models**: Business entities and value objects
 - **Service layer**: Business logic and orchestration
-- **Repository/Data access**: JPA repositories for PostgreSQL, MongoDB repositories for document storage
+- **Repository/Data access**: JPA repositories for PostgreSQL with JSONB support for complex types
 - **REST controllers**: HTTP endpoints and request/response handling
 - **Configuration**: Module-specific beans and settings
 - **Events**: Inter-module communication via Spring Application Events
@@ -620,7 +599,7 @@ npx husky install
 
 **Key Features:**
 - **Modular Architecture**: Clear separation using Spring Modulith
-- **Multi-database Support**: PostgreSQL for relational data, MongoDB for documents
+- **Database Support**: PostgreSQL with JSONB for complex data structures
 - **AI Integration**: OpenAI and Google Vertex AI services
 - **Container-ready**: Docker and Docker Compose support
 - **Development Tools**: Git hooks, automated builds, health monitoring
