@@ -191,8 +191,8 @@ public class PresentationManagement implements PresentationApi {
     public PresentationDto getPresentation(String id) {
         log.info("Fetching presentation with ID: {}", id);
 
-        Optional<Presentation> presentationOpt = presentationRepository.findByIdActive(id);
-
+        Optional<Presentation> presentationOpt;
+        presentationOpt = presentationRepository.findById(id);
         validation.validatePresentationExists(presentationOpt, id);
 
         Presentation presentation = presentationOpt.get();
@@ -205,7 +205,6 @@ public class PresentationManagement implements PresentationApi {
 
     @Override
     public void updatePresentationParsingStatus(String id) {
-
         Optional<Presentation> presentationOpt = presentationRepository.findById(id);
         validation.validatePresentationExists(presentationOpt, id);
 
@@ -217,7 +216,6 @@ public class PresentationManagement implements PresentationApi {
     @Override
     public void deletePresentation(String id) {
         log.info("Deleting presentation with ID: {}", id);
-
         Optional<Presentation> presentationOpt = presentationRepository.findById(id);
         validation.validatePresentationExists(presentationOpt, id);
         Presentation presentation = presentationOpt.get();
@@ -227,7 +225,6 @@ public class PresentationManagement implements PresentationApi {
 
     @Override
     public long insertImageToPresentation(String presentationId, String slideId, String elementId, String imageUrl) {
-
         var presentation = presentationRepository.findById(presentationId);
 
         if (presentation.isEmpty()) {
@@ -243,9 +240,7 @@ public class PresentationManagement implements PresentationApi {
                 .flatMap(slide -> slide.getElements().stream())
                 .filter(element -> element.getId().equals(elementId))
                 .findFirst();
-
         Object finalClip = getClip(imageElement);
-
         log.info("Update image element with ID: {} on slide ID: {} in presentation ID: {} with URL: {} and clip: {}",
                 elementId,
                 slideId,
@@ -266,7 +261,7 @@ public class PresentationManagement implements PresentationApi {
         });
 
         presentationRepository.save(existingPresentation);
-        return 1; // Return 1 to indicate success
+        return 1;
     }
 
     private static Object getClip(Optional<SlideElement> imageElement) {
