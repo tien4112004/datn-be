@@ -84,7 +84,7 @@ class GetPresentationTest {
                 .updatedAt(createdAt)
                 .build();
 
-        when(presentationRepository.findByIdActive(any(String.class))).thenReturn(Optional.of(presentation));
+        when(presentationRepository.findById(any(String.class))).thenReturn(Optional.of(presentation));
 
         // When
         PresentationDto result = presentationService.getPresentation(presentationId);
@@ -100,7 +100,7 @@ class GetPresentationTest {
         // Given
         String nonExistentId = "507f1f77bcf86cd799439011"; // Valid ObjectId format but non-existent
 
-        when(presentationRepository.findByIdActive(any(String.class))).thenReturn(Optional.empty());
+        when(presentationRepository.findById(any(String.class))).thenReturn(Optional.empty());
 
         // When & Then
         assertThatThrownBy(() -> presentationService.getPresentation(nonExistentId)).isInstanceOf(AppException.class)
@@ -127,7 +127,7 @@ class GetPresentationTest {
                 .updatedAt(createdAt)
                 .build();
 
-        when(presentationRepository.findByIdActive(any(String.class))).thenReturn(Optional.of(mockPresentation));
+        when(presentationRepository.findById(any(String.class))).thenReturn(Optional.of(mockPresentation));
 
         // When
         PresentationDto result = presentationService.getPresentation(presentationId);
@@ -174,7 +174,7 @@ class GetPresentationTest {
                 .updatedAt(createdAt)
                 .build();
 
-        when(presentationRepository.findByIdActive(any(String.class))).thenReturn(Optional.of(presentation));
+        when(presentationRepository.findById(any(String.class))).thenReturn(Optional.of(presentation));
 
         // When
         PresentationDto result = presentationService.getPresentation(presentationId);
@@ -203,7 +203,7 @@ class GetPresentationTest {
                 .updatedAt(createdAt)
                 .build();
 
-        when(presentationRepository.findByIdActive(any(String.class))).thenReturn(Optional.of(mockPresentation));
+        when(presentationRepository.findById(any(String.class))).thenReturn(Optional.of(mockPresentation));
 
         // When
         PresentationDto result = presentationService.getPresentation(presentationId);
