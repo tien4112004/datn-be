@@ -57,6 +57,7 @@ public class SlideCreateRequest {
         String color;
         String style;
         Float wordSpace;
+        @Builder.Default
         Map<String, Object> extraFields = new java.util.HashMap<>();
 
         @JsonAnySetter

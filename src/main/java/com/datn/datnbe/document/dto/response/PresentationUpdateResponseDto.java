@@ -4,6 +4,8 @@ import com.datn.datnbe.document.dto.SlideDto;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,7 +23,10 @@ public class PresentationUpdateResponseDto {
     private String id;
     private String title;
     private List<SlideDto> slides;
-    private Map<String, Object> metadata = new java.util.HashMap<>();
+    @Builder.Default
+    private Map<String, Object> metadata = new HashMap<>();
+    @Builder.Default
+    private Map<String, Object> addtionalData = new HashMap<>();
 
     @JsonAnySetter
     public void setMetadata(String key, Object value) {
@@ -31,5 +36,15 @@ public class PresentationUpdateResponseDto {
     @JsonAnyGetter
     public Map<String, Object> getMetadata() {
         return metadata;
+    }
+
+    @JsonAnySetter
+    public void setAddtionalData(String key, Object value) {
+        addtionalData.put(key, value);
+    }
+
+    @JsonAnyGetter
+    public Map<String, Object> getAddtionalData() {
+        return addtionalData;
     }
 }

@@ -22,6 +22,7 @@ import java.util.UUID;
         UUID.class}, nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface MindmapEntityMapper {
 
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "title", expression = "java((request.getTitle() == null || request.getTitle().isEmpty()) ? \"Untitled Presentation\" : request.getTitle())")
     @Mapping(target = "description", expression = "java(request.getDescription())")
     @Mapping(target = "createdAt", expression = "java(LocalDateTime.now())")

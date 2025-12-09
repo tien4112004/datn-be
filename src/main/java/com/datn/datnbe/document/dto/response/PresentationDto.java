@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,11 +23,14 @@ import lombok.NoArgsConstructor;
 public class PresentationDto {
     private String id;
     private String title;
-    private Map<String, Object> metadata = new java.util.HashMap<>();
+    @Builder.Default
+    private Map<String, Object> metadata = new HashMap<>();
     private List<SlideDto> slides;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private boolean isParsed;
+    @Builder.Default
+    private Map<String, Object> addtionalData = new HashMap<>();
 
     @JsonAnySetter
     public void setMetadata(String key, Object value) {
@@ -36,5 +40,15 @@ public class PresentationDto {
     @JsonAnyGetter
     public Map<String, Object> getMetadata() {
         return metadata;
+    }
+
+    @JsonAnySetter
+    public void setAddtionalData(String key, Object value) {
+        addtionalData.put(key, value);
+    }
+
+    @JsonAnyGetter
+    public Map<String, Object> getAddtionalData() {
+        return addtionalData;
     }
 }

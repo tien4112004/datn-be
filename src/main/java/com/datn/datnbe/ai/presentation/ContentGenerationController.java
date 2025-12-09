@@ -2,7 +2,6 @@ package com.datn.datnbe.ai.presentation;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.http.MediaType;
@@ -82,14 +81,7 @@ public class ContentGenerationController {
     public ResponseEntity<Flux<String>> generateSlides(@RequestBody PresentationPromptRequest request) {
         StringBuilder result = new StringBuilder();
 
-        PresentationCreateRequest createRequest = PresentationCreateRequest.builder()
-                .title("AI Generated Presentation")
-                .slides(new ArrayList<>())
-                .metadata(convertToMap(request.getPresentation()))
-                .isParsed(false)
-                .build();
-        var newPresentation = presentationApi.createPresentation(createRequest);
-        String presentationId = newPresentation.getId();
+        String presentationId = request.getPresentationId();
 
         // Return the flux with all processing attached
         var slideSse = contentGenerationExternalApi.generateSlides(request)
@@ -149,11 +141,6 @@ public class ContentGenerationController {
         data.set("presentation", mapper.valueToTree(newPresentation));
 
         return ResponseEntity.ok().header("X-Presentation", presentationId).body(AppResponseDto.success(result));
-    }
-
-    private Map<String, Object> convertToMap(Object object) {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.convertValue(object, Map.class);
     }
 
     @PostMapping(value = "mindmaps/generate", produces = "application/json")

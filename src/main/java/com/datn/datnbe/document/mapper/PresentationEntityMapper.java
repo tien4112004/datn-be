@@ -25,6 +25,7 @@ public interface PresentationEntityMapper {
     @Mapping(target = "isParsed", source = "isParsed", defaultValue = "true")
     @Mapping(target = "metadata", source = "metadata")
     @Mapping(target = "deletedAt", ignore = true)
+    @Mapping(target = "additionalData", source = "additionalData")
     Presentation createRequestToEntity(PresentationCreateRequest request);
 
     @Mapping(target = "updatedAt", ignore = true)
@@ -34,6 +35,7 @@ public interface PresentationEntityMapper {
     @Mapping(target = "isParsed", ignore = true)
     @Mapping(target = "metadata", ignore = true)
     @Mapping(target = "deletedAt", ignore = true)
+    @Mapping(target = "additionalData", ignore = true)
     void updateEntity(PresentationUpdateRequest request, @MappingTarget Presentation presentation);
 
     @Mapping(target = "id", expression = "java(entity.getId() != null ? entity.getId().toString() : null)")
@@ -42,6 +44,7 @@ public interface PresentationEntityMapper {
 
     @Mapping(target = "id", expression = "java(entity.getId() != null ? entity.getId().toString() : null)")
     @Mapping(target = "slides", source = "slides")
+    @Mapping(target = "addtionalData", ignore = true)
     PresentationUpdateResponseDto toUpdateResponseDto(Presentation entity);
 
     @Mapping(target = "id", expression = "java(entity.getId() != null ? entity.getId().toString() : null)")
@@ -53,6 +56,7 @@ public interface PresentationEntityMapper {
 
     @Mapping(target = "id", expression = "java(entity.getId() != null ? entity.getId().toString() : null)")
     @Mapping(target = "slides", source = "slides", qualifiedByName = "toDtoList")
+    @Mapping(target = "addtionalData", ignore = true)
     PresentationDto toDetailedDto(Presentation entity);
 
     // Helper methods for null safety

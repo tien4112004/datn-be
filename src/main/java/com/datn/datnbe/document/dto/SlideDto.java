@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import lombok.*;
 
 @Data
@@ -55,7 +56,8 @@ public class SlideDto {
         String style;
         Float wordSpace;
 
-        Map<String, Object> extraFields = new java.util.HashMap<>();
+        @Builder.Default
+        Map<String, Object> extraFields = new HashMap<>();
 
         @JsonAnySetter
         public void setExtraField(String key, Object value) {

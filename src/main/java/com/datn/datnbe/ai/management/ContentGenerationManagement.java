@@ -72,7 +72,6 @@ public class ContentGenerationManagement implements ContentGenerationApi {
         }
 
         log.info("Calling AI to stream presentation slides");
-        request.setPresentation(null);
 
         return aiApiClient.postSse(PRESENTATION_API_ENDPOINT, MappingParamsUtils.constructParams(request));
     }
@@ -107,8 +106,6 @@ public class ContentGenerationManagement implements ContentGenerationApi {
         }
 
         log.info("Calling AI to generate presentation slides in batch mode");
-        request.setPresentation(null);
-
         try {
             String result = aiApiClient
                     .post(PRESENTATION_BATCH_API_ENDPOINT, MappingParamsUtils.constructParams(request), String.class);
