@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +31,11 @@ public class PresentationCreateRequest {
     private List<SlideDto> slides;
     Boolean isParsed;
 
-    private Map<String, Object> metadata = new java.util.HashMap<>();
+    @Builder.Default
+    private Map<String, Object> metadata = new HashMap<>();
+
+    @Builder.Default
+    private Map<String, Object> additionalData = new HashMap<>();
 
     @JsonAnySetter
     public void setMetadata(String key, Object value) {
@@ -37,7 +43,17 @@ public class PresentationCreateRequest {
     }
 
     @JsonAnyGetter
-    public java.util.Map<String, Object> getMetadata() {
+    public Map<String, Object> getMetadata() {
         return metadata;
+    }
+
+    @JsonAnySetter
+    public void setAdditionalData(String key, Object value) {
+        additionalData.put(key, value);
+    }
+
+    @JsonAnyGetter
+    public Map<String, Object> getAdditionalData() {
+        return additionalData;
     }
 }
