@@ -80,17 +80,16 @@ public class ContentGenerationController {
 
     @PostMapping(value = "presentations/generate", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<Flux<String>> generateSlides(@RequestBody PresentationPromptRequest request) {
-        String presentationId = UUID.randomUUID().toString();
         StringBuilder result = new StringBuilder();
 
         PresentationCreateRequest createRequest = PresentationCreateRequest.builder()
-                .id(presentationId)
                 .title("AI Generated Presentation")
                 .slides(new ArrayList<>())
                 .metadata(convertToMap(request.getPresentation()))
                 .isParsed(false)
                 .build();
-        presentationApi.createPresentation(createRequest);
+        var newPresentation = presentationApi.createPresentation(createRequest);
+        String presentationId = newPresentation.getId();
 
         // Return the flux with all processing attached
         var slideSse = contentGenerationExternalApi.generateSlides(request)
