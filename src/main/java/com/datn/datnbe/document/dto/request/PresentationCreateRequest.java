@@ -34,9 +34,6 @@ public class PresentationCreateRequest {
     @Builder.Default
     private Map<String, Object> metadata = new HashMap<>();
 
-    @Builder.Default
-    private Map<String, Object> additionalData = new HashMap<>();
-
     @JsonAnySetter
     public void setMetadata(String key, Object value) {
         metadata.put(key, value);
@@ -45,15 +42,5 @@ public class PresentationCreateRequest {
     @JsonAnyGetter
     public Map<String, Object> getMetadata() {
         return metadata;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalData(String key, Object value) {
-        additionalData.put(key, value);
-    }
-
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalData() {
-        return additionalData;
     }
 }
