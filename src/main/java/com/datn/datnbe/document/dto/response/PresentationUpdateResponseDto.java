@@ -20,6 +20,7 @@ import lombok.NoArgsConstructor;
 public class PresentationUpdateResponseDto {
     private String id;
     private String title;
+    private String thumbnail;
     private List<SlideDto> slides;
     private Map<String, Object> metadata = new java.util.HashMap<>();
 

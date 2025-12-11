@@ -27,13 +27,14 @@ public interface PresentationEntityMapper {
     @Mapping(target = "deletedAt", ignore = true)
     Presentation createRequestToEntity(PresentationCreateRequest request);
 
-    @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "slides", source = "slides", qualifiedByName = "toEntityList")
     @Mapping(target = "isParsed", ignore = true)
     @Mapping(target = "metadata", ignore = true)
     @Mapping(target = "deletedAt", ignore = true)
+    @Mapping(target = "thumbnail", source = "thumbnail")
     void updateEntity(PresentationUpdateRequest request, @MappingTarget Presentation presentation);
 
     @Mapping(target = "id", expression = "java(entity.getId() != null ? entity.getId().toString() : null)")
@@ -48,7 +49,7 @@ public interface PresentationEntityMapper {
     @Mapping(target = "title", source = "title")
     @Mapping(target = "createdAt", source = "createdAt")
     @Mapping(target = "updatedAt", source = "updatedAt")
-    @Mapping(target = "thumbnail", expression = "java(entity.getSlides() != null && !entity.getSlides().isEmpty() ? slideToSlideDto(entity.getSlides().get(0)) : null)")
+    @Mapping(target = "thumbnail", source = "thumbnail")
     PresentationListResponseDto toListResponseDto(Presentation entity);
 
     @Mapping(target = "id", expression = "java(entity.getId() != null ? entity.getId().toString() : null)")
