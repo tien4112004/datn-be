@@ -16,6 +16,7 @@ import com.datn.datnbe.ai.api.ContentGenerationApi;
 import com.datn.datnbe.ai.dto.request.MindmapPromptRequest;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
+import com.datn.datnbe.ai.dto.response.MindmapGenerateResponseDto;
 import com.datn.datnbe.document.api.PresentationApi;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
@@ -144,21 +145,34 @@ public class ContentGenerationController {
     }
 
     @PostMapping(value = "mindmaps/generate", produces = "application/json")
-    public ResponseEntity<AppResponseDto<String>> generateMindmap(@RequestBody MindmapPromptRequest request) {
+    public ResponseEntity<AppResponseDto<MindmapGenerateResponseDto>> generateMindmap(
+            @RequestBody MindmapPromptRequest request) {
         log.info("Received mindmap generation request: {}", request);
-        String result;
 
         try {
-            result = contentGenerationExternalApi.generateMindmap(request);
+            String result = contentGenerationExternalApi.generateMindmap(request)
+                    .replace("```json", "")
+                    .replace("```", "")
+                    .trim();
 
-            log.info("Mindmap generation completed successfully");
+            log.info("Raw mindmap generation result: {}", result);
 
+            ObjectMapper mapper = new ObjectMapper();
+
+            JsonNode rootNode = mapper.readTree(result);
+            String jsonToParse = result;
+
+            if (rootNode.isTextual()) {
+                jsonToParse = rootNode.asText();
+            }
+
+            MindmapGenerateResponseDto mindmapDto = mapper.readValue(jsonToParse, MindmapGenerateResponseDto.class);
+
+            return ResponseEntity.ok().body(AppResponseDto.success(mindmapDto));
         } catch (Exception error) {
             log.error("Error generating mindmap", error);
             throw new AppException(ErrorCode.GENERATION_ERROR, "Failed to generate mindmap: " + error.getMessage());
         }
-
-        return ResponseEntity.ok().body(AppResponseDto.success(result));
     }
 
 }

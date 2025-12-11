@@ -113,6 +113,7 @@ app:
       - "http://localhost:8080"
       - "https://datn-fe.vercel.app"
       - "https://api.huy-devops.site"
+      - "https://app.huy-devops.site"
     # Use allowed-origin-patterns for wildcard matching with Spring AntPathMatcher syntax
     # * matches any characters except /
     # ** matches any characters including /
