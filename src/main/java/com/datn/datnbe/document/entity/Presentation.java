@@ -54,11 +54,6 @@ public class Presentation {
     @Builder.Default
     Map<String, Object> metadata = new HashMap<>();
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "additional_data", columnDefinition = "jsonb")
-    @Builder.Default
-    Map<String, Object> additionalData = new HashMap<>();
-
     @Column(name = "deleted_at")
     LocalDate deletedAt;
 
@@ -87,15 +82,5 @@ public class Presentation {
     @JsonAnyGetter
     public Map<String, Object> getMetadata() {
         return metadata;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalData(String key, Object value) {
-        additionalData.put(key, value);
-    }
-
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalData() {
-        return additionalData;
     }
 }

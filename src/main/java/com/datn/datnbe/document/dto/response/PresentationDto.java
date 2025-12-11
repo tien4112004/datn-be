@@ -30,8 +30,6 @@ public class PresentationDto {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private boolean isParsed;
-    @Builder.Default
-    private Map<String, Object> addtionalData = new HashMap<>();
 
     @JsonAnySetter
     public void setMetadata(String key, Object value) {
@@ -41,15 +39,5 @@ public class PresentationDto {
     @JsonAnyGetter
     public Map<String, Object> getMetadata() {
         return metadata;
-    }
-
-    @JsonAnySetter
-    public void setAddtionalData(String key, Object value) {
-        addtionalData.put(key, value);
-    }
-
-    @JsonAnyGetter
-    public Map<String, Object> getAddtionalData() {
-        return addtionalData;
     }
 }
