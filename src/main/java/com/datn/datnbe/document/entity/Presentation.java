@@ -32,6 +32,9 @@ public class Presentation {
     @Column(name = "title", nullable = false)
     String title;
 
+    @Column(name = "thumbnail", nullable = true)
+    String thumbnail;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "slides", columnDefinition = "jsonb", nullable = false)
     @Builder.Default
