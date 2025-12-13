@@ -66,9 +66,7 @@ public class DocumentPermissionAspect {
         }
 
         String userId = securityContextUtils.getCurrentUserId();
-        String userToken = securityContextUtils.getCurrentUserToken();
-
-        if (userId == null || userToken == null) {
+        if (userId == null) {
             throw new AppException(ErrorCode.UNAUTHORIZED, "User not authenticated");
         }
 
@@ -81,8 +79,8 @@ public class DocumentPermissionAspect {
         try {
             // Call: permissionService.checkUserPermissions(documentId, userToken, userId).getPermissions()
             var checkMethod = permissionService.getClass()
-                    .getMethod("checkUserPermissions", String.class, String.class, String.class);
-            var response = checkMethod.invoke(permissionService, documentId, userToken, userId);
+                    .getMethod("checkUserPermissions", String.class, String.class);
+            var response = checkMethod.invoke(permissionService, documentId, userId);
             var getPermissionsMethod = response.getClass().getMethod("getPermissions");
             Set<String> permissions = (Set<String>) getPermissionsMethod.invoke(response);
             userPermissions = permissions;

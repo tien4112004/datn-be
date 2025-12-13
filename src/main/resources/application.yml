@@ -95,6 +95,11 @@ app:
           provider: "Google"
           default-model: false
           model-type: text
+        - model-name: "gemini-2.5-flash-image-preview"
+          display-name: "Nano Banana"
+          provider: "Google"
+          default-model: true
+          model-type: image
       openRouter:
         - model-name: "google/gemini-2.5-flash-image-preview"
           display-name: "Nano Banana"

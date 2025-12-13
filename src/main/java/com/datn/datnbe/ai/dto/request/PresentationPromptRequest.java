@@ -25,6 +25,5 @@ public class PresentationPromptRequest {
     @JsonAlias("slide_count, slideCount")
     Integer slideCount;
     String provider;
-
-    private String presentationId;
+    String presentationId;
 }

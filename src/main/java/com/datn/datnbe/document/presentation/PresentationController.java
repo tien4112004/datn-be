@@ -62,7 +62,7 @@ public class PresentationController {
     }
 
     @PutMapping("/{id}")
-    @RequireDocumentPermission
+    @RequireDocumentPermission(scopes = {"edit"})
     public ResponseEntity<AppResponseDto<Void>> updatePresentation(@PathVariable String id,
             @Valid @RequestBody PresentationUpdateRequest request) {
         presentationApi.updatePresentation(id, request);
@@ -71,7 +71,7 @@ public class PresentationController {
 
     @Idempotent
     @PutMapping("/{id}/slides")
-    @RequireDocumentPermission
+    @RequireDocumentPermission(scopes = {"edit"})
     public ResponseEntity<AppResponseDto<Void>> upsertSlides(@PathVariable String id,
             @Valid @RequestBody SlidesUpsertRequest request) {
         slidesApi.upsertSlides(id, request);
@@ -80,7 +80,7 @@ public class PresentationController {
 
     @Idempotent(serviceType = PresentationIdempotencyService.class)
     @PutMapping("/{id}/slides/error")
-    @RequireDocumentPermission
+    @RequireDocumentPermission(scopes = {"edit"})
     public ResponseEntity<AppResponseDto<Void>> testErrorIdempotency(@PathVariable String id,
             @Valid @RequestBody SlidesUpsertRequest request) {
         slidesApi.upsertSlides(id, request);
@@ -88,7 +88,7 @@ public class PresentationController {
     }
 
     @PatchMapping("/{id}/title")
-    @RequireDocumentPermission
+    @RequireDocumentPermission(scopes = {"edit"})
     public ResponseEntity<AppResponseDto<Void>> updateTitlePresentation(@PathVariable String id,
             @Valid @RequestBody PresentationUpdateTitleRequest request) {
         presentationApi.updateTitlePresentation(id, request);
@@ -103,14 +103,14 @@ public class PresentationController {
     }
 
     @PatchMapping("/{id}/parse")
-    @RequireDocumentPermission
+    @RequireDocumentPermission(scopes = {"edit"})
     public ResponseEntity<Void> updatePresentationParsingStatus(@PathVariable String id) {
         presentationApi.updatePresentationParsingStatus(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
-    @RequireDocumentPermission
+    @RequireDocumentPermission(scopes = {"edit"})
     public ResponseEntity<Void> deletePresentation(@PathVariable String id) {
         presentationApi.deletePresentation(id);
         return ResponseEntity.noContent().build();
