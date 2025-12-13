@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface ImageGenerationApi {
     List<MultipartFile> generateImage(ImagePromptRequest request);
+    List<MultipartFile> generateMockImage(ImagePromptRequest request);
 }

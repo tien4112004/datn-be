@@ -59,6 +59,32 @@ public class ImageGenerationManagement implements ImageGenerationApi {
         return generatedImage.getImages().stream().map(this::convertBase64ToMultipartFile).toList();
     }
 
+    @Override
+    public List<MultipartFile> generateMockImage(ImagePromptRequest request) {
+        log.info("Image generation start");
+
+        if (!modelSelectionApi.isModelEnabled(request.getModel())) {
+            log.error("Model {} is not enabled for image generation", request.getModel());
+            throw new AppException(ErrorCode.MODEL_NOT_ENABLED);
+        }
+
+        //TODO: check if model supports image generation
+
+        ImageGeneratedResponseDto generatedImage = aiApiClient.post("/api/image/generate",
+                MappingParamsUtils.constructParams(request),
+                ImageGeneratedResponseDto.class);
+
+        if (generatedImage.getError() != null || generatedImage.getImages() == null
+                || generatedImage.getImages().isEmpty()) {
+            log.error("Error during image generation: {}", generatedImage.getError());
+            throw new AppException(ErrorCode.GENERATION_ERROR, generatedImage.getError());
+        }
+
+        log.info("Image generation completed");
+
+        return generatedImage.getImages().stream().map(this::convertBase64ToMultipartFile).toList();
+    }
+
     private MultipartFile convertBase64ToMultipartFile(String base64Image) {
         try {
             byte[] decoded = Base64.getDecoder().decode(base64Image);
