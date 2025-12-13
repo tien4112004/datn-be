@@ -91,7 +91,6 @@ public class ContentGenerationController {
                 .delayElements(Duration.ofMillis(SLIDE_DELAY))
                 .doOnNext(slide -> {
                     result.append(slide);
-                    log.info("Processing slide in background: {}", slide);
                 })
                 .doOnComplete(() -> {
                     aiResultApi.saveAIResult(result.toString(), presentationId);

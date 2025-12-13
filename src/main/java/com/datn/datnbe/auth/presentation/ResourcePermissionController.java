@@ -84,10 +84,9 @@ public class ResourcePermissionController {
         // Extract user info and token
         Jwt jwt = (Jwt) authentication.getPrincipal();
         String userId = jwt.getSubject();
-        String token = jwt.getTokenValue();
 
         // Check permissions (will look up mapping table internally)
-        var response = resourcePermissionApi.checkUserPermissions(documentId, token, userId);
+        var response = resourcePermissionApi.checkUserPermissions(documentId, userId);
         log.info("User {} has permissions {} on resource {}", userId, response.getPermissions(), documentId);
 
         return ResponseEntity.ok(AppResponseDto.success(response));

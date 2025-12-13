@@ -99,7 +99,11 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
         String name = request.getName();
         String resourceType = request.getResourceType();
 
-        log.info("Registering document {} in Keycloak for owner {} with resource type {}", id, name, resourceType);
+        log.info("Registering document '{}' (ID: {}) in Keycloak for owner '{}' with resource type '{}'",
+                name,
+                id,
+                ownerId,
+                resourceType);
 
         // Check if already registered
         if (mappingRepository.existsByDocumentId(id)) {
@@ -142,31 +146,52 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
                 ownerPermissionName,
                 ownerId);
 
-        // Save mapping
+        // Save mapping with the resource URI and owner ID
         DocumentResourceMapping mapping = DocumentResourceMapping.builder()
                 .documentId(id)
                 .keycloakResourceId(keycloakResourceId)
                 .resourceType(resourceType)
+                .resourceUri(resourcePath)
+                .ownerId(ownerId)
                 .build();
 
         DocumentResourceMapping saved = mappingRepository.save(mapping);
-        log.info("Saved mapping: id={} → keycloakResourceId={} (type: {})", id, keycloakResourceId, resourceType);
+        log.info("Successfully saved mapping: documentId='{}' → keycloakResourceId='{}' (type: '{}'), ownerId='{}'",
+                id,
+                keycloakResourceId,
+                resourceType,
+                ownerId);
 
         return mapper.toDocumentRegistrationResponse(saved, name, ownerId);
     }
 
     @Override
-    public ResourcePermissionResponse checkUserPermissions(String documentId, String userToken, String userId) {
-        log.debug("Checking permissions for document {} by user", documentId);
+    public ResourcePermissionResponse checkUserPermissions(String documentId, String userId) {
+        log.info("Checking permissions for document {} by user {}", documentId, userId);
 
-        // 1. Look up the Keycloak resource ID from mapping table
+        // Look up the resource mapping to get the exact URI used in Keycloak
         DocumentResourceMapping mapping = mappingRepository.findByDocumentId(documentId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND,
                         String.format(RESOURCE_NOT_FOUND_MSG, documentId)));
 
-        // 2. Check permissions via Keycloak API using resource ID (not name)
-        List<String> permissions = keycloakAuthzService.checkUserPermissions(userToken,
+        log.info("Found mapping for document {}: ownerId='{}', keycloakResourceId='{}'",
+                documentId,
+                mapping.getOwnerId(),
                 mapping.getKeycloakResourceId());
+
+        // Check if the user is the owner - if so, grant all permissions
+        if (mapping.getOwnerId() != null && mapping.getOwnerId().equals(userId)) {
+            log.info("User {} is the owner of document {}, granting all permissions", userId, documentId);
+            return mapper
+                    .toResourcePermissionResponse(documentId, userId, List.of(READ_SCOPE, COMMENT_SCOPE, EDIT_SCOPE));
+        }
+
+        log.info("User {} is NOT the owner of document {} (owner is '{}'), checking Keycloak permissions",
+                userId,
+                documentId,
+                mapping.getOwnerId());
+
+        List<String> permissions = keycloakAuthzService.checkUserPermissions(userId, documentId);
 
         log.debug("User has permissions {} on document {}", permissions, documentId);
 

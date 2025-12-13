@@ -146,14 +146,25 @@ public class KeycloakResponseParser {
     }
 
     /**
-     * Extract permissions from RPT (Requesting Party Token) for a specific resource
+     * Extract permissions from RPT (Requesting Party Token) or Policy Evaluation response for a specific resource
      *
-     * @param rptToken RPT token (JWT format)
+     * @param rptToken RPT token (JWT format) or Policy Evaluation response (JSON)
      * @param resourceId Keycloak resource ID to filter permissions
      * @return List of permission scopes granted for the resource
      */
     public List<String> extractPermissionsFromToken(String rptToken, String resourceId) {
         try {
+            // Check if this is a Policy Evaluation response (starts with {)
+            if (rptToken != null && rptToken.trim().startsWith("{")) {
+                return extractPermissionsFromEvaluationResponse(rptToken, resourceId);
+            }
+
+            // Otherwise, parse as JWT token
+            if (rptToken == null) {
+                log.warn("RPT token is null");
+                return List.of();
+            }
+
             String[] parts = rptToken.split("\\.");
             if (parts.length < 2) {
                 log.warn("Invalid JWT token format");
@@ -189,6 +200,51 @@ public class KeycloakResponseParser {
             return scopes.isEmpty() ? List.of() : scopes;
         } catch (Exception e) {
             log.error("Failed to parse RPT token: {}", e.getMessage(), e);
+            return List.of();
+        }
+    }
+
+    /**
+     * Extract permissions from Keycloak Policy Evaluation response
+     */
+    private List<String> extractPermissionsFromEvaluationResponse(String evaluationResponse, String resourceId) {
+        try {
+            JsonNode rootNode = objectMapper.readTree(evaluationResponse);
+            List<String> scopes = new ArrayList<>();
+
+            // The response has format: {"status": "...", "results": [...]}
+            JsonNode resultsNode = rootNode.get("results");
+
+            if (resultsNode != null && resultsNode.isArray()) {
+                for (JsonNode result : resultsNode) {
+                    JsonNode statusNode = result.get("status");
+                    JsonNode scopesNode = result.get("scopes");
+
+                    // Check if this result has PERMIT status
+                    if (statusNode != null && "PERMIT".equals(statusNode.asText())) {
+                        // Extract scope names from the scopes array
+                        if (scopesNode != null && scopesNode.isArray()) {
+                            for (JsonNode scopeObj : scopesNode) {
+                                String scopeName = scopeObj.asText();
+                                // If it's an object, get the "name" field
+                                if (scopeObj.isObject() && scopeObj.has("name")) {
+                                    scopeName = scopeObj.get("name").asText();
+                                }
+                                scopes.add(scopeName);
+                            }
+                        }
+                    }
+                }
+            }
+
+            log.info("Extracted {} permissions from policy evaluation for resource {}: {}",
+                    scopes.size(),
+                    resourceId,
+                    scopes);
+            return scopes.isEmpty() ? List.of() : scopes;
+
+        } catch (Exception e) {
+            log.error("Failed to parse policy evaluation response: {}", e.getMessage(), e);
             return List.of();
         }
     }
