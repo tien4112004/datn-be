@@ -32,38 +32,6 @@ public class StudentController {
     StudentImportApi studentImportApi;
     StudentApi studentApi;
 
-    // ============================================================
-    // Individual Student Endpoints
-    // ============================================================
-
-    /**
-     * Get a student by ID.
-     */
-    @GetMapping("/students/{studentId}")
-    public ResponseEntity<AppResponseDto<StudentResponseDto>> getStudent(@PathVariable String studentId) {
-        log.info("Received request to get student with ID: {}", studentId);
-        StudentResponseDto response = studentApi.getStudentById(studentId);
-        return ResponseEntity.ok(AppResponseDto.success(response));
-    }
-
-    /**
-     * Update a student by ID.
-     */
-    @PutMapping("/students/{studentId}")
-    public ResponseEntity<AppResponseDto<StudentResponseDto>> updateStudent(@PathVariable String studentId,
-            @Valid @RequestBody StudentUpdateRequest request) {
-        log.info("Received request to update student with ID: {}", studentId);
-        StudentResponseDto response = studentApi.updateStudent(studentId, request);
-        return ResponseEntity.ok(AppResponseDto.success(response, "Student updated successfully"));
-    }
-
-    // ============================================================
-    // Class-based Student Management Endpoints
-    // ============================================================
-
-    /**
-     * Get all students in a class.
-     */
     @GetMapping("/classes/{classId}/students")
     public ResponseEntity<AppResponseDto<List<StudentResponseDto>>> getStudentsByClass(@PathVariable String classId) {
         log.info("Received request to get students for class: {}", classId);
@@ -71,9 +39,6 @@ public class StudentController {
         return ResponseEntity.ok(AppResponseDto.success(students, "Students retrieved successfully"));
     }
 
-    /**
-     * Enroll a student in a class or create and enroll a new student.
-     */
     @PostMapping("/classes/{classId}/students")
     public ResponseEntity<AppResponseDto<StudentResponseDto>> enrollStudent(@PathVariable String classId,
             @RequestBody String jsonRequest) throws Exception {
@@ -97,9 +62,6 @@ public class StudentController {
         return ResponseEntity.ok(AppResponseDto.success(response, "Student enrolled successfully"));
     }
 
-    /**
-     * Remove a student from a class.
-     */
     @DeleteMapping("/classes/{classId}/students/{studentId}")
     public ResponseEntity<AppResponseDto<Void>> removeStudentFromClass(@PathVariable String classId,
             @PathVariable String studentId) {
@@ -160,10 +122,17 @@ public class StudentController {
         }
     }
 
-    /**
-     * Import students to the general student list (not class-specific).
-     * This endpoint is kept for backward compatibility.
-     */
+    @PutMapping("/students/{studentId}")
+    public ResponseEntity<AppResponseDto<StudentResponseDto>> updateStudent(@PathVariable String studentId,
+            @Valid @RequestBody StudentUpdateRequest request) {
+        log.info("Received request to update student with ID: {}", studentId);
+        StudentResponseDto response = studentApi.updateStudent(studentId, request);
+        return ResponseEntity.ok(AppResponseDto.success(response, "Student updated successfully"));
+    }
+
+    //Decrepted methods
+
+    @Deprecated(since = "1.0.0", forRemoval = true)
     @PostMapping("/students/import")
     public ResponseEntity<AppResponseDto<StudentImportResponseDto>> importStudentsGeneral(
             @RequestParam(value = "file", required = true) MultipartFile file) {
@@ -182,5 +151,13 @@ public class StudentController {
                             .message(result.getMessage())
                             .build());
         }
+    }
+
+    @Deprecated(since = "1.0.0", forRemoval = true)
+    @GetMapping("/students/{studentId}")
+    public ResponseEntity<AppResponseDto<StudentResponseDto>> getStudent(@PathVariable String studentId) {
+        log.info("Received request to get student with ID: {}", studentId);
+        StudentResponseDto response = studentApi.getStudentById(studentId);
+        return ResponseEntity.ok(AppResponseDto.success(response));
     }
 }

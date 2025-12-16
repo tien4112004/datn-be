@@ -5,6 +5,8 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
+
 /**
  * Request DTO for updating a student.
  */
@@ -16,16 +18,13 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class StudentUpdateRequest {
 
-    @Size(max = 100, message = "First name must not exceed 100 characters")
-    String firstName;
+    LocalDate enrollmentDate;
 
-    @Size(max = 100, message = "Last name must not exceed 100 characters")
-    String lastName;
+    @Size(max = 255, message = "Address must not exceed 255 characters")
+    String address;
 
-    @Size(max = 20, message = "Phone number must not exceed 20 characters")
-    String phoneNumber;
-
-    String avatarUrl;
+    @Size(max = 100, message = "Parent contact email must not exceed 100 characters")
+    String parentContactEmail;
 
     StudentStatus status;
 }

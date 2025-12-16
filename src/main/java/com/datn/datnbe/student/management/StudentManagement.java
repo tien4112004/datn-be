@@ -18,10 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -48,11 +46,11 @@ public class StudentManagement implements StudentApi {
     @Override
     @Transactional
     public StudentResponseDto createStudent(StudentCreateRequest request) {
-        log.info("Creating new student with email: {}", request.getEmail());
+        log.info("Creating new student with user ID: {}", request.getUserId());
 
-        // Check if email already exists
-        if (studentRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Student with email " + request.getEmail() + " already exists");
+        // Check if student already exists for this user
+        if (studentRepository.existsByUserId(request.getUserId())) {
+            throw new IllegalArgumentException("Student already exists for user ID: " + request.getUserId());
         }
 
         Student student = studentEntityMapper.toEntity(request);

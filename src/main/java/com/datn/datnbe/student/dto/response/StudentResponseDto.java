@@ -1,11 +1,11 @@
 package com.datn.datnbe.student.dto.response;
 
-import com.datn.datnbe.student.enums.Role;
 import com.datn.datnbe.student.enums.StudentStatus;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -21,12 +21,10 @@ import java.time.LocalDateTime;
 public class StudentResponseDto {
 
     String id;
-    String firstName;
-    String lastName;
-    String email;
-    String phoneNumber;
-    String avatarUrl;
-    Role role;
+    String userId;
+    LocalDate enrollmentDate;
+    String address;
+    String parentContactEmail;
     StudentStatus status;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
