@@ -5,9 +5,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -22,8 +22,9 @@ import java.time.LocalDateTime;
 public class ClassEnrollment {
 
     @Id
-    @Column(name = "id", nullable = false, length = 50)
-    String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    Long id;
 
     @Column(name = "class_id", nullable = false, length = 50)
     String classId;
@@ -31,8 +32,9 @@ public class ClassEnrollment {
     @Column(name = "student_id", nullable = false, length = 50)
     String studentId;
 
-    @Column(name = "enrolled_at")
-    LocalDate enrolledAt;
+    @LastModifiedDate
+    @Column(name = "updated_at")
+    LocalDateTime updatedAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)

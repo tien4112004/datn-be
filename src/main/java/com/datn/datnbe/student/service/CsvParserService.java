@@ -10,6 +10,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -19,10 +21,12 @@ import java.util.*;
 @Slf4j
 public class CsvParserService {
 
-    private static final Set<String> REQUIRED_HEADERS = Set.of("firstName", "lastName", "email");
+    private static final Set<String> REQUIRED_HEADERS = Set.of("userId");
 
     private static final Set<String> VALID_HEADERS = Set
-            .of("firstName", "lastName", "email", "phoneNumber", "avatarUrl", "status");
+            .of("userId", "enrollmentDate", "address", "parentContactEmail", "status");
+
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
 
     /**
      * Parse CSV file and return list of StudentCsvRow objects with any parsing errors.
@@ -113,20 +117,26 @@ public class CsvParserService {
             List<String> errors) {
         String[] values = splitCsvLine(line);
 
-        String firstName = getValueOrNull(values, headerMap.get("firstName"));
-        String lastName = getValueOrNull(values, headerMap.get("lastName"));
-        String email = getValueOrNull(values, headerMap.get("email"));
+        String userId = getValueOrNull(values, headerMap.get("userId"));
+        String enrollmentDateStr = getValueOrNull(values, headerMap.get("enrollmentDate"));
+        String address = getValueOrNull(values, headerMap.get("address"));
+        String parentContactEmail = getValueOrNull(values, headerMap.get("parentContactEmail"));
+        String status = getValueOrNull(values, headerMap.get("status"));
 
         // Validate required fields
         List<String> rowErrors = new ArrayList<>();
-        if (firstName == null || firstName.isBlank()) {
-            rowErrors.add("firstName is required");
+        if (userId == null || userId.isBlank()) {
+            rowErrors.add("userId is required");
         }
-        if (lastName == null || lastName.isBlank()) {
-            rowErrors.add("lastName is required");
-        }
-        if (email == null || email.isBlank()) {
-            rowErrors.add("email is required");
+
+        // Parse enrollment date if provided
+        LocalDate enrollmentDate = null;
+        if (enrollmentDateStr != null && !enrollmentDateStr.isBlank()) {
+            try {
+                enrollmentDate = LocalDate.parse(enrollmentDateStr, DATE_FORMATTER);
+            } catch (Exception e) {
+                rowErrors.add("Invalid enrollmentDate format (expected YYYY-MM-DD): " + enrollmentDateStr);
+            }
         }
 
         if (!rowErrors.isEmpty()) {
@@ -135,12 +145,11 @@ public class CsvParserService {
         }
 
         return StudentCsvRow.builder()
-                .firstName(firstName)
-                .lastName(lastName)
-                .email(email)
-                .phoneNumber(getValueOrNull(values, headerMap.get("phoneNumber")))
-                .avatarUrl(getValueOrNull(values, headerMap.get("avatarUrl")))
-                .status(getValueOrNull(values, headerMap.get("status")))
+                .userId(userId)
+                .enrollmentDate(enrollmentDate)
+                .address(address)
+                .parentContactEmail(parentContactEmail)
+                .status(status)
                 .build();
     }
 
