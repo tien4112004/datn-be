@@ -1,10 +1,14 @@
 package com.datn.datnbe.student.management;
 
 import com.datn.datnbe.student.api.StudentApi;
+import com.datn.datnbe.student.dto.request.StudentCreateRequest;
 import com.datn.datnbe.student.dto.request.StudentUpdateRequest;
 import com.datn.datnbe.student.dto.response.StudentResponseDto;
+import com.datn.datnbe.student.entity.ClassEnrollment;
 import com.datn.datnbe.student.entity.Student;
+import com.datn.datnbe.student.enums.EnrollmentStatus;
 import com.datn.datnbe.student.mapper.StudentEntityMapper;
+import com.datn.datnbe.student.repository.ClassEnrollmentRepository;
 import com.datn.datnbe.student.repository.StudentRepository;
 import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
 import lombok.AccessLevel;
@@ -13,6 +17,12 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Management service for student CRUD operations.
@@ -24,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class StudentManagement implements StudentApi {
 
     StudentRepository studentRepository;
+    ClassEnrollmentRepository classEnrollmentRepository;
     StudentEntityMapper studentEntityMapper;
 
     @Override
@@ -32,6 +43,23 @@ public class StudentManagement implements StudentApi {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + id));
         return studentEntityMapper.toResponseDto(student);
+    }
+
+    @Override
+    @Transactional
+    public StudentResponseDto createStudent(StudentCreateRequest request) {
+        log.info("Creating new student with email: {}", request.getEmail());
+
+        // Check if email already exists
+        if (studentRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Student with email " + request.getEmail() + " already exists");
+        }
+
+        Student student = studentEntityMapper.toEntity(request);
+        Student savedStudent = studentRepository.save(student);
+
+        log.info("Successfully created student with ID: {}", savedStudent.getId());
+        return studentEntityMapper.toResponseDto(savedStudent);
     }
 
     @Override
@@ -57,6 +85,12 @@ public class StudentManagement implements StudentApi {
         if (!studentRepository.existsById(id)) {
             throw new ResourceNotFoundException("Student not found with ID: " + id);
         }
+
+        // Also remove from all class enrollments
+        classEnrollmentRepository.deleteInBatch(classEnrollmentRepository.findAll()
+                .stream()
+                .filter(e -> e.getStudentId().equals(id))
+                .collect(Collectors.toList()));
 
         studentRepository.deleteById(id);
         log.info("Successfully deleted student with ID: {}", id);

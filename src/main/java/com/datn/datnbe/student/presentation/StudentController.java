@@ -2,6 +2,8 @@ package com.datn.datnbe.student.presentation;
 
 import com.datn.datnbe.student.api.StudentApi;
 import com.datn.datnbe.student.api.StudentImportApi;
+import com.datn.datnbe.student.dto.request.StudentCreateRequest;
+import com.datn.datnbe.student.dto.request.StudentEnrollmentRequest;
 import com.datn.datnbe.student.dto.request.StudentUpdateRequest;
 import com.datn.datnbe.student.dto.response.StudentImportResponseDto;
 import com.datn.datnbe.student.dto.response.StudentResponseDto;
@@ -18,8 +20,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/api/students")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
@@ -27,6 +31,82 @@ public class StudentController {
 
     StudentImportApi studentImportApi;
     StudentApi studentApi;
+
+    // ============================================================
+    // Individual Student Endpoints
+    // ============================================================
+
+    /**
+     * Get a student by ID.
+     */
+    @GetMapping("/students/{studentId}")
+    public ResponseEntity<AppResponseDto<StudentResponseDto>> getStudent(@PathVariable String studentId) {
+        log.info("Received request to get student with ID: {}", studentId);
+        StudentResponseDto response = studentApi.getStudentById(studentId);
+        return ResponseEntity.ok(AppResponseDto.success(response));
+    }
+
+    /**
+     * Update a student by ID.
+     */
+    @PutMapping("/students/{studentId}")
+    public ResponseEntity<AppResponseDto<StudentResponseDto>> updateStudent(@PathVariable String studentId,
+            @Valid @RequestBody StudentUpdateRequest request) {
+        log.info("Received request to update student with ID: {}", studentId);
+        StudentResponseDto response = studentApi.updateStudent(studentId, request);
+        return ResponseEntity.ok(AppResponseDto.success(response, "Student updated successfully"));
+    }
+
+    // ============================================================
+    // Class-based Student Management Endpoints
+    // ============================================================
+
+    /**
+     * Get all students in a class.
+     */
+    @GetMapping("/classes/{classId}/students")
+    public ResponseEntity<AppResponseDto<List<StudentResponseDto>>> getStudentsByClass(@PathVariable String classId) {
+        log.info("Received request to get students for class: {}", classId);
+        List<StudentResponseDto> students = studentApi.getStudentsByClass(classId);
+        return ResponseEntity.ok(AppResponseDto.success(students, "Students retrieved successfully"));
+    }
+
+    /**
+     * Enroll a student in a class or create and enroll a new student.
+     */
+    @PostMapping("/classes/{classId}/students")
+    public ResponseEntity<AppResponseDto<StudentResponseDto>> enrollStudent(@PathVariable String classId,
+            @RequestBody String jsonRequest) throws Exception {
+        log.info("Received request to enroll student in class: {}", classId);
+
+        // Use a simple JSON parsing to determine the type
+        StudentResponseDto response;
+
+        if (jsonRequest.contains("\"studentId\"") && !jsonRequest.contains("\"firstName\"")) {
+            // It's an enrollment request
+            StudentEnrollmentRequest enrollmentRequest = new com.fasterxml.jackson.databind.ObjectMapper()
+                    .readValue(jsonRequest, StudentEnrollmentRequest.class);
+            response = studentApi.enrollStudent(classId, enrollmentRequest.getStudentId());
+        } else {
+            // It's a create request
+            StudentCreateRequest createRequest = new com.fasterxml.jackson.databind.ObjectMapper()
+                    .readValue(jsonRequest, StudentCreateRequest.class);
+            response = studentApi.createAndEnrollStudent(classId, createRequest);
+        }
+
+        return ResponseEntity.ok(AppResponseDto.success(response, "Student enrolled successfully"));
+    }
+
+    /**
+     * Remove a student from a class.
+     */
+    @DeleteMapping("/classes/{classId}/students/{studentId}")
+    public ResponseEntity<AppResponseDto<Void>> removeStudentFromClass(@PathVariable String classId,
+            @PathVariable String studentId) {
+        log.info("Received request to remove student {} from class {}", studentId, classId);
+        studentApi.removeStudentFromClass(classId, studentId);
+        return ResponseEntity.noContent().<AppResponseDto<Void>>build();
+    }
 
     @GetMapping("/classes/{classId}/students")
     public ResponseEntity<AppResponseDto<?>> getStudentsByClass(@PathVariable String classId,
@@ -61,8 +141,9 @@ public class StudentController {
     @PostMapping("/classes/{classId}/students/import")
     public ResponseEntity<AppResponseDto<StudentImportResponseDto>> importStudents(@PathVariable String classId,
             @RequestParam(value = "file", required = true) MultipartFile file) {
-
-        log.info("Received student import request for file: {}", file != null ? file.getOriginalFilename() : "null");
+        log.info("Received student import request for class {} with file: {}",
+                classId,
+                file != null ? file.getOriginalFilename() : "null");
 
         StudentImportResponseDto result = studentImportApi.importStudentsFromCsv(file);
 
@@ -80,44 +161,26 @@ public class StudentController {
     }
 
     /**
-     * Get a student by ID.
-     *
-     * @param id the student ID
-     * @return the student data
+     * Import students to the general student list (not class-specific).
+     * This endpoint is kept for backward compatibility.
      */
-    @GetMapping("/{id}")
-    public ResponseEntity<AppResponseDto<StudentResponseDto>> getStudent(@PathVariable String id) {
-        log.info("Received request to get student with ID: {}", id);
-        StudentResponseDto response = studentApi.getStudentById(id);
-        return ResponseEntity.ok(AppResponseDto.success(response));
-    }
+    @PostMapping("/students/import")
+    public ResponseEntity<AppResponseDto<StudentImportResponseDto>> importStudentsGeneral(
+            @RequestParam(value = "file", required = true) MultipartFile file) {
+        log.info("Received student import request for file: {}", file != null ? file.getOriginalFilename() : "null");
 
-    /**
-     * Update a student by ID.
-     *
-     * @param id      the student ID
-     * @param request the update request
-     * @return the updated student data
-     */
-    @PutMapping("/{id}")
-    public ResponseEntity<AppResponseDto<StudentResponseDto>> updateStudent(@PathVariable String id,
-            @Valid @RequestBody StudentUpdateRequest request) {
+        StudentImportResponseDto result = studentImportApi.importStudentsFromCsv(file);
 
-        log.info("Received request to update student with ID: {}", id);
-        StudentResponseDto response = studentApi.updateStudent(id, request);
-        return ResponseEntity.ok(AppResponseDto.success(response, "Student updated successfully"));
-    }
-
-    /**
-     * Delete a student by ID.
-     *
-     * @param id the student ID
-     * @return success response
-     */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<AppResponseDto<Void>> deleteStudent(@PathVariable String id) {
-        log.info("Received request to delete student with ID: {}", id);
-        studentApi.deleteStudent(id);
-        return ResponseEntity.ok(AppResponseDto.success("Student deleted successfully"));
+        if (result.isSuccess()) {
+            return ResponseEntity.ok(AppResponseDto.success(result, result.getMessage()));
+        } else {
+            return ResponseEntity.badRequest()
+                    .body(AppResponseDto.<StudentImportResponseDto>builder()
+                            .success(false)
+                            .code(400)
+                            .data(result)
+                            .message(result.getMessage())
+                            .build());
+        }
     }
 }

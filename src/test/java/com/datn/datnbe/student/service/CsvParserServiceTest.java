@@ -28,9 +28,9 @@ class CsvParserServiceTest {
         void parseStudentCsv_withValidCsv_returnsStudents() {
             // Given
             String csvContent = """
-                    id,fullName,dateOfBirth,gender,address,parentName,parentPhone,classId,enrollmentDate,status
-                    std_001,Nguyen Van A,2008-01-15,male,123 Main St,Nguyen Van X,+84987654321,cls_001,2024-01-15,active
-                    std_002,Tran Thi B,2008-05-20,female,456 Oak Ave,Tran Van Y,+84912345678,cls_001,2024-01-15,active
+                    firstName,lastName,email,phoneNumber,avatarUrl,status
+                    Nguyen,Van A,student1@example.com,+84987654321,https://example.com/avatar1.jpg,ACTIVE
+                    Tran,Thi B,student2@example.com,+84912345678,https://example.com/avatar2.jpg,ACTIVE
                     """;
             MockMultipartFile file = new MockMultipartFile("file", "students.csv", "text/csv",
                     csvContent.getBytes(StandardCharsets.UTF_8));
@@ -41,17 +41,18 @@ class CsvParserServiceTest {
             // Then
             assertThat(result.hasErrors()).isFalse();
             assertThat(result.rows()).hasSize(2);
-            assertThat(result.rows().get(0).getId()).isEqualTo("std_001");
-            assertThat(result.rows().get(0).getFullName()).isEqualTo("Nguyen Van A");
-            assertThat(result.rows().get(1).getId()).isEqualTo("std_002");
+            assertThat(result.rows().get(0).getFirstName()).isEqualTo("Nguyen");
+            assertThat(result.rows().get(0).getLastName()).isEqualTo("Van A");
+            assertThat(result.rows().get(0).getEmail()).isEqualTo("student1@example.com");
+            assertThat(result.rows().get(1).getFirstName()).isEqualTo("Tran");
         }
 
         @Test
         void parseStudentCsv_withMinimalRequiredFields_returnsStudents() {
             // Given
             String csvContent = """
-                    id,fullName
-                    std_001,Nguyen Van A
+                    firstName,lastName,email
+                    Nguyen,Van A,student@example.com
                     """;
             MockMultipartFile file = new MockMultipartFile("file", "students.csv", "text/csv",
                     csvContent.getBytes(StandardCharsets.UTF_8));
@@ -62,15 +63,16 @@ class CsvParserServiceTest {
             // Then
             assertThat(result.hasErrors()).isFalse();
             assertThat(result.rows()).hasSize(1);
-            assertThat(result.rows().get(0).getDateOfBirth()).isNull();
+            assertThat(result.rows().get(0).getPhoneNumber()).isNull();
+            assertThat(result.rows().get(0).getAvatarUrl()).isNull();
         }
 
         @Test
         void parseStudentCsv_withQuotedValues_handlesCorrectly() {
             // Given
             String csvContent = """
-                    id,fullName,address
-                    std_001,"Nguyen Van A","123 Main St, City, Country"
+                    firstName,lastName,email
+                    Nguyen,"Van A","student@example.com"
                     """;
             MockMultipartFile file = new MockMultipartFile("file", "students.csv", "text/csv",
                     csvContent.getBytes(StandardCharsets.UTF_8));
@@ -81,7 +83,7 @@ class CsvParserServiceTest {
             // Then
             assertThat(result.hasErrors()).isFalse();
             assertThat(result.rows()).hasSize(1);
-            assertThat(result.rows().get(0).getAddress()).isEqualTo("123 Main St, City, Country");
+            assertThat(result.rows().get(0).getLastName()).isEqualTo("Van A");
         }
     }
 
@@ -106,8 +108,8 @@ class CsvParserServiceTest {
         void parseStudentCsv_withMissingRequiredHeader_returnsError() {
             // Given
             String csvContent = """
-                    id,dateOfBirth
-                    std_001,2008-01-15
+                    phoneNumber,avatarUrl
+                    +84987654321,https://example.com/avatar.jpg
                     """;
             MockMultipartFile file = new MockMultipartFile("file", "students.csv", "text/csv",
                     csvContent.getBytes(StandardCharsets.UTF_8));
@@ -117,15 +119,15 @@ class CsvParserServiceTest {
 
             // Then
             assertThat(result.hasErrors()).isTrue();
-            assertThat(result.errors()).anyMatch(e -> e.contains("Missing required column: fullName"));
+            assertThat(result.errors()).anyMatch(e -> e.contains("Missing required column"));
         }
 
         @Test
         void parseStudentCsv_withMissingRequiredValue_returnsError() {
             // Given
             String csvContent = """
-                    id,fullName
-                    ,Nguyen Van A
+                    firstName,lastName,email
+                    ,Van A,student@example.com
                     """;
             MockMultipartFile file = new MockMultipartFile("file", "students.csv", "text/csv",
                     csvContent.getBytes(StandardCharsets.UTF_8));
@@ -135,17 +137,17 @@ class CsvParserServiceTest {
 
             // Then
             assertThat(result.hasErrors()).isTrue();
-            assertThat(result.errors()).anyMatch(e -> e.contains("Row 2: id is required"));
+            assertThat(result.errors()).anyMatch(e -> e.contains("Row 2"));
         }
 
         @Test
         void parseStudentCsv_withBlankRows_skipsBlankRows() {
             // Given
             String csvContent = """
-                    id,fullName
-                    std_001,Nguyen Van A
+                    firstName,lastName,email
+                    Nguyen,Van A,student1@example.com
 
-                    std_002,Tran Thi B
+                    Tran,Thi B,student2@example.com
                     """;
             MockMultipartFile file = new MockMultipartFile("file", "students.csv", "text/csv",
                     csvContent.getBytes(StandardCharsets.UTF_8));

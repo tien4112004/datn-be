@@ -1,15 +1,13 @@
 package com.datn.datnbe.student.dto.request;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDate;
-
 /**
  * Request DTO for creating a new student.
- * Requires user creation fields (fullName, dateOfBirth, etc.) which will be used to create a user via UserProfileAPI.
  */
 @Getter
 @Setter
@@ -19,30 +17,20 @@ import java.time.LocalDate;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class StudentCreateRequest {
 
-    @NotBlank(message = "Full name is required")
-    String fullName;
+    @NotBlank(message = "First name is required")
+    @Size(max = 100, message = "First name must not exceed 100 characters")
+    String firstName;
 
-    LocalDate dateOfBirth;
+    @NotBlank(message = "Last name is required")
+    @Size(max = 100, message = "Last name must not exceed 100 characters")
+    String lastName;
 
-    @Size(max = 50, message = "Gender must not exceed 50 characters")
-    String gender;
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email should be valid")
+    String email;
 
-    @Size(max = 255, message = "Address must not exceed 255 characters")
-    String address;
+    @Size(max = 20, message = "Phone number must not exceed 20 characters")
+    String phoneNumber;
 
-    @NotBlank(message = "Parent name is required")
-    String parentName;
-
-    @NotBlank(message = "Parent phone is required")
-    String parentPhone;
-
-    @Size(max = 100, message = "Parent contact email must not exceed 100 characters")
-    String parentContactEmail;
-
-    @NotBlank(message = "Class ID is required")
-    String classId;
-
-    LocalDate enrollmentDate;
-
-    String status;
+    String avatarUrl;
 }

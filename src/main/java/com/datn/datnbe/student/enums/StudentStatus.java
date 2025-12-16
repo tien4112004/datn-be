@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum StudentStatus {
-    ACTIVE("active"), INACTIVE("inactive"), GRADUATED("graduated"), TRANSFERRED("transferred"), SUSPENDED("suspended");
+    ACTIVE("active"), TRANSFERRED("transferred"), GRADUATED("graduated"), DROPPED("dropped");
 
     private final String value;
 

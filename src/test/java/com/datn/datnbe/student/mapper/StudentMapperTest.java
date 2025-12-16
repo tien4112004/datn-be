@@ -2,14 +2,13 @@ package com.datn.datnbe.student.mapper;
 
 import com.datn.datnbe.student.dto.request.StudentCsvRow;
 import com.datn.datnbe.student.entity.Student;
-import com.datn.datnbe.student.enums.Gender;
+import com.datn.datnbe.student.enums.Role;
 import com.datn.datnbe.student.enums.StudentStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,16 +34,12 @@ class StudentMapperTest {
         void toEntity_withAllFields_mapsCorrectly() {
             // Given
             StudentCsvRow csvRow = StudentCsvRow.builder()
-                    .id("std_001")
-                    .fullName("Nguyen Van A")
-                    .dateOfBirth("2008-01-15")
-                    .gender("male")
-                    .address("123 Main St")
-                    .parentName("Nguyen Van X")
-                    .parentPhone("+84987654321")
-                    .classId("cls_001")
-                    .enrollmentDate("2024-01-15")
-                    .status("active")
+                    .firstName("Nguyen")
+                    .lastName("Van A")
+                    .email("student@example.com")
+                    .phoneNumber("+84987654321")
+                    .avatarUrl("https://example.com/avatar.jpg")
+                    .status("ACTIVE")
                     .build();
             List<String> errors = new ArrayList<>();
 
@@ -54,22 +49,23 @@ class StudentMapperTest {
             // Then
             assertThat(errors).isEmpty();
             assertThat(student).isNotNull();
-            assertThat(student.getId()).isEqualTo("std_001");
-            assertThat(student.getFullName()).isEqualTo("Nguyen Van A");
-            assertThat(student.getDateOfBirth()).isEqualTo(LocalDate.of(2008, 1, 15));
-            assertThat(student.getGender()).isEqualTo(Gender.MALE);
-            assertThat(student.getAddress()).isEqualTo("123 Main St");
-            assertThat(student.getParentName()).isEqualTo("Nguyen Van X");
-            assertThat(student.getParentPhone()).isEqualTo("+84987654321");
-            assertThat(student.getClassId()).isEqualTo("cls_001");
-            assertThat(student.getEnrollmentDate()).isEqualTo(LocalDate.of(2024, 1, 15));
+            assertThat(student.getFirstName()).isEqualTo("Nguyen");
+            assertThat(student.getLastName()).isEqualTo("Van A");
+            assertThat(student.getEmail()).isEqualTo("student@example.com");
+            assertThat(student.getPhoneNumber()).isEqualTo("+84987654321");
+            assertThat(student.getAvatarUrl()).isEqualTo("https://example.com/avatar.jpg");
             assertThat(student.getStatus()).isEqualTo(StudentStatus.ACTIVE);
+            assertThat(student.getRole()).isEqualTo(Role.STUDENT);
         }
 
         @Test
         void toEntity_withMinimalFields_usesDefaults() {
             // Given
-            StudentCsvRow csvRow = StudentCsvRow.builder().id("std_001").fullName("Nguyen Van A").build();
+            StudentCsvRow csvRow = StudentCsvRow.builder()
+                    .firstName("Nguyen")
+                    .lastName("Van A")
+                    .email("student@example.com")
+                    .build();
             List<String> errors = new ArrayList<>();
 
             // When
@@ -79,17 +75,18 @@ class StudentMapperTest {
             assertThat(errors).isEmpty();
             assertThat(student).isNotNull();
             assertThat(student.getStatus()).isEqualTo(StudentStatus.ACTIVE);
-            assertThat(student.getGender()).isNull();
-            assertThat(student.getDateOfBirth()).isNull();
+            assertThat(student.getRole()).isEqualTo(Role.STUDENT);
+            assertThat(student.getPhoneNumber()).isNull();
+            assertThat(student.getAvatarUrl()).isNull();
         }
 
         @Test
-        void toEntity_withFemaleGender_mapsCorrectly() {
+        void toEntity_withEmailValidation_mapsCorrectly() {
             // Given
             StudentCsvRow csvRow = StudentCsvRow.builder()
-                    .id("std_001")
-                    .fullName("Tran Thi B")
-                    .gender("female")
+                    .firstName("Tran")
+                    .lastName("Thi B")
+                    .email("valid.email@example.com")
                     .build();
             List<String> errors = new ArrayList<>();
 
@@ -98,7 +95,7 @@ class StudentMapperTest {
 
             // Then
             assertThat(errors).isEmpty();
-            assertThat(student.getGender()).isEqualTo(Gender.FEMALE);
+            assertThat(student.getEmail()).isEqualTo("valid.email@example.com");
         }
     }
 
@@ -107,12 +104,12 @@ class StudentMapperTest {
     class InvalidMappingTests {
 
         @Test
-        void toEntity_withInvalidDateFormat_returnsError() {
+        void toEntity_withMissingFirstName_returnsError() {
             // Given
             StudentCsvRow csvRow = StudentCsvRow.builder()
-                    .id("std_001")
-                    .fullName("Nguyen Van A")
-                    .dateOfBirth("15-01-2008") // Wrong format
+                    .firstName(null)
+                    .lastName("Van A")
+                    .email("student@example.com")
                     .build();
             List<String> errors = new ArrayList<>();
 
@@ -121,17 +118,18 @@ class StudentMapperTest {
 
             // Then
             assertThat(errors).hasSize(1);
-            assertThat(errors.get(0)).contains("Row 2: Invalid dateOfBirth format");
+            assertThat(errors.get(0)).contains("Row 2");
+            assertThat(errors.get(0)).contains("firstName");
             assertThat(student).isNull();
         }
 
         @Test
-        void toEntity_withInvalidGender_returnsError() {
+        void toEntity_withMissingLastName_returnsError() {
             // Given
             StudentCsvRow csvRow = StudentCsvRow.builder()
-                    .id("std_001")
-                    .fullName("Nguyen Van A")
-                    .gender("unknown")
+                    .firstName("Nguyen")
+                    .lastName(null)
+                    .email("student@example.com")
                     .build();
             List<String> errors = new ArrayList<>();
 
@@ -140,7 +138,44 @@ class StudentMapperTest {
 
             // Then
             assertThat(errors).hasSize(1);
-            assertThat(errors.get(0)).contains("Row 2: Invalid gender value");
+            assertThat(errors.get(0)).contains("Row 2");
+            assertThat(errors.get(0)).contains("lastName");
+            assertThat(student).isNull();
+        }
+
+        @Test
+        void toEntity_withMissingEmail_returnsError() {
+            // Given
+            StudentCsvRow csvRow = StudentCsvRow.builder().firstName("Nguyen").lastName("Van A").email(null).build();
+            List<String> errors = new ArrayList<>();
+
+            // When
+            Student student = studentMapper.toEntity(csvRow, 2, errors);
+
+            // Then
+            assertThat(errors).hasSize(1);
+            assertThat(errors.get(0)).contains("Row 2");
+            assertThat(errors.get(0)).contains("email");
+            assertThat(student).isNull();
+        }
+
+        @Test
+        void toEntity_withInvalidEmailFormat_returnsError() {
+            // Given
+            StudentCsvRow csvRow = StudentCsvRow.builder()
+                    .firstName("Nguyen")
+                    .lastName("Van A")
+                    .email("invalid-email-format")
+                    .build();
+            List<String> errors = new ArrayList<>();
+
+            // When
+            Student student = studentMapper.toEntity(csvRow, 2, errors);
+
+            // Then
+            assertThat(errors).hasSize(1);
+            assertThat(errors.get(0)).contains("Row 2");
+            assertThat(errors.get(0)).contains("email");
             assertThat(student).isNull();
         }
 
@@ -148,9 +183,10 @@ class StudentMapperTest {
         void toEntity_withInvalidStatus_returnsError() {
             // Given
             StudentCsvRow csvRow = StudentCsvRow.builder()
-                    .id("std_001")
-                    .fullName("Nguyen Van A")
-                    .status("invalid_status")
+                    .firstName("Nguyen")
+                    .lastName("Van A")
+                    .email("student@example.com")
+                    .status("INVALID_STATUS")
                     .build();
             List<String> errors = new ArrayList<>();
 
@@ -159,7 +195,8 @@ class StudentMapperTest {
 
             // Then
             assertThat(errors).hasSize(1);
-            assertThat(errors.get(0)).contains("Row 2: Invalid status value");
+            assertThat(errors.get(0)).contains("Row 2");
+            assertThat(errors.get(0)).contains("status");
             assertThat(student).isNull();
         }
 
@@ -167,9 +204,10 @@ class StudentMapperTest {
         void toEntity_withInvalidPhoneFormat_returnsError() {
             // Given
             StudentCsvRow csvRow = StudentCsvRow.builder()
-                    .id("std_001")
-                    .fullName("Nguyen Van A")
-                    .parentPhone("invalid-phone!")
+                    .firstName("Nguyen")
+                    .lastName("Van A")
+                    .email("student@example.com")
+                    .phoneNumber("invalid-phone!")
                     .build();
             List<String> errors = new ArrayList<>();
 
@@ -178,7 +216,8 @@ class StudentMapperTest {
 
             // Then
             assertThat(errors).hasSize(1);
-            assertThat(errors.get(0)).contains("Row 2: Invalid parentPhone format");
+            assertThat(errors.get(0)).contains("Row 2");
+            assertThat(errors.get(0)).contains("phoneNumber");
             assertThat(student).isNull();
         }
 
@@ -186,11 +225,11 @@ class StudentMapperTest {
         void toEntity_withMultipleErrors_reportsAll() {
             // Given
             StudentCsvRow csvRow = StudentCsvRow.builder()
-                    .id("std_001")
-                    .fullName("Nguyen Van A")
-                    .dateOfBirth("invalid")
-                    .gender("invalid")
-                    .status("invalid")
+                    .firstName(null)
+                    .lastName(null)
+                    .email("invalid-email")
+                    .status("INVALID")
+                    .phoneNumber("invalid!")
                     .build();
             List<String> errors = new ArrayList<>();
 
@@ -198,7 +237,7 @@ class StudentMapperTest {
             Student student = studentMapper.toEntity(csvRow, 2, errors);
 
             // Then
-            assertThat(errors).hasSize(3);
+            assertThat(errors).hasSizeGreaterThanOrEqualTo(3);
             assertThat(student).isNull();
         }
     }

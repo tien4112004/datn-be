@@ -13,15 +13,11 @@ import java.time.LocalDate;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class StudentCsvRow {
-    String id;
-    String fullName;
-    String dateOfBirth;
-    String gender;
-    String address;
-    String parentName;
-    String parentPhone;
-    String classId;
-    String enrollmentDate;
+    String firstName;
+    String lastName;
+    String email;
+    String phoneNumber;
+    String avatarUrl;
     String status;
     String createdAt;
     String updatedAt;
