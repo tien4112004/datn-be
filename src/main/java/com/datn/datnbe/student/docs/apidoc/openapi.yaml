@@ -1,0 +1,462 @@
+openapi: 3.0.1
+
+info:
+  title: Presentation Service API
+  description: >-
+    This collection provides a set of APIs for managing and generating
+    presentations. It allows users to perform CRUD (Create, Read, Update,
+    Delete) operations on presentations, as well as leverage artificial
+    intelligence to generate presentation slides based on specified topics and
+    requirements.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080/api
+    description: Local development server
+  - url: https://api.huy-devops.site/api
+    description: Production server
+
+tags:
+  - name: Backend-Server / Presentations
+    description: All operations related to creating, managing, and generating presentations.
+  - name: Backend-Server / Images
+    description: Endpoints for image generation using AI models.
+  - name: Backend-Server / Models
+    description: Endpoints for managing AI model configurations.
+  - name: Backend-Server / Mindmaps
+    description: Endpoints for managing mindmaps.
+  - name: Backend-Server / Authentication
+    description: Endpoints for user authentication and authorization.
+  - name: Backend-Server / Users
+    description: Endpoints for managing user profiles and settings.
+  - name: Backend-Server / Admin-UserManagement
+    description: Admin endpoints for managing users.
+  - name: AI-Worker / PresentationGeneration
+    description: Endpoints for generating presentations using AI.
+  - name: AI-Worker / OutlineGeneration
+    description: Endpoints for generating presentation outlines using AI.
+  - name: AI-Worker / ImageGeneration
+    description: Endpoints for generating images using AI models.
+  - name: CMS / Classes
+    description: Endpoints for managing classes.
+  - name: CMS / Students
+    description: Endpoints for managing students and enrollment.
+  - name: CMS / Schedules
+    description: Endpoints for managing class schedules and periods.
+  - name: CMS / Lessons
+    description: Endpoints for managing lessons and learning objectives.
+  - name: CMS / Seating Chart
+    description: Endpoints for managing classroom seating arrangements.
+  - name: CMS / Dashboard
+    description: Endpoints for unified dashboard views combining posts and assignments.
+
+paths:
+  /presentations:
+    $ref: './paths/presentations.yaml#/paths/~1presentations'
+  /presentations/{id}:
+    $ref: './paths/presentations.yaml#/paths/~1presentations~1{id}'
+  /presentations/{id}/title:
+    $ref: './paths/presentations.yaml#/paths/~1presentations~1{id}~1title'
+  /presentations/{presentationId}/ai-result:
+    $ref: './paths/presentations.yaml#/paths/~1presentations~1{presentationId}~1ai-result'
+  /presentations/{id}/slides:
+    $ref: './paths/presentations.yaml#/paths/~1presentations~1{id}~1slides'
+  /presentations/generate:
+    $ref: './paths/presentations.yaml#/paths/~1presentations~1generate'
+  /presentations/outline-generate:
+    $ref: './paths/presentations.yaml#/paths/~1presentations~1outline-generate'
+  /presentations/{id}/parse:
+    $ref: './paths/presentations.yaml#/paths/~1presentations~1{id}~1parse'
+  /images/generate:
+    $ref: './paths/images.yaml#/paths/~1images~1generate'
+  /images/generate-with-idempotency:
+    $ref: './paths/images.yaml#/paths/~1images~1generate-with-idempotency'
+  /images:
+    $ref: './paths/images.yaml#/paths/~1images'
+  /images/{id}:
+    $ref: './paths/images.yaml#/paths/~1images~1{id}'
+  /models:
+    $ref: './paths/models.yaml#/paths/~1models'
+  /mindmaps:
+    $ref: './paths/mindmaps.yaml#/paths/~1mindmaps'
+  /mindmaps/{id}:
+    $ref: './paths/mindmaps.yaml#/paths/~1mindmaps~1{id}'
+  /mindmaps/{id}/title:
+    $ref: './paths/mindmaps.yaml#/paths/~1mindmaps~1{id}~1title'
+  /mindmaps/generate:
+    $ref: './paths/mindmaps.yaml#/paths/~1mindmaps~1generate'
+  /auth/signin:
+    $ref: './paths/auth.yaml#/paths/~1auth~1signin'
+  /auth/signup:
+    $ref: './paths/auth.yaml#/paths/~1auth~1signup'
+  /auth/exchange:
+    $ref: './paths/auth.yaml#/paths/~1auth~1exchange'
+  /auth/google/authorize:
+    $ref: './paths/auth.yaml#/paths/~1auth~1google~1authorize'
+  /user/me:
+    $ref: './paths/auth.yaml#/paths/~1user~1me'
+  /user/me/avatar:
+    $ref: './paths/auth.yaml#/paths/~1user~1me~1avatar'
+  /admin/users:
+    $ref: './paths/admin.yaml#/paths/~1admin~1users'
+  /admin/users/{id}:
+    $ref: './paths/admin.yaml#/paths/~1admin~1users~1{id}'
+  /admin/slide/theme:
+    $ref: './paths/admin.yaml#/paths/~1admin~1slide~1theme'
+  /admin/slide/theme/{id}:
+    $ref: './paths/admin.yaml#/paths/~1admin~1slide~1theme~1{id}'
+  /admin/slide/layout:
+    $ref: './paths/admin.yaml#/paths/~1admin~1slide~1layout'
+  /admin/slide/layout/{id}:
+    $ref: './paths/admin.yaml#/paths/~1admin~1slide~1layout~1{id}'
+  /outline/generate/stream:
+    $ref: './paths/ai-worker.yaml#/paths/~1outline~1generate~1stream'
+  /outline/generate:
+    $ref: './paths/ai-worker.yaml#/paths/~1outline~1generate'
+  /presentations/generate/:
+    $ref: './paths/ai-worker.yaml#/paths/~1presentations~1generate~1'
+  /presentations/generate/stream:
+    $ref: './paths/ai-worker.yaml#/paths/~1presentations~1generate~1stream'
+  /image/generate:
+    $ref: './paths/ai-worker.yaml#/paths/~1image~1generate'
+  /classes:
+    $ref: './paths/classes.yaml#/paths/~1classes'
+  /classes/{classId}:
+    $ref: './paths/classes.yaml#/paths/~1classes~1{classId}'
+  /classes/{classId}/seating-chart:
+    $ref: './paths/classes.yaml#/paths/~1classes~1{classId}~1seating-chart'
+  /classes/{classId}/students:
+    $ref: './paths/classes.yaml#/paths/~1classes~1{classId}~1students'
+  /classes/{classId}/students/{studentId}:
+    $ref: './paths/classes.yaml#/paths/~1classes~1{classId}~1students~1{studentId}'
+  /classes/{classId}/students/import:
+    $ref: './paths/classes.yaml#/paths/~1classes~1{classId}~1students~1import'
+  /students/{studentId}:
+    $ref: './paths/classes.yaml#/paths/~1students~1{studentId}'
+  /classes/{classId}/schedules:
+    $ref: './paths/classes.yaml#/paths/~1classes~1{classId}~1schedules'
+  /classes/{classId}/periods:
+    $ref: './paths/classes.yaml#/paths/~1classes~1{classId}~1periods'
+  /classes/{classId}/periods/{id}:
+    $ref: './paths/classes.yaml#/paths/~1classes~1{classId}~1periods~1{id}'
+  /classes/{classId}/lessons:
+    $ref: './paths/classes.yaml#/paths/~1classes~1{classId}~1lessons'
+  /lessons:
+    $ref: './paths/classes.yaml#/paths/~1lessons'
+  /lessons/{id}:
+    $ref: './paths/classes.yaml#/paths/~1lessons~1{id}'
+  /lessons/{id}/status:
+    $ref: './paths/classes.yaml#/paths/~1lessons~1{id}~1status'
+  /classes/{classId}/join-code:
+    $ref: './paths/classes.yaml#/paths/~1classes~1{classId}~1join-code'
+  /classes/join/{joinCode}:
+    $ref: './paths/classes.yaml#/paths/~1classes~1join~1{joinCode}'
+  /classes/{classId}/students/bulk-create-accounts:
+    $ref: './paths/classes.yaml#/paths/~1classes~1{classId}~1students~1bulk-create-accounts'
+  /classes/{classId}/dashboard:
+    $ref: './paths/classes.yaml#/paths/~1classes~1{classId}~1dashboard'
+  /lessons/{lessonId}/resources:
+    $ref: './paths/classes.yaml#/paths/~1lessons~1{lessonId}~1resources'
+  /lesson-resources/{resourceId}:
+    $ref: './paths/classes.yaml#/paths/~1lesson-resources~1{resourceId}'
+  /lessons/{lessonId}/submissions:
+    $ref: './paths/classes.yaml#/paths/~1lessons~1{lessonId}~1submissions'
+  /submissions/{submissionId}:
+    $ref: './paths/classes.yaml#/paths/~1submissions~1{submissionId}'
+  /classes/{classId}/posts:
+    $ref: './paths/classes.yaml#/paths/~1classes~1{classId}~1posts'
+  /posts/{postId}:
+    $ref: './paths/classes.yaml#/paths/~1posts~1{postId}'
+  /posts/{postId}/pin:
+    $ref: './paths/classes.yaml#/paths/~1posts~1{postId}~1pin'
+  /posts/{postId}/comments:
+    $ref: './paths/classes.yaml#/paths/~1posts~1{postId}~1comments'
+  /comments/{commentId}:
+    $ref: './paths/classes.yaml#/paths/~1comments~1{commentId}'
+
+components:
+  schemas:
+    # Presentation & Slide Schemas
+    AppResponseDto:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/responses/AppResponseDto'
+    Error:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/Error'
+    Pagination:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/responses/Pagination'
+    Presentation:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/Presentation'
+    Slide:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/Slide'
+    SlideElement:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/SlideElement'
+    AIPresentation:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/AIPresentation'
+    CoverSlide:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/CoverSlide'
+    ContentsSlide:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/ContentsSlide'
+    TransitionSlide:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/TransitionSlide'
+    ContentSlide:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/ContentSlide'
+    EndSlide:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/EndSlide'
+    ModelResponse:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/ModelResponse'
+    ImageGenerationRequest:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/ImageGenerationRequest'
+    ImageGenerationResponse:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/ImageGenerationResponse'
+    MediaResponse:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/MediaResponse'
+    AI-Result:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/AI-Result'
+    HTTPValidationError:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/HTTPValidationError'
+    ImageGenerateRequest:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/ImageGenerateRequest'
+    ImageGenerateResponse:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/ImageGenerateResponse'
+    OutlineGenerateRequest:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/OutlineGenerateRequest'
+    PresentationGenerateRequest:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/PresentationGenerateRequest'
+    ValidationError:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/ValidationError'
+    # Mindmap Schemas
+    MindmapBaseNode:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/MindmapBaseNode'
+    MindmapTextNode:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/MindmapTextNode'
+    MindmapRootNode:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/MindmapRootNode'
+    MindmapShapeNode:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/MindmapShapeNode'
+    MindmapImageNode:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/MindmapImageNode'
+    MindmapNode:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/MindmapNode'
+    Mindmap:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/Mindmap'
+    MindmapGenerateRequest:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/MindmapGenerateRequest'
+    MindmapNodeContent:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/MindmapNodeContent'
+    MindmapGenerateResponse:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/MindmapGenerateResponse'
+    # User Management Schemas
+    ErrorResponse:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/ErrorResponse'
+    UserProfileResponse:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/UserProfileResponse'
+    SignInResponse:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/SignInResponse'
+    SignInRequest:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/SignInRequest'
+    SignupRequest:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/SignupRequest'
+    UserProfileUpdateRequest:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/UserProfileUpdateRequest'
+    # CMS Schemas
+    Class:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/Class'
+    ClassCreateRequest:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/ClassCreateRequest'
+    ClassUpdateRequest:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/ClassUpdateRequest'
+    ClassCollectionRequest:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/ClassCollectionRequest'
+    Student:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/Student'
+    StudentCreateRequest:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/StudentCreateRequest'
+    StudentUpdateRequest:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/StudentUpdateRequest'
+    ClassEnrollment:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/ClassEnrollment'
+    Lesson:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/Lesson'
+    LessonCreateRequest:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/LessonCreateRequest'
+    LessonUpdateRequest:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/LessonUpdateRequest'
+    LessonResource:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/LessonResource'
+    LessonResourceCreateRequest:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/LessonResourceCreateRequest'
+    Submission:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/Submission'
+    SubmissionCreateRequest:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/SubmissionCreateRequest'
+    SubmissionUpdateRequest:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/SubmissionUpdateRequest'
+    Post:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/Post'
+    PostCreateRequest:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/PostCreateRequest'
+    PostUpdateRequest:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/PostUpdateRequest'
+    Comment:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/Comment'
+    CommentCreateRequest:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/CommentCreateRequest'
+    CommentUpdateRequest:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/CommentUpdateRequest'
+    PostResourceMapping:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/PostResourceMapping'
+    DashboardItem:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/DashboardItem'
+    DashboardQuery:
+      type: object
+      allOf:
+        - $ref: './schemas.yaml#/components/schemas/DashboardQuery'
+
+  responses:
+    UnauthorizedError:
+      $ref: './schemas.yaml#/components/responses/UnauthorizedError'
+    ForbiddenError:
+      $ref: './schemas.yaml#/components/responses/ForbiddenError'
+    NotFoundError:
+      $ref: './schemas.yaml#/components/responses/NotFoundError'
+    BadRequestError:
+      $ref: './schemas.yaml#/components/responses/BadRequestError'
+    ConflictError:
+      $ref: './schemas.yaml#/components/responses/ConflictError'
+    InternalServerError:
+      $ref: './schemas.yaml#/components/responses/InternalServerError'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Bearer token for authentication. Required for all endpoints except public endpoints.
+
+security:
+  - bearerAuth: []

@@ -10,8 +10,8 @@ public interface StudentImportApi {
 
     /**
      * Import students from a CSV file.
-     * The CSV should contain columns: id, fullName, dateOfBirth, gender, address,
-     * parentName, parentPhone, classId, enrollmentDate, status, createdAt, updatedAt
+     * The CSV should contain columns: firstName, lastName, email, phoneNumber, avatarUrl, status
+     * Required columns: firstName, lastName, email
      *
      * @param file the CSV file to import
      * @return import result with success status, count of created students, and any errors

@@ -1,0 +1,241 @@
+// Database Schema for Class Management System
+// Updated: Comments link directly to posts
+
+// ENUMS
+Enum user_role_enum {
+  admin
+  teacher
+  student
+  parent
+}
+
+Enum gender_enum {
+  male
+  female
+  other
+}
+
+Enum student_status_enum {
+  active
+  transferred
+  graduated
+  dropped
+}
+
+Enum enrollment_status_enum {
+  active
+  dropped
+  completed
+}
+
+Enum post_type_enum {
+  announcement
+  schedule_event
+  general
+}
+
+Enum lesson_status_enum {
+  draft
+  published
+  archived
+}
+
+Enum lesson_type_enum {
+  assignment
+  material
+  lecture
+  quiz
+}
+
+Enum resource_type_enum {
+  presentation
+  mindmap
+  document
+  video
+  audio
+  image
+  worksheet
+  equipment
+  other
+}
+
+Enum submission_status_enum {
+  draft
+  submitted
+  returned
+  late
+  graded
+}
+
+// TABLES
+
+Table users {
+  id char(36) [pk, default: `UUID()`]
+  keycloak_user_id char(36)
+  first_name varchar(100) [not null]
+  last_name varchar(100) [not null]
+  email varchar(100) [unique, not null]
+  role user_role_enum [default: 'student']
+  phone_number varchar(20)
+  avatar_url varchar(255)
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`]
+  deleted_at timestamp [default: null]
+}
+
+Table classes {
+  id char(36) [pk, default: `UUID()`]
+  owner_id char(36) [not null]
+  name varchar(50) [not null]
+  description text
+  join_code varchar(10) [unique]
+  settings json [note: 'Class specific settings like theme, allow_comments, etc.']
+  is_active boolean [default: true]
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`]
+
+  indexes {
+    owner_id [name: 'idx_classes_owner']
+    join_code [name: 'idx_classes_code']
+  }
+}
+
+Table class_enrollments {
+  id char(36) [pk, default: `UUID()`]
+  class_id char(36) [not null]
+  student_id char(36) [not null]
+  enrolled_at date [default: `CURRENT_DATE`]
+  status enrollment_status_enum [default: 'active']
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`]
+
+  indexes {
+    (class_id, student_id) [unique, name: 'unique_enrollment']
+    class_id [name: 'idx_enrollments_class']
+    student_id [name: 'idx_enrollments_student']
+  }
+  note: 'N-N Junction Table for Classes and Students'
+}
+
+Table posts {
+  id char(36) [pk, default: `UUID()`]
+  class_id char(36) [not null]
+  author_id char(36) [not null]
+  content text [not null]
+  type post_type_enum [default: 'announcement']
+  attachments varchar[] [note: 'Array of URL strings']
+  linked_resources uuid[]
+  is_pinned boolean
+  allow_comments boolean
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`]
+
+  indexes {
+    class_id [name: 'idx_posts_class']
+    author_id [name: 'idx_posts_author']
+  }
+  note: 'Handles Announcements and Calendar Events/Schedules'
+}
+
+Table lessons {
+  id char(36) [pk, default: `UUID()`]
+  class_id char(36) [not null]
+  author_id char(36) [not null]
+  title varchar(200) [not null]
+  subject varchar(50) [note: 'Tag for the lesson, example: Math-1']
+  content text [not null, note: 'Instructions or lesson content']
+  
+  status lesson_status_enum [default: 'draft']
+  type lesson_type_enum [not null, default: 'lecture']
+  
+  learning_objectives json [note: 'Array: {description, type, is_achieved, notes}']
+  lesson_plan text [note: 'Private teacher notes/plan']
+  
+  // Assignment specific fields
+  max_points integer
+  due_date timestamp
+  
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`]
+
+  indexes {
+    class_id [name: 'idx_lessons_class']
+    author_id [name: 'idx_lessons_author']
+  }
+  
+  note: '''
+    Combined Lessons and Assignments.
+    Teacher parts: learning_objectives, lesson_plan
+    Student parts: content, attachments, due_date
+  '''
+}
+
+Table lesson_resources {
+  id char(36) [pk, default: `UUID()`]
+  lesson_id char(36) [not null]
+  name varchar(200) [not null]
+  type resource_type_enum [not null]
+  url varchar(500)
+  file_path varchar(500)
+  description text
+  is_required boolean [default: false]
+  is_prepared boolean [default: false]
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+}
+
+Table submissions {
+  id char(36) [pk, default: `UUID()`]
+  lesson_id char(36) [not null, note: 'Links to a lesson where type=assignment']
+  student_id char(36) [not null]
+  
+  file_urls json [note: 'Array of file URLs uploaded by student']
+  
+  grade integer
+  feedback text
+  status submission_status_enum [default: 'draft']
+  
+  submitted_at timestamp
+  returned_at timestamp
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`]
+
+  indexes {
+    (lesson_id, student_id) [unique, name: 'unique_submission']
+  }
+  note: 'Student work for assignments'
+}
+
+Table comments {
+  id char(36) [pk, default: `UUID()`]
+  post_id char(36) [not null]
+  user_id char(36) [not null]
+  content text [not null]
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`]
+  deleted_at timestamp
+
+  indexes {
+    post_id [name: 'idx_comments_post']
+    user_id [name: 'idx_comments_user']
+  }
+}
+
+// RELATIONSHIPS
+
+Ref: classes.owner_id > users.id
+Ref: class_enrollments.class_id > classes.id [delete: cascade]
+Ref: class_enrollments.student_id > users.id [delete: cascade]
+
+Ref: posts.class_id > classes.id [delete: cascade]
+Ref: posts.author_id > users.id
+
+Ref: lessons.class_id > classes.id [delete: cascade]
+Ref: lessons.author_id > users.id
+
+Ref: lesson_resources.lesson_id > lessons.id [delete: cascade]
+
+Ref: submissions.lesson_id > lessons.id [delete: cascade]
+Ref: submissions.student_id > users.id [delete: cascade]
+
+Ref: comments.post_id > posts.id [delete: cascade]
+Ref: comments.user_id > users.id [delete: cascade]

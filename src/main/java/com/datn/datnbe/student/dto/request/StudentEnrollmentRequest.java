@@ -1,10 +1,11 @@
 package com.datn.datnbe.student.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 /**
- * Represents a single row from the CSV file for student import.
+ * Request DTO for enrolling a student in a class.
  */
 @Getter
 @Setter
@@ -12,11 +13,8 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class StudentCsvRow {
-    String firstName;
-    String lastName;
-    String email;
-    String phoneNumber;
-    String avatarUrl;
-    String status;
+public class StudentEnrollmentRequest {
+
+    @NotBlank(message = "Student ID is required")
+    String studentId;
 }

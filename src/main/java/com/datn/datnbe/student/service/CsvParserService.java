@@ -19,20 +19,10 @@ import java.util.*;
 @Slf4j
 public class CsvParserService {
 
-    private static final Set<String> REQUIRED_HEADERS = Set.of("id", "fullName");
+    private static final Set<String> REQUIRED_HEADERS = Set.of("firstName", "lastName", "email");
 
-    private static final Set<String> VALID_HEADERS = Set.of("id",
-            "fullName",
-            "dateOfBirth",
-            "gender",
-            "address",
-            "parentName",
-            "parentPhone",
-            "classId",
-            "enrollmentDate",
-            "status",
-            "createdAt",
-            "updatedAt");
+    private static final Set<String> VALID_HEADERS = Set
+            .of("firstName", "lastName", "email", "phoneNumber", "avatarUrl", "status");
 
     /**
      * Parse CSV file and return list of StudentCsvRow objects with any parsing errors.
@@ -123,16 +113,20 @@ public class CsvParserService {
             List<String> errors) {
         String[] values = splitCsvLine(line);
 
-        String id = getValueOrNull(values, headerMap.get("id"));
-        String fullName = getValueOrNull(values, headerMap.get("fullName"));
+        String firstName = getValueOrNull(values, headerMap.get("firstName"));
+        String lastName = getValueOrNull(values, headerMap.get("lastName"));
+        String email = getValueOrNull(values, headerMap.get("email"));
 
         // Validate required fields
         List<String> rowErrors = new ArrayList<>();
-        if (id == null || id.isBlank()) {
-            rowErrors.add("id is required");
+        if (firstName == null || firstName.isBlank()) {
+            rowErrors.add("firstName is required");
         }
-        if (fullName == null || fullName.isBlank()) {
-            rowErrors.add("fullName is required");
+        if (lastName == null || lastName.isBlank()) {
+            rowErrors.add("lastName is required");
+        }
+        if (email == null || email.isBlank()) {
+            rowErrors.add("email is required");
         }
 
         if (!rowErrors.isEmpty()) {
@@ -141,18 +135,12 @@ public class CsvParserService {
         }
 
         return StudentCsvRow.builder()
-                .id(id)
-                .fullName(fullName)
-                .dateOfBirth(getValueOrNull(values, headerMap.get("dateOfBirth")))
-                .gender(getValueOrNull(values, headerMap.get("gender")))
-                .address(getValueOrNull(values, headerMap.get("address")))
-                .parentName(getValueOrNull(values, headerMap.get("parentName")))
-                .parentPhone(getValueOrNull(values, headerMap.get("parentPhone")))
-                .classId(getValueOrNull(values, headerMap.get("classId")))
-                .enrollmentDate(getValueOrNull(values, headerMap.get("enrollmentDate")))
+                .firstName(firstName)
+                .lastName(lastName)
+                .email(email)
+                .phoneNumber(getValueOrNull(values, headerMap.get("phoneNumber")))
+                .avatarUrl(getValueOrNull(values, headerMap.get("avatarUrl")))
                 .status(getValueOrNull(values, headerMap.get("status")))
-                .createdAt(getValueOrNull(values, headerMap.get("createdAt")))
-                .updatedAt(getValueOrNull(values, headerMap.get("updatedAt")))
                 .build();
     }
 

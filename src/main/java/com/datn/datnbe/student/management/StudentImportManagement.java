@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Management service for student import operations.
@@ -55,36 +54,34 @@ public class StudentImportManagement implements StudentImportApi {
             }
         }
 
-        // Step 3: Check for duplicate IDs within the CSV
-        Set<String> seenIds = new HashSet<>();
-        Set<String> duplicateIds = new HashSet<>();
-        for (Student student : students) {
-            if (!seenIds.add(student.getId())) {
-                duplicateIds.add(student.getId());
-            }
-        }
-        if (!duplicateIds.isEmpty()) {
-            errors.add(String.format("Duplicate student IDs found in CSV: %s", String.join(", ", duplicateIds)));
-        }
-
-        // Step 4: Check for existing IDs in database
+        // Step 3: Check for duplicate emails within the CSV and in database
         if (!students.isEmpty()) {
-            Set<String> studentIds = students.stream().map(Student::getId).collect(Collectors.toSet());
+            Set<String> seenEmails = new HashSet<>();
+            Set<String> duplicateEmails = new HashSet<>();
+            for (Student student : students) {
+                if (!seenEmails.add(student.getEmail())) {
+                    duplicateEmails.add(student.getEmail());
+                }
+            }
+            if (!duplicateEmails.isEmpty()) {
+                errors.add(String.format("Duplicate emails found in CSV: %s", String.join(", ", duplicateEmails)));
+            }
 
-            List<Student> existingStudents = studentRepository.findByIdIn(studentIds);
-            if (!existingStudents.isEmpty()) {
-                Set<String> existingIds = existingStudents.stream().map(Student::getId).collect(Collectors.toSet());
-                errors.add(String.format("Student IDs already exist in database: %s", String.join(", ", existingIds)));
+            // Check for existing emails in database
+            for (Student student : students) {
+                if (studentRepository.existsByEmail(student.getEmail())) {
+                    errors.add(String.format("Email already exists in database: %s", student.getEmail()));
+                }
             }
         }
 
-        // Step 5: If any errors, abort and return failure response
+        // Step 4: If any errors, abort and return failure response
         if (!errors.isEmpty()) {
             log.warn("Student import failed with {} errors", errors.size());
             return StudentImportResponseDto.failure(errors);
         }
 
-        // Step 6: Save all students
+        // Step 5: Save all students
         try {
             studentRepository.saveAll(students);
             log.info("Successfully imported {} students", students.size());

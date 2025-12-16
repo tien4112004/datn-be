@@ -3,12 +3,12 @@ package com.datn.datnbe.student.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum StudentStatus {
-    ACTIVE("active"), TRANSFERRED("transferred"), GRADUATED("graduated"), DROPPED("dropped");
+public enum EnrollmentStatus {
+    ACTIVE("active"), DROPPED("dropped"), COMPLETED("completed");
 
     private final String value;
 
-    StudentStatus(String value) {
+    EnrollmentStatus(String value) {
         this.value = value;
     }
 
@@ -18,15 +18,15 @@ public enum StudentStatus {
     }
 
     @JsonCreator
-    public static StudentStatus fromValue(String value) {
+    public static EnrollmentStatus fromValue(String value) {
         if (value == null || value.isBlank()) {
             return ACTIVE; // Default value
         }
-        for (StudentStatus status : StudentStatus.values()) {
+        for (EnrollmentStatus status : EnrollmentStatus.values()) {
             if (status.value.equalsIgnoreCase(value.trim())) {
                 return status;
             }
         }
-        throw new IllegalArgumentException("Invalid status value: " + value);
+        throw new IllegalArgumentException("Invalid enrollment status value: " + value);
     }
 }

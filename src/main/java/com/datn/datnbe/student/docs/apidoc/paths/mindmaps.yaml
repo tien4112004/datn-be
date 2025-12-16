@@ -1,0 +1,306 @@
+paths:
+  # Tag: Mindmaps
+  /mindmaps:
+    get:
+      tags:
+        - Backend-Server / Mindmaps
+      summary: Get All Mindmaps
+      description: Retrieves paginated list of mindmaps with thumbnails.
+      operationId: getAllMindmaps
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+          description: Number of mindmaps per page (1-100)
+        - name: filter
+          in: query
+          schema:
+            type: string
+            maxLength: 100
+          description: Filter mindmaps by title (case-insensitive search)
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: ["asc", "desc"]
+            default: "asc"
+          description: Sort order - ascending (asc) or descending (desc)
+      responses:
+        "200":
+          description: success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "../schemas.yaml#/components/responses/AppResponseDto"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            title:
+                              type: string
+                            thumbnail:
+                              type: string
+                              format: uri
+                            createdAt:
+                              type: string
+                              format: date-time
+                            updatedAt:
+                              type: string
+                              format: date-time
+                      pagination:
+                        $ref: "../schemas.yaml#/components/responses/Pagination"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas.yaml#/components/schemas/Error"
+    post:
+      tags:
+        - Backend-Server / Mindmaps
+      summary: Create new Mindmap
+      description: Creates a new mindmap with default structure.
+      operationId: createMindmap
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: The title of the mindmap
+                  minLength: 1
+                  maxLength: 200
+                  example: "My First Mindmap"
+                nodes:
+                  type: array
+                  items:
+                    $ref: "../schemas.yaml#/components/schemas/MindmapNode"
+      responses:
+        "200":
+          description: success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "../schemas.yaml#/components/responses/AppResponseDto"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "../schemas.yaml#/components/schemas/Mindmap"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas.yaml#/components/schemas/Error"
+  /mindmaps/{id}:
+    get:
+      tags:
+        - Backend-Server / Mindmaps
+      summary: Get Mindmap
+      description: Gets a complete mindmap by its ID.
+      operationId: getMindmap
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "../schemas.yaml#/components/responses/AppResponseDto"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "../schemas.yaml#/components/schemas/Mindmap"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas.yaml#/components/schemas/Error"
+    put:
+      tags:
+        - Backend-Server / Mindmaps
+      summary: Update a Mindmap
+      description: Updates a mindmap by replacing the existing resource with the provided data.
+      operationId: updateMindmap
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                nodes:
+                  type: array
+                  items:
+                    $ref: "../schemas.yaml#/components/schemas/MindmapNode"
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas.yaml#/components/schemas/Error"
+    delete:
+      tags:
+        - Backend-Server / Mindmaps
+      summary: Delete a Mindmap
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas.yaml#/components/schemas/Error"
+  /mindmaps/{id}/title:
+    patch:
+      tags:
+        - Backend-Server / Mindmaps
+      summary: Update a Mindmap Title
+      description: Updates the title or description of an existing mindmap by ID. **Either title or description must be provided.**
+      operationId: updateMindmapTitle
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: [string, "null"]
+                  description: The new title for the mindmap
+                  minLength: 1
+                  maxLength: 200
+                  example: "Updated Mindmap Title"
+                description:
+                  type: [string, "null"]
+                  description: The new description for the mindmap
+                  minLength: 1
+                  maxLength: 500
+                  example: "This is an updated description for my mindmap."
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas.yaml#/components/schemas/Error"
+  /mindmaps/generate:
+    post:
+      tags:
+        - Backend-Server / Mindmaps
+      summary: Generate a mindmap from a topic
+      description: |
+        Generate a hierarchical mindmap structure from a given topic using AI.
+        The endpoint creates a mindmap with a central concept and nested branches
+        representing main ideas and sub-ideas.
+      operationId: generateMindmap
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas.yaml#/components/schemas/MindmapGenerateRequest"
+            examples:
+              example1:
+                summary: Generate mindmap for Python
+                value:
+                  topic: "Python Programming"
+                  model: "gpt-4o"
+                  provider: "openai"
+                  language: "en"
+              example2:
+                summary: Generate mindmap for Web Development
+                value:
+                  topic: "Web Development Fundamentals"
+                  model: "claude-3-sonnet"
+                  provider: "anthropic"
+                  language: "en"
+      responses:
+        "200":
+          description: Mindmap generated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "../schemas.yaml#/components/responses/AppResponseDto"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "../schemas.yaml#/components/schemas/MindmapGenerateResponse"
+              examples:
+                success:
+                  summary: Successful mindmap generation
+                  value:
+                    success: true
+                    code: 200
+                    message: "Mindmap generated successfully"
+                    data:
+                      content: "Python Programming"
+                      children:
+                        - content: "Core Concepts"
+                          children:
+                            - content: "Variables & Data Types"
+                            - content: "Functions"
+                        - content: "Advanced Topics"
+                          children:
+                            - content: "Decorators"
+                            - content: "Async Programming"
+        "400":
+          $ref: "../schemas.yaml#/components/responses/BadRequestError"
+        "401":
+          $ref: "../schemas.yaml#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "../schemas.yaml#/components/responses/InternalServerError"
+      security:
+        - bearerAuth: []

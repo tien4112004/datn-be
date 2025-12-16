@@ -1,10 +1,14 @@
 package com.datn.datnbe.student.management;
 
 import com.datn.datnbe.student.api.StudentApi;
+import com.datn.datnbe.student.dto.request.StudentCreateRequest;
 import com.datn.datnbe.student.dto.request.StudentUpdateRequest;
 import com.datn.datnbe.student.dto.response.StudentResponseDto;
+import com.datn.datnbe.student.entity.ClassEnrollment;
 import com.datn.datnbe.student.entity.Student;
+import com.datn.datnbe.student.enums.EnrollmentStatus;
 import com.datn.datnbe.student.mapper.StudentEntityMapper;
+import com.datn.datnbe.student.repository.ClassEnrollmentRepository;
 import com.datn.datnbe.student.repository.StudentRepository;
 import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
 import lombok.AccessLevel;
@@ -13,6 +17,12 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Management service for student CRUD operations.
@@ -24,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class StudentManagement implements StudentApi {
 
     StudentRepository studentRepository;
+    ClassEnrollmentRepository classEnrollmentRepository;
     StudentEntityMapper studentEntityMapper;
 
     @Override
@@ -32,6 +43,23 @@ public class StudentManagement implements StudentApi {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + id));
         return studentEntityMapper.toResponseDto(student);
+    }
+
+    @Override
+    @Transactional
+    public StudentResponseDto createStudent(StudentCreateRequest request) {
+        log.info("Creating new student with email: {}", request.getEmail());
+
+        // Check if email already exists
+        if (studentRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Student with email " + request.getEmail() + " already exists");
+        }
+
+        Student student = studentEntityMapper.toEntity(request);
+        Student savedStudent = studentRepository.save(student);
+
+        log.info("Successfully created student with ID: {}", savedStudent.getId());
+        return studentEntityMapper.toResponseDto(savedStudent);
     }
 
     @Override
@@ -58,7 +86,88 @@ public class StudentManagement implements StudentApi {
             throw new ResourceNotFoundException("Student not found with ID: " + id);
         }
 
+        // Also remove from all class enrollments
+        classEnrollmentRepository.deleteInBatch(classEnrollmentRepository.findAll()
+                .stream()
+                .filter(e -> e.getStudentId().equals(id))
+                .collect(Collectors.toList()));
+
         studentRepository.deleteById(id);
         log.info("Successfully deleted student with ID: {}", id);
+    }
+
+    @Override
+    public List<StudentResponseDto> getStudentsByClass(String classId) {
+        log.info("Getting students for class ID: {}", classId);
+
+        List<ClassEnrollment> enrollments = classEnrollmentRepository.findByClassId(classId);
+        List<String> studentIds = enrollments.stream().map(ClassEnrollment::getStudentId).collect(Collectors.toList());
+
+        if (studentIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<Student> students = studentRepository.findByIdIn(Set.copyOf(studentIds));
+
+        return students.stream().map(studentEntityMapper::toResponseDto).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public StudentResponseDto enrollStudent(String classId, String studentId) {
+        log.info("Enrolling student {} to class {}", studentId, classId);
+
+        // Check if student exists
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + studentId));
+
+        // Check if already enrolled
+        if (classEnrollmentRepository.existsByClassIdAndStudentId(classId, studentId)) {
+            log.warn("Student {} is already enrolled in class {}", studentId, classId);
+            return studentEntityMapper.toResponseDto(student);
+        }
+
+        // Create enrollment
+        ClassEnrollment enrollment = ClassEnrollment.builder()
+                .id(UUID.randomUUID().toString())
+                .classId(classId)
+                .studentId(studentId)
+                .enrolledAt(LocalDate.now())
+                .status(EnrollmentStatus.ACTIVE)
+                .build();
+
+        classEnrollmentRepository.save(enrollment);
+        log.info("Successfully enrolled student {} to class {}", studentId, classId);
+
+        return studentEntityMapper.toResponseDto(student);
+    }
+
+    @Override
+    @Transactional
+    public StudentResponseDto createAndEnrollStudent(String classId, StudentCreateRequest request) {
+        log.info("Creating and enrolling new student in class {}", classId);
+
+        // Create the student
+        StudentResponseDto createdStudent = createStudent(request);
+
+        // Enroll the student
+        enrollStudent(classId, createdStudent.getId());
+
+        log.info("Successfully created and enrolled student {} in class {}", createdStudent.getId(), classId);
+        return createdStudent;
+    }
+
+    @Override
+    @Transactional
+    public void removeStudentFromClass(String classId, String studentId) {
+        log.info("Removing student {} from class {}", studentId, classId);
+
+        // Check if enrollment exists
+        if (!classEnrollmentRepository.existsByClassIdAndStudentId(classId, studentId)) {
+            throw new ResourceNotFoundException("Student " + studentId + " is not enrolled in class " + classId);
+        }
+
+        classEnrollmentRepository.deleteByClassIdAndStudentId(classId, studentId);
+        log.info("Successfully removed student {} from class {}", studentId, classId);
     }
 }
