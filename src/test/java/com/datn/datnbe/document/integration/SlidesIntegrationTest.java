@@ -85,11 +85,11 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
         registeredPresentations.clear();
 
         // Mock permission API to always grant full permissions
-        when(resourcePermissionApi.checkUserPermissions(anyString(), anyString(), anyString()))
+        when(resourcePermissionApi.checkUserPermissions(anyString(), anyString()))
                 .thenReturn(ResourcePermissionResponse.builder()
                         .resourceId("test-resource")
                         .userId("test-user-id")
-                        .permissions(Set.of("read", "write", "share"))
+                        .permissions(Set.of("read", "edit", "comment"))
                         .hasAccess(true)
                         .build());
 

@@ -54,4 +54,17 @@ public class ImageGenerationController {
         return ResponseEntity.ok(AppResponseDto.<ImageResponseDto>builder().data(uploadedMedia).build());
     }
 
+    @PostMapping("/image/generate-in-presentation/mock")
+    @Idempotent(serviceType = ImageGenerationIdempotencyService.class)
+    public ResponseEntity<AppResponseDto<ImageResponseDto>> generateMockImageWithIdempotency(
+            @RequestBody ImagePromptRequest request) {
+
+        List<MultipartFile> imageResponse = imageGenerationApi.generateMockImage(request);
+
+        log.info("uploading images to media storage");
+        ImageResponseDto uploadedMedia = imageGenerateMapper.toImageResponseDto(imageResponse, mediaStorageApi);
+        log.info("Images uploaded successfully: {}", uploadedMedia);
+
+        return ResponseEntity.ok(AppResponseDto.<ImageResponseDto>builder().data(uploadedMedia).build());
+    }
 }
