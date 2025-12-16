@@ -1,0 +1,2787 @@
+components:
+  schemas:
+    SlideElement:
+      type: object
+      properties:
+        type:
+          type: string
+        id:
+          type: string
+        left:
+          type: number
+        top:
+          type: number
+        width:
+          type: number
+        height:
+          type: number
+        viewBox:
+          type: array
+          items:
+            type: integer
+        path:
+          type: string
+        fill:
+          type: string
+        fixedRatio:
+          type: boolean
+        opacity:
+          type: number
+        rotate:
+          type: integer
+        flipV:
+          type: boolean
+        lineHeight:
+          type: number
+        content:
+          type: string
+        defaultFontName:
+          type: string
+        defaultColor:
+          type: string
+        start:
+          type: array
+          items:
+            type: integer
+        end:
+          type: array
+          items:
+            type: integer
+        points:
+          type: array
+          items:
+            type: string
+        color:
+          type: string
+        style:
+          type: string
+        wordSpace:
+          type: integer
+    Slide:
+      type: object
+      properties:
+        id:
+          type: string
+        elements:
+          type: array
+          items:
+            $ref: "#/components/schemas/SlideElement"
+        background:
+          type: object
+          properties:
+            type:
+              type: string
+            color:
+              type: string
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        code:
+          type: integer
+        errorCode:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+    AIPresentation:
+      description: Union type representing any slide accepted by the AI-PPT generator.
+      oneOf:
+        - $ref: "#/components/schemas/CoverSlide"
+        - $ref: "#/components/schemas/ContentsSlide"
+        - $ref: "#/components/schemas/TransitionSlide"
+        - $ref: "#/components/schemas/ContentSlide"
+        - $ref: "#/components/schemas/EndSlide"
+    CoverSlide:
+      type: object
+      description: Cover slide containing the presentation's main title and a subtitle/teaser text.
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          enum: ["cover"]
+        data:
+          type: object
+          additionalProperties: false
+          properties:
+            title:
+              type: string
+            text:
+              type: string
+          required: ["title", "text"]
+      required: ["type", "data"]
+    ContentsSlide:
+      type: object
+      description: Table-of-contents slide listing the main sections or agenda items.
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          enum: ["contents"]
+        data:
+          type: object
+          additionalProperties: false
+          properties:
+            items:
+              type: array
+              items:
+                type: string
+              minItems: 1
+          required: ["items"]
+      required: ["type", "data"]
+    TransitionSlide:
+      type: object
+      description: Section-transition slide that introduces a new part of the presentation.
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          enum: ["transition"]
+        data:
+          type: object
+          additionalProperties: false
+          properties:
+            title:
+              type: string
+            text:
+              type: string
+          required: ["title", "text"]
+      required: ["type", "data"]
+    ContentSlide:
+      type: object
+      description: Standard content slide with a title and one or more bullet-style items, each having its own title and text.
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          enum: ["content"]
+        data:
+          type: object
+          additionalProperties: false
+          properties:
+            title:
+              type: string
+            items:
+              type: array
+              items:
+                type: object
+                additionalProperties: false
+                properties:
+                  title:
+                    type: string
+                  text:
+                    type: string
+                required: ["title", "text"]
+              minItems: 1
+          required: ["title", "items"]
+      required: ["type", "data"]
+    EndSlide:
+      type: object
+      description: Closing slide signalling the end of the presentation (often just displays "Thank you" or similar).
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          enum: ["end"]
+      required: ["type"]
+    ModelResponse:
+      type: object
+      properties:
+        modelId:
+          type: string
+        modelName:
+          type: string
+        displayName:
+          type: string
+        enabled:
+          type: boolean
+        default:
+          type: boolean
+        modelType:
+          type: string
+          enum: ["TEXT", "IMAGE"]
+    Presentation:
+      type: object
+      description: Presentation response schema matching the /presentations/{id} GET endpoint
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the presentation
+          example: "12345"
+        title:
+          type: string
+          description: Title of the presentation
+          example: "My Awesome Presentation"
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the presentation was created
+          example: "2025-08-30T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the presentation was last updated
+          example: "2025-08-30T15:45:00Z"
+        slides:
+          type: array
+          description: Array of slides in the presentation
+          items:
+            $ref: "#/components/schemas/Slide"
+    ImageGenerationRequest:
+      type: object
+      properties:
+        prompt:
+          type: string
+          description: The text prompt to generate the image from.
+          example: "A beautiful sunset over a mountain landscape"
+        aspectRatio:
+          type: string
+          description: The aspect ratio of the generated image.
+          default: "1:1"
+          example: "16:9"
+        artStyle:
+          type: string
+          description: the
+          example: "cartoon"
+        artDescription:
+          type: string
+          example: "something"
+        themeStyle:
+          type: string
+          example: "something"
+        themeDescription:
+          type: string
+          example: "something"
+        model:
+          type: string
+          description: AI model
+          example: "gpt-4o"
+        provider:
+          type: string
+          description: provider of AI model
+          example: "openai"
+      required:
+        - prompt
+    ImageGenerationResponse:
+      type: object
+      properties:
+        url:
+          type: [string, "null"]
+          format: uri
+          description: The URI of the generated image.
+        mimeType:
+          type: string
+          description: The MIME type of the generated image.
+          example: "image/png"
+        prompt:
+          type: string
+          description: The prompt used to generate the image.
+          example: "A beautiful sunset over a mountain landscape"
+        created:
+          type: string
+          format: date-time
+          description: The timestamp when the image was created.
+          example: "2025-09-01T12:00:00Z"
+
+    MediaResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the media
+        originalFilename:
+          type: string
+          description: Original filename of the media
+        url:
+          type: string
+          format: uri
+          description: URL to access the media from CDN
+        mediaType:
+          type: string
+          description: Type of the media (e.g., image/png)
+        fileSize:
+          type: integer
+          description: Size of the file in bytes
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the media was created
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the media was last updated
+
+    AI-Result:
+      type: object
+      properties:
+        id:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        presentationId:
+          type: string
+        result:
+          type: string
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: "#/components/schemas/ValidationError"
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    ImageGenerateRequest:
+      properties:
+        prompt:
+          type: string
+          title: Prompt
+        model:
+          type: string
+          title: Model
+        provider:
+          type: string
+          title: Provider
+        number_of_images:
+          type: integer
+          title: Number Of Images
+          description: Number of images to generate
+          default: 1
+        aspect_ratio:
+          type: string
+          enum:
+            - "1:1"
+            - "9:16"
+            - "16:9"
+            - "4:3"
+            - "3:4"
+          title: Aspect Ratio
+          description: "Desired image dimensions, format: WIDTHxHEIGHT"
+          default: "1:1"
+        safety_filter_level:
+          anyOf:
+            - type: string
+              enum:
+                - block_most
+                - block_some
+                - block_few
+                - block_fewest
+            - type: "null"
+          title: Safety Filter Level
+          description: "Safety filter level: block_most, block_some, block_few, block_fewest"
+          default: block_few
+        person_generation:
+          anyOf:
+            - type: string
+              enum:
+                - dont_allow
+                - allow_adult
+                - allow_all
+            - type: "null"
+          title: Person Generation
+          description: "Person generation: dont_allow, allow_adult, allow_all"
+          default: allow_all
+        seed:
+          anyOf:
+            - type: integer
+            - type: "null"
+          title: Seed
+          description: Random seed for reproducible generation
+        negative_prompt:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Negative Prompt
+          description: Negative prompt to avoid certain elements in the image
+      type: object
+      required:
+        - prompt
+        - model
+        - provider
+      title: ImageGenerateRequest
+    ImageGenerateResponse:
+      properties:
+        images:
+          items:
+            type: string
+          type: array
+          title: Images
+          description: Base64 encoded images data (without mime prefix)
+        error:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Error
+          description: Error message if image generation failed
+        count:
+          type: integer
+          title: Count
+          description: Number of Images
+          default: 1
+      type: object
+      required:
+        - images
+      title: ImageGenerateResponse
+    OutlineGenerateRequest:
+      properties:
+        topic:
+          type: string
+          title: Topic
+          description: The topic for the presentation
+        model:
+          type: string
+          title: Model
+          description: The model to use for generation
+        provider:
+          type: string
+          title: Provider
+          description: The provider of the model
+        language:
+          type: string
+          title: Language
+          description: The language for the presentation
+        slide_count:
+          type: integer
+          title: Slide Count
+          description: The number of slides to generate
+      type: object
+      required:
+        - topic
+        - model
+        - provider
+        - language
+        - slide_count
+      title: OutlineGenerateRequest
+    PresentationGenerateRequest:
+      properties:
+        model:
+          type: string
+          title: Model
+          description: The model to use for generation
+        provider:
+          type: string
+          title: Provider
+          description: The provider of the model
+        language:
+          type: string
+          title: Language
+          description: The language for the presentation
+        slide_count:
+          type: integer
+          title: Slide Count
+          description: The number of slides to generate
+        outline:
+          type: string
+          title: Outline
+          description: The outline for the presentation
+        meta_data:
+          anyOf:
+            - additionalProperties: True
+              type: object
+            - type: "null"
+          title: Meta Data
+          description: Additional metadata for the presentation
+      type: object
+      required:
+        - model
+        - provider
+        - language
+        - slide_count
+        - outline
+      title: PresentationGenerateRequest
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+        - loc
+        - msg
+        - type
+      title: ValidationError
+    # Mindmap nodes schemas
+    MindmapBaseNode:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the node. Unique within the its mindmap.
+    MindmapTextNode:
+      title: MindmapTextNode
+      allOf:
+        - $ref: "#/components/schemas/MindmapBaseNode"
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: ["mindmapTextNode"]
+            content:
+              type: string
+              description: Text content of the node
+    MindmapRootNode:
+      title: MindmapRootNode
+      allOf:
+        - $ref: "#/components/schemas/MindmapBaseNode"
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: ["mindmapRootNode"]
+            content:
+              type: string
+              description: Text content of the root node
+            MindmappathType:
+              enum: ["smoothstep", "straight", "bezier"]
+              description: Style of the path connecting nodes
+            edgeColor:
+              anyOf:
+                - type: string
+                - type: "null"
+              description: Hex color for the edges connecting nodes
+              example: "#FF5733"
+    MindmapShapeNode:
+      title: MindmapShapeNode
+      allOf:
+        - $ref: "#/components/schemas/MindmapBaseNode"
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: ["mindmapShapeNode"]
+            shape:
+              type: [string, "null"]
+              enum: ["rectangle", "circle", "ellipse"]
+              description: Shape of the node (e.g., rectangle, circle)
+            width:
+              type: [number, "null"]
+              description: Width of the shape node
+            height:
+              type: [number, "null"]
+              description: Height of the shape node
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: ["mindmapImageNode"]
+            imageUrl:
+              type: string
+              format: uri
+              description: URL of the image for the node
+            width:
+              type: number
+              description: Width of the image node
+            height:
+              type: [number, "null"]
+              description: Height of the image node
+            alt:
+              type: [string, "null"]
+              description: Alt text for the image node
+    MindmapImageNode:
+      title: MindmapImageNode
+      allOf:
+        - $ref: "#/components/schemas/MindmapBaseNode"
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: ["mindmapImageNode"]
+            imageUrl:
+              type: string
+              format: uri
+              description: URL of the image for the node
+            width:
+              anyOf:
+                - type: number
+                - type: "null"
+              description: Width of the image node
+            height:
+              anyOf:
+                - type: number
+                - type: "null"
+              description: Height of the image node
+            alt:
+              anyOf:
+                - type: string
+                - type: "null"
+              description: Alt text for the image node
+    MindmapNode:
+      description: Union type representing any node in the mindmap
+      oneOf:
+        - $ref: "#/components/schemas/MindmapTextNode"
+        - $ref: "#/components/schemas/MindmapRootNode"
+        - $ref: "#/components/schemas/MindmapShapeNode"
+        - $ref: "#/components/schemas/MindmapImageNode"
+    Mindmap:
+      type: object
+      description: Mindmap response schema
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the mindmap
+        title:
+          type: string
+          description: Title of the mindmap (or the filename)
+        description:
+          type: [string, "null"]
+          description: Description of the mindmap
+        nodes:
+          type: array
+          description: Array of nodes in the mindmap
+          items:
+            $ref: "#/components/schemas/MindmapNode"
+        edges:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: The unique identifier for the edge
+              type:
+                type: string
+                description: The type of the edge
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the mindmap was created
+          example: "2025-08-30T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the mindmap was last updated
+          example: "2025-08-30T15:45:00Z"
+
+    MindmapGenerateRequest:
+      type: object
+      description: Request body for generating a mindmap
+      required:
+        - topic
+        - model
+        - provider
+        - language
+      properties:
+        topic:
+          type: string
+          description: The main topic or subject for the mindmap generation
+          example: "Machine Learning Fundamentals"
+          minLength: 1
+          maxLength: 500
+        model:
+          type: string
+          description: The AI model to use for generation
+          example: "gpt-4o"
+          enum:
+            - gpt-4o
+            - gpt-4-turbo
+            - gpt-3.5-turbo
+            - claude-3-opus
+            - claude-3-sonnet
+            - claude-3-haiku
+        provider:
+          type: string
+          description: The AI service provider
+          example: "openai"
+          enum:
+            - openai
+            - anthropic
+            - google
+        language:
+          type: string
+          description: The language for the mindmap content (ISO 639-1 code)
+          example: "en"
+          enum:
+            - en
+            - vi
+            - fr
+            - es
+            - de
+            - ja
+            - zh
+        maxDepth:
+          type: integer
+          description: Maximum depth of the mindmap branches (default 3)
+          minimum: 1
+          maximum: 5
+          default: 3
+          example: 3
+        maxBranchesPerNode:
+          type: integer
+          description: Maximum number of branches per node (default 5)
+          minimum: 1
+          maximum: 10
+          default: 5
+          example: 5
+
+    MindmapNodeContent:
+      type: object
+      description: A node in the mindmap hierarchy with recursive children structure
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          description: Text content of the node
+          example: "Central Concept"
+        children:
+          type: array
+          description: Child nodes branching from this node
+          items:
+            $ref: "#/components/schemas/MindmapNodeContent"
+          default: []
+
+    MindmapGenerateResponse:
+      type: object
+      description: Response schema for mindmap generation with hierarchical structure
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          description: The central concept or root content
+          example: "Central Concept"
+        children:
+          type: array
+          description: Array of main branches as child nodes
+          items:
+            $ref: "#/components/schemas/MindmapNodeContent"
+          example:
+            - content: "Main Branch 1"
+              children:
+                - content: "Sub-idea 1.1"
+                  children: []
+                - content: "Sub-idea 1.2"
+                  children: []
+            - content: "Main Branch 2"
+              children: []
+
+    # AI worker components
+
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: Error message details
+          example: "Invalid input parameters"
+
+    # User management
+    UserProfileResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the user
+          example: "user_12345"
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "user@example.com"
+        firstName:
+          type: string
+          description: User's first name
+          example: "John"
+        lastName:
+          type: string
+          description: User's last name
+          example: "Doe"
+        dateOfBirth:
+          type: string
+          format: date
+          description: User's date of birth
+          example: "1990-01-01"
+        avatarUrl:
+          type: [string, "null"]
+          format: uri
+          description: URL of the user's profile avatar
+          example: "https://cdn.example.com/avatars/user_12345.jpg"
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the user profile was created
+          example: "2025-08-30T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the user profile was last updated
+          example: "2025-08-30T15:45:00Z"
+        phoneNumber:
+          type: [string, "null"]
+          description: User's phone number (optional)
+          example: "+1234567890"
+
+    SignInResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: JWT access token for authenticated requests
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refresh_token:
+          type: string
+          description: JWT refresh token for obtaining new access tokens
+          example: "dGhpc0lzQVRlc3RSZWZyZXNoVG9rZW4..."
+        token_type:
+          type: string
+          description: Type of the token, typically "Bearer"
+          example: "Bearer"
+        expires_in:
+          type: integer
+          description: Expiration time of the access token in seconds
+          example: 3600
+    SignInRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "user@example.com"
+        password:
+          type: string
+          description: User's password
+          example: "password123"
+    SignupRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "user@example.com"
+        password:
+          type: string
+          description: User's password
+          example: "Password@123"
+        firstName:
+          type: string
+          description: User's first name
+          example: "John"
+        lastName:
+          type: string
+          description: User's last name
+          example: "Doe"
+        dateOfBirth:
+          type: string
+          format: date
+          description: User's date of birth
+          example: "1990-01-01"
+        phoneNumber:
+          type: string
+          description: User's phone number (optional)
+          example: "+1234567890"
+    UserProfileUpdateRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+          description: User's first name
+          example: "John"
+        lastName:
+          type: string
+          description: User's last name
+          example: "Doe"
+        dateOfBirth:
+          type: string
+          format: date
+          description: User's date of birth (must be in the past)
+          example: "1990-01-01"
+
+    # Admin - Manage slide themes
+    SlideTemplate:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the slide template
+          example: "template_12345"
+        name:
+          type: string
+          description: Name of the slide template
+          example: "Professional Business"
+        layout:
+          type: string
+          description: The layout of the slide
+          enum: 
+            - labeledList
+            - list
+            - mainImage
+            - pyramid
+            - tableOfContents
+            - timeline
+            - title
+            - twoColumn
+            - twoColumnWithImage
+        config:
+          type: object
+          description: PartialTemplateConfig
+          additionalProperties: true
+        graphics:
+          type: array
+          items:
+            type: object
+            description: GraphicElement
+            additionalProperties: true
+          description: Optional decorative graphics
+        parameters:
+          type: array
+          description: Parameters for customizing the slide template
+          nullable: true
+          items: 
+            type: object
+            properties:
+              key:
+                type: string
+                description: Variable name used in expressions
+                example: "IMAGE_RATIO"
+              label:
+                type: string
+                description: User-friendly name for UI
+                example: "Image Ratio"
+              defaultValue:
+                type: number
+                description: Default value if not overridden
+                example: 16
+              min:
+                type: number
+                description: Minimum allowed value
+              max:
+                type: number
+                description: Maximum allowed value
+              step:
+                type: number
+                description: Step increment for UI controls
+              description:
+                type: string
+                description: Help text for users
+            required:
+              - key
+              - label
+              - defaultValue
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the slide template was created
+          example: "2025-08-30T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the slide template was last updated
+          example: "2025-08-30T15:45:00Z"
+      required:
+        - id
+        - name
+        - config
+        - createdAt
+        - updatedAt
+    SlideTheme:
+      type: object
+      description: Slide theme configuration
+      properties:
+        backgroundColor:
+          description: Page background color or gradient
+          oneOf:
+            - type: string
+            - $ref: "#/components/schemas/Gradient"
+        themeColors:
+          type: array
+          description: Theme color palette
+          items:
+            type: string
+        fontColor:
+          type: string
+          description: Default font color
+        fontName:
+          type: string
+          description: Default font family
+        outline:
+          $ref: "#/components/schemas/PPTElementOutline"
+        shadow:
+          $ref: "#/components/schemas/PPTElementShadow"
+        titleFontName:
+          type: string
+        titleFontColor:
+          type: string
+        labelFontColor:
+          type: string
+        labelFontName:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        additionalElements:
+          type: array
+          items:
+            $ref: "#/components/schemas/PPTElement"
+        accentImageShape:
+          type: string
+          enum:
+            - default
+            - big
+            - mixed
+        card:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            borderRadius:
+              type: number
+            borderWidth:
+              type: number
+            fill:
+              type: string
+              enum:
+                - none
+                - full
+                - semi
+            shadow:
+              $ref: "#/components/schemas/PPTElementShadow"
+            backgroundColor:
+              type: string
+            textColor:
+              type: string
+          required:
+            - enabled
+            - borderRadius
+            - borderWidth
+            - fill
+            - shadow
+            - backgroundColor
+            - textColor
+      required:
+        - backgroundColor
+        - themeColors
+        - fontColor
+        - fontName
+        - outline
+        - shadow
+    Gradient:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - linear
+            - radial
+        colors:
+          type: array
+          items:
+            $ref: "#/components/schemas/GradientColor"
+        rotate:
+          type: number
+      required:
+        - type
+        - colors
+        - rotate
+    GradientColor:
+      type: object
+      properties:
+        pos:
+          type: number
+          description: Percentage position (0-100)
+        color:
+          type: string
+      required:
+        - pos
+        - color
+    PPTElementOutline:
+      type: object
+      properties:
+        style:
+          type: string
+          enum:
+            - solid
+            - dashed
+            - dotted
+        width:
+          type: number
+        color:
+          type: string
+    PPTElementShadow:
+      type: object
+      properties:
+        h:
+          type: number
+          description: Horizontal offset
+        v:
+          type: number
+          description: Vertical offset
+        blur:
+          type: number
+          description: Blur amount
+        color:
+          type: string
+      required:
+        - h
+        - v
+        - blur
+        - color
+    PPTElement:
+      type: object
+      description: Base definition for PPT Elements (Text, Image, Shape, etc.)
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum:
+            - text
+            - image
+            - shape
+            - line
+            - chart
+            - table
+            - latex
+            - video
+            - audio
+        left:
+          type: number
+        top:
+          type: number
+        width:
+          type: number
+        height:
+          type: number
+        rotate:
+          type: number
+        lock:
+          type: boolean
+        groupId:
+          type: string
+        link:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - web
+                - slide
+            target:
+              type: string
+          required:
+            - type
+            - target
+      required:
+        - id
+        - type
+        - left
+        - top
+        - width
+        - height
+        - rotate
+
+    Class:
+      type: object
+      description: Class (learning group) representing a classroom with enrolled students
+      required:
+        - id
+        - ownerId
+        - name
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the class
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        ownerId:
+          type: string
+          description: ID of the teacher/owner who created the class
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        name:
+          type: string
+          maxLength: 50
+          description: Name of the class (e.g., "10A1", "11B2")
+          example: "12A"
+        description:
+          type: string
+          nullable: true
+          description: Description or notes about the class
+          example: "Advanced Science Track"
+        joinCode:
+          type: string
+          maxLength: 10
+          nullable: true
+          description: Unique join code for students to enroll
+          example: "ABCD1234"
+        settings:
+          type: object
+          nullable: true
+          description: Class-specific settings like theme, allow_comments, etc.
+          example: { "theme": "light", "allow_comments": true }
+        isActive:
+          type: boolean
+          description: Whether the class is active
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the class was created
+          example: "2024-01-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the class was last updated
+          example: "2024-09-20T14:45:00Z"
+
+    ClassCreateRequest:
+      type: object
+      description: Request body for creating a new class
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          maxLength: 50
+          description: Name of the class
+          example: "12A"
+        description:
+          type: string
+          nullable: true
+          description: Description of the class
+          example: "Advanced Science Track"
+        settings:
+          type: object
+          nullable: true
+          description: Class-specific settings
+          example: { "theme": "light", "allow_comments": true }
+
+    ClassUpdateRequest:
+      type: object
+      description: Request body for updating a class
+      properties:
+        name:
+          type: string
+          maxLength: 50
+          nullable: true
+          description: Name of the class
+          example: "12A"
+        description:
+          type: string
+          nullable: true
+          description: Description of the class
+          example: "Advanced Science Track"
+        settings:
+          type: object
+          nullable: true
+          description: Class-specific settings
+          example: { "theme": "light", "allow_comments": true }
+        isActive:
+          type: boolean
+          nullable: true
+          description: Whether the class is active
+          example: true
+
+    ClassCollectionRequest:
+      type: object
+      description: Query parameters for fetching a collection of classes
+      properties:
+        page:
+          type: integer
+          description: Page number (1-indexed)
+          example: 1
+        pageSize:
+          type: integer
+          maximum: 100
+          description: Number of items per page
+          example: 10
+        sort:
+          type: string
+          description: Sort field and direction
+          example: "name-asc"
+        search:
+          type: string
+          description: Search by class name
+          example: "12A"
+        isActive:
+          type: boolean
+          nullable: true
+          description: Filter by active status
+          example: true
+
+    Layout:
+      type: object
+      description: Seating chart layout object representing classroom arrangement
+      properties:
+        rows:
+          type: integer
+          description: Number of rows in the classroom layout
+          example: 5
+        columns:
+          type: integer
+          description: Number of columns in the classroom layout
+          example: 6
+        seats:
+          type: array
+          description: Array of seats in the layout
+          items:
+            $ref: "#/components/schemas/Seat"
+        separatorInterval:
+          type: integer
+          nullable: true
+          description: Interval for separators in the layout
+          example: 2
+
+    Seat:
+      type: object
+      description: Seat object representing a single seat in the classroom
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the seat
+          example: "seat_123456"
+        studentId:
+          type: string
+          nullable: true
+          description: ID of the assigned student, null if empty
+          example: "std_123456"
+
+    Student:
+      type: object
+      description: Student object representing a school student
+      required:
+        - id
+        - firstName
+        - lastName
+        - email
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the student
+          example: "550e8400-e29b-41d4-a716-446655440002"
+        firstName:
+          type: string
+          maxLength: 100
+          description: First name of the student
+          example: "Nguyen"
+        lastName:
+          type: string
+          maxLength: 100
+          description: Last name of the student
+          example: "Van A"
+        email:
+          type: string
+          format: email
+          description: Email address of the student
+          example: "student@example.com"
+        phoneNumber:
+          type: string
+          nullable: true
+          description: Phone number of student
+          example: "+84987654321"
+        avatarUrl:
+          type: string
+          nullable: true
+          description: Avatar image URL
+          example: "https://example.com/avatar.jpg"
+        role:
+          type: string
+          enum: ["admin", "teacher", "student", "parent"]
+          description: User role in the system
+          example: "student"
+        status:
+          type: string
+          enum: ["active", "transferred", "graduated", "dropped"]
+          nullable: true
+          description: Student status (null if not in a class)
+          example: "active"
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the record was created
+          example: "2024-01-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the record was last updated
+          example: "2024-09-20T14:45:00Z"
+
+    StudentCreateRequest:
+      type: object
+      description: Request body for creating a new student
+      required:
+        - firstName
+        - lastName
+        - email
+      properties:
+        firstName:
+          type: string
+          maxLength: 100
+          description: First name of the student
+          example: "Nguyen"
+        lastName:
+          type: string
+          maxLength: 100
+          description: Last name of the student
+          example: "Van A"
+        email:
+          type: string
+          format: email
+          description: Email address of the student
+          example: "student@example.com"
+        phoneNumber:
+          type: string
+          nullable: true
+          description: Phone number of student
+          example: "+84987654321"
+        avatarUrl:
+          type: string
+          nullable: true
+          description: Avatar image URL
+          example: "https://example.com/avatar.jpg"
+
+    StudentUpdateRequest:
+      type: object
+      description: Request body for updating an existing student
+      properties:
+        firstName:
+          type: string
+          maxLength: 100
+          nullable: true
+          description: First name of the student
+          example: "Nguyen"
+        lastName:
+          type: string
+          maxLength: 100
+          nullable: true
+          description: Last name of the student
+          example: "Van A"
+        phoneNumber:
+          type: string
+          nullable: true
+          description: Phone number of student
+          example: "+84987654321"
+        avatarUrl:
+          type: string
+          nullable: true
+          description: Avatar image URL
+          example: "https://example.com/avatar.jpg"
+        status:
+          type: string
+          enum: ["active", "transferred", "graduated", "dropped"]
+          nullable: true
+          description: Student status
+          example: "active"
+
+    StudentCollectionRequest:
+      type: object
+      description: Query parameters for fetching students
+      properties:
+        page:
+          type: integer
+          description: Page number (1-indexed)
+          example: 1
+        pageSize:
+          type: integer
+          description: Number of items per page
+          example: 10
+        sort:
+          type: string
+          description: Sort field and direction
+          example: "lastName-asc"
+        search:
+          type: string
+          description: Search by name or email
+          example: "Nguyen Van A"
+        status:
+          type: string
+          enum: ["active", "transferred", "graduated", "dropped"]
+          nullable: true
+          description: Filter by student status
+          example: "active"
+
+    StudentEnrollmentRequest:
+      type: object
+      description: Request body for enrolling a student in a class
+      required:
+        - studentId
+        - classId
+      properties:
+        studentId:
+          type: string
+          description: ID of the student to enroll
+          example: "550e8400-e29b-41d4-a716-446655440002"
+
+    ClassEnrollment:
+      type: object
+      description: Enrollment record linking students to classes
+      required:
+        - id
+        - classId
+        - studentId
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the enrollment
+          example: "550e8400-e29b-41d4-a716-446655440004"
+        classId:
+          type: string
+          description: ID of the class
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        studentId:
+          type: string
+          description: ID of the student
+          example: "550e8400-e29b-41d4-a716-446655440002"
+        enrolledAt:
+          type: string
+          format: date
+          description: Date the student was enrolled
+          example: "2024-01-15"
+        status:
+          type: string
+          enum: ["active", "dropped", "completed"]
+          description: Enrollment status
+          example: "active"
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when enrollment was created
+          example: "2024-01-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when enrollment was last updated
+          example: "2024-09-20T14:45:00Z"
+
+    SchedulePeriod:
+      type: object
+      description: Schedule period representing a scheduled event or class period on a specific date (non-recurring)
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the period
+          example: "period_123456"
+        classId:
+          type: string
+          description: ID of the class
+          example: "cls_123456"
+        name:
+          type: string
+          description: Name of the period or event
+          example: "Math Period 1"
+        subject:
+          type: string
+          description: Subject code being taught
+          example: "MATH101"
+        date:
+          type: string
+          format: date
+          description: Date of the period (YYYY-MM-DD)
+          example: "2024-09-20"
+        startTime:
+          type: string
+          format: time
+          nullable: true
+          description: Start time of the period (HH:mm)
+          example: "07:00"
+        endTime:
+          type: string
+          format: time
+          nullable: true
+          description: End time of the period (HH:mm)
+          example: "08:00"
+        category:
+          type: string
+          enum: ["assignment", "exam", "fieldTrip", "meeting", "holiday", "presentation", "other"]
+          description: Category of the period
+          example: "assignment"
+        location:
+          type: string
+          nullable: true
+          description: Location of the period
+          example: "Room 101"
+        description:
+          type: string
+          nullable: true
+          description: Description of the period
+          example: "Regular math class"
+        isActive:
+          type: boolean
+          description: Whether the period is active
+          example: true
+        lessons:
+          type: array
+          items:
+            $ref: "#/components/schemas/Lesson"
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the period was created
+          example: "2024-01-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the period was last updated
+          example: "2024-09-20T14:45:00Z"
+
+    MinimalSchedulePeriod:
+      type: object
+      description: Minimal schedule period object for references (reduced payload)
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the period
+          example: "period_123456"
+        classId:
+          type: string
+          description: ID of the class
+          example: "cls_123456"
+        name:
+          type: string
+          description: Name of the period or event
+          example: "Math Period 1"
+        subject:
+          type: string
+          description: Subject code being taught
+          example: "MATH101"
+        date:
+          type: string
+          format: date
+          description: Date of the period
+          example: "2024-09-20"
+        startTime:
+          type: string
+          format: time
+          nullable: true
+          description: Start time of the period
+          example: "07:00"
+        endTime:
+          type: string
+          format: time
+          nullable: true
+          description: End time of the period
+          example: "08:00"
+        category:
+          type: string
+          enum: ["assignment", "exam", "fieldTrip", "meeting", "holiday", "presentation", "other"]
+          description: Category of the period
+          example: "assignment"
+        isActive:
+          type: boolean
+          description: Whether the period is active
+          example: true
+
+    SchedulePeriodCreateRequest:
+      type: object
+      description: Request body for creating a new schedule period (date-based, non-recurring)
+      required:
+        - classId
+        - date
+        - startTime
+        - endTime
+      properties:
+        classId:
+          type: string
+          description: ID of the class
+          example: "cls_123456"
+        date:
+          type: string
+          format: date
+          description: Date of the period (YYYY-MM-DD)
+          example: "2024-09-20"
+        startTime:
+          type: string
+          format: time
+          description: Start time (HH:mm)
+          example: "07:00"
+        endTime:
+          type: string
+          format: time
+          description: End time (HH:mm)
+          example: "08:00"
+        location:
+          type: string
+          nullable: true
+          description: Location of the period
+          example: "Room 101"
+
+    SchedulePeriodUpdateRequest:
+      type: object
+      description: Request body for updating a schedule period
+      properties:
+        id:
+          type: string
+          description: ID of the period to update
+          example: "period_123456"
+        classId:
+          type: string
+          nullable: true
+          description: ID of the class
+        date:
+          type: string
+          format: date
+          nullable: true
+          description: Date of the period
+        startTime:
+          type: string
+          format: time
+          nullable: true
+          description: Start time
+        endTime:
+          type: string
+          format: time
+          nullable: true
+          description: End time
+        location:
+          type: string
+          nullable: true
+          description: Location of the period
+
+    DailySchedule:
+      type: object
+      description: Daily schedule object containing all periods for a specific date
+      properties:
+        date:
+          type: string
+          format: date
+          description: Date of the schedule (YYYY-MM-DD)
+          example: "2024-09-20"
+        classId:
+          type: string
+          description: ID of the class
+          example: "cls_123456"
+        periods:
+          type: array
+          description: List of periods for this date
+          items:
+            $ref: "#/components/schemas/SchedulePeriod"
+
+    ScheduleCollectionRequest:
+      type: object
+      description: Query parameters for retrieving schedules
+      properties:
+        startDate:
+          type: string
+          format: date
+          description: Start date for the schedule range (YYYY-MM-DD)
+          example: "2024-09-01"
+        endDate:
+          type: string
+          format: date
+          description: End date for the schedule range (YYYY-MM-DD)
+          example: "2024-09-30"
+        date:
+          type: string
+          format: date
+          description: Single date for fetching schedules (YYYY-MM-DD)
+          example: "2024-09-20"
+
+    Lesson:
+      type: object
+      description: Lesson plan object representing a detailed plan for teaching or assignment
+      required:
+        - id
+        - classId
+        - authorId
+        - title
+        - content
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the lesson
+          example: "550e8400-e29b-41d4-a716-446655440005"
+        classId:
+          type: string
+          description: ID of the class
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        authorId:
+          type: string
+          description: ID of the teacher/author
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        title:
+          type: string
+          maxLength: 200
+          description: Title of the lesson
+          example: "Quadratic Equations"
+        subject:
+          type: string
+          nullable: true
+          description: Subject code (e.g., Math-1)
+          example: "MATH101"
+        content:
+          type: string
+          description: Lesson content or instructions
+          example: "Students will learn to solve quadratic equations..."
+        type:
+          type: string
+          enum: ["assignment", "material", "lecture", "quiz"]
+          description: Type of lesson
+          example: "lecture"
+        status:
+          type: string
+          enum: ["draft", "published", "archived"]
+          description: Status of the lesson
+          example: "published"
+        learningObjectives:
+          type: array
+          nullable: true
+          description: Array of learning objectives
+          items:
+            type: object
+            properties:
+              description:
+                type: string
+                example: "Students will be able to solve quadratic equations"
+              type:
+                type: string
+                example: "knowledge"
+              isAchieved:
+                type: boolean
+                example: false
+              notes:
+                type: string
+                nullable: true
+        lessonPlan:
+          type: string
+          nullable: true
+          description: Private teacher notes/plan (not visible to students)
+          example: "Start with examples, then practice problems"
+        maxPoints:
+          type: integer
+          nullable: true
+          description: Maximum points for assignments
+          example: 100
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+          description: Due date for assignments
+          example: "2024-09-30T23:59:59Z"
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the lesson was created
+          example: "2024-01-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the lesson was last updated
+          example: "2024-09-20T14:45:00Z"
+
+    LessonCreateRequest:
+      type: object
+      description: Request body for creating a lesson
+      required:
+        - classId
+        - title
+        - content
+      properties:
+        classId:
+          type: string
+          description: ID of the class
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        title:
+          type: string
+          maxLength: 200
+          description: Title of the lesson
+          example: "Quadratic Equations"
+        content:
+          type: string
+          description: Lesson content or instructions
+          example: "Students will learn to solve quadratic equations..."
+        subject:
+          type: string
+          nullable: true
+          description: Subject code
+          example: "MATH101"
+        type:
+          type: string
+          enum: ["assignment", "material", "lecture", "quiz"]
+          nullable: true
+          description: Type of lesson
+          example: "lecture"
+        learningObjectives:
+          type: array
+          nullable: true
+          description: Learning objectives
+          items:
+            type: object
+            properties:
+              description:
+                type: string
+                example: "Students will be able to solve quadratic equations"
+              type:
+                type: string
+                example: "knowledge"
+              isAchieved:
+                type: boolean
+                example: false
+              notes:
+                type: string
+                nullable: true
+        lessonPlan:
+          type: string
+          nullable: true
+          description: Private teacher notes/plan
+          example: "Start with examples, then practice problems"
+        maxPoints:
+          type: integer
+          nullable: true
+          description: Maximum points for assignments
+          example: 100
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+          description: Due date for assignments
+          example: "2024-09-30T23:59:59Z"
+
+    LessonUpdateRequest:
+      type: object
+      description: Request body for updating a lesson
+      properties:
+        title:
+          type: string
+          maxLength: 200
+          nullable: true
+          description: Title of the lesson
+          example: "Quadratic Equations"
+        content:
+          type: string
+          nullable: true
+          description: Lesson content or instructions
+          example: "Students will learn to solve quadratic equations..."
+        subject:
+          type: string
+          nullable: true
+          description: Subject code
+          example: "MATH101"
+        type:
+          type: string
+          enum: ["assignment", "material", "lecture", "quiz"]
+          nullable: true
+          description: Type of lesson
+          example: "lecture"
+        status:
+          type: string
+          enum: ["draft", "published", "archived"]
+          nullable: true
+          description: Status of the lesson
+          example: "published"
+        learningObjectives:
+          type: array
+          nullable: true
+          description: Learning objectives
+          items:
+            type: object
+            properties:
+              description:
+                type: string
+              type:
+                type: string
+              isAchieved:
+                type: boolean
+              notes:
+                type: string
+                nullable: true
+        lessonPlan:
+          type: string
+          nullable: true
+          description: Private teacher notes/plan
+        maxPoints:
+          type: integer
+          nullable: true
+          description: Maximum points for assignments
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+          description: Due date for assignments
+
+    LessonCollectionRequest:
+      type: object
+      description: Query parameters for retrieving lessons
+      properties:
+        classId:
+          type: string
+          description: Filter by class ID
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        authorId:
+          type: string
+          nullable: true
+          description: Filter by teacher/author ID
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        subject:
+          type: string
+          nullable: true
+          description: Filter by subject
+          example: "MATH101"
+        type:
+          type: string
+          enum: ["assignment", "material", "lecture", "quiz"]
+          nullable: true
+          description: Filter by type
+          example: "lecture"
+        status:
+          type: string
+          enum: ["draft", "published", "archived"]
+          nullable: true
+          description: Filter by status
+          example: "published"
+        page:
+          type: integer
+          description: Page number (1-indexed)
+          example: 1
+        pageSize:
+          type: integer
+          maximum: 100
+          description: Number of items per page
+          example: 10
+
+    LessonResource:
+      type: object
+      description: Lesson resource representing teaching materials and resources
+      required:
+        - id
+        - lessonId
+        - name
+        - type
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the resource
+          example: "550e8400-e29b-41d4-a716-446655440006"
+        lessonId:
+          type: string
+          description: ID of the lesson
+          example: "550e8400-e29b-41d4-a716-446655440005"
+        name:
+          type: string
+          maxLength: 200
+          description: Name of the resource
+          example: "Quadratic Formula Worksheet"
+        type:
+          type: string
+          enum: ["presentation", "mindmap", "document", "video", "audio", "image", "worksheet", "equipment", "other"]
+          description: Type of resource
+          example: "document"
+        url:
+          type: string
+          format: uri
+          nullable: true
+          description: URL of the resource
+          example: "https://example.com/worksheet.pdf"
+        filePath:
+          type: string
+          nullable: true
+          description: File path of the resource
+          example: "/uploads/worksheet.pdf"
+        description:
+          type: string
+          nullable: true
+          description: Description of the resource
+          example: "Practice worksheet for quadratic equations"
+        isRequired:
+          type: boolean
+          description: Whether the resource is required for the lesson
+          example: true
+        isPrepared:
+          type: boolean
+          description: Whether the resource has been prepared
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the resource was created
+          example: "2024-01-15T10:30:00Z"
+
+    LessonResourceCreateRequest:
+      type: object
+      description: Request body for creating a lesson resource
+      required:
+        - lessonId
+        - name
+        - type
+      properties:
+        lessonId:
+          type: string
+          description: ID of the lesson
+          example: "550e8400-e29b-41d4-a716-446655440005"
+        name:
+          type: string
+          maxLength: 200
+          description: Name of the resource
+          example: "Quadratic Formula Worksheet"
+        type:
+          type: string
+          enum: ["presentation", "mindmap", "document", "video", "audio", "image", "worksheet", "equipment", "other"]
+          description: Type of resource
+          example: "document"
+        url:
+          type: string
+          format: uri
+          nullable: true
+          description: URL of the resource
+          example: "https://example.com/worksheet.pdf"
+        filePath:
+          type: string
+          nullable: true
+          description: File path of the resource
+          example: "/uploads/worksheet.pdf"
+        description:
+          type: string
+          nullable: true
+          description: Description of the resource
+        isRequired:
+          type: boolean
+          nullable: true
+          description: Whether the resource is required
+          example: true
+        isPrepared:
+          type: boolean
+          nullable: true
+          description: Whether the resource has been prepared
+          example: false
+
+    LessonResourceUpdateRequest:
+      type: object
+      description: Request body for updating a lesson resource
+      properties:
+        name:
+          type: string
+          maxLength: 200
+          nullable: true
+          description: Name of the resource
+        type:
+          type: string
+          enum: ["presentation", "mindmap", "document", "video", "audio", "image", "worksheet", "equipment", "other"]
+          nullable: true
+          description: Type of resource
+        url:
+          type: string
+          format: uri
+          nullable: true
+          description: URL of the resource
+        filePath:
+          type: string
+          nullable: true
+          description: File path of the resource
+        description:
+          type: string
+          nullable: true
+          description: Description of the resource
+        isRequired:
+          type: boolean
+          nullable: true
+          description: Whether the resource is required
+        isPrepared:
+          type: boolean
+          nullable: true
+          description: Whether the resource has been prepared
+
+    Submission:
+      type: object
+      description: Student submission for assignments
+      required:
+        - id
+        - lessonId
+        - studentId
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the submission
+          example: "550e8400-e29b-41d4-a716-446655440007"
+        lessonId:
+          type: string
+          description: ID of the lesson/assignment
+          example: "550e8400-e29b-41d4-a716-446655440005"
+        studentId:
+          type: string
+          description: ID of the student
+          example: "550e8400-e29b-41d4-a716-446655440002"
+        fileUrls:
+          type: array
+          nullable: true
+          description: Array of file URLs uploaded by student
+          items:
+            type: string
+            format: uri
+          example: ["https://example.com/submission1.pdf"]
+        grade:
+          type: integer
+          nullable: true
+          description: Grade/points awarded
+          example: 85
+        feedback:
+          type: string
+          nullable: true
+          description: Teacher feedback on the submission
+          example: "Good work, but needs improvement on part 2"
+        status:
+          type: string
+          enum: ["draft", "submitted", "returned", "late", "graded"]
+          description: Submission status
+          example: "graded"
+        submittedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp when submitted
+          example: "2024-09-25T10:30:00Z"
+        returnedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp when returned by teacher
+          example: "2024-09-27T14:00:00Z"
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when submission record was created
+          example: "2024-01-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when submission was last updated
+          example: "2024-09-27T14:00:00Z"
+
+    SubmissionCreateRequest:
+      type: object
+      description: Request body for creating/submitting an assignment
+      required:
+        - lessonId
+        - studentId
+      properties:
+        lessonId:
+          type: string
+          description: ID of the lesson/assignment
+          example: "550e8400-e29b-41d4-a716-446655440005"
+        studentId:
+          type: string
+          description: ID of the student
+          example: "550e8400-e29b-41d4-a716-446655440002"
+        fileUrls:
+          type: array
+          nullable: true
+          description: Array of file URLs to submit
+          items:
+            type: string
+            format: uri
+          example: ["https://example.com/submission1.pdf"]
+
+    SubmissionUpdateRequest:
+      type: object
+      description: Request body for updating a submission (grading)
+      properties:
+        grade:
+          type: integer
+          nullable: true
+          description: Grade/points to award
+          example: 85
+        feedback:
+          type: string
+          nullable: true
+          description: Teacher feedback
+          example: "Good work, but needs improvement on part 2"
+        status:
+          type: string
+          enum: ["draft", "submitted", "returned", "late", "graded"]
+          nullable: true
+          description: Update submission status
+          example: "graded"
+
+    ImportResult:
+      type: object
+      description: Result of importing students via CSV
+      properties:
+        success:
+          type: boolean
+          description: Whether the import was successful
+          example: true
+        studentsCreated:
+          type: integer
+          nullable: true
+          description: Number of students created
+          example: 25
+        message:
+          type: string
+          nullable: true
+          description: Import result message
+          example: "Students imported successfully"
+        errors:
+          type: array
+          nullable: true
+          description: List of import errors
+          items:
+            type: string
+            example: "Row 5: Invalid full name format"
+
+    Post:
+      type: object
+      description: Post representing announcements, schedule events, or general messages in a class
+      required:
+        - id
+        - classId
+        - authorId
+        - content
+        - type
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the post
+          example: "550e8400-e29b-41d4-a716-446655440008"
+        classId:
+          type: string
+          description: ID of the class
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        authorId:
+          type: string
+          description: ID of the post author
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        author:
+          type: object
+          nullable: true
+          description: Author information (populated on GET)
+          properties:
+            id:
+              type: string
+            firstName:
+              type: string
+            lastName:
+              type: string
+            avatarUrl:
+              type: string
+        content:
+          type: string
+          description: Content of the post
+          example: "Check out this lesson on quadratic equations"
+        type:
+          type: string
+          enum: ["announcement", "schedule_event", "general"]
+          description: Type of post
+          example: "announcement"
+        attachments:
+          type: array
+          nullable: true
+          description: Array of attachment URLs
+          items:
+            type: string
+            format: uri
+          example: ["https://example.com/file.pdf"]
+        linkedResources:
+          type: array
+          nullable: true
+          description: Array of linked resource IDs (lesson IDs or individual resource IDs)
+          items:
+            type: string
+          example: ["550e8400-e29b-41d4-a716-446655440005"]
+        linkedLesson:
+          type: object
+          nullable: true
+          description: If a lesson is linked, includes lesson data with its resources combined with individual resources
+          properties:
+            id:
+              type: string
+            title:
+              type: string
+            resources:
+              type: array
+              items:
+                $ref: "#/components/schemas/LessonResource"
+        isPinned:
+          type: boolean
+          description: Whether post is pinned
+          example: false
+        allowComments:
+          type: boolean
+          description: Whether comments are allowed on this post
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when post was created
+          example: "2024-09-20T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when post was last updated
+          example: "2024-09-20T14:45:00Z"
+
+    PostCreateRequest:
+      type: object
+      description: Request body for creating a post
+      required:
+        - classId
+        - content
+        - type
+      properties:
+        classId:
+          type: string
+          description: ID of the class
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        content:
+          type: string
+          description: Content of the post
+          example: "Check out this lesson on quadratic equations"
+        type:
+          type: string
+          enum: ["announcement", "schedule_event", "general"]
+          description: Type of post
+          example: "announcement"
+        attachments:
+          type: array
+          nullable: true
+          description: Array of attachment URLs
+          items:
+            type: string
+            format: uri
+        linkedResourceIds:
+          type: array
+          nullable: true
+          description: Array of linked resource IDs (individual resource IDs, not lessons)
+          items:
+            type: string
+        linkedLessonId:
+          type: string
+          nullable: true
+          description: If linking a lesson, provide lesson ID. Lesson resources will be mapped to post automatically
+          example: "550e8400-e29b-41d4-a716-446655440005"
+        isPinned:
+          type: boolean
+          nullable: true
+          description: Whether to pin the post
+          example: false
+        allowComments:
+          type: boolean
+          nullable: true
+          description: Whether comments are allowed
+          example: true
+
+    PostUpdateRequest:
+      type: object
+      description: Request body for updating a post
+      properties:
+        content:
+          type: string
+          nullable: true
+          description: Updated content of the post
+          example: "Updated announcement: Class moved to next week"
+        attachments:
+          type: array
+          nullable: true
+          description: Array of attachment URLs
+          items:
+            type: string
+            format: uri
+        linkedResourceIds:
+          type: array
+          nullable: true
+          description: Array of linked resource IDs
+          items:
+            type: string
+        linkedLessonId:
+          type: string
+          nullable: true
+          description: If updating lesson link, provide lesson ID
+          example: "550e8400-e29b-41d4-a716-446655440005"
+        isPinned:
+          type: boolean
+          nullable: true
+          description: Whether to pin the post
+          example: false
+        allowComments:
+          type: boolean
+          nullable: true
+          description: Whether comments are allowed
+          example: true
+
+    Comment:
+      type: object
+      description: Comment on a post
+      required:
+        - id
+        - postId
+        - userId
+        - content
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the comment
+          example: "550e8400-e29b-41d4-a716-446655440009"
+        postId:
+          type: string
+          description: ID of the post
+          example: "550e8400-e29b-41d4-a716-446655440008"
+        userId:
+          type: string
+          description: ID of the user who commented
+          example: "550e8400-e29b-41d4-a716-446655440002"
+        content:
+          type: string
+          description: Comment content
+          example: "Thanks for the update!"
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when comment was created
+          example: "2024-09-20T11:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when comment was last updated
+          example: "2024-09-20T11:30:00Z"
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp when comment was deleted
+          example: null
+
+    CommentCreateRequest:
+      type: object
+      description: Request body for creating a comment
+      required:
+        - postId
+        - content
+      properties:
+        postId:
+          type: string
+          description: ID of the post
+          example: "550e8400-e29b-41d4-a716-446655440008"
+        content:
+          type: string
+          description: Comment content
+          example: "Thanks for the update!"
+
+    CommentUpdateRequest:
+      type: object
+      description: Request body for updating a comment
+      properties:
+        content:
+          type: string
+          nullable: true
+          description: Comment content
+          example: "Thanks for the update!"
+
+    PostResourceMapping:
+      type: object
+      description: Represents resource linked to a post (either lesson resource or individual resource)
+      properties:
+        id:
+          type: string
+          description: Resource ID
+          example: "550e8400-e29b-41d4-a716-446655440010"
+        type:
+          type: string
+          enum: ["presentation", "mindmap", "document", "video", "audio", "image", "worksheet", "equipment", "other"]
+          description: Type of resource
+          example: "presentation"
+        name:
+          type: string
+          description: Resource name
+          example: "Quadratic Equations Guide"
+        url:
+          type: string
+          format: uri
+          description: URL to resource
+          example: "https://drive.google.com/file/d/abc123"
+        fromLesson:
+          type: boolean
+          description: Whether this resource came from linked lesson or individual resource
+          example: true
+
+    DashboardItem:
+      type: object
+      description: Dashboard item representing either a post or assignment in unified view
+      properties:
+        itemType:
+          type: string
+          enum: ["post", "assignment"]
+          description: Type of dashboard item
+          example: "post"
+        id:
+          type: string
+          description: ID of post or lesson (assignment)
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        classId:
+          type: string
+          description: ID of the class
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        title:
+          type: string
+          nullable: true
+          description: Post content preview or lesson title
+          example: "Quadratic Equations Assignment"
+        content:
+          type: string
+          nullable: true
+          description: Full post content or lesson content
+          example: "Solve the following equations..."
+        author:
+          type: object
+          description: Author information
+          properties:
+            id:
+              type: string
+            firstName:
+              type: string
+            lastName:
+              type: string
+            avatarUrl:
+              type: string
+              nullable: true
+        type:
+          type: string
+          description: For posts - announcement/schedule_event/general; For assignments - lesson type
+          example: "announcement"
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+          description: Due date for assignments only
+          example: "2024-09-25T23:59:59Z"
+        maxPoints:
+          type: number
+          nullable: true
+          description: Max points for assignments only
+          example: 100
+        attachments:
+          type: array
+          nullable: true
+          description: Post attachments or lesson resources
+          items:
+            $ref: '#/components/schemas/PostResourceMapping'
+        commentCount:
+          type: integer
+          description: Number of comments on post
+          example: 5
+        submissionCount:
+          type: integer
+          nullable: true
+          description: Number of submissions for assignment
+          example: 23
+        isPinned:
+          type: boolean
+          nullable: true
+          description: Whether post is pinned
+          example: false
+        allowComments:
+          type: boolean
+          nullable: true
+          description: Whether comments allowed on post
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          description: When post/lesson was created
+          example: "2024-09-21T10:00:00Z"
+
+    DashboardQuery:
+      type: object
+      description: Query parameters for dashboard view
+      properties:
+        type:
+          type: string
+          enum: ["post", "assignment", "all"]
+          description: Filter by item type
+          example: "all"
+        startDate:
+          type: string
+          format: date-time
+          nullable: true
+          description: Start date for filtering
+          example: "2024-09-01T00:00:00Z"
+        endDate:
+          type: string
+          format: date-time
+          nullable: true
+          description: End date for filtering
+          example: "2024-09-30T23:59:59Z"
+        page:
+          type: integer
+          minimum: 1
+          description: Page number (1-based)
+          example: 1
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Items per page
+          example: 10
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Bearer token for authentication. Required for all endpoints except public endpoints.
+
+  responses:
+    AppResponseDto:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        code:
+          type: integer
+          format: int32
+          example: 200
+        message:
+          type: string
+    Pagination:
+      properties:
+        currentPage:
+          description: The current page number (1-based indexing)
+          example: 1
+        pageSize:
+          description: Number of items per page
+          example: 10
+        totalItems:
+          description: Total number of items across all pages
+          example: 100
+        totalPages:
+          description: Total number of available pages
+          example: 10
+    UnauthorizedError:
+      description: Unauthorized - Invalid or missing authentication token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ForbiddenError:
+      description: Forbidden - Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFoundError:
+      description: Not Found - Resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    BadRequestError:
+      description: Bad Request - Invalid input data or malformed request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ConflictError:
+      description: Conflict - Resource already exists or state conflict
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
