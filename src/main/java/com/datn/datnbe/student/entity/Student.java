@@ -1,6 +1,5 @@
 package com.datn.datnbe.student.entity;
 
-import com.datn.datnbe.student.enums.Role;
 import com.datn.datnbe.student.enums.StudentStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -9,7 +8,9 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "students")
@@ -23,28 +24,21 @@ import java.time.LocalDateTime;
 public class Student {
 
     @Id
-    @Column(name = "id", nullable = false, length = 50)
-    String id;
-
-    @Column(name = "first_name", nullable = false, length = 100)
-    String firstName;
-
-    @Column(name = "last_name", nullable = false, length = 100)
-    String lastName;
-
-    @Column(name = "email", nullable = false, length = 255, unique = true)
-    String email;
-
-    @Column(name = "phone_number", length = 20)
-    String phoneNumber;
-
-    @Column(name = "avatar_url")
-    String avatarUrl;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false, length = 20)
+    @Column(name = "id", nullable = false)
     @Builder.Default
-    Role role = Role.STUDENT;
+    String id = UUID.randomUUID().toString();
+
+    @Column(name = "user_id", nullable = false)
+    String userId;
+
+    @Column(name = "enrollment_date")
+    LocalDate enrollmentDate;
+
+    @Column(name = "address", length = 255)
+    String address;
+
+    @Column(name = "parent_contact_email", length = 100)
+    String parentContactEmail;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)

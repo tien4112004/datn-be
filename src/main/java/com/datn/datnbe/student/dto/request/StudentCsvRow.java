@@ -3,6 +3,8 @@ package com.datn.datnbe.student.dto.request;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
+
 /**
  * Represents a single row from the CSV file for student import.
  */
@@ -13,10 +15,9 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class StudentCsvRow {
-    String firstName;
-    String lastName;
-    String email;
-    String phoneNumber;
-    String avatarUrl;
+    String userId;
+    LocalDate enrollmentDate;
+    String address;
+    String parentContactEmail;
     String status;
 }

@@ -1,10 +1,11 @@
 package com.datn.datnbe.student.dto.request;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.time.LocalDate;
 
 /**
  * Request DTO for creating a new student.
@@ -17,20 +18,14 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class StudentCreateRequest {
 
-    @NotBlank(message = "First name is required")
-    @Size(max = 100, message = "First name must not exceed 100 characters")
-    String firstName;
+    @NotBlank(message = "User ID is required")
+    String userId;
 
-    @NotBlank(message = "Last name is required")
-    @Size(max = 100, message = "Last name must not exceed 100 characters")
-    String lastName;
+    LocalDate enrollmentDate;
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email should be valid")
-    String email;
+    @Size(max = 255, message = "Address must not exceed 255 characters")
+    String address;
 
-    @Size(max = 20, message = "Phone number must not exceed 20 characters")
-    String phoneNumber;
-
-    String avatarUrl;
+    @Size(max = 100, message = "Parent contact email must not exceed 100 characters")
+    String parentContactEmail;
 }

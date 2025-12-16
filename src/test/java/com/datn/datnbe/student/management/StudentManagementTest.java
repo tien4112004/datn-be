@@ -3,7 +3,6 @@ package com.datn.datnbe.student.management;
 import com.datn.datnbe.student.dto.request.StudentUpdateRequest;
 import com.datn.datnbe.student.dto.response.StudentResponseDto;
 import com.datn.datnbe.student.entity.Student;
-import com.datn.datnbe.student.enums.Role;
 import com.datn.datnbe.student.enums.StudentStatus;
 import com.datn.datnbe.student.mapper.StudentEntityMapper;
 import com.datn.datnbe.student.repository.ClassEnrollmentRepository;
@@ -18,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -48,12 +48,10 @@ class StudentManagementTest {
     void setUp() {
         testStudent = Student.builder()
                 .id("std_001")
-                .firstName("Nguyen")
-                .lastName("Van A")
-                .email("student@example.com")
-                .phoneNumber("+84987654321")
-                .avatarUrl("https://example.com/avatar.jpg")
-                .role(Role.STUDENT)
+                .userId("user_001")
+                .enrollmentDate(LocalDate.of(2024, 1, 15))
+                .address("123 Main St")
+                .parentContactEmail("parent@example.com")
                 .status(StudentStatus.ACTIVE)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
@@ -61,12 +59,10 @@ class StudentManagementTest {
 
         testResponseDto = StudentResponseDto.builder()
                 .id("std_001")
-                .firstName("Nguyen")
-                .lastName("Van A")
-                .email("student@example.com")
-                .phoneNumber("+84987654321")
-                .avatarUrl("https://example.com/avatar.jpg")
-                .role(Role.STUDENT)
+                .userId("user_001")
+                .enrollmentDate(LocalDate.of(2024, 1, 15))
+                .address("123 Main St")
+                .parentContactEmail("parent@example.com")
                 .status(StudentStatus.ACTIVE)
                 .build();
     }
@@ -87,7 +83,7 @@ class StudentManagementTest {
             // Then
             assertThat(result).isNotNull();
             assertThat(result.getId()).isEqualTo("std_001");
-            assertThat(result.getFirstName()).isEqualTo("Nguyen");
+            assertThat(result.getUserId()).isEqualTo("user_001");
             verify(studentRepository).findById("std_001");
         }
 
@@ -111,8 +107,8 @@ class StudentManagementTest {
         void updateStudent_withValidRequest_returnsUpdatedStudent() {
             // Given
             StudentUpdateRequest request = StudentUpdateRequest.builder()
-                    .firstName("Nguyen")
-                    .lastName("Van B")
+                    .enrollmentDate(LocalDate.of(2024, 1, 20))
+                    .address("456 New St")
                     .status(StudentStatus.ACTIVE)
                     .build();
 
@@ -133,7 +129,9 @@ class StudentManagementTest {
         @Test
         void updateStudent_withNonExistentId_throwsException() {
             // Given
-            StudentUpdateRequest request = StudentUpdateRequest.builder().firstName("Nguyen").build();
+            StudentUpdateRequest request = StudentUpdateRequest.builder()
+                    .enrollmentDate(LocalDate.of(2024, 1, 15))
+                    .build();
 
             when(studentRepository.findById("non_existent")).thenReturn(Optional.empty());
 

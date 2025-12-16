@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Mapper for converting StudentCsvRow to Student entity with validation.
@@ -28,34 +27,29 @@ public class StudentMapper {
     public Student toEntity(StudentCsvRow csvRow, int rowNumber, List<String> errors) {
         List<String> rowErrors = new ArrayList<>();
 
+        // Validate userId
+        if (csvRow.getUserId() == null || csvRow.getUserId().isBlank()) {
+            rowErrors.add(String.format("Row %d: userId is required", rowNumber));
+        } else if (csvRow.getUserId().length() > 50) {
+            rowErrors.add(String.format("Row %d: userId exceeds maximum length", rowNumber));
+        }
+
         // Validate status
         StudentStatus status = parseStatus(csvRow.getStatus(), rowNumber, rowErrors);
 
-        // Validate first name
-        if (csvRow.getFirstName() == null || csvRow.getFirstName().isBlank()) {
-            rowErrors.add(String.format("Row %d: firstName is required", rowNumber));
-        } else if (csvRow.getFirstName().length() > 100) {
-            rowErrors.add(String.format("Row %d: firstName exceeds maximum length of 100 characters", rowNumber));
+        // Validate address (optional but has length limit)
+        if (csvRow.getAddress() != null && csvRow.getAddress().length() > 255) {
+            rowErrors.add(String.format("Row %d: address exceeds maximum length of 255 characters", rowNumber));
         }
 
-        // Validate last name
-        if (csvRow.getLastName() == null || csvRow.getLastName().isBlank()) {
-            rowErrors.add(String.format("Row %d: lastName is required", rowNumber));
-        } else if (csvRow.getLastName().length() > 100) {
-            rowErrors.add(String.format("Row %d: lastName exceeds maximum length of 100 characters", rowNumber));
-        }
-
-        // Validate email
-        if (csvRow.getEmail() == null || csvRow.getEmail().isBlank()) {
-            rowErrors.add(String.format("Row %d: email is required", rowNumber));
-        } else if (!isValidEmailFormat(csvRow.getEmail())) {
-            rowErrors.add(String.format("Row %d: Invalid email format: %s", rowNumber, csvRow.getEmail()));
-        }
-
-        // Validate phone format (basic validation)
-        if (csvRow.getPhoneNumber() != null && !csvRow.getPhoneNumber().isBlank()
-                && !isValidPhoneFormat(csvRow.getPhoneNumber())) {
-            rowErrors.add(String.format("Row %d: Invalid phoneNumber format", rowNumber));
+        // Validate parent contact email (optional but format if provided)
+        if (csvRow.getParentContactEmail() != null && !csvRow.getParentContactEmail().isBlank()) {
+            if (csvRow.getParentContactEmail().length() > 100) {
+                rowErrors.add(String.format("Row %d: parentContactEmail exceeds maximum length of 100 characters",
+                        rowNumber));
+            } else if (!isValidEmailFormat(csvRow.getParentContactEmail())) {
+                rowErrors.add(String.format("Row %d: Invalid parentContactEmail format", rowNumber));
+            }
         }
 
         if (!rowErrors.isEmpty()) {
@@ -64,12 +58,10 @@ public class StudentMapper {
         }
 
         return Student.builder()
-                .id(UUID.randomUUID().toString())
-                .firstName(csvRow.getFirstName())
-                .lastName(csvRow.getLastName())
-                .email(csvRow.getEmail())
-                .phoneNumber(csvRow.getPhoneNumber())
-                .avatarUrl(csvRow.getAvatarUrl())
+                .userId(csvRow.getUserId())
+                .enrollmentDate(csvRow.getEnrollmentDate())
+                .address(csvRow.getAddress())
+                .parentContactEmail(csvRow.getParentContactEmail())
                 .status(status != null ? status : StudentStatus.ACTIVE)
                 .build();
     }
@@ -87,11 +79,6 @@ public class StudentMapper {
                     statusStr));
             return null;
         }
-    }
-
-    private boolean isValidPhoneFormat(String phone) {
-        // Allow digits, spaces, dashes, parentheses, and + for international format
-        return phone.matches("^[+]?[0-9\\s\\-()]+$");
     }
 
     private boolean isValidEmailFormat(String email) {

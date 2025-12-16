@@ -4,10 +4,7 @@ import com.datn.datnbe.student.dto.request.StudentCreateRequest;
 import com.datn.datnbe.student.dto.request.StudentUpdateRequest;
 import com.datn.datnbe.student.dto.response.StudentResponseDto;
 import com.datn.datnbe.student.entity.Student;
-import com.datn.datnbe.student.enums.Role;
 import org.springframework.stereotype.Component;
-
-import java.util.UUID;
 
 /**
  * Mapper for Student entity to/from DTOs.
@@ -25,12 +22,10 @@ public class StudentEntityMapper {
 
         return StudentResponseDto.builder()
                 .id(entity.getId())
-                .firstName(entity.getFirstName())
-                .lastName(entity.getLastName())
-                .email(entity.getEmail())
-                .phoneNumber(entity.getPhoneNumber())
-                .avatarUrl(entity.getAvatarUrl())
-                .role(entity.getRole())
+                .userId(entity.getUserId())
+                .enrollmentDate(entity.getEnrollmentDate())
+                .address(entity.getAddress())
+                .parentContactEmail(entity.getParentContactEmail())
                 .status(entity.getStatus())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
@@ -46,14 +41,10 @@ public class StudentEntityMapper {
         }
 
         return Student.builder()
-                .id(UUID.randomUUID().toString())
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .email(request.getEmail())
-                .phoneNumber(request.getPhoneNumber())
-                .avatarUrl(request.getAvatarUrl())
-                .role(Role.STUDENT)
-                .status(request == null ? null : null) // Will use default from builder
+                .userId(request.getUserId())
+                .enrollmentDate(request.getEnrollmentDate())
+                .address(request.getAddress())
+                .parentContactEmail(request.getParentContactEmail())
                 .build();
     }
 
@@ -65,17 +56,14 @@ public class StudentEntityMapper {
             return;
         }
 
-        if (request.getFirstName() != null) {
-            entity.setFirstName(request.getFirstName());
+        if (request.getEnrollmentDate() != null) {
+            entity.setEnrollmentDate(request.getEnrollmentDate());
         }
-        if (request.getLastName() != null) {
-            entity.setLastName(request.getLastName());
+        if (request.getAddress() != null) {
+            entity.setAddress(request.getAddress());
         }
-        if (request.getPhoneNumber() != null) {
-            entity.setPhoneNumber(request.getPhoneNumber());
-        }
-        if (request.getAvatarUrl() != null) {
-            entity.setAvatarUrl(request.getAvatarUrl());
+        if (request.getParentContactEmail() != null) {
+            entity.setParentContactEmail(request.getParentContactEmail());
         }
         if (request.getStatus() != null) {
             entity.setStatus(request.getStatus());

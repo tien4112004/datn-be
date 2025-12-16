@@ -54,23 +54,23 @@ public class StudentImportManagement implements StudentImportApi {
             }
         }
 
-        // Step 3: Check for duplicate emails within the CSV and in database
+        // Step 3: Check for duplicate userIds within the CSV and in database
         if (!students.isEmpty()) {
-            Set<String> seenEmails = new HashSet<>();
-            Set<String> duplicateEmails = new HashSet<>();
+            Set<String> seenUserIds = new HashSet<>();
+            Set<String> duplicateUserIds = new HashSet<>();
             for (Student student : students) {
-                if (!seenEmails.add(student.getEmail())) {
-                    duplicateEmails.add(student.getEmail());
+                if (!seenUserIds.add(student.getUserId())) {
+                    duplicateUserIds.add(student.getUserId());
                 }
             }
-            if (!duplicateEmails.isEmpty()) {
-                errors.add(String.format("Duplicate emails found in CSV: %s", String.join(", ", duplicateEmails)));
+            if (!duplicateUserIds.isEmpty()) {
+                errors.add(String.format("Duplicate user IDs found in CSV: %s", String.join(", ", duplicateUserIds)));
             }
 
-            // Check for existing emails in database
+            // Check for existing user IDs in database
             for (Student student : students) {
-                if (studentRepository.existsByEmail(student.getEmail())) {
-                    errors.add(String.format("Email already exists in database: %s", student.getEmail()));
+                if (studentRepository.existsByUserId(student.getUserId())) {
+                    errors.add(String.format("Student already exists for user ID: %s", student.getUserId()));
                 }
             }
         }
