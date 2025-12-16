@@ -1,0 +1,239 @@
+paths:
+  # Tag: Images
+  /images/generate:
+    post:
+      tags:
+        - Backend-Server / Images
+      summary: Generate an image based on a prompt
+      description: Creates an image using an AI model based on the provided prompt and parameters.
+      operationId: generateImage
+      requestBody:
+        description: Parameters for the image generation
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas.yaml#/components/schemas/ImageGenerationRequest"
+      responses:
+        "200":
+          description: Image generated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "../schemas.yaml#/components/responses/AppResponseDto"
+                  - type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: true
+                      data:
+                        $ref: "../schemas.yaml#/components/schemas/ImageGenerationResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "../schemas.yaml#/components/schemas/Error"
+                  - type: object
+                    properties:
+                      errorCode:
+                        type: string
+                        example: "INVALID_IMAGE_PROMPT"
+                      message:
+                        type: string
+                        example: "Invalid prompt or parameters for image generation"
+                      code:
+                        type: integer
+                        example: 400
+        "429":
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "../schemas.yaml#/components/schemas/Error"
+                  - type: object
+                    properties:
+                      errorCode:
+                        type: string
+                        example: "IMAGE_GENERATION_QUOTA_EXCEEDED"
+                      message:
+                        type: string
+                        example: "Image generation quota has been exceeded"
+                      code:
+                        type: integer
+                        example: 429
+        "500":
+          description: Internal Server Error - Failed to generate image
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "../schemas.yaml#/components/schemas/Error"
+                  - type: object
+                    properties:
+                      errorCode:
+                        type: string
+                        example: "GENERATION_ERROR"
+                      message:
+                        type: string
+                        example: "An error occurred during content generation"
+                      code:
+                        type: integer
+                        example: 500
+  /images/generate-with-idempotency:
+    post:
+      tags:
+        - Backend-Server / Images
+      summary: Generate an image based on a prompt with idempotency key
+      description: Creates an image using an AI model based on the provided prompt and parameters.
+      operationId: generateImageWithIdempotency
+      parameters:
+        - name: idempotency-key
+          in: header
+          required: false
+          schema:
+            type: string
+          description: A unique key to ensure idempotent requests.
+      requestBody:
+        description: Parameters for the image generation
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas.yaml#/components/schemas/ImageGenerationRequest"
+      responses:
+        "200":
+          description: Image generated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "../schemas.yaml#/components/responses/AppResponseDto"
+                  - type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: true
+                      data:
+                        $ref: "../schemas.yaml#/components/schemas/ImageGenerationResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "../schemas.yaml#/components/schemas/Error"
+                  - type: object
+                    properties:
+                      errorCode:
+                        type: string
+                        example: "INVALID_IMAGE_PROMPT"
+                      message:
+                        type: string
+                        example: "Invalid prompt or parameters for image generation"
+                      code:
+                        type: integer
+                        example: 400
+        "429":
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "../schemas.yaml#/components/schemas/Error"
+                  - type: object
+                    properties:
+                      errorCode:
+                        type: string
+                        example: "IMAGE_GENERATION_QUOTA_EXCEEDED"
+                      message:
+                        type: string
+                        example: "Image generation quota has been exceeded"
+                      code:
+                        type: integer
+                        example: 429
+        "500":
+          description: Internal Server Error - Failed to generate image
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "../schemas.yaml#/components/schemas/Error"
+                  - type: object
+                    properties:
+                      errorCode:
+                        type: string
+                        example: "GENERATION_ERROR"
+                      message:
+                        type: string
+                        example: "An error occurred during content generation"
+                      code:
+                        type: integer
+                        example: 500
+  /images:
+    get:
+      tags:
+        - Backend-Server / Images
+      summary: Get All Generated Images
+      description: Retrieves a list of all generated images with their metadata.
+      operationId: getAllGeneratedImages
+      responses:
+        "200":
+          description: success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "../schemas.yaml#/components/responses/AppResponseDto"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "../schemas.yaml#/components/schemas/MediaResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas.yaml#/components/schemas/Error"
+  /images/{id}:
+    get:
+      tags:
+        - Backend-Server / Images
+      summary: Get Generated Image by ID
+      description: Retrieves a specific generated image by its unique ID.
+      operationId: getGeneratedImageById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "../schemas.yaml#/components/responses/AppResponseDto"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "../schemas.yaml#/components/schemas/MediaResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas.yaml#/components/schemas/Error"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas.yaml#/components/schemas/Error"

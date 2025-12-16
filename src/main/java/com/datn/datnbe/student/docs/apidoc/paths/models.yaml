@@ -1,0 +1,77 @@
+paths:
+  # Tag: Models
+  /models:
+    get:
+      tags:
+        - Backend-Server / Models
+      operationId: getAllModels
+      parameters:
+        - in: query
+          name: modelType
+          schema:
+            type: string
+            enum: ["TEXT", "IMAGE"]
+          description: Filter models by type (text or image)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "../schemas.yaml#/components/responses/AppResponseDto"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "../schemas.yaml#/components/schemas/ModelResponse"
+    patch:
+      tags:
+        - Backend-Server / Models
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                default:
+                  type: boolean
+                  description: Whether the model is the default model
+                enabled:
+                  type: boolean
+                  description: Whether the model should be enabled or disabled
+      operationId: updateModelStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: "../schemas.yaml#/components/responses/AppResponseDto"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "../schemas.yaml#/components/schemas/ModelResponse"
+        "404":
+          description: Not Found
+          content:
+            "*/*":
+              schema:
+                $ref: "../schemas.yaml#/components/schemas/Error"
+        "500":
+          description: Internal Server Error
+          content:
+            "*/*":
+              schema:
+                $ref: "../schemas.yaml#/components/schemas/Error"
