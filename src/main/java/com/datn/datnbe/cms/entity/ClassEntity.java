@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
@@ -34,7 +36,8 @@ public class ClassEntity {
     @Column(name = "join_code", length = 10, unique = true)
     String joinCode;
 
-    @Column(name = "settings", columnDefinition = "JSON")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "settings", columnDefinition = "jsonb")
     String settings;
 
     @Column(name = "is_active")

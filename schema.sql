@@ -15,7 +15,7 @@ CREATE TABLE classes (
     name VARCHAR(50) NOT NULL,
     description TEXT,
     join_code VARCHAR(10) UNIQUE,
-    settings JSON COMMENT 'Class-specific settings like theme, allow_comments, etc.',
+    settings JSONB COMMENT 'Class-specific settings like theme, allow_comments, etc.',
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

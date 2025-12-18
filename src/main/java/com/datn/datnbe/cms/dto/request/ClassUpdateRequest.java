@@ -16,9 +16,6 @@ public class ClassUpdateRequest {
 
     String description;
 
-    @Size(max = 10, message = "Join code cannot exceed 10 characters")
-    String joinCode;
-
     String settings;
 
     Boolean isActive;
