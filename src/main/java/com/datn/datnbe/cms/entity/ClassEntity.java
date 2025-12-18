@@ -22,27 +22,20 @@ public class ClassEntity {
     @Column(name = "id", length = 36)
     String id;
 
+    @Column(name = "owner_id", nullable = false, length = 36)
+    String ownerId;
+
     @Column(name = "name", nullable = false, length = 50)
     String name;
 
-    @Column(name = "grade", nullable = false)
-    Integer grade;
-
-    @Column(name = "academic_year", nullable = false, length = 9)
-    String academicYear;
-
-    @Column(name = "current_enrollment")
-    @Builder.Default
-    Integer currentEnrollment = 0;
-
-    @Column(name = "teacher_id", length = 36)
-    String teacherId;
-
-    @Column(name = "classroom", length = 100)
-    String classroom;
-
     @Column(name = "description", columnDefinition = "TEXT")
     String description;
+
+    @Column(name = "join_code", length = 10, unique = true)
+    String joinCode;
+
+    @Column(name = "settings", columnDefinition = "JSON")
+    String settings;
 
     @Column(name = "is_active")
     @Builder.Default

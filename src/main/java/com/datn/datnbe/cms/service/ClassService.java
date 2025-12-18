@@ -13,6 +13,7 @@ import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -31,13 +32,15 @@ public class ClassService implements ClassApi {
 
     private final ClassRepository classRepository;
     private final ClassEntityMapper classEntityMapper;
+    private final SecurityContextUtils securityContextUtils;
 
     @Override
     @Transactional
     public ClassResponseDto createClass(ClassCreateRequest request) {
-        log.info("Creating class with name: {} for academic year: {}", request.getName(), request.getAcademicYear());
+        log.info("Creating class with name: {}", request.getName());
 
         ClassEntity entity = classEntityMapper.toEntity(request);
+        entity.setOwnerId(securityContextUtils.getCurrentUserId());
         ClassEntity savedEntity = classRepository.save(entity);
 
         log.info("Successfully created class with id: {}", savedEntity.getId());
@@ -46,14 +49,14 @@ public class ClassService implements ClassApi {
 
     @Override
     @Transactional(readOnly = true)
-    public PaginatedResponseDto<ClassListResponseDto> getAllClasses(ClassCollectionRequest request, String teacherId) {
-        log.info("Fetching classes with filters: {}, for teacherId: {}", request, teacherId);
+    public PaginatedResponseDto<ClassListResponseDto> getAllClasses(ClassCollectionRequest request, String ownerId) {
+        log.info("Fetching classes with filters: {}, for ownerId: {}", request, ownerId);
 
         Sort sort = buildSort(request.getSort());
         Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
 
         Page<ClassEntity> page = classRepository
-                .findAllWithFilters(request.getSearch(), teacherId, request.getIsActive(), pageable);
+                .findAllWithFilters(request.getSearch(), ownerId, request.getIsActive(), pageable);
 
         List<ClassListResponseDto> data = page.getContent().stream().map(classEntityMapper::toListResponseDto).toList();
 
@@ -112,8 +115,6 @@ public class ClassService implements ClassApi {
 
     private String mapSortField(String field) {
         return switch (field.toLowerCase()) {
-            case "grade" -> "grade";
-            case "academicyear" -> "academicYear";
             case "createdat" -> "createdAt";
             case "updatedat" -> "updatedAt";
             default -> "name";

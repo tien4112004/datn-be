@@ -33,7 +33,7 @@ public class TeacherPermissionAspect {
 
         String classId = String.valueOf(ParamUtils.getParamValue(jp, "classId"));
         var userId = securityContextUtils.getCurrentUserId();
-        if (!classRepository.isTheTeacherOfClass(classId, userId)) {
+        if (!classRepository.isTheOwnerOfClass(classId, userId)) {
             log.debug("Teacher does not have permission for class: {}", classId);
             throw new AppException(ErrorCode.CLASS_NOT_FOUND, "Class not found or you do not have permission.");
         }

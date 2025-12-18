@@ -39,8 +39,8 @@ public class ClassController {
             @Valid @ModelAttribute ClassCollectionRequest request) {
         log.debug("GET /api/classes with params: {}", request);
 
-        var teacherId = securityContextUtils.getCurrentUserId();
-        PaginatedResponseDto<ClassListResponseDto> paginatedResponse = classApi.getAllClasses(request, teacherId);
+        var ownerId = securityContextUtils.getCurrentUserId();
+        PaginatedResponseDto<ClassListResponseDto> paginatedResponse = classApi.getAllClasses(request, ownerId);
 
         return ResponseEntity.ok(
                 AppResponseDto.successWithPagination(paginatedResponse.getData(), paginatedResponse.getPagination()));

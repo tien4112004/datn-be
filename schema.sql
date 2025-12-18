@@ -11,17 +11,15 @@ CREATE TABLE teachers (
 -- 2. CLASSES
 CREATE TABLE classes (
     id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    owner_id CHAR(36) NOT NULL,
     name VARCHAR(50) NOT NULL,
-    grade SMALLINT NOT NULL CHECK (grade >= 1 AND grade <= 12),
-    academic_year VARCHAR(9) NOT NULL,
-    current_enrollment INTEGER DEFAULT 0,
-    teacher_id CHAR(36),
-    classroom VARCHAR(100),
     description TEXT,
+    join_code VARCHAR(10) UNIQUE,
+    settings JSON COMMENT 'Class-specific settings like theme, allow_comments, etc.',
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (teacher_id) REFERENCES teachers(id)
+    FOREIGN KEY (owner_id) REFERENCES teachers(id)
 );
 
 -- 3. STUDENTS
@@ -112,9 +110,8 @@ CREATE TABLE lesson_resources (
 );
 
 -- INDEXES
-CREATE INDEX idx_classes_grade ON classes(grade);
-CREATE INDEX idx_classes_academic_year ON classes(academic_year);
-CREATE INDEX idx_classes_teacher_id ON classes(teacher_id);
+CREATE INDEX idx_classes_owner_id ON classes(owner_id);
+CREATE INDEX idx_classes_join_code ON classes(join_code);
 CREATE INDEX idx_classes_is_active ON classes(is_active);
 
 CREATE INDEX idx_students_class_id ON students(class_id);

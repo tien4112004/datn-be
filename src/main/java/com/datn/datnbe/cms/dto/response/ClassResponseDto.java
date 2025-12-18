@@ -15,13 +15,11 @@ import java.time.LocalDateTime;
 public class ClassResponseDto {
 
     String id;
+    String ownerId;
     String name;
-    Integer grade;
-    String academicYear;
-    Integer currentEnrollment;
-    String teacherId;
-    String classroom;
     String description;
+    String joinCode;
+    String settings;
     Boolean isActive;
     SeatingLayoutResponseDto layout;
     LocalDateTime createdAt;

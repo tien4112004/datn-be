@@ -13,7 +13,7 @@ import org.mapstruct.*;
 public interface ClassEntityMapper {
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "currentEnrollment", constant = "0")
+    @Mapping(target = "ownerId", ignore = true)
     @Mapping(target = "isActive", constant = "true")
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
@@ -21,7 +21,7 @@ public interface ClassEntityMapper {
     ClassEntity toEntity(ClassCreateRequest request);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "currentEnrollment", ignore = true)
+    @Mapping(target = "ownerId", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "seatingLayout", ignore = true)

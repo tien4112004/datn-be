@@ -15,12 +15,9 @@ import java.time.LocalDateTime;
 public class ClassListResponseDto {
 
     String id;
+    String ownerId;
     String name;
-    Integer grade;
-    String academicYear;
-    Integer currentEnrollment;
-    String teacherId;
-    String classroom;
+    String joinCode;
     Boolean isActive;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;

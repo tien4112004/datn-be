@@ -11,7 +11,7 @@ public interface ClassApi {
 
     ClassResponseDto createClass(ClassCreateRequest request);
 
-    PaginatedResponseDto<ClassListResponseDto> getAllClasses(ClassCollectionRequest request, String teacherId);
+    PaginatedResponseDto<ClassListResponseDto> getAllClasses(ClassCollectionRequest request, String ownerId);
 
     ClassResponseDto getClassById(String id);
 

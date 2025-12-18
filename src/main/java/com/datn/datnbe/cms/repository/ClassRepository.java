@@ -13,13 +13,13 @@ import org.springframework.stereotype.Repository;
 public interface ClassRepository extends JpaRepository<ClassEntity, String>, JpaSpecificationExecutor<ClassEntity> {
     @Query("SELECT c FROM ClassEntity c WHERE "
             + "(:search IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND "
-            + "(:teacherId IS NULL OR c.teacherId = :teacherId) AND " + "(:isActive IS NULL OR c.isActive = :isActive)")
+            + "(:ownerId IS NULL OR c.ownerId = :ownerId) AND " + "(:isActive IS NULL OR c.isActive = :isActive)")
     Page<ClassEntity> findAllWithFilters(@Param("search") String search,
-            @Param("teacherId") String teacherId,
+            @Param("ownerId") String ownerId,
             @Param("isActive") Boolean isActive,
             Pageable pageable);
 
     @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END "
-            + " FROM ClassEntity c WHERE c.id = :classId AND c.teacherId = :teacherId")
-    boolean isTheTeacherOfClass(String classId, String teacherId);
+            + " FROM ClassEntity c WHERE c.id = :classId AND c.ownerId = :ownerId")
+    boolean isTheOwnerOfClass(String classId, String ownerId);
 }
