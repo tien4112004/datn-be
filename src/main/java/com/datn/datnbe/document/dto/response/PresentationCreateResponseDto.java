@@ -21,6 +21,7 @@ import lombok.NoArgsConstructor;
 public class PresentationCreateResponseDto {
     private String id;
     private String title;
+    private String thumbnail;
     private Map<String, Object> metadata;
     private List<SlideDto> slides;
 
