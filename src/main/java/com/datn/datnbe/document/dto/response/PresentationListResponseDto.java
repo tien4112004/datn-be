@@ -1,6 +1,5 @@
 package com.datn.datnbe.document.dto.response;
 
-import com.datn.datnbe.document.dto.SlideDto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
@@ -16,7 +15,7 @@ import lombok.NoArgsConstructor;
 public class PresentationListResponseDto {
     private String id;
     private String title;
+    private String thumbnail;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private SlideDto thumbnail;
 }

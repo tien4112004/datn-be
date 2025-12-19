@@ -26,5 +26,7 @@ public class PresentationUpdateRequest {
     @Valid
     private List<SlideDto> slides;
 
+    private String thumbnail;
+
     private boolean isParsed;
 }
