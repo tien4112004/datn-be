@@ -95,6 +95,11 @@ app:
           provider: "Google"
           default-model: false
           model-type: text
+        - model-name: "gemini-2.5-flash-image-preview"
+          display-name: "Nano Banana"
+          provider: "Google"
+          default-model: true
+          model-type: image
       openRouter:
         - model-name: "google/gemini-2.5-flash-image-preview"
           display-name: "Nano Banana"
@@ -113,6 +118,7 @@ app:
       - "http://localhost:8080"
       - "https://datn-fe.vercel.app"
       - "https://api.huy-devops.site"
+      - "https://app.huy-devops.site"
     # Use allowed-origin-patterns for wildcard matching with Spring AntPathMatcher syntax
     # * matches any characters except /
     # ** matches any characters including /

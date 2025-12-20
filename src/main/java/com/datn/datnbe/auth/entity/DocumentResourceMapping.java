@@ -42,6 +42,12 @@ public class DocumentResourceMapping {
     String resourceType = "presentations";
 
     @Column
+    String resourceUri; // The exact URI used for this resource in Keycloak (e.g., /api/presentation/id)
+
+    @Column
+    String ownerId; // The user ID of the resource owner
+
+    @Column
     String readersGroupId; // Group for users with read-only access
 
     @Column

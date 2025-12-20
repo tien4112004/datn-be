@@ -11,7 +11,7 @@ import com.datn.datnbe.auth.dto.response.ResourceShareResponse;
 public interface ResourcePermissionApi {
     public DocumentRegistrationResponse registerResource(ResourceRegistrationRequest resourceRegistrationRequest,
             String ownerId);
-    public ResourcePermissionResponse checkUserPermissions(String documentId, String userToken, String userId);
+    public ResourcePermissionResponse checkUserPermissions(String documentId, String userId);
     public ResourceShareResponse shareDocument(String documentId, ResourceShareRequest request, String currentUserId);
     public void revokeDocumentAccess(String documentId, String targetUserId, String currentUserId);
     public List<String> getAllResourceByTypeOfOwner(String ownerId, String resourceType);
