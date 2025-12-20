@@ -214,8 +214,7 @@ public class ImageGenerationControllerIntegrationTest extends BaseIntegrationTes
     void generateImageWithIdempotency_WithValidRequest_ShouldSucceed() throws Exception {
         // Given
         String slideId = testPresentation.getSlides().get(0).getId();
-        String elementId = testPresentation.getSlides().get(0).getElements().get(0).getId();
-        String idempotencyKey = testPresentation.getId() + ":" + slideId + ":" + elementId;
+        String idempotencyKey = testPresentation.getId() + ":" + slideId;
 
         ImagePromptRequest request = ImagePromptRequest.builder()
                 .prompt("A beautiful landscape")
@@ -255,8 +254,7 @@ public class ImageGenerationControllerIntegrationTest extends BaseIntegrationTes
     void generateImageWithIdempotency_WithDuplicateRequest_ShouldReturnCached() throws Exception {
         // Given
         String slideId = testPresentation.getSlides().get(0).getId();
-        String elementId = testPresentation.getSlides().get(0).getElements().get(0).getId();
-        String idempotencyKey = testPresentation.getId() + ":" + slideId + ":" + elementId;
+        String idempotencyKey = testPresentation.getId() + ":" + slideId;
 
         ImagePromptRequest request = ImagePromptRequest.builder()
                 .prompt("A mountain landscape")
@@ -306,12 +304,10 @@ public class ImageGenerationControllerIntegrationTest extends BaseIntegrationTes
         Presentation presentation2 = createTestPresentation();
 
         String slideId1 = testPresentation.getSlides().get(0).getId();
-        String elementId1 = testPresentation.getSlides().get(0).getElements().get(0).getId();
-        String idempotencyKey1 = testPresentation.getId() + ":" + slideId1 + ":" + elementId1;
+        String idempotencyKey1 = testPresentation.getId() + ":" + slideId1;
 
         String slideId2 = presentation2.getSlides().get(0).getId();
-        String elementId2 = presentation2.getSlides().get(0).getElements().get(0).getId();
-        String idempotencyKey2 = presentation2.getId() + ":" + slideId2 + ":" + elementId2;
+        String idempotencyKey2 = presentation2.getId() + ":" + slideId2;
 
         ImagePromptRequest request1 = ImagePromptRequest.builder()
                 .prompt("A sunset")
@@ -403,8 +399,7 @@ public class ImageGenerationControllerIntegrationTest extends BaseIntegrationTes
     void generateImageWithIdempotency_WithGenerationError_ShouldMarkAsFailed() throws Exception {
         // Given
         String slideId = testPresentation.getSlides().get(0).getId();
-        String elementId = testPresentation.getSlides().get(0).getElements().get(0).getId();
-        String idempotencyKey = testPresentation.getId() + ":" + slideId + ":" + elementId;
+        String idempotencyKey = testPresentation.getId() + ":" + slideId;
 
         ImagePromptRequest request = ImagePromptRequest.builder()
                 .prompt("Invalid content")
@@ -437,8 +432,7 @@ public class ImageGenerationControllerIntegrationTest extends BaseIntegrationTes
     void generateImageWithIdempotency_WithEmptyImages_ShouldReturnError() throws Exception {
         // Given
         String slideId = testPresentation.getSlides().get(0).getId();
-        String elementId = testPresentation.getSlides().get(0).getElements().get(0).getId();
-        String idempotencyKey = testPresentation.getId() + ":" + slideId + ":" + elementId;
+        String idempotencyKey = testPresentation.getId() + ":" + slideId;
 
         ImagePromptRequest request = ImagePromptRequest.builder()
                 .prompt("Test prompt")
@@ -466,8 +460,7 @@ public class ImageGenerationControllerIntegrationTest extends BaseIntegrationTes
     void generateImageWithIdempotency_RetryFailedRequest_ShouldSucceed() throws Exception {
         // Given
         String slideId = testPresentation.getSlides().get(0).getId();
-        String elementId = testPresentation.getSlides().get(0).getElements().get(0).getId();
-        String idempotencyKey = testPresentation.getId() + ":" + slideId + ":" + elementId;
+        String idempotencyKey = testPresentation.getId() + ":" + slideId;
 
         ImagePromptRequest request = ImagePromptRequest.builder()
                 .prompt("Test prompt")
@@ -530,8 +523,7 @@ public class ImageGenerationControllerIntegrationTest extends BaseIntegrationTes
     void generateImageWithIdempotency_ShouldUseImageSuffix() throws Exception {
         // Given
         String slideId = testPresentation.getSlides().get(0).getId();
-        String elementId = testPresentation.getSlides().get(0).getElements().get(0).getId();
-        String baseIdempotencyKey = testPresentation.getId() + ":" + slideId + ":" + elementId;
+        String baseIdempotencyKey = testPresentation.getId() + ":" + slideId;
         String expectedKey = baseIdempotencyKey + "-image";
 
         ImagePromptRequest request = ImagePromptRequest.builder()

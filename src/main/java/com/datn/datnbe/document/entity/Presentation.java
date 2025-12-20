@@ -50,7 +50,7 @@ public class Presentation {
     Boolean isParsed;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "metadata", columnDefinition = "jsonb", nullable = false)
+    @Column(name = "metadata", columnDefinition = "jsonb")
     @Builder.Default
     Map<String, Object> metadata = new HashMap<>();
 

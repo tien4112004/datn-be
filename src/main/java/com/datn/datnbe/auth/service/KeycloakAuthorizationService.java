@@ -193,11 +193,11 @@ public class KeycloakAuthorizationService {
 
     // ========== Permission Check ==========
 
-    public List<String> checkUserPermissions(String userToken, String resourceId) {
-        log.info("Checking permissions for resource: {}", resourceId);
+    public List<String> checkUserPermissions(String userId, String resourceId) {
+        log.info("Checking permissions for resource: {} for user: {}", resourceId, userId);
 
         try {
-            AuthTokenResponse tokenResponse = apiClient.requestRPT(userToken, resourceId);
+            AuthTokenResponse tokenResponse = apiClient.requestRPT(userId, resourceId);
 
             log.info("Keycloak checkUserPermissions response: hasToken={}",
                     tokenResponse != null && tokenResponse.getAccessToken() != null);
@@ -224,6 +224,20 @@ public class KeycloakAuthorizationService {
 
             log.error("Failed to check permissions: {}", e.getMessage());
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR, "Failed to check permissions: " + e.getMessage());
+        } catch (AppException e) {
+            log.error("Failed to check permissions: {}", e.getMessage());
+            // If it's a Keycloak evaluation error (wrapped from RestClientException),
+            // return empty permissions instead of throwing to fail gracefully
+            if (e.getMessage() != null && e.getMessage().contains("Failed to evaluate permissions in Keycloak")) {
+                log.warn("Keycloak permission evaluation failed, denying access to resource: {}", resourceId);
+                return List.of();
+            }
+            throw e;
+        } catch (Exception e) {
+            log.error("Unexpected error while checking permissions for resource: {}", resourceId, e);
+            // Fail gracefully - deny access rather than throw
+            log.warn("Due to unexpected error, denying access to resource: {}", resourceId);
+            return List.of();
         }
     }
 

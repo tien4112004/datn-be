@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,6 +24,7 @@ public class PresentationDto {
     private String id;
     private String title;
     private String thumbnail;
+    @Builder.Default
     private Map<String, Object> metadata = new java.util.HashMap<>();
     private List<SlideDto> slides;
     private LocalDateTime createdAt;

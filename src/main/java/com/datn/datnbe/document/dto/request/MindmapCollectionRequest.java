@@ -11,12 +11,16 @@ import lombok.*;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class MindmapCollectionRequest {
     @Min(value = 0, message = "Page must be non-negative")
+    @Builder.Default
     private Integer page = 0;
 
     @Min(value = 1, message = "Size must be at least 1")
+    @Builder.Default
     private Integer size = 10;
 
+    @Builder.Default
     private String sortBy = "createdAt";
+    @Builder.Default
     private String sortDirection = "desc";
     private String searchQuery;
 }

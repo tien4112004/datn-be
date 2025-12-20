@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 @Data
 @Builder
@@ -64,7 +65,8 @@ public class SlideUpdateRequest {
         String color;
         String style;
         Float wordSpace;
-        Map<String, Object> extraFields = new java.util.HashMap<>();
+        @Builder.Default
+        Map<String, Object> extraFields = new HashMap<>();
 
         @JsonAnySetter
         public void setExtraField(String key, Object value) {
