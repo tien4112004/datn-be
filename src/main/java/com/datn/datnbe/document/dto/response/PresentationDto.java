@@ -23,8 +23,8 @@ import lombok.NoArgsConstructor;
 public class PresentationDto {
     private String id;
     private String title;
-    @Builder.Default
     private String thumbnail;
+    @Builder.Default
     private Map<String, Object> metadata = new java.util.HashMap<>();
     private List<SlideDto> slides;
     private LocalDateTime createdAt;
