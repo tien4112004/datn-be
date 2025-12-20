@@ -43,6 +43,7 @@ public interface PresentationEntityMapper {
 
     @Mapping(target = "id", expression = "java(entity.getId() != null ? entity.getId().toString() : null)")
     @Mapping(target = "slides", source = "slides")
+    @Mapping(target = "addtionalData", ignore = true)
     PresentationUpdateResponseDto toUpdateResponseDto(Presentation entity);
 
     @Mapping(target = "id", expression = "java(entity.getId() != null ? entity.getId().toString() : null)")
@@ -54,6 +55,7 @@ public interface PresentationEntityMapper {
 
     @Mapping(target = "id", expression = "java(entity.getId() != null ? entity.getId().toString() : null)")
     @Mapping(target = "slides", source = "slides", qualifiedByName = "toDtoList")
+    @Mapping(target = "isParsed", source = "isParsed")
     PresentationDto toDetailedDto(Presentation entity);
 
     // Helper methods for null safety

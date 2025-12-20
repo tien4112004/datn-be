@@ -3,6 +3,7 @@ package com.datn.datnbe.auth.apiclient;
 import java.util.List;
 
 import com.datn.datnbe.auth.dto.response.AuthTokenResponse;
+
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import com.datn.datnbe.auth.config.KeycloakAuthorizationProperties;
@@ -272,34 +274,43 @@ public class KeycloakApiClient {
         }
     }
 
-    public AuthTokenResponse requestRPT(String userToken, String resourceName) {
-        String tokenUrl = String.format("%s/realms/%s/protocol/openid-connect/token",
+    public AuthTokenResponse requestRPT(String userId, String resourceId) {
+        String url = String.format("%s/admin/realms/%s/clients/%s/authz/resource-server/policy/evaluate",
                 authzProperties.getServerUrl(),
-                authzProperties.getRealm());
+                authzProperties.getRealm(),
+                authzProperties.getClientUuid());
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        headers.setBearerAuth(userToken.replace("Bearer ", ""));
+        HttpHeaders headers = createAuthHeaders();
 
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("grant_type", "urn:ietf:params:oauth:grant-type:uma-ticket");
-        body.add("audience", authzProperties.getClientId());
-        body.add("permission", resourceName + "#read");
-        body.add("permission", resourceName + "#comment");
-        body.add("permission", resourceName + "#share");
+        String requestBody = String.format(
+                "{\"resources\":[{\"_id\":\"%s\"}],\"userId\":\"%s\",\"context\":{\"attributes\":{}}}",
+                resourceId,
+                userId);
 
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
+        HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
 
         try {
-            log.info("Requesting RPT for resource: {}", resourceName);
+            log.info("Evaluating permissions for resource: {} for user: {} using Policy Evaluation API",
+                    resourceId,
+                    userId);
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
 
-            ResponseEntity<AuthTokenResponse> response = restTemplate
-                    .exchange(tokenUrl, HttpMethod.POST, request, AuthTokenResponse.class);
+            String responseBody = response.getBody();
 
-            return response.getBody();
+            if (responseBody == null || responseBody.isEmpty()) {
+                log.error("Empty response from policy evaluation");
+                throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR, "Empty response from policy evaluation");
+            }
 
-        } catch (HttpClientErrorException e) {
-            throw e;
+            AuthTokenResponse tokenResponse = new AuthTokenResponse();
+            tokenResponse.setAccessToken(responseBody);
+            log.info("Policy evaluation completed for resource: {} and user: {}", resourceId, userId);
+            return tokenResponse;
+
+        } catch (RestClientException e) {
+            log.error("Failed to evaluate permissions for resource {}: {}", resourceId, e.getMessage());
+            throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR,
+                    "Failed to evaluate permissions in Keycloak: " + e.getMessage());
         }
     }
 

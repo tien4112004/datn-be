@@ -29,6 +29,7 @@ public class MindmapUpdateRequest {
 
     private List<MindmapEdgeDto> edges;
 
+    @Builder.Default
     Map<String, Object> extraFields = new java.util.HashMap<>();
 
     @JsonAnySetter

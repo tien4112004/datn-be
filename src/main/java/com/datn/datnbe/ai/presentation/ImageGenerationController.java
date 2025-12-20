@@ -6,12 +6,8 @@ import com.datn.datnbe.ai.dto.response.ImageResponseDto;
 import com.datn.datnbe.ai.management.ImageGenerationIdempotencyService;
 import com.datn.datnbe.ai.mapper.ImageGenerateMapper;
 import com.datn.datnbe.document.api.MediaStorageApi;
-import com.datn.datnbe.document.api.PresentationApi;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
-import com.datn.datnbe.sharedkernel.exceptions.AppException;
-import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.idempotency.api.Idempotent;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -31,7 +26,6 @@ import java.util.List;
 public class ImageGenerationController {
     private final ImageGenerationApi imageGenerationApi;
     private final MediaStorageApi mediaStorageApi;
-    private final PresentationApi presentationApi;
     private final ImageGenerateMapper imageGenerateMapper;
 
     @PostMapping("/images/generate")
@@ -49,8 +43,7 @@ public class ImageGenerationController {
     @PostMapping("/images/generate-in-presentation")
     @Idempotent(serviceType = ImageGenerationIdempotencyService.class)
     public ResponseEntity<AppResponseDto<ImageResponseDto>> generateImageWithIdempotency(
-            @RequestBody ImagePromptRequest request,
-            HttpServletRequest httpRequest) {
+            @RequestBody ImagePromptRequest request) {
 
         List<MultipartFile> imageResponse = imageGenerationApi.generateImage(request);
 
@@ -58,26 +51,20 @@ public class ImageGenerationController {
         ImageResponseDto uploadedMedia = imageGenerateMapper.toImageResponseDto(imageResponse, mediaStorageApi);
         log.info("Images uploaded successfully: {}", uploadedMedia);
 
-        if (uploadedMedia == null) {
-            throw new AppException(ErrorCode.GENERATION_ERROR, "No images were generated");
-        }
-
-        log.info("Images generated and uploaded successfully: {}", uploadedMedia);
-
-        String idempotencyKey = httpRequest.getHeader("Idempotency-Key");
-
-        List<String> keys = Arrays.stream(idempotencyKey.split(":")).toList();
-        String presentationId = keys.getFirst();
-        String slideId = keys.get(1);
-        String elementId = keys.get(2);
-
-        String url = uploadedMedia.getImages().getFirst().get("cdnUrl").toString();
-
-        if (!(presentationApi.insertImageToPresentation(presentationId, slideId, elementId, url) > 0)) {
-            throw new AppException(ErrorCode.IMAGE_INSERTION_FAILED);
-        }
-
         return ResponseEntity.ok(AppResponseDto.<ImageResponseDto>builder().data(uploadedMedia).build());
     }
 
+    @PostMapping("/image/generate-in-presentation/mock")
+    @Idempotent(serviceType = ImageGenerationIdempotencyService.class)
+    public ResponseEntity<AppResponseDto<ImageResponseDto>> generateMockImageWithIdempotency(
+            @RequestBody ImagePromptRequest request) {
+
+        List<MultipartFile> imageResponse = imageGenerationApi.generateMockImage(request);
+
+        log.info("uploading images to media storage");
+        ImageResponseDto uploadedMedia = imageGenerateMapper.toImageResponseDto(imageResponse, mediaStorageApi);
+        log.info("Images uploaded successfully: {}", uploadedMedia);
+
+        return ResponseEntity.ok(AppResponseDto.<ImageResponseDto>builder().data(uploadedMedia).build());
+    }
 }
