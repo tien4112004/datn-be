@@ -31,6 +31,9 @@ public class SlideTheme {
     @Column(name = "name", nullable = false, length = 255)
     String name;
 
+    @Column(name = "modifiers", length = 1000)
+    String modifiers;
+
     @Column(name = "is_enabled", nullable = false)
     @Builder.Default
     Boolean isEnabled = true;

@@ -26,9 +26,8 @@ public class PresentationUpdateResponseDto {
     private List<SlideDto> slides;
     @Builder.Default
     private Map<String, Object> metadata = new HashMap<>();
-    @Builder.Default
-    private Map<String, Object> addtionalData = new HashMap<>();
 
+    // Capture any unknown JSON properties into metadata
     @JsonAnySetter
     public void setMetadata(String key, Object value) {
         metadata.put(key, value);
@@ -37,15 +36,5 @@ public class PresentationUpdateResponseDto {
     @JsonAnyGetter
     public Map<String, Object> getMetadata() {
         return metadata;
-    }
-
-    @JsonAnySetter
-    public void setAddtionalData(String key, Object value) {
-        addtionalData.put(key, value);
-    }
-
-    @JsonAnyGetter
-    public Map<String, Object> getAddtionalData() {
-        return addtionalData;
     }
 }
