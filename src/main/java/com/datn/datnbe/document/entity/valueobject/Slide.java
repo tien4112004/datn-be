@@ -1,9 +1,7 @@
 package com.datn.datnbe.document.entity.valueobject;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
@@ -18,11 +16,6 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Slide implements Serializable {
     String id;
-
-    @Builder.Default
-    List<SlideElement> elements = new ArrayList<>();
-
-    SlideBackground background;
 
     @Builder.Default
     Map<String, Object> extraFields = new HashMap<>();

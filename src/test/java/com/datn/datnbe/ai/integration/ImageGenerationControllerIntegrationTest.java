@@ -10,8 +10,6 @@ import com.datn.datnbe.document.api.PresentationApi;
 import com.datn.datnbe.document.entity.Media;
 import com.datn.datnbe.document.entity.Presentation;
 import com.datn.datnbe.document.entity.valueobject.Slide;
-import com.datn.datnbe.document.entity.valueobject.SlideElement;
-import com.datn.datnbe.document.enums.SlideElementType;
 import com.datn.datnbe.document.repository.MediaRepository;
 import com.datn.datnbe.document.repository.PresentationRepository;
 import com.datn.datnbe.sharedkernel.idempotency.api.IdempotencyKey;
@@ -113,17 +111,18 @@ public class ImageGenerationControllerIntegrationTest extends BaseIntegrationTes
         presentation.setCreatedAt(LocalDateTime.now());
         presentation.setUpdatedAt(LocalDateTime.now());
 
-        SlideElement element = new SlideElement();
-        element.setId(UUID.randomUUID().toString());
-        element.setType(SlideElementType.IMAGE);
-        element.setLeft(100.0f);
-        element.setTop(100.0f);
-        element.setWidth(200.0f);
-        element.setHeight(200.0f);
+        Map<String, Object> elementData = new HashMap<>();
+        elementData.put("id", UUID.randomUUID().toString());
+        elementData.put("type", "IMAGE");
+        elementData.put("left", 100.0f);
+        elementData.put("top", 100.0f);
+        elementData.put("width", 200.0f);
+        elementData.put("height", 200.0f);
 
-        Slide slide = new Slide();
-        slide.setId(UUID.randomUUID().toString());
-        slide.setElements(List.of(element));
+        Map<String, Object> slideExtraFields = new HashMap<>();
+        slideExtraFields.put("elements", List.of(elementData));
+
+        Slide slide = Slide.builder().id(UUID.randomUUID().toString()).extraFields(slideExtraFields).build();
 
         presentation.setSlides(List.of(slide));
 
