@@ -21,6 +21,7 @@ public class SlideThemeMapper {
         return SlideThemeResponseDto.builder()
                 .id(entity.getId())
                 .name(entity.getName())
+                .modifiers(entity.getModifiers())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .additionalProperties(data)
@@ -34,6 +35,7 @@ public class SlideThemeMapper {
         return SlideTheme.builder()
                 .id(request.getId())
                 .name(request.getName())
+                .modifiers(request.getModifiers())
                 .isEnabled(request.getIsEnabled() != null ? request.getIsEnabled() : true)
                 .data(request.getData() != null ? request.getData() : new HashMap<>())
                 .build();
@@ -45,6 +47,9 @@ public class SlideThemeMapper {
 
         if (request.getName() != null) {
             entity.setName(request.getName());
+        }
+        if (request.getModifiers() != null) {
+            entity.setModifiers(request.getModifiers());
         }
         if (request.getIsEnabled() != null) {
             entity.setIsEnabled(request.getIsEnabled());

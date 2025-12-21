@@ -26,6 +26,9 @@ public class SlideThemeCreateRequest {
     @Size(max = 255, message = "Theme name must not exceed 255 characters")
     private String name;
 
+    @Size(max = 1000, message = "Theme modifiers must not exceed 1000 characters")
+    private String modifiers;
+
     @Builder.Default
     private Boolean isEnabled = true;
 
