@@ -130,34 +130,10 @@ public class StudentController {
         return ResponseEntity.ok(AppResponseDto.success(response, "Student updated successfully"));
     }
 
-    //Decrepted methods
-
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    @PostMapping("/students/import")
-    public ResponseEntity<AppResponseDto<StudentImportResponseDto>> importStudentsGeneral(
-            @RequestParam(value = "file", required = true) MultipartFile file) {
-        log.info("Received student import request for file: {}", file != null ? file.getOriginalFilename() : "null");
-
-        StudentImportResponseDto result = studentImportApi.importStudentsFromCsv(file);
-
-        if (result.isSuccess()) {
-            return ResponseEntity.ok(AppResponseDto.success(result, result.getMessage()));
-        } else {
-            return ResponseEntity.badRequest()
-                    .body(AppResponseDto.<StudentImportResponseDto>builder()
-                            .success(false)
-                            .code(400)
-                            .data(result)
-                            .message(result.getMessage())
-                            .build());
-        }
-    }
-
-    @Deprecated(since = "1.0.0", forRemoval = true)
     @GetMapping("/students/{studentId}")
-    public ResponseEntity<AppResponseDto<StudentResponseDto>> getStudent(@PathVariable String studentId) {
+    public ResponseEntity<AppResponseDto<StudentResponseDto>> getStudentById(@PathVariable String studentId) {
         log.info("Received request to get student with ID: {}", studentId);
         StudentResponseDto response = studentApi.getStudentById(studentId);
-        return ResponseEntity.ok(AppResponseDto.success(response));
+        return ResponseEntity.ok(AppResponseDto.success(response, "Student retrieved successfully"));
     }
 }
