@@ -70,7 +70,7 @@ public class ImageGenerationManagement implements ImageGenerationApi {
 
         //TODO: check if model supports image generation
 
-        ImageGeneratedResponseDto generatedImage = aiApiClient.post("/api/image/generate",
+        ImageGeneratedResponseDto generatedImage = aiApiClient.post("/api/image/generate/mock",
                 MappingParamsUtils.constructParams(request),
                 ImageGeneratedResponseDto.class);
 
