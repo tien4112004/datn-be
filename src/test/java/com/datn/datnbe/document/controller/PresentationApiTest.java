@@ -522,7 +522,7 @@ class PresentationApiTest {
         String presentationId = "test-presentation-id";
 
         Map<String, Object> elementWithoutType = new HashMap<>();
-        elementWithoutType.put("type", null); // Invalid: null type
+        elementWithoutType.put("type", null); // Null type is now allowed with extraFields structure
         elementWithoutType.put("id", "element-1");
         elementWithoutType.put("content", "Sample text");
 
@@ -533,15 +533,15 @@ class PresentationApiTest {
 
         SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(List.of(slide)).build();
 
+        doNothing().when(slidesApi).upsertSlides(eq(presentationId), any(SlidesUpsertRequest.class));
+
         // When & Then
+        // After refactoring to use extraFields, null types are allowed (no field-level validation)
         mockMvc.perform(put("/api/presentations/{id}/slides", presentationId).contentType(MediaType.APPLICATION_JSON)
                 .header("idempotency-key", "test-key-invalid-element-type")
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.code").value(400))
-                .andExpect(jsonPath("$.message").value("Validation failed"))
-                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
+                .content(objectMapper.writeValueAsString(request))).andExpect(status().isNoContent());
+
+        verify(slidesApi).upsertSlides(eq(presentationId), any(SlidesUpsertRequest.class));
     }
 
     @Test
