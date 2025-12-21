@@ -1,0 +1,5 @@
+fullName,dateOfBirth,gender,address,parentName,parentPhone,parentContactEmail,classId,enrollmentDate,status
+"Nguyen Van A",1990-01-15,Male,"123 Main St, ""Downtown"" District",Nguyen Thi B,0912345678,parent1@example.com,class001,2024-01-01,active
+"Tran Thi C",1995-05-20,Female,"456 Oak Ave, ""Central"" Zone",Tran Van D,0923456789,parent2@example.com,class002,2024-01-15,active
+"Le Van E",1992-03-10,Male,"789 Pine Rd - ""Old City""",Le Thi F,0934567890,parent3@example.com,class001,2024-02-01,active
+"Pham Thi G",1998-07-25,Female,"321 Elm St, Building ""A""",Pham Van H,0945678901,parent4@example.com,class003,2024-02-15,active

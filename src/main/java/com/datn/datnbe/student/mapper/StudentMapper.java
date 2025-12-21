@@ -82,6 +82,6 @@ public class StudentMapper {
 
     private boolean isValidEmailFormat(String email) {
         // Basic email validation
-        return email.matches("^[A-Za-z0-9+_.-]+@(.+)$");
+        return email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
     }
 }
