@@ -1,6 +1,6 @@
-id,fullName,dateOfBirth,gender,address,parentName,parentPhone,classId,enrollmentDate,status
-std_001,Nguyen Van A,2008-01-15,male,123 Main Street,Nguyen Van X,+84987654321,cls_001,2024-01-15,active
-std_002,Tran Thi B,2008-05-20,female,456 Oak Avenue,Tran Van Y,+84912345678,cls_001,2024-01-15,active
-std_003,Le Van C,2008-03-10,male,789 Pine Road,Le Van Z,+84999888777,cls_002,2024-01-15,inactive
-std_004,Pham Thi D,2008-07-25,female,321 Elm Street,Pham Van W,+84111222333,cls_002,2024-01-15,active
-std_005,Hoang Van E,2008-09-30,other,555 Cedar Lane,Hoang Van V,+84444555666,cls_003,2024-01-15,graduated
+fullName,dateOfBirth,gender,address,parentName,parentPhone,parentContactEmail,classId
+Nguyen Van A,2008-01-15,male,123 Main Street,Nguyen Van X,+84987654321,parent1@example.com,cls_001
+Tran Thi B,2008-05-20,female,456 Oak Avenue,Tran Van Y,+84912345678,parent2@example.com,cls_001
+Le Van C,2008-03-10,male,789 Pine Road,Le Van Z,+84999888777,parent3@example.com,cls_002
+Pham Thi D,2008-07-25,female,321 Elm Street,Pham Van W,+84111222333,parent4@example.com,cls_002
+Hoang Van E,2008-09-30,other,555 Cedar Lane,Hoang Van V,+84444555666,parent5@example.com,cls_003

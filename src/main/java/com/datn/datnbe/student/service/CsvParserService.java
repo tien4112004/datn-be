@@ -21,10 +21,11 @@ import java.util.*;
 @Slf4j
 public class CsvParserService {
 
-    private static final Set<String> REQUIRED_HEADERS = Set.of("userId");
+    private static final Set<String> REQUIRED_HEADERS = Set.of("fullName");
 
     private static final Set<String> VALID_HEADERS = Set
-            .of("userId", "enrollmentDate", "address", "parentContactEmail", "status");
+            .of("id", "fullName", "dateOfBirth", "gender", "address", "parentName", "parentPhone", 
+                "parentContactEmail", "classId", "enrollmentDate", "status");
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
 
@@ -117,16 +118,31 @@ public class CsvParserService {
             List<String> errors) {
         String[] values = splitCsvLine(line);
 
-        String userId = getValueOrNull(values, headerMap.get("userId"));
-        String enrollmentDateStr = getValueOrNull(values, headerMap.get("enrollmentDate"));
+        String fullName = getValueOrNull(values, headerMap.get("fullName"));
+        String dateOfBirthStr = getValueOrNull(values, headerMap.get("dateOfBirth"));
+        String gender = getValueOrNull(values, headerMap.get("gender"));
         String address = getValueOrNull(values, headerMap.get("address"));
+        String parentName = getValueOrNull(values, headerMap.get("parentName"));
+        String parentPhone = getValueOrNull(values, headerMap.get("parentPhone"));
         String parentContactEmail = getValueOrNull(values, headerMap.get("parentContactEmail"));
+        String classId = getValueOrNull(values, headerMap.get("classId"));
+        String enrollmentDateStr = getValueOrNull(values, headerMap.get("enrollmentDate"));
         String status = getValueOrNull(values, headerMap.get("status"));
 
         // Validate required fields
         List<String> rowErrors = new ArrayList<>();
-        if (userId == null || userId.isBlank()) {
-            rowErrors.add("userId is required");
+        if (fullName == null || fullName.isBlank()) {
+            rowErrors.add("fullName is required");
+        }
+
+        // Parse dateOfBirth if provided
+        LocalDate dateOfBirth = null;
+        if (dateOfBirthStr != null && !dateOfBirthStr.isBlank()) {
+            try {
+                dateOfBirth = LocalDate.parse(dateOfBirthStr, DATE_FORMATTER);
+            } catch (Exception e) {
+                rowErrors.add("Invalid dateOfBirth format (expected YYYY-MM-DD): " + dateOfBirthStr);
+            }
         }
 
         // Parse enrollment date if provided
@@ -145,10 +161,15 @@ public class CsvParserService {
         }
 
         return StudentCsvRow.builder()
-                .userId(userId)
-                .enrollmentDate(enrollmentDate)
+                .fullName(fullName)
+                .dateOfBirth(dateOfBirth)
+                .gender(gender)
                 .address(address)
+                .parentName(parentName)
+                .parentPhone(parentPhone)
                 .parentContactEmail(parentContactEmail)
+                .classId(classId)
+                .enrollmentDate(enrollmentDate)
                 .status(status)
                 .build();
     }
