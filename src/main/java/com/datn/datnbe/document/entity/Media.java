@@ -43,6 +43,9 @@ public class Media {
     @Column(name = "content_type")
     String contentType;
 
+    @Column(name = "owner_id", nullable = true, length = 36)
+    String ownerId;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     LocalDateTime createdAt;
