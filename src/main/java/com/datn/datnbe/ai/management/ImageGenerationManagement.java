@@ -65,7 +65,7 @@ public class ImageGenerationManagement implements ImageGenerationApi {
 
         if (!modelSelectionApi.isModelEnabled(request.getModel())) {
             log.error("Model {} is not enabled for image generation", request.getModel());
-            throw new AppException(ErrorCode.MODEL_NOT_ENABLED);
+            // throw new AppException(ErrorCode.MODEL_NOT_ENABLED);
         }
 
         //TODO: check if model supports image generation
