@@ -27,8 +27,9 @@ public class PresentationUpdateResponseDto {
     @Builder.Default
     private Map<String, Object> metadata = new HashMap<>();
     @Builder.Default
-    private Map<String, Object> addtionalData = new HashMap<>();
+    private Map<String, Object> additionalData = new HashMap<>();
 
+    // Capture any unknown JSON properties into metadata
     @JsonAnySetter
     public void setMetadata(String key, Object value) {
         metadata.put(key, value);
@@ -39,13 +40,12 @@ public class PresentationUpdateResponseDto {
         return metadata;
     }
 
-    @JsonAnySetter
-    public void setAddtionalData(String key, Object value) {
-        addtionalData.put(key, value);
+    // Standard helpers for additional data (no JsonAny annotations)
+    public void setAdditionalData(String key, Object value) {
+        additionalData.put(key, value);
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAddtionalData() {
-        return addtionalData;
+    public Map<String, Object> getAdditionalData() {
+        return additionalData;
     }
 }

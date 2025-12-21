@@ -40,9 +40,6 @@ public class PresentationUpdateRequest {
     @Builder.Default
     private Map<String, Object> metadata = new HashMap<>();
 
-    @Builder.Default
-    private Map<String, Object> addtionalData = new HashMap<>();
-
     @JsonAnySetter
     public void setMetadata(String key, Object value) {
         metadata.put(key, value);
@@ -53,13 +50,11 @@ public class PresentationUpdateRequest {
         return metadata;
     }
 
-    @JsonAnySetter
-    public void setAddtionalData(String key, Object value) {
-        addtionalData.put(key, value);
+    public void setAdditionalData(String key, Object value) {
+        additionalData.put(key, value);
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAddtionalData() {
-        return addtionalData;
+    public Map<String, Object> getAdditionalData() {
+        return additionalData;
     }
 }
