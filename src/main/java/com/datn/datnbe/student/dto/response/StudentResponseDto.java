@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 
 /**
  * Response DTO for student data.
+ * Includes optional credentials (username/password) when returned from create operations.
  */
 @Getter
 @Setter

@@ -21,7 +21,7 @@ import java.util.*;
 @Slf4j
 public class CsvParserService {
 
-    private static final Set<String> REQUIRED_HEADERS = Set.of("userId");
+    private static final Set<String> REQUIRED_HEADERS = Set.of("fullName");
 
     private static final Set<String> VALID_HEADERS = Set.of("id",
             "fullName",
@@ -135,8 +135,18 @@ public class CsvParserService {
 
         // Validate required fields
         List<String> rowErrors = new ArrayList<>();
-        if (userId == null || userId.isBlank()) {
-            rowErrors.add("userId is required");
+        if (fullName == null || fullName.isBlank()) {
+            rowErrors.add("fullName is required");
+        }
+
+        // Parse dateOfBirth if provided
+        LocalDate dateOfBirth = null;
+        if (dateOfBirthStr != null && !dateOfBirthStr.isBlank()) {
+            try {
+                dateOfBirth = LocalDate.parse(dateOfBirthStr, DATE_FORMATTER);
+            } catch (Exception e) {
+                rowErrors.add("Invalid dateOfBirth format (expected YYYY-MM-DD): " + dateOfBirthStr);
+            }
         }
 
         // Parse enrollment date if provided
@@ -155,10 +165,15 @@ public class CsvParserService {
         }
 
         return StudentCsvRow.builder()
-                .userId(userId)
-                .enrollmentDate(enrollmentDate)
+                .fullName(fullName)
+                .dateOfBirth(dateOfBirth)
+                .gender(gender)
                 .address(address)
+                .parentName(parentName)
+                .parentPhone(parentPhone)
                 .parentContactEmail(parentContactEmail)
+                .classId(classId)
+                .enrollmentDate(enrollmentDate)
                 .status(status)
                 .build();
     }

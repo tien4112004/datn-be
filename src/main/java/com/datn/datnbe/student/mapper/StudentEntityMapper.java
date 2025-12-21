@@ -34,6 +34,8 @@ public class StudentEntityMapper {
 
     /**
      * Convert StudentCreateRequest to Student entity.
+     * Note: userId should be set separately after user creation.
+     * This method is kept for reference but not used in the create flow.
      */
     public Student toEntity(StudentCreateRequest request) {
         if (request == null) {
@@ -41,7 +43,6 @@ public class StudentEntityMapper {
         }
 
         return Student.builder()
-                .userId(request.getUserId())
                 .enrollmentDate(request.getEnrollmentDate())
                 .address(request.getAddress())
                 .parentContactEmail(request.getParentContactEmail())
