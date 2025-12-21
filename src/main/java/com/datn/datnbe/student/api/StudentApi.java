@@ -29,15 +29,6 @@ public interface StudentApi {
     StudentResponseDto enrollStudent(String classId, String studentId);
 
     /**
-     * Create a new student and enroll in a class.
-     *
-     * @param classId the class ID
-     * @param request the student create request
-     * @return the created and enrolled student data
-     */
-    StudentResponseDto createAndEnrollStudent(String classId, StudentCreateRequest request);
-
-    /**
      * Remove a student from a class.
      *
      * @param classId the class ID

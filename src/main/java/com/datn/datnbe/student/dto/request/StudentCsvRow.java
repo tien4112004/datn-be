@@ -5,9 +5,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 
-/**
- * Represents a single row from the CSV file for student import.
- */
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -15,9 +13,19 @@ import java.time.LocalDate;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class StudentCsvRow {
-    String userId;
-    LocalDate enrollmentDate;
+    String fullName;
+    LocalDate dateOfBirth;
+    String gender;
+    String parentName;
+    String parentPhone;
+    
     String address;
-    String parentContactEmail;
+    String classId;
+    LocalDate enrollmentDate;
     String status;
+    
+    String parentContactEmail;
+    
+    // Set by import process after user creation
+    String userId;
 }
