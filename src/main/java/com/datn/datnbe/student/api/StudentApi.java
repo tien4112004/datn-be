@@ -54,34 +54,9 @@ public interface StudentApi {
      */
     StudentResponseDto updateStudent(String id, StudentUpdateRequest request);
 
-    // ============================================================
-    // DEPRECATED - Not in OpenAPI documentation
-    // ============================================================
-
-    /**
-     * @deprecated Not in OpenAPI documentation. Use
-     * {@link #createAndEnrollStudent(String, StudentCreateRequest)} instead to create
-     * students within a class context.
-     * @param request the create request
-     * @return the created student data
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
     StudentResponseDto createStudent(StudentCreateRequest request);
 
-    /**
-     * @deprecated Not in OpenAPI documentation. Students should be managed through class
-     * enrollment operations only.
-     * @param id the student ID
-     * @return the student data
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
     StudentResponseDto getStudentById(String id);
 
-    /**
-     * @deprecated Not in OpenAPI documentation. Students should be managed through class
-     * enrollment operations only.
-     * @param id the student ID
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
     void deleteStudent(String id);
 }

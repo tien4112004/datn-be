@@ -70,7 +70,8 @@ public class RequestLoggingFilter {
                     origin != null ? origin : "N/A",
                     remoteAddr,
                     contentType != null ? contentType : "N/A",
-                    headers);
+                    headers,
+                    bodyStr.isEmpty() ? "N/A" : bodyStr);
 
             try {
                 filterChain.doFilter(requestToUse, response);
