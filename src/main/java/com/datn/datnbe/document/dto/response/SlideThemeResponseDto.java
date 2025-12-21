@@ -21,6 +21,7 @@ public class SlideThemeResponseDto {
 
     private String id;
     private String name;
+    private String modifiers;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
