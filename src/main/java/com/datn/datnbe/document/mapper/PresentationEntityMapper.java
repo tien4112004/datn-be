@@ -43,7 +43,6 @@ public interface PresentationEntityMapper {
 
     @Mapping(target = "id", expression = "java(entity.getId() != null ? entity.getId().toString() : null)")
     @Mapping(target = "slides", source = "slides")
-    @Mapping(target = "additionalData", ignore = true)
     PresentationUpdateResponseDto toUpdateResponseDto(Presentation entity);
 
     @Mapping(target = "id", expression = "java(entity.getId() != null ? entity.getId().toString() : null)")

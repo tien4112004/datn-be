@@ -26,8 +26,6 @@ public class PresentationUpdateResponseDto {
     private List<SlideDto> slides;
     @Builder.Default
     private Map<String, Object> metadata = new HashMap<>();
-    @Builder.Default
-    private Map<String, Object> additionalData = new HashMap<>();
 
     // Capture any unknown JSON properties into metadata
     @JsonAnySetter
@@ -38,14 +36,5 @@ public class PresentationUpdateResponseDto {
     @JsonAnyGetter
     public Map<String, Object> getMetadata() {
         return metadata;
-    }
-
-    // Standard helpers for additional data (no JsonAny annotations)
-    public void setAdditionalData(String key, Object value) {
-        additionalData.put(key, value);
-    }
-
-    public Map<String, Object> getAdditionalData() {
-        return additionalData;
     }
 }

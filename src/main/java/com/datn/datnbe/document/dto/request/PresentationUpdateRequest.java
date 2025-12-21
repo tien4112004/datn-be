@@ -40,6 +40,7 @@ public class PresentationUpdateRequest {
     @Builder.Default
     private Map<String, Object> metadata = new HashMap<>();
 
+    // Capture any unknown JSON properties into metadata
     @JsonAnySetter
     public void setMetadata(String key, Object value) {
         metadata.put(key, value);
@@ -48,13 +49,5 @@ public class PresentationUpdateRequest {
     @JsonAnyGetter
     public Map<String, Object> getMetadata() {
         return metadata;
-    }
-
-    public void setAdditionalData(String key, Object value) {
-        additionalData.put(key, value);
-    }
-
-    public Map<String, Object> getAdditionalData() {
-        return additionalData;
     }
 }
