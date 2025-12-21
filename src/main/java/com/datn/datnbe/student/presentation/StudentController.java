@@ -3,7 +3,6 @@ package com.datn.datnbe.student.presentation;
 import com.datn.datnbe.student.api.StudentApi;
 import com.datn.datnbe.student.api.StudentImportApi;
 import com.datn.datnbe.student.dto.request.StudentCreateRequest;
-import com.datn.datnbe.student.dto.request.StudentEnrollmentRequest;
 import com.datn.datnbe.student.dto.request.StudentUpdateRequest;
 import com.datn.datnbe.student.dto.response.StudentImportResponseDto;
 import com.datn.datnbe.student.dto.response.StudentResponseDto;
@@ -36,26 +35,17 @@ public class StudentController {
     }
 
     @PostMapping("/classes/{classId}/students")
-    public ResponseEntity<AppResponseDto<StudentResponseDto>> enrollStudent(@PathVariable String classId,
-            @RequestBody String jsonRequest) throws Exception {
-        log.info("Received request to enroll student in class: {}", classId);
+    public ResponseEntity<AppResponseDto<StudentResponseDto>> createAndEnrollStudent(@PathVariable String classId,
+            @Valid @RequestBody StudentCreateRequest createRequest) {
+        log.info("Received request to create and enroll student in class: {}", classId);
 
-        // Use a simple JSON parsing to determine the type
-        StudentResponseDto response;
+        // Step 1: Create the student entity
+        StudentResponseDto createdStudent = studentApi.createStudent(createRequest);
 
-        if (jsonRequest.contains("\"studentId\"") && !jsonRequest.contains("\"firstName\"")) {
-            // It's an enrollment request
-            StudentEnrollmentRequest enrollmentRequest = new com.fasterxml.jackson.databind.ObjectMapper()
-                    .readValue(jsonRequest, StudentEnrollmentRequest.class);
-            response = studentApi.enrollStudent(classId, enrollmentRequest.getStudentId());
-        } else {
-            // It's a create request
-            StudentCreateRequest createRequest = new com.fasterxml.jackson.databind.ObjectMapper()
-                    .readValue(jsonRequest, StudentCreateRequest.class);
-            response = studentApi.createAndEnrollStudent(classId, createRequest);
-        }
+        // Step 2: Enroll the created student in the class
+        StudentResponseDto response = studentApi.enrollStudent(classId, createdStudent.getId());
 
-        return ResponseEntity.ok(AppResponseDto.success(response, "Student enrolled successfully"));
+        return ResponseEntity.ok(AppResponseDto.success(response, "Student created and enrolled successfully"));
     }
 
     @DeleteMapping("/classes/{classId}/students/{studentId}")

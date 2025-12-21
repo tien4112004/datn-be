@@ -18,8 +18,9 @@ public class StudentMapper {
 
     /**
      * Convert a CSV row to a Student entity with validation.
+     * At this point, the csvRow.userId should already be set to the created user ID.
      *
-     * @param csvRow    the CSV row data
+     * @param csvRow    the CSV row data (with userId already set from user creation)
      * @param rowNumber the row number for error reporting
      * @param errors    list to collect validation errors
      * @return the Student entity or null if validation fails
@@ -27,11 +28,9 @@ public class StudentMapper {
     public Student toEntity(StudentCsvRow csvRow, int rowNumber, List<String> errors) {
         List<String> rowErrors = new ArrayList<>();
 
-        // Validate userId
+        // Validate userId is set
         if (csvRow.getUserId() == null || csvRow.getUserId().isBlank()) {
             rowErrors.add(String.format("Row %d: userId is required", rowNumber));
-        } else if (csvRow.getUserId().length() > 50) {
-            rowErrors.add(String.format("Row %d: userId exceeds maximum length", rowNumber));
         }
 
         // Validate status

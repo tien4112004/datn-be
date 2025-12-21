@@ -9,6 +9,7 @@ import java.time.LocalDate;
 
 /**
  * Request DTO for creating a new student.
+ * Requires user creation fields (fullName, dateOfBirth, etc.) which will be used to create a user via UserProfileAPI.
  */
 @Getter
 @Setter
@@ -18,14 +19,30 @@ import java.time.LocalDate;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class StudentCreateRequest {
 
-    @NotBlank(message = "User ID is required")
-    String userId;
+    @NotBlank(message = "Full name is required")
+    String fullName;
 
-    LocalDate enrollmentDate;
+    LocalDate dateOfBirth;
+
+    @Size(max = 50, message = "Gender must not exceed 50 characters")
+    String gender;
 
     @Size(max = 255, message = "Address must not exceed 255 characters")
     String address;
 
+    @NotBlank(message = "Parent name is required")
+    String parentName;
+
+    @NotBlank(message = "Parent phone is required")
+    String parentPhone;
+
     @Size(max = 100, message = "Parent contact email must not exceed 100 characters")
     String parentContactEmail;
+
+    @NotBlank(message = "Class ID is required")
+    String classId;
+
+    LocalDate enrollmentDate;
+
+    String status;
 }

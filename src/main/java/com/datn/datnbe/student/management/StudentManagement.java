@@ -10,7 +10,11 @@ import com.datn.datnbe.student.enums.EnrollmentStatus;
 import com.datn.datnbe.student.mapper.StudentEntityMapper;
 import com.datn.datnbe.student.repository.ClassEnrollmentRepository;
 import com.datn.datnbe.student.repository.StudentRepository;
+import com.datn.datnbe.student.utils.StudentCredentialGenerator;
 import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
+import com.datn.datnbe.auth.api.UserProfileApi;
+import com.datn.datnbe.auth.dto.request.SignupRequest;
+import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -34,6 +38,7 @@ public class StudentManagement implements StudentApi {
     StudentRepository studentRepository;
     ClassEnrollmentRepository classEnrollmentRepository;
     StudentEntityMapper studentEntityMapper;
+    UserProfileApi userProfileApi;
 
     @Override
     public StudentResponseDto getStudentById(String id) {
@@ -46,18 +51,48 @@ public class StudentManagement implements StudentApi {
     @Override
     @Transactional
     public StudentResponseDto createStudent(StudentCreateRequest request) {
-        log.info("Creating new student with user ID: {}", request.getUserId());
+        log.info("Creating new student with full name: {}", request.getFullName());
 
-        // Check if student already exists for this user
-        if (studentRepository.existsByUserId(request.getUserId())) {
-            throw new IllegalArgumentException("Student already exists for user ID: " + request.getUserId());
-        }
+        // Phase 1: Create user via UserProfileAPI
+        String email = StudentCredentialGenerator.generateEmail(request.getFullName());
+        String password = StudentCredentialGenerator.generatePassword();
 
-        Student student = studentEntityMapper.toEntity(request);
+        // Parse fullName into firstName and lastName
+        String[] names = request.getFullName().trim().split("\\s+", 2);
+        String firstName = names[0];
+        String lastName = names.length > 1 ? names[1] : firstName;
+
+        SignupRequest signupRequest = SignupRequest.builder()
+                .email(email)
+                .password(password)
+                .firstName(firstName)
+                .lastName(lastName)
+                .build();
+
+        UserProfileResponse createdUser = userProfileApi.createUserProfile(signupRequest);
+        String userId = createdUser.getId();
+
+        log.info("User created via UserProfileAPI with ID: {}", userId);
+
+        // Phase 2: Create student entity linked to the user
+        Student student = Student.builder()
+                .userId(userId)
+                .enrollmentDate(request.getEnrollmentDate())
+                .address(request.getAddress())
+                .parentContactEmail(request.getParentContactEmail())
+                .build();
+
         Student savedStudent = studentRepository.save(student);
 
         log.info("Successfully created student with ID: {}", savedStudent.getId());
-        return studentEntityMapper.toResponseDto(savedStudent);
+        
+        // Build response with credentials
+        StudentResponseDto response = studentEntityMapper.toResponseDto(savedStudent);
+        response.setUsername(email);
+        response.setPassword(password);
+        response.setEmail(email);
+        
+        return response;
     }
 
     @Override
@@ -136,21 +171,6 @@ public class StudentManagement implements StudentApi {
         log.info("Successfully enrolled student {} to class {}", studentId, classId);
 
         return studentEntityMapper.toResponseDto(student);
-    }
-
-    @Override
-    @Transactional
-    public StudentResponseDto createAndEnrollStudent(String classId, StudentCreateRequest request) {
-        log.info("Creating and enrolling new student in class {}", classId);
-
-        // Create the student
-        StudentResponseDto createdStudent = createStudent(request);
-
-        // Enroll the student
-        enrollStudent(classId, createdStudent.getId());
-
-        log.info("Successfully created and enrolled student {} in class {}", createdStudent.getId(), classId);
-        return createdStudent;
     }
 
     @Override
