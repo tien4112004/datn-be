@@ -85,7 +85,7 @@ public class StudentManagement implements StudentApi {
         }
 
         // Also remove from all class enrollments
-        classEnrollmentRepository.deleteInBatch(classEnrollmentRepository.findAll()
+        classEnrollmentRepository.deleteAllInBatch(classEnrollmentRepository.findAll()
                 .stream()
                 .filter(e -> e.getStudentId().equals(id))
                 .collect(Collectors.toList()));
