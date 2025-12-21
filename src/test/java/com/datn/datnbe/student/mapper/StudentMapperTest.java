@@ -20,6 +20,7 @@ class StudentMapperTest {
     void toEntity_withAllFields_mapsCorrectly() {
         // Given
         StudentCsvRow csvRow = StudentCsvRow.builder()
+                .userId("user_001")
                 .enrollmentDate(LocalDate.of(2024, 1, 15))
                 .address("123 Main St")
                 .parentContactEmail("parent@example.com")
@@ -43,7 +44,9 @@ class StudentMapperTest {
     @DisplayName("Valid mapping with minimal fields")
     void toEntity_withMinimalFields_usesDefaults() {
         // Given
-        StudentCsvRow csvRow = StudentCsvRow.builder().build();
+        StudentCsvRow csvRow = StudentCsvRow.builder()
+                .userId("user_002")
+                .build();
         List<String> errors = new ArrayList<>();
 
         // When
@@ -77,6 +80,7 @@ class StudentMapperTest {
     void toEntity_withInvalidEmailFormat_returnsError() {
         // Given
         StudentCsvRow csvRow = StudentCsvRow.builder()
+                .userId("user_002")
                 .parentContactEmail("invalid-email-format")
                 .build();
         List<String> errors = new ArrayList<>();

@@ -73,6 +73,13 @@ class StudentImportManagementTest {
                     .status("active")
                     .build();
 
+            UserProfileResponse createdUser = UserProfileResponse.builder()
+                    .id("user_001")
+                    .email("nguyen.van.a@example.com")
+                    .firstName("Nguyen")
+                    .lastName("Van A")
+                    .build();
+
             Student student = Student.builder()
                     .userId("user_001")
                     .enrollmentDate(LocalDate.of(2024, 1, 15))
@@ -82,6 +89,7 @@ class StudentImportManagementTest {
 
             when(csvParserService.parseStudentCsv(any()))
                     .thenReturn(new CsvParserService.ParseResult(List.of(csvRow), new ArrayList<>()));
+            when(userProfileApi.createUserProfile(any())).thenReturn(createdUser);
             when(studentMapper.toEntity(eq(csvRow), anyInt(), anyList())).thenReturn(student);
             when(studentRepository.existsByUserId(anyString())).thenReturn(false);
             when(studentRepository.saveAll(anyList())).thenReturn(List.of(student));
@@ -109,6 +117,20 @@ class StudentImportManagementTest {
                     .dateOfBirth(LocalDate.of(2008, 5, 20))
                     .gender("female")
                     .classId("cls_001")
+                    .build();
+
+            UserProfileResponse createdUser1 = UserProfileResponse.builder()
+                    .id("user_001")
+                    .email("nguyen.van.a@example.com")
+                    .firstName("Nguyen")
+                    .lastName("Van A")
+                    .build();
+
+            UserProfileResponse createdUser2 = UserProfileResponse.builder()
+                    .id("user_002")
+                    .email("tran.thi.b@example.com")
+                    .firstName("Tran")
+                    .lastName("Thi B")
                     .build();
 
             Student student1 = Student.builder().userId("user_001").build();
@@ -164,11 +186,19 @@ class StudentImportManagementTest {
                     .classId("cls_001")
                     .build();
 
+            UserProfileResponse createdUser = UserProfileResponse.builder()
+                    .id("user_001")
+                    .email("test@example.com")
+                    .firstName("Test")
+                    .lastName("User")
+                    .build();
+
             Student student1 = Student.builder().userId("user_001").build();
             Student student2 = Student.builder().userId("user_001").build();
 
             when(csvParserService.parseStudentCsv(any()))
                     .thenReturn(new CsvParserService.ParseResult(List.of(csvRow1, csvRow2), new ArrayList<>()));
+            when(userProfileApi.createUserProfile(any())).thenReturn(createdUser);
             when(studentMapper.toEntity(eq(csvRow1), anyInt(), anyList())).thenReturn(student1);
             when(studentMapper.toEntity(eq(csvRow2), anyInt(), anyList())).thenReturn(student2);
 
@@ -189,10 +219,18 @@ class StudentImportManagementTest {
                     .classId("cls_001")
                     .build();
 
+            UserProfileResponse createdUser = UserProfileResponse.builder()
+                    .id("user_001")
+                    .email("nguyen.van.a@example.com")
+                    .firstName("Nguyen")
+                    .lastName("Van A")
+                    .build();
+
             Student student = Student.builder().userId("user_001").build();
 
             when(csvParserService.parseStudentCsv(any()))
                     .thenReturn(new CsvParserService.ParseResult(List.of(csvRow), new ArrayList<>()));
+            when(userProfileApi.createUserProfile(any())).thenReturn(createdUser);
             when(studentMapper.toEntity(eq(csvRow), anyInt(), anyList())).thenReturn(student);
             when(studentRepository.existsByUserId("user_001")).thenReturn(true);
 
@@ -208,8 +246,16 @@ class StudentImportManagementTest {
         void importStudentsFromCsv_withMappingErrors_returnsFailure() {
             StudentCsvRow csvRow = StudentCsvRow.builder().fullName("Test Student").build();
 
+            UserProfileResponse createdUser = UserProfileResponse.builder()
+                    .id("user_001")
+                    .email("test.student@example.com")
+                    .firstName("Test")
+                    .lastName("Student")
+                    .build();
+
             when(csvParserService.parseStudentCsv(any()))
                     .thenReturn(new CsvParserService.ParseResult(List.of(csvRow), new ArrayList<>()));
+            when(userProfileApi.createUserProfile(any())).thenReturn(createdUser);
             when(studentMapper.toEntity(eq(csvRow), anyInt(), anyList())).thenAnswer(invocation -> {
                 List<String> errors = invocation.getArgument(2);
                 errors.add("Row 2: userId is required");
@@ -233,10 +279,18 @@ class StudentImportManagementTest {
                     .classId("cls_001")
                     .build();
 
+            UserProfileResponse createdUser = UserProfileResponse.builder()
+                    .id("user_001")
+                    .email("nguyen.van.a@example.com")
+                    .firstName("Nguyen")
+                    .lastName("Van A")
+                    .build();
+
             Student student = Student.builder().userId("user_001").build();
 
             when(csvParserService.parseStudentCsv(any()))
                     .thenReturn(new CsvParserService.ParseResult(List.of(csvRow), new ArrayList<>()));
+            when(userProfileApi.createUserProfile(any())).thenReturn(createdUser);
             when(studentMapper.toEntity(eq(csvRow), anyInt(), anyList())).thenReturn(student);
             when(studentRepository.existsByUserId(anyString())).thenReturn(false);
             when(studentRepository.saveAll(anyList())).thenThrow(new RuntimeException("DB Error"));

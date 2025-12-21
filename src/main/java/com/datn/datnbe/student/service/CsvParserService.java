@@ -4,6 +4,9 @@ import com.datn.datnbe.student.dto.request.StudentCsvRow;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,6 +19,7 @@ import java.util.*;
 
 /**
  * Service for parsing CSV files for student import.
+ * Uses Apache Commons CSV for robust handling of escaped quotes and complex CSV format variations.
  */
 @Service
 @Slf4j
@@ -39,6 +43,7 @@ public class CsvParserService {
 
     /**
      * Parse CSV file and return list of StudentCsvRow objects with any parsing errors.
+     * Uses Apache Commons CSV for robust handling of escaped quotes within quoted fields.
      *
      * @param file the CSV file to parse
      * @return ParseResult containing parsed rows and any errors
@@ -71,16 +76,15 @@ public class CsvParserService {
                 return new ParseResult(rows, errors);
             }
 
-            String line;
-            int rowNumber = 1; // Header is row 0, data starts at row 1
-            while ((line = reader.readLine()) != null) {
+            int rowNumber = 1; // Data starts at row 1 (row 0 is header)
+            for (CSVRecord record : csvParser) {
                 rowNumber++;
-                if (line.isBlank()) {
+                if (record.size() == 0 || record.get(0).isBlank()) {
                     continue;
                 }
 
                 try {
-                    StudentCsvRow row = parseDataLine(line, headerMap, rowNumber, errors);
+                    StudentCsvRow row = parseDataLine(record, headerMap, rowNumber, errors);
                     if (row != null) {
                         rows.add(row);
                     }
@@ -97,13 +101,12 @@ public class CsvParserService {
         return new ParseResult(rows, errors);
     }
 
-    private Map<String, Integer> parseHeaderLine(String headerLine, List<String> errors) {
+    private Map<String, Integer> buildHeaderMap(Map<String, Integer> csvHeaderMap, List<String> errors) {
         Map<String, Integer> headerMap = new HashMap<>();
-
         for (Map.Entry<String, Integer> entry : csvHeaderMap.entrySet()) {
             String header = entry.getKey().trim();
             if (VALID_HEADERS.contains(header)) {
-                headerMap.put(header, i);
+                headerMap.put(header, entry.getValue());
             }
         }
 
@@ -117,11 +120,10 @@ public class CsvParserService {
         return headerMap;
     }
 
-    private StudentCsvRow parseDataLine(String line,
+    private StudentCsvRow parseDataLine(CSVRecord record,
             Map<String, Integer> headerMap,
             int rowNumber,
             List<String> errors) {
-
         String fullName = getValueFromRecord(record, "fullName");
         String dateOfBirthStr = getValueFromRecord(record, "dateOfBirth");
         String gender = getValueFromRecord(record, "gender");
@@ -178,35 +180,16 @@ public class CsvParserService {
                 .build();
     }
 
-    private String getValueOrNull(String[] values, Integer index) {
-        if (index == null || index >= values.length) {
+    private String getValueFromRecord(CSVRecord record, String columnName) {
+        try {
+            if (!record.isMapped(columnName)) {
+                return null;
+            }
+            String value = record.get(columnName).trim();
+            return value.isEmpty() ? null : value;
+        } catch (IllegalArgumentException e) {
             return null;
         }
-        String value = values[index].trim().replace("\"", "");
-        return value.isEmpty() ? null : value;
-    }
-
-    /**
-     * Split CSV line handling quoted values with commas.
-     */
-    private String[] splitCsvLine(String line) {
-        List<String> values = new ArrayList<>();
-        StringBuilder current = new StringBuilder();
-        boolean inQuotes = false;
-
-        for (char c : line.toCharArray()) {
-            if (c == '"') {
-                inQuotes = !inQuotes;
-            } else if (c == ',' && !inQuotes) {
-                values.add(current.toString());
-                current = new StringBuilder();
-            } else {
-                current.append(c);
-            }
-        }
-        values.add(current.toString());
-
-        return values.toArray(new String[0]);
     }
 
     /**
@@ -218,3 +201,4 @@ public class CsvParserService {
         }
     }
 }
+
