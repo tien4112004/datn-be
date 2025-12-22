@@ -15,10 +15,7 @@ import java.util.Map;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SlideBackground implements Serializable {
-    @NonNull
-    String type;
-
-    String color;
+    String id;
 
     @Builder.Default
     Map<String, Object> extraFields = new HashMap<>();

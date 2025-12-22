@@ -8,8 +8,19 @@ public interface MediaStorageApi {
      * Upload any supported media file
      *
      * @param file the file to upload
+     * @param ownerId the ID of the user who owns this media
      * @return the CDN URL of the uploaded file
      */
+    UploadedMediaResponseDto upload(MultipartFile file, String ownerId);
+
+    /**
+     * Upload any supported media file
+     *
+     * @param file the file to upload
+     * @return the CDN URL of the uploaded file
+     * @deprecated Use {@link #upload(MultipartFile, String)} instead
+     */
+    @Deprecated
     UploadedMediaResponseDto upload(MultipartFile file);
 
     /**

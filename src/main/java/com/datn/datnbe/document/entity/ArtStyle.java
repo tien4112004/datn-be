@@ -34,7 +34,7 @@ public class ArtStyle {
     @Column(name = "label_key", nullable = false, length = 100)
     String labelKey;
 
-    @Column(name = "visual", length = 500)
+    @Column(name = "visual")
     String visual;
 
     @Column(name = "modifiers", length = 1000)

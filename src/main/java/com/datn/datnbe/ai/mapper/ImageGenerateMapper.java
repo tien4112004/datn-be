@@ -12,15 +12,21 @@ import java.util.Map;
 public interface ImageGenerateMapper {
 
     @Named("toElement")
-    default Map<String, Object> toElement(MultipartFile image, @Context MediaStorageApi mediaStorageApi) {
-        var uploaded = mediaStorageApi.upload(image);
+    default Map<String, Object> toElement(MultipartFile image,
+            @Context MediaStorageApi mediaStorageApi,
+            @Context String ownerId) {
+        var uploaded = mediaStorageApi.upload(image, ownerId);
         return Map.of("id", uploaded.getId(), "cdnUrl", uploaded.getCdnUrl());
     }
 
     @IterableMapping(qualifiedByName = "toElement")
-    List<Map<String, Object>> toElements(List<MultipartFile> images, @Context MediaStorageApi mediaStorageApi);
+    List<Map<String, Object>> toElements(List<MultipartFile> images,
+            @Context MediaStorageApi mediaStorageApi,
+            @Context String ownerId);
 
-    default ImageResponseDto toImageResponseDto(List<MultipartFile> images, @Context MediaStorageApi mediaStorageApi) {
-        return ImageResponseDto.builder().images(toElements(images, mediaStorageApi)).build();
+    default ImageResponseDto toImageResponseDto(List<MultipartFile> images,
+            @Context MediaStorageApi mediaStorageApi,
+            String ownerId) {
+        return ImageResponseDto.builder().images(toElements(images, mediaStorageApi, ownerId)).build();
     }
 }

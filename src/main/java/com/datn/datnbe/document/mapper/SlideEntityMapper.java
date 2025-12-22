@@ -7,22 +7,17 @@ import com.datn.datnbe.document.entity.valueobject.Slide;
 import java.util.List;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring", nullValueMappingStrategy = NullValueMappingStrategy.RETURN_NULL, collectionMappingStrategy = CollectionMappingStrategy.ADDER_PREFERRED, uses = {
-        SlideElementMapper.class
-        // , SlideBackgroundMapper.class
-})
+@Mapper(componentModel = "spring", nullValueMappingStrategy = NullValueMappingStrategy.RETURN_NULL)
 @Named("SlideEntityMapper")
 public interface SlideEntityMapper {
 
     @Mapping(target = "id", source = "id")
-    @Mapping(target = "background", source = "background")
-    @Mapping(target = "elements", source = "elements", qualifiedByName = "toEntityList")
+    @Mapping(target = "extraFields", source = "extraFields")
     @Named("toEntity")
     Slide toEntity(SlideDto slideDto);
 
     @Mapping(target = "id", source = "id")
-    @Mapping(target = "elements", source = "elements", qualifiedByName = "toDto")
-    @Mapping(target = "background", source = "background")
+    @Mapping(target = "extraFields", source = "extraFields")
     @Named("toDto")
     SlideDto toDto(Slide slide);
 
@@ -35,18 +30,16 @@ public interface SlideEntityMapper {
     List<Slide> toEntityList(List<SlideDto> slideDtos);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "elements", source = "elements", qualifiedByName = "createRequestToEntityList")
-    @Mapping(target = "background", source = "background")
-    @Named("createRequestToEntityList")
+    @Mapping(target = "extraFields", source = "extraFields")
+    @Named("createRequestToEntity")
     Slide createRequestToEntity(SlideCreateRequest request);
 
-    @IterableMapping(qualifiedByName = "createRequestToEntityList")
+    @IterableMapping(qualifiedByName = "createRequestToEntity")
     @Named("createRequestToEntityList")
     List<Slide> createRequestToEntityList(List<SlideCreateRequest> slideCreateRequests);
 
     @Mapping(target = "id", source = "id")
-    @Mapping(target = "elements", source = "elements", qualifiedByName = "updateRequestToEntityList")
-    @Mapping(target = "background", source = "background")
+    @Mapping(target = "extraFields", source = "extraFields")
     @Named("updateRequestToEntity")
     Slide updateRequestToEntity(SlideUpdateRequest request);
 

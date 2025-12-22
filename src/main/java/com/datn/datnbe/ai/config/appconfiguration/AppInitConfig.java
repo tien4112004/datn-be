@@ -8,8 +8,11 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -17,15 +20,21 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@ConditionalOnProperty(prefix = "app.init", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "app.init", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class AppInitConfig {
 
     ModelProperties modelProperties;
     ModelSelectionApi modelSelectionApi;
+    ApplicationContext applicationContext;
+
+    @Value("${app.init.exit-after-init:false}")
+    boolean exitAfterInit;
 
     @Bean
     CommandLineRunner InitializeModelConfiguration() {
         return args -> {
+            log.info("Starting model configuration initialization...");
+
             var existingModels = modelSelectionApi.getModelConfigurations();
             var existingModelNames = existingModels.stream()
                     .map(ModelResponseDto::getModelName)
@@ -53,6 +62,11 @@ public class AppInitConfig {
                     });
 
             log.info("Model configuration synchronization completed");
+
+            if (exitAfterInit) {
+                log.info("Exiting application after initialization (app.init.exit-after-init=true)");
+                SpringApplication.exit(applicationContext, () -> 0);
+            }
         };
     }
 }

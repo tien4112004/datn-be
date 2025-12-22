@@ -2,6 +2,7 @@ package com.datn.datnbe.document.controller;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,7 +33,6 @@ import com.datn.datnbe.document.api.SlidesApi;
 import com.datn.datnbe.document.dto.SlideDto;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
 import com.datn.datnbe.document.dto.request.SlideUpdateRequest;
-import com.datn.datnbe.document.dto.request.SlideUpdateRequest.SlideElementUpdateRequest;
 import com.datn.datnbe.document.dto.request.SlidesUpsertRequest;
 import com.datn.datnbe.document.dto.response.PresentationCreateResponseDto;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
@@ -62,24 +62,26 @@ class PresentationApiTest {
 
     @BeforeEach
     void setUp() {
-        SlideDto.SlideBackgroundDto background = SlideDto.SlideBackgroundDto.builder()
-                .type("color")
-                .color("#ffffff")
-                .build();
+        Map<String, Object> background = new HashMap<>();
+        background.put("type", "color");
+        background.put("color", "#ffffff");
 
-        SlideDto.SlideElementDto element = SlideDto.SlideElementDto.builder()
-                .type("text")
-                .id("element-1")
-                .left(100.0f)
-                .top(200.0f)
-                .width(300.0f)
-                .height(50.0f)
-                .content("Sample text")
-                .defaultFontName("Arial")
-                .defaultColor("#000000")
-                .build();
+        Map<String, Object> element = new HashMap<>();
+        element.put("type", "text");
+        element.put("id", "element-1");
+        element.put("left", 100.0f);
+        element.put("top", 200.0f);
+        element.put("width", 300.0f);
+        element.put("height", 50.0f);
+        element.put("content", "Sample text");
+        element.put("defaultFontName", "Arial");
+        element.put("defaultColor", "#000000");
 
-        SlideDto slide = SlideDto.builder().id("slide-1").elements(List.of(element)).background(background).build();
+        Map<String, Object> slideExtraFields = new HashMap<>();
+        slideExtraFields.put("elements", List.of(element));
+        slideExtraFields.put("background", background);
+
+        SlideDto slide = SlideDto.builder().id("slide-1").extraFields(slideExtraFields).build();
 
         request = PresentationCreateRequest.builder().slides(List.of(slide)).build();
 
@@ -117,8 +119,7 @@ class PresentationApiTest {
     void createPresentation_WithMultipleSlides_ShouldReturnAllSlides() throws Exception {
         SlideDto secondSlide = SlideDto.builder()
                 .id("slide-2")
-                .elements(request.getSlides().get(0).getElements())
-                .background(request.getSlides().get(0).getBackground())
+                .extraFields(request.getSlides().get(0).getExtraFields())
                 .build();
 
         request = PresentationCreateRequest.builder()
@@ -142,47 +143,41 @@ class PresentationApiTest {
 
     @Test
     void createPresentation_WithComplexElements_ShouldPreserveAllProperties() throws Exception {
-        var extraFields = Map.of("customProperty",
-                "customValue",
-                "isTest",
-                true,
-                "testNumber",
-                42,
-                "nestedLevel1",
-                Map.of("level2", Map.of("level3", Map.of("deepKey", "deepValue"))));
+        Map<String, Object> complexElement = new HashMap<>();
+        complexElement.put("type", "text");
+        complexElement.put("id", "complex-element");
+        complexElement.put("left", 50.0f);
+        complexElement.put("top", 75.0f);
+        complexElement.put("width", 200.0f);
+        complexElement.put("height", 150.0f);
+        complexElement.put("viewBox", Arrays.asList(0.0f, 0.0f, 100.0f, 100.0f));
+        complexElement.put("path", "M10,10 L90,90");
+        complexElement.put("fill", "#ff0000");
+        complexElement.put("fixedRatio", true);
+        complexElement.put("opacity", 0.8f);
+        complexElement.put("rotate", 45.0f);
+        complexElement.put("flipV", false);
+        complexElement.put("lineHeight", 1.5f);
+        complexElement.put("content", null);
+        complexElement.put("defaultFontName", "Arial");
+        complexElement.put("defaultColor", "#000000");
+        complexElement.put("start", Arrays.asList(10.0f, 20.0f));
+        complexElement.put("end", Arrays.asList(90.0f, 80.0f));
+        complexElement.put("points", Arrays.asList("10,10", "50,50", "90,90"));
+        complexElement.put("color", "#00ff00");
+        complexElement.put("style", "solid");
+        complexElement.put("wordSpace", 2.0f);
+        // Extra custom fields
+        complexElement.put("customProperty", "customValue");
+        complexElement.put("isTest", true);
+        complexElement.put("testNumber", 42);
+        complexElement.put("nestedLevel1", Map.of("level2", Map.of("level3", Map.of("deepKey", "deepValue"))));
 
-        SlideDto.SlideElementDto complexElement = SlideDto.SlideElementDto.builder()
-                .type("text")
-                .id("complex-element")
-                .left(50.0f)
-                .top(75.0f)
-                .width(200.0f)
-                .height(150.0f)
-                .viewBox(Arrays.asList(0.0f, 0.0f, 100.0f, 100.0f))
-                .path("M10,10 L90,90")
-                .fill("#ff0000")
-                .fixedRatio(true)
-                .opacity(0.8f)
-                .rotate(45.0f)
-                .flipV(false)
-                .lineHeight(1.5f)
-                .content(null)
-                .defaultFontName("Arial")
-                .defaultColor("#000000")
-                .start(Arrays.asList(10.0f, 20.0f))
-                .end(Arrays.asList(90.0f, 80.0f))
-                .points(Arrays.asList("10,10", "50,50", "90,90"))
-                .color("#00ff00")
-                .style("solid")
-                .wordSpace(2.0f)
-                .extraFields(extraFields)
-                .build();
+        Map<String, Object> slideExtraFields = new HashMap<>();
+        slideExtraFields.put("elements", List.of(complexElement));
+        slideExtraFields.put("background", request.getSlides().get(0).getExtraFields().get("background"));
 
-        SlideDto slideWithComplexElement = SlideDto.builder()
-                .id("complex-slide")
-                .elements(List.of(complexElement))
-                .background(request.getSlides().get(0).getBackground())
-                .build();
+        SlideDto slideWithComplexElement = SlideDto.builder().id("complex-slide").extraFields(slideExtraFields).build();
 
         request = PresentationCreateRequest.builder().slides(List.of(slideWithComplexElement)).build();
         mockResponse = PresentationCreateResponseDto.builder()
@@ -360,26 +355,25 @@ class PresentationApiTest {
     void upsertSlides_WithValidRequest_ShouldReturnNoContent() throws Exception {
         // Given
         String presentationId = "test-presentation-id";
-        SlideElementUpdateRequest element = SlideElementUpdateRequest.builder()
-                .type("text")
-                .id("element-1")
-                .left(100.0f)
-                .top(200.0f)
-                .width(300.0f)
-                .height(50.0f)
-                .content("Sample text")
-                .build();
 
-        SlideDto.SlideBackgroundDto background = SlideDto.SlideBackgroundDto.builder()
-                .type("color")
-                .color("#ffffff")
-                .build();
+        Map<String, Object> element = new HashMap<>();
+        element.put("type", "text");
+        element.put("id", "element-1");
+        element.put("left", 100.0f);
+        element.put("top", 200.0f);
+        element.put("width", 300.0f);
+        element.put("height", 50.0f);
+        element.put("content", "Sample text");
 
-        SlideUpdateRequest slide = SlideUpdateRequest.builder()
-                .id("slide-1")
-                .elements(List.of(element))
-                .background(background)
-                .build();
+        Map<String, Object> background = new HashMap<>();
+        background.put("type", "color");
+        background.put("color", "#ffffff");
+
+        Map<String, Object> slideExtraFields = new HashMap<>();
+        slideExtraFields.put("elements", List.of(element));
+        slideExtraFields.put("background", background);
+
+        SlideUpdateRequest slide = SlideUpdateRequest.builder().id("slide-1").extraFields(slideExtraFields).build();
 
         SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(List.of(slide)).build();
 
@@ -397,21 +391,26 @@ class PresentationApiTest {
     void upsertSlides_WithMultipleSlides_ShouldProcessAllSlides() throws Exception {
         // Given
         String presentationId = "test-presentation-id";
-        SlideElementUpdateRequest element1 = SlideElementUpdateRequest.builder()
-                .type("text")
-                .id("element-1")
-                .content("First slide text")
-                .build();
 
-        SlideElementUpdateRequest element2 = SlideElementUpdateRequest.builder()
-                .type("text")
-                .id("element-2")
-                .content("Second slide text")
-                .build();
+        Map<String, Object> element1 = new HashMap<>();
+        element1.put("type", "text");
+        element1.put("id", "element-1");
+        element1.put("content", "First slide text");
 
-        SlideUpdateRequest slide1 = SlideUpdateRequest.builder().id("slide-1").elements(List.of(element1)).build();
+        Map<String, Object> element2 = new HashMap<>();
+        element2.put("type", "text");
+        element2.put("id", "element-2");
+        element2.put("content", "Second slide text");
 
-        SlideUpdateRequest slide2 = SlideUpdateRequest.builder().id("slide-2").elements(List.of(element2)).build();
+        Map<String, Object> slide1ExtraFields = new HashMap<>();
+        slide1ExtraFields.put("elements", List.of(element1));
+
+        Map<String, Object> slide2ExtraFields = new HashMap<>();
+        slide2ExtraFields.put("elements", List.of(element2));
+
+        SlideUpdateRequest slide1 = SlideUpdateRequest.builder().id("slide-1").extraFields(slide1ExtraFields).build();
+
+        SlideUpdateRequest slide2 = SlideUpdateRequest.builder().id("slide-2").extraFields(slide2ExtraFields).build();
 
         SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(Arrays.asList(slide1, slide2)).build();
 
@@ -429,40 +428,42 @@ class PresentationApiTest {
     void upsertSlides_WithComplexSlideElements_ShouldPreserveAllProperties() throws Exception {
         // Given
         String presentationId = "test-presentation-id";
-        SlideElementUpdateRequest complexElement = SlideElementUpdateRequest.builder()
-                .type("shape")
-                .id("complex-element")
-                .left(50.0f)
-                .top(75.0f)
-                .width(200.0f)
-                .height(150.0f)
-                .viewBox(Arrays.asList(0.0f, 0.0f, 100.0f, 100.0f))
-                .path("M10,10 L90,90")
-                .fill("#ff0000")
-                .fixedRatio(true)
-                .opacity(0.8f)
-                .rotate(45.0f)
-                .flipV(false)
-                .lineHeight(1.5f)
-                .defaultFontName("Arial")
-                .defaultColor("#000000")
-                .start(Arrays.asList(10.0f, 20.0f))
-                .end(Arrays.asList(90.0f, 80.0f))
-                .points(Arrays.asList("10,10", "50,50", "90,90"))
-                .color("#00ff00")
-                .style("solid")
-                .wordSpace(2.0f)
-                .build();
 
-        SlideDto.SlideBackgroundDto background = SlideDto.SlideBackgroundDto.builder()
-                .type("gradient")
-                .color("#ffffff")
-                .build();
+        Map<String, Object> complexElement = new HashMap<>();
+        complexElement.put("type", "shape");
+        complexElement.put("id", "complex-element");
+        complexElement.put("left", 50.0f);
+        complexElement.put("top", 75.0f);
+        complexElement.put("width", 200.0f);
+        complexElement.put("height", 150.0f);
+        complexElement.put("viewBox", Arrays.asList(0.0f, 0.0f, 100.0f, 100.0f));
+        complexElement.put("path", "M10,10 L90,90");
+        complexElement.put("fill", "#ff0000");
+        complexElement.put("fixedRatio", true);
+        complexElement.put("opacity", 0.8f);
+        complexElement.put("rotate", 45.0f);
+        complexElement.put("flipV", false);
+        complexElement.put("lineHeight", 1.5f);
+        complexElement.put("defaultFontName", "Arial");
+        complexElement.put("defaultColor", "#000000");
+        complexElement.put("start", Arrays.asList(10.0f, 20.0f));
+        complexElement.put("end", Arrays.asList(90.0f, 80.0f));
+        complexElement.put("points", Arrays.asList("10,10", "50,50", "90,90"));
+        complexElement.put("color", "#00ff00");
+        complexElement.put("style", "solid");
+        complexElement.put("wordSpace", 2.0f);
+
+        Map<String, Object> background = new HashMap<>();
+        background.put("type", "gradient");
+        background.put("color", "#ffffff");
+
+        Map<String, Object> slideExtraFields = new HashMap<>();
+        slideExtraFields.put("elements", List.of(complexElement));
+        slideExtraFields.put("background", background);
 
         SlideUpdateRequest slide = SlideUpdateRequest.builder()
                 .id("complex-slide")
-                .elements(List.of(complexElement))
-                .background(background)
+                .extraFields(slideExtraFields)
                 .build();
 
         SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(List.of(slide)).build();
@@ -499,7 +500,7 @@ class PresentationApiTest {
         String presentationId = "test-presentation-id";
         SlideUpdateRequest slideWithoutId = SlideUpdateRequest.builder()
                 .id("") // Invalid: blank ID
-                .elements(List.of())
+                .extraFields(new HashMap<>())
                 .build();
 
         SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(List.of(slideWithoutId)).build();
@@ -519,28 +520,28 @@ class PresentationApiTest {
     void upsertSlides_WithInvalidElementType_ShouldReturnBadRequest() throws Exception {
         // Given
         String presentationId = "test-presentation-id";
-        SlideElementUpdateRequest elementWithoutType = SlideElementUpdateRequest.builder()
-                .type(null) // Invalid: null type
-                .id("element-1")
-                .content("Sample text")
-                .build();
 
-        SlideUpdateRequest slide = SlideUpdateRequest.builder()
-                .id("slide-1")
-                .elements(List.of(elementWithoutType))
-                .build();
+        Map<String, Object> elementWithoutType = new HashMap<>();
+        elementWithoutType.put("type", null); // Null type is now allowed with extraFields structure
+        elementWithoutType.put("id", "element-1");
+        elementWithoutType.put("content", "Sample text");
+
+        Map<String, Object> slideExtraFields = new HashMap<>();
+        slideExtraFields.put("elements", List.of(elementWithoutType));
+
+        SlideUpdateRequest slide = SlideUpdateRequest.builder().id("slide-1").extraFields(slideExtraFields).build();
 
         SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(List.of(slide)).build();
 
+        doNothing().when(slidesApi).upsertSlides(eq(presentationId), any(SlidesUpsertRequest.class));
+
         // When & Then
+        // After refactoring to use extraFields, null types are allowed (no field-level validation)
         mockMvc.perform(put("/api/presentations/{id}/slides", presentationId).contentType(MediaType.APPLICATION_JSON)
                 .header("idempotency-key", "test-key-invalid-element-type")
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.code").value(400))
-                .andExpect(jsonPath("$.message").value("Validation failed"))
-                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
+                .content(objectMapper.writeValueAsString(request))).andExpect(status().isNoContent());
+
+        verify(slidesApi).upsertSlides(eq(presentationId), any(SlidesUpsertRequest.class));
     }
 
     @Test

@@ -1,7 +1,9 @@
 package com.datn.datnbe.document.integration;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -34,10 +36,8 @@ import com.datn.datnbe.auth.api.ResourcePermissionApi;
 import com.datn.datnbe.auth.dto.request.ResourceRegistrationRequest;
 import com.datn.datnbe.auth.dto.response.ResourcePermissionResponse;
 import com.datn.datnbe.document.dto.SlideDto;
-import com.datn.datnbe.document.dto.SlideDto.SlideBackgroundDto;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
 import com.datn.datnbe.document.dto.request.SlideUpdateRequest;
-import com.datn.datnbe.document.dto.request.SlideUpdateRequest.SlideElementUpdateRequest;
 import com.datn.datnbe.document.dto.request.SlidesUpsertRequest;
 import com.datn.datnbe.sharedkernel.idempotency.api.IdempotencyKey;
 import com.datn.datnbe.sharedkernel.idempotency.api.IdempotencyStatus;
@@ -107,25 +107,26 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
     }
 
     private String createTestPresentation() throws Exception {
-        SlideBackgroundDto background = SlideBackgroundDto.builder().type("color").color("#ffffff").build();
+        Map<String, Object> background = new HashMap<>();
+        background.put("type", "color");
+        background.put("color", "#ffffff");
 
-        SlideDto.SlideElementDto element = SlideDto.SlideElementDto.builder()
-                .type("text")
-                .id("initial-element")
-                .left(100.0f)
-                .top(200.0f)
-                .width(300.0f)
-                .height(50.0f)
-                .content("Initial slide content")
-                .defaultFontName("Arial")
-                .defaultColor("#000000")
-                .build();
+        Map<String, Object> element = new HashMap<>();
+        element.put("type", "text");
+        element.put("id", "initial-element");
+        element.put("left", 100.0f);
+        element.put("top", 200.0f);
+        element.put("width", 300.0f);
+        element.put("height", 50.0f);
+        element.put("content", "Initial slide content");
+        element.put("defaultFontName", "Arial");
+        element.put("defaultColor", "#000000");
 
-        SlideDto slide = SlideDto.builder()
-                .id("initial-slide")
-                .elements(List.of(element))
-                .background(background)
-                .build();
+        Map<String, Object> slideExtraFields = new HashMap<>();
+        slideExtraFields.put("elements", List.of(element));
+        slideExtraFields.put("background", background);
+
+        SlideDto slide = SlideDto.builder().id("initial-slide").extraFields(slideExtraFields).build();
 
         PresentationCreateRequest createRequest = PresentationCreateRequest.builder()
                 .title("test presentation")
@@ -150,27 +151,29 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
     void upsertSlides_WithValidRequest_ShouldSucceedWithIdempotency() throws Exception {
         // Given
         String idempotencyKey = "integration-test-key-1";
-        SlideElementUpdateRequest newElement = SlideElementUpdateRequest.builder()
-                .type("text")
-                .id("new-element-1")
-                .left(50.0f)
-                .top(100.0f)
-                .width(250.0f)
-                .height(75.0f)
-                .content("New slide content from integration test")
-                .defaultFontName("Helvetica")
-                .defaultColor("#333333")
-                .build();
 
-        SlideBackgroundDto newBackground = SlideBackgroundDto.builder()
-                .type("gradient")
-                .color("linear-gradient(45deg, #ff6b6b, #4ecdc4)")
-                .build();
+        Map<String, Object> newElement = new HashMap<>();
+        newElement.put("type", "text");
+        newElement.put("id", "new-element-1");
+        newElement.put("left", 50.0f);
+        newElement.put("top", 100.0f);
+        newElement.put("width", 250.0f);
+        newElement.put("height", 75.0f);
+        newElement.put("content", "New slide content from integration test");
+        newElement.put("defaultFontName", "Helvetica");
+        newElement.put("defaultColor", "#333333");
+
+        Map<String, Object> newBackground = new HashMap<>();
+        newBackground.put("type", "gradient");
+        newBackground.put("color", "linear-gradient(45deg, #ff6b6b, #4ecdc4)");
+
+        Map<String, Object> slideExtraFields = new HashMap<>();
+        slideExtraFields.put("elements", List.of(newElement));
+        slideExtraFields.put("background", newBackground);
 
         SlideUpdateRequest newSlide = SlideUpdateRequest.builder()
                 .id("integration-slide-1")
-                .elements(List.of(newElement))
-                .background(newBackground)
+                .extraFields(slideExtraFields)
                 .build();
 
         SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(List.of(newSlide)).build();
@@ -206,27 +209,31 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
         // Given
         String idempotencyKey = "integration-test-multiple-slides";
 
-        SlideElementUpdateRequest element1 = SlideElementUpdateRequest.builder()
-                .type("text")
-                .id("multi-element-1")
-                .content("First slide in batch")
-                .build();
+        Map<String, Object> element1 = new HashMap<>();
+        element1.put("type", "text");
+        element1.put("id", "multi-element-1");
+        element1.put("content", "First slide in batch");
 
-        SlideElementUpdateRequest element2 = SlideElementUpdateRequest.builder()
-                .type("shape")
-                .id("multi-element-2")
-                .path("M10,10 L90,90")
-                .fill("#ff0000")
-                .build();
+        Map<String, Object> element2 = new HashMap<>();
+        element2.put("type", "shape");
+        element2.put("id", "multi-element-2");
+        element2.put("path", "M10,10 L90,90");
+        element2.put("fill", "#ff0000");
+
+        Map<String, Object> slide1ExtraFields = new HashMap<>();
+        slide1ExtraFields.put("elements", List.of(element1));
+
+        Map<String, Object> slide2ExtraFields = new HashMap<>();
+        slide2ExtraFields.put("elements", List.of(element2));
 
         SlideUpdateRequest slide1 = SlideUpdateRequest.builder()
                 .id("multi-slide-1")
-                .elements(List.of(element1))
+                .extraFields(slide1ExtraFields)
                 .build();
 
         SlideUpdateRequest slide2 = SlideUpdateRequest.builder()
                 .id("multi-slide-2")
-                .elements(List.of(element2))
+                .extraFields(slide2ExtraFields)
                 .build();
 
         SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(Arrays.asList(slide1, slide2)).build();
@@ -250,41 +257,42 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
         // Given
         String idempotencyKey = "integration-test-complex-elements";
 
-        SlideElementUpdateRequest complexElement = SlideElementUpdateRequest.builder()
-                .type("vector")
-                .id("complex-element-integration")
-                .left(25.0f)
-                .top(50.0f)
-                .width(400.0f)
-                .height(300.0f)
-                .viewBox(Arrays.asList(0.0f, 0.0f, 400.0f, 300.0f))
-                .path("M25,50 Q100,25 175,50 T325,50")
-                .fill("#4a90e2")
-                .fixedRatio(true)
-                .opacity(0.85f)
-                .rotate(15.0f)
-                .flipV(false)
-                .lineHeight(1.4f)
-                .content("Complex element integration test")
-                .defaultFontName("Roboto")
-                .defaultColor("#2c3e50")
-                .start(Arrays.asList(25.0f, 50.0f))
-                .end(Arrays.asList(325.0f, 50.0f))
-                .points(Arrays.asList("25,50", "100,25", "175,50", "250,75", "325,50"))
-                .color("#e74c3c")
-                .style("dashed")
-                .wordSpace(1.2f)
-                .build();
+        Map<String, Object> complexElement = new HashMap<>();
+        complexElement.put("type", "vector");
+        complexElement.put("id", "complex-element-integration");
+        complexElement.put("left", 25.0f);
+        complexElement.put("top", 50.0f);
+        complexElement.put("width", 400.0f);
+        complexElement.put("height", 300.0f);
+        complexElement.put("viewBox", Arrays.asList(0.0f, 0.0f, 400.0f, 300.0f));
+        complexElement.put("path", "M25,50 Q100,25 175,50 T325,50");
+        complexElement.put("fill", "#4a90e2");
+        complexElement.put("fixedRatio", true);
+        complexElement.put("opacity", 0.85f);
+        complexElement.put("rotate", 15.0f);
+        complexElement.put("flipV", false);
+        complexElement.put("lineHeight", 1.4f);
+        complexElement.put("content", "Complex element integration test");
+        complexElement.put("defaultFontName", "Roboto");
+        complexElement.put("defaultColor", "#2c3e50");
+        complexElement.put("start", Arrays.asList(25.0f, 50.0f));
+        complexElement.put("end", Arrays.asList(325.0f, 50.0f));
+        complexElement.put("points", Arrays.asList("25,50", "100,25", "175,50", "250,75", "325,50"));
+        complexElement.put("color", "#e74c3c");
+        complexElement.put("style", "dashed");
+        complexElement.put("wordSpace", 1.2f);
 
-        SlideBackgroundDto complexBackground = SlideBackgroundDto.builder()
-                .type("image")
-                .color("url('/api/images/background-pattern.png')")
-                .build();
+        Map<String, Object> complexBackground = new HashMap<>();
+        complexBackground.put("type", "image");
+        complexBackground.put("color", "url('/api/images/background-pattern.png')");
+
+        Map<String, Object> slideExtraFields = new HashMap<>();
+        slideExtraFields.put("elements", List.of(complexElement));
+        slideExtraFields.put("background", complexBackground);
 
         SlideUpdateRequest complexSlide = SlideUpdateRequest.builder()
                 .id("complex-integration-slide")
-                .elements(List.of(complexElement))
-                .background(complexBackground)
+                .extraFields(slideExtraFields)
                 .build();
 
         SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(List.of(complexSlide)).build();
@@ -306,7 +314,10 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
     @DisplayName("Should reject request without idempotency key")
     void upsertSlides_WithoutIdempotencyKey_ShouldReturnBadRequest() throws Exception {
         // Given
-        SlideUpdateRequest slide = SlideUpdateRequest.builder().id("slide-without-key").elements(List.of()).build();
+        SlideUpdateRequest slide = SlideUpdateRequest.builder()
+                .id("slide-without-key")
+                .extraFields(new HashMap<>())
+                .build();
 
         SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(List.of(slide)).build();
 
@@ -324,7 +335,7 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
         String idempotencyKey = "integration-test-validation-error";
         SlideUpdateRequest invalidSlide = SlideUpdateRequest.builder()
                 .id("")  // Invalid: blank ID
-                .elements(List.of())
+                .extraFields(new HashMap<>())
                 .build();
 
         SlidesUpsertRequest request = SlidesUpsertRequest.builder().slides(List.of(invalidSlide)).build();
@@ -373,9 +384,15 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
         String idempotencyKey1 = "concurrent-test-key-1";
         String idempotencyKey2 = "concurrent-test-key-2";
 
-        SlideUpdateRequest slide1 = SlideUpdateRequest.builder().id("concurrent-slide-1").elements(List.of()).build();
+        SlideUpdateRequest slide1 = SlideUpdateRequest.builder()
+                .id("concurrent-slide-1")
+                .extraFields(new HashMap<>())
+                .build();
 
-        SlideUpdateRequest slide2 = SlideUpdateRequest.builder().id("concurrent-slide-2").elements(List.of()).build();
+        SlideUpdateRequest slide2 = SlideUpdateRequest.builder()
+                .id("concurrent-slide-2")
+                .extraFields(new HashMap<>())
+                .build();
 
         SlidesUpsertRequest request1 = SlidesUpsertRequest.builder().slides(List.of(slide1)).build();
 

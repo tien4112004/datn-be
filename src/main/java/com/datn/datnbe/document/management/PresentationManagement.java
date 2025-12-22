@@ -11,8 +11,8 @@ import com.datn.datnbe.document.dto.response.PresentationCreateResponseDto;
 import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
 import com.datn.datnbe.document.entity.Presentation;
-import com.datn.datnbe.document.entity.valueobject.SlideElement;
 import com.datn.datnbe.document.management.validation.PresentationValidation;
+import java.util.stream.Stream;
 import com.datn.datnbe.document.mapper.PresentationEntityMapper;
 import com.datn.datnbe.document.repository.PresentationRepository;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -233,12 +234,20 @@ public class PresentationManagement implements PresentationApi {
 
         Presentation existingPresentation = presentation.get();
 
-        // Get Image
+        // Get Image - extract elements from extraFields
         var imageElement = existingPresentation.getSlides()
                 .stream()
                 .filter(slide -> slide.getId().equals(slideId))
-                .flatMap(slide -> slide.getElements().stream())
-                .filter(element -> element.getId().equals(elementId))
+                .flatMap(slide -> {
+                    Object elementsObj = slide.getExtraFields().get("elements");
+                    if (elementsObj instanceof List) {
+                        return ((List<?>) elementsObj).stream()
+                                .filter(obj -> obj instanceof Map)
+                                .map(obj -> (Map<String, Object>) obj);
+                    }
+                    return Stream.empty();
+                })
+                .filter(element -> elementId.equals(element.get("id")))
                 .findFirst();
         Object finalClip = getClip(imageElement);
         log.info("Update image element with ID: {} on slide ID: {} in presentation ID: {} with URL: {} and clip: {}",
@@ -251,12 +260,17 @@ public class PresentationManagement implements PresentationApi {
         // Update the slide element in memory
         existingPresentation.getSlides().forEach(slide -> {
             if (slide.getId().equals(slideId)) {
-                slide.getElements().forEach(element -> {
-                    if (element.getId().equals(elementId)) {
-                        element.getExtraFields().put("src", imageUrl);
-                        element.getExtraFields().put("clip", finalClip);
-                    }
-                });
+                Object elementsObj = slide.getExtraFields().get("elements");
+                if (elementsObj instanceof List) {
+                    ((List<?>) elementsObj).stream()
+                            .filter(obj -> obj instanceof Map)
+                            .map(obj -> (Map<String, Object>) obj)
+                            .filter(element -> elementId.equals(element.get("id")))
+                            .forEach(element -> {
+                                element.put("src", imageUrl);
+                                element.put("clip", finalClip);
+                            });
+                }
             }
         });
 
@@ -264,12 +278,22 @@ public class PresentationManagement implements PresentationApi {
         return 1;
     }
 
-    private static Object getClip(Optional<SlideElement> imageElement) {
+    private static Object getClip(Optional<Map<String, Object>> imageElement) {
         if (imageElement.isEmpty()) {
             throw new AppException(ErrorCode.PRESENTATION_NOT_FOUND);
         }
 
-        var containerRatio = imageElement.get().getWidth() / imageElement.get().getHeight();
+        Map<String, Object> element = imageElement.get();
+        Number widthNum = (Number) element.get("width");
+        Number heightNum = (Number) element.get("height");
+
+        if (widthNum == null || heightNum == null) {
+            throw new AppException(ErrorCode.PRESENTATION_NOT_FOUND);
+        }
+
+        float width = widthNum.floatValue();
+        float height = heightNum.floatValue();
+        var containerRatio = width / height;
 
         Object finalClip = 1 > containerRatio ? new java.util.HashMap<String, Object>() {
             {
