@@ -1,7 +1,9 @@
 package com.datn.datnbe.document.management;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -47,28 +49,31 @@ class GetPresentationTest {
     private PresentationManagement presentationService;
 
     private SlideDto slideDto;
-    private SlideDto.SlideElementDto elementDto;
-    private SlideDto.SlideBackgroundDto backgroundDto;
 
     @BeforeEach
     void setUp() {
         presentationService = new PresentationManagement(presentationRepository, presentationEntityMapper,
                 presentationValidation, resourcePermissionApi);
 
-        backgroundDto = SlideDto.SlideBackgroundDto.builder().type("color").color("#ffffff").build();
+        Map<String, Object> background = new HashMap<>();
+        background.put("type", "color");
+        background.put("color", "#ffffff");
 
-        elementDto = SlideDto.SlideElementDto.builder()
-                .type("text")
-                .left(100.0f)
-                .top(200.0f)
-                .width(300.0f)
-                .height(50.0f)
-                .content("Sample text content")
-                .defaultFontName("Arial")
-                .defaultColor("#000000")
-                .build();
+        Map<String, Object> element = new HashMap<>();
+        element.put("type", "text");
+        element.put("left", 100.0f);
+        element.put("top", 200.0f);
+        element.put("width", 300.0f);
+        element.put("height", 50.0f);
+        element.put("content", "Sample text content");
+        element.put("defaultFontName", "Arial");
+        element.put("defaultColor", "#000000");
 
-        slideDto = SlideDto.builder().id("slide-1").elements(List.of(elementDto)).background(backgroundDto).build();
+        Map<String, Object> slideExtraFields = new HashMap<>();
+        slideExtraFields.put("elements", List.of(element));
+        slideExtraFields.put("background", background);
+
+        slideDto = SlideDto.builder().id("slide-1").extraFields(slideExtraFields).build();
     }
 
     @Test

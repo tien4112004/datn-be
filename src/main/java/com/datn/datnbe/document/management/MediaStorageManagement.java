@@ -34,7 +34,7 @@ public class MediaStorageManagement implements MediaStorageApi {
 
     @Override
     @Transactional
-    public UploadedMediaResponseDto upload(MultipartFile file) {
+    public UploadedMediaResponseDto upload(MultipartFile file, String ownerId) {
         var mediaType = MediaValidation.getValidatedMediaType(file);
 
         String originalFilename = getOriginalFilename(file);
@@ -52,10 +52,14 @@ public class MediaStorageManagement implements MediaStorageApi {
                 .mediaType(mediaType)
                 .fileSize(file.getSize())
                 .contentType(contentType)
+                .ownerId(ownerId)
                 .build();
 
         Media savedMedia = mediaRepository.save(media);
-        log.info("Saved media record with ID: {} for file: {}", savedMedia.getId(), originalFilename);
+        log.info("Saved media record with ID: {} for file: {} (owner: {})",
+                savedMedia.getId(),
+                originalFilename,
+                ownerId);
 
         return UploadedMediaResponseDto.builder()
                 .id(savedMedia.getId())
@@ -63,6 +67,13 @@ public class MediaStorageManagement implements MediaStorageApi {
                 .cdnUrl(savedMedia.getCdnUrl())
                 .extension(extension)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    @Deprecated
+    public UploadedMediaResponseDto upload(MultipartFile file) {
+        return upload(file, null);
     }
 
     /**

@@ -20,6 +20,8 @@ public interface MediaRepository extends JpaRepository<Media, Long> {
 
     Page<Media> findByMediaType(MediaType mediaType, Pageable pageable);
 
+    Page<Media> findByOwnerIdAndMediaType(String ownerId, MediaType mediaType, Pageable pageable);
+
     @Query("SELECT m FROM Media m WHERE m.originalFilename LIKE %:filename%")
     List<Media> findByOriginalFilenameContaining(String filename);
 

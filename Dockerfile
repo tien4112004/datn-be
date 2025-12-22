@@ -30,6 +30,11 @@ RUN set -eux; \
 FROM eclipse-temurin:21-jre
 WORKDIR /application
 
+# Install postgresql-client for database connectivity checks
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends postgresql-client && \
+    rm -rf /var/lib/apt/lists/*
+
 # Create a non-root user for security
 RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 
@@ -38,6 +43,10 @@ COPY --from=builder /application/dependencies/ ./
 COPY --from=builder /application/spring-boot-loader/ ./
 COPY --from=builder /application/snapshot-dependencies/ ./
 COPY --from=builder /application/application/ ./
+
+# Copy initialization script
+COPY scripts/init-models.sh /application/scripts/init-models.sh
+RUN chmod +x /application/scripts/init-models.sh
 
 # Change ownership to the non-root user
 RUN chown -R appuser:appgroup /application

@@ -1,6 +1,5 @@
 package com.datn.datnbe.document.management;
 
-import com.datn.datnbe.auth.api.ResourcePermissionApi;
 import com.datn.datnbe.document.api.ImagesApi;
 import com.datn.datnbe.document.dto.response.MediaResponseDto;
 import com.datn.datnbe.sharedkernel.enums.MediaType;
@@ -10,16 +9,12 @@ import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -28,21 +23,13 @@ public class ImageManagement implements ImagesApi {
 
     MediaRepository mediaRepository;
     MediaEntityMapper mediaMapper;
-    ResourcePermissionApi resourcePermissionApi;
+    SecurityContextUtils securityContextUtils;
 
     @Override
     public PaginatedResponseDto<MediaResponseDto> getImages(Pageable pageable) {
-        //        var medias = mediaRepository.findByMediaType(MediaType.IMAGE, pageable);
+        String ownerId = securityContextUtils.getCurrentUserId();
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Object principal = authentication.getPrincipal();
-        if (!(principal instanceof Jwt)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED, "Invalid authentication type");
-        }
-        String ownerId = ((Jwt) principal).getSubject();
-        List<String> resourceIds = resourcePermissionApi.getAllResourceByTypeOfOwner(ownerId, "image");
-
-        var medias = mediaRepository.findByMediaTypeWhereIn(resourceIds, MediaType.IMAGE.name(), pageable);
+        var medias = mediaRepository.findByOwnerIdAndMediaType(ownerId, MediaType.IMAGE, pageable);
 
         var paginationDto = PaginationDto.getFromPageable(pageable);
         paginationDto.setTotalItems(medias.getTotalElements());

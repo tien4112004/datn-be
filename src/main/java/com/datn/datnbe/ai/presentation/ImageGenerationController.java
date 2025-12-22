@@ -8,6 +8,7 @@ import com.datn.datnbe.ai.mapper.ImageGenerateMapper;
 import com.datn.datnbe.document.api.MediaStorageApi;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.idempotency.api.Idempotent;
+import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -27,14 +28,33 @@ public class ImageGenerationController {
     private final ImageGenerationApi imageGenerationApi;
     private final MediaStorageApi mediaStorageApi;
     private final ImageGenerateMapper imageGenerateMapper;
+    private final SecurityContextUtils securityContextUtils;
 
     @PostMapping("/images/generate")
     public ResponseEntity<AppResponseDto<ImageResponseDto>> generateImage(@RequestBody ImagePromptRequest request) {
         log.info("Received image generation request: {}", request);
+        String ownerId = securityContextUtils.getCurrentUserId();
+
         List<MultipartFile> imageResponse = imageGenerationApi.generateImage(request);
 
         log.info("uploading images to media storage");
-        ImageResponseDto uploadedMedia = imageGenerateMapper.toImageResponseDto(imageResponse, mediaStorageApi);
+        ImageResponseDto uploadedMedia = imageGenerateMapper
+                .toImageResponseDto(imageResponse, mediaStorageApi, ownerId);
+        log.info("Images uploaded successfully: {}", uploadedMedia);
+
+        return ResponseEntity.ok(AppResponseDto.<ImageResponseDto>builder().data(uploadedMedia).build());
+    }
+
+    @PostMapping("/image/generate/mock")
+    public ResponseEntity<AppResponseDto<ImageResponseDto>> generateMockImage(@RequestBody ImagePromptRequest request) {
+        log.info("Received mock image generation request: {}", request);
+        String ownerId = securityContextUtils.getCurrentUserId();
+
+        List<MultipartFile> imageResponse = imageGenerationApi.generateMockImage(request);
+
+        log.info("uploading images to media storage");
+        ImageResponseDto uploadedMedia = imageGenerateMapper
+                .toImageResponseDto(imageResponse, mediaStorageApi, ownerId);
         log.info("Images uploaded successfully: {}", uploadedMedia);
 
         return ResponseEntity.ok(AppResponseDto.<ImageResponseDto>builder().data(uploadedMedia).build());
@@ -44,11 +64,13 @@ public class ImageGenerationController {
     @Idempotent(serviceType = ImageGenerationIdempotencyService.class)
     public ResponseEntity<AppResponseDto<ImageResponseDto>> generateImageWithIdempotency(
             @RequestBody ImagePromptRequest request) {
+        String ownerId = securityContextUtils.getCurrentUserId();
 
         List<MultipartFile> imageResponse = imageGenerationApi.generateImage(request);
 
         log.info("uploading images to media storage");
-        ImageResponseDto uploadedMedia = imageGenerateMapper.toImageResponseDto(imageResponse, mediaStorageApi);
+        ImageResponseDto uploadedMedia = imageGenerateMapper
+                .toImageResponseDto(imageResponse, mediaStorageApi, ownerId);
         log.info("Images uploaded successfully: {}", uploadedMedia);
 
         return ResponseEntity.ok(AppResponseDto.<ImageResponseDto>builder().data(uploadedMedia).build());
@@ -58,11 +80,13 @@ public class ImageGenerationController {
     @Idempotent(serviceType = ImageGenerationIdempotencyService.class)
     public ResponseEntity<AppResponseDto<ImageResponseDto>> generateMockImageWithIdempotency(
             @RequestBody ImagePromptRequest request) {
+        String ownerId = securityContextUtils.getCurrentUserId();
 
         List<MultipartFile> imageResponse = imageGenerationApi.generateMockImage(request);
 
         log.info("uploading images to media storage");
-        ImageResponseDto uploadedMedia = imageGenerateMapper.toImageResponseDto(imageResponse, mediaStorageApi);
+        ImageResponseDto uploadedMedia = imageGenerateMapper
+                .toImageResponseDto(imageResponse, mediaStorageApi, ownerId);
         log.info("Images uploaded successfully: {}", uploadedMedia);
 
         return ResponseEntity.ok(AppResponseDto.<ImageResponseDto>builder().data(uploadedMedia).build());
