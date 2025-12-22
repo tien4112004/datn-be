@@ -68,7 +68,13 @@ public class MindmapManagement implements MindmapApi {
             resourcePermissionApi.registerResource(resourceRegistrationRequest, ownerId);
 
             log.info("Successfully created mindmap with id: '{}'", savedMindmap.getId());
-            return MindmapCreateResponseDto.builder().id(savedMindmap.getId()).build();
+            MindmapCreateResponseDto response = new MindmapCreateResponseDto();
+            response.setId(savedMindmap.getId());
+            response.setCreatedAt(savedMindmap.getCreatedAt());
+            response.setTitle(savedMindmap.getTitle());
+            response.setExtraField("nodes", savedMindmap.getNodes());
+            response.setExtraField("edges", savedMindmap.getEdges());
+            return response;
         } catch (Exception e) {
             log.error("Failed to create mindmap with title: '{}'. Error: {}", request.getTitle(), e.getMessage());
             throw e;
@@ -82,7 +88,7 @@ public class MindmapManagement implements MindmapApi {
 
         try {
             Pageable pageable = PageRequest
-                    .of(request.getPage(), request.getSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
+                    .of(request.getPage() - 1, request.getSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
 
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             Object principal = authentication.getPrincipal();
@@ -91,6 +97,7 @@ public class MindmapManagement implements MindmapApi {
             }
             String ownerId = ((Jwt) principal).getSubject();
             List<String> resourceIds = resourcePermissionApi.getAllResourceByTypeOfOwner(ownerId, "mindmap");
+            log.info("Found {} mindmap resources for ownerId: '{}'", resourceIds.size(), ownerId);
 
             // Page<Mindmap> mindmapPage = mindmapRepository.findAll(pageable);
             Page<Mindmap> mindmapPage = mindmapRepository.findByIdIn(resourceIds, pageable);
@@ -100,7 +107,7 @@ public class MindmapManagement implements MindmapApi {
                     .map(mapper::entityToListResponse)
                     .collect(Collectors.toList());
 
-            PaginationDto pagination = new PaginationDto(mindmapPage.getNumber(), mindmapPage.getSize(),
+            PaginationDto pagination = new PaginationDto(request.getPage(), mindmapPage.getSize(),
                     mindmapPage.getTotalElements(), mindmapPage.getTotalPages());
 
             log.info("Successfully retrieved {} mindmaps from page {} of {}",
