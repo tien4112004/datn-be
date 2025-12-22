@@ -1,5 +1,7 @@
 package com.datn.datnbe.document.presentation;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,7 @@ import com.datn.datnbe.document.dto.request.MindmapUpdateTitleAndDescriptionRequ
 import com.datn.datnbe.document.dto.response.MindmapCreateResponseDto;
 import com.datn.datnbe.document.dto.response.MindmapDto;
 import com.datn.datnbe.document.dto.response.MindmapListResponseDto;
+import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.security.annotation.RequireDocumentPermission;
 
@@ -37,14 +40,15 @@ public class MindmapController {
     private final MindmapApi mindmapApi;
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<MindmapCreateResponseDto> createMindmap(@Valid @RequestBody MindmapCreateRequest request) {
+    public ResponseEntity<AppResponseDto<MindmapCreateResponseDto>> createMindmap(
+            @Valid @RequestBody MindmapCreateRequest request) {
         log.info("Received request to create mindmap with title: {}", request.getTitle());
         MindmapCreateResponseDto response = mindmapApi.createMindmap(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(AppResponseDto.success(response));
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<PaginatedResponseDto<MindmapListResponseDto>> getAllMindmapsPaginated(
+    public ResponseEntity<AppResponseDto<List<MindmapListResponseDto>>> getAllMindmapsPaginated(
             @RequestParam(defaultValue = "0") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
@@ -60,21 +64,22 @@ public class MindmapController {
                 .searchQuery(searchQuery)
                 .build();
 
-        PaginatedResponseDto<MindmapListResponseDto> response = mindmapApi.getAllMindmaps(request);
-        return ResponseEntity.ok(response);
+        PaginatedResponseDto<MindmapListResponseDto> paginatedResponse = mindmapApi.getAllMindmaps(request);
+        return ResponseEntity.ok(
+                AppResponseDto.successWithPagination(paginatedResponse.getData(), paginatedResponse.getPagination()));
     }
 
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @RequireDocumentPermission
-    public ResponseEntity<MindmapDto> getMindmap(@PathVariable String id) {
+    public ResponseEntity<AppResponseDto<MindmapDto>> getMindmap(@PathVariable String id) {
         log.info("Received request to get mindmap with id: {}", id);
         MindmapDto response = mindmapApi.getMindmap(id);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(AppResponseDto.success(response));
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @RequireDocumentPermission
-    public ResponseEntity<Void> updateMindmap(@PathVariable String id,
+    public ResponseEntity<AppResponseDto<Void>> updateMindmap(@PathVariable String id,
             @Valid @RequestBody MindmapUpdateRequest request) {
         log.info("Received request to update mindmap with id: {}", id);
         mindmapApi.updateMindmap(id, request);
@@ -83,7 +88,7 @@ public class MindmapController {
 
     @PatchMapping(value = "/{id}/title", consumes = MediaType.APPLICATION_JSON_VALUE)
     @RequireDocumentPermission
-    public ResponseEntity<Void> updateMindmapTitle(@PathVariable String id,
+    public ResponseEntity<AppResponseDto<Void>> updateMindmapTitle(@PathVariable String id,
             @Valid @RequestBody MindmapUpdateTitleAndDescriptionRequest request) {
         log.info("Received request to update mindmap title with id: {}", id);
         mindmapApi.updateTitleAndDescriptionMindmap(id, request);
