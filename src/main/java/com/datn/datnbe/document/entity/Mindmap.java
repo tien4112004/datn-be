@@ -45,6 +45,9 @@ public class Mindmap {
     @Column(name = "updated_at", nullable = false)
     LocalDateTime updatedAt;
 
+    @Column(name = "thumbnail")
+    String thumbnail;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
