@@ -1,4 +1,4 @@
-package com.datn.datnbe.cms.security.aspect;
+package com.datn.datnbe.cms.security;
 
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
