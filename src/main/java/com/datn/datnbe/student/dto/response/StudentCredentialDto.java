@@ -16,14 +16,14 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StudentCredentialDto {
-    
+
     String studentId;
-    
+
     String username;
-    
+
     String password;
-    
+
     String email;
-    
+
     String fullName;
 }

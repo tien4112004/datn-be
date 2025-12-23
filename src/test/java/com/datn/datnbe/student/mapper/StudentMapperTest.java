@@ -44,9 +44,7 @@ class StudentMapperTest {
     @DisplayName("Valid mapping with minimal fields")
     void toEntity_withMinimalFields_usesDefaults() {
         // Given
-        StudentCsvRow csvRow = StudentCsvRow.builder()
-                .userId("user_002")
-                .build();
+        StudentCsvRow csvRow = StudentCsvRow.builder().userId("user_002").build();
         List<String> errors = new ArrayList<>();
 
         // When

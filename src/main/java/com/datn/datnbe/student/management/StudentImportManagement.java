@@ -24,7 +24,7 @@ import java.util.*;
 
 /**
  * Management service for student import operations.
- * Implements two-phase creation:
+ * Implements two-phase creation: 
  * 1) Create user via UserProfileAPI
  * 2) Create student linked to that user
  */
@@ -91,8 +91,13 @@ public class StudentImportManagement implements StudentImportApi {
         List<Student> students = new ArrayList<>();
         rowNumber = 0;
 
-        for (StudentCsvRow csvRow : successfulRows) {
+        for (StudentCsvRow csvRow : parseResult.rows()) {
             rowNumber++;
+            if (csvRow.getUserId() == null) {
+                errors.add(String.format("Row %d: User ID not created", rowNumber));
+                continue;
+            }
+
             Student student = studentMapper.toEntity(csvRow, rowNumber, errors);
             if (student != null) {
                 students.add(student);
