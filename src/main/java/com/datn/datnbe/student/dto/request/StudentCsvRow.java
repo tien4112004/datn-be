@@ -5,7 +5,6 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 
-
 @Getter
 @Setter
 @NoArgsConstructor
@@ -18,7 +17,7 @@ public class StudentCsvRow {
     String gender;
     String parentName;
     String parentPhone;
-    
+
     String address;
     String classId;
     LocalDate enrollmentDate;
