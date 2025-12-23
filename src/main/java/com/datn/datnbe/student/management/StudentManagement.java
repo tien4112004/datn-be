@@ -45,7 +45,9 @@ public class StudentManagement implements StudentApi {
         log.info("Getting student by ID: {}", id);
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + id));
-        return studentEntityMapper.toResponseDto(student);
+        StudentResponseDto dto = studentEntityMapper.toResponseDto(student);
+        enrichWithUserProfile(dto, student.getUserId());
+        return dto;
     }
 
     @Override
@@ -91,7 +93,19 @@ public class StudentManagement implements StudentApi {
         response.setUsername(email);
         response.setPassword(password);
         response.setEmail(email);
-        
+        // populate profile fields from created user
+        try {
+            var profile = userProfileApi.getUserProfile(createdUser.getId());
+            if (profile != null) {
+                response.setFirstName(profile.getFirstName());
+                response.setLastName(profile.getLastName());
+                response.setAvatarUrl(profile.getAvatarUrl());
+                response.setPhoneNumber(profile.getPhoneNumber());
+            }
+        } catch (Exception e) {
+            log.debug("Unable to fetch user profile for created student: {}", e.getMessage());
+        }
+
         return response;
     }
 
@@ -107,7 +121,9 @@ public class StudentManagement implements StudentApi {
         Student savedStudent = studentRepository.save(student);
 
         log.info("Successfully updated student with ID: {}", id);
-        return studentEntityMapper.toResponseDto(savedStudent);
+        StudentResponseDto dto = studentEntityMapper.toResponseDto(savedStudent);
+        enrichWithUserProfile(dto, savedStudent.getUserId());
+        return dto;
     }
 
     @Override
