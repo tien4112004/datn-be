@@ -45,7 +45,9 @@ public class StudentManagement implements StudentApi {
         log.info("Getting student by ID: {}", id);
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + id));
-        return studentEntityMapper.toResponseDto(student);
+        StudentResponseDto dto = studentEntityMapper.toResponseDto(student);
+        enrichWithUserProfile(dto, student.getUserId());
+        return dto;
     }
 
     @Override
@@ -91,7 +93,19 @@ public class StudentManagement implements StudentApi {
         response.setUsername(email);
         response.setPassword(password);
         response.setEmail(email);
-        
+        // populate profile fields from created user
+        try {
+            var profile = userProfileApi.getUserProfile(createdUser.getId());
+            if (profile != null) {
+                response.setFirstName(profile.getFirstName());
+                response.setLastName(profile.getLastName());
+                response.setAvatarUrl(profile.getAvatarUrl());
+                response.setPhoneNumber(profile.getPhoneNumber());
+            }
+        } catch (Exception e) {
+            log.debug("Unable to fetch user profile for created student: {}", e.getMessage());
+        }
+
         return response;
     }
 
@@ -107,7 +121,9 @@ public class StudentManagement implements StudentApi {
         Student savedStudent = studentRepository.save(student);
 
         log.info("Successfully updated student with ID: {}", id);
-        return studentEntityMapper.toResponseDto(savedStudent);
+        StudentResponseDto dto = studentEntityMapper.toResponseDto(savedStudent);
+        enrichWithUserProfile(dto, savedStudent.getUserId());
+        return dto;
     }
 
     @Override
@@ -142,7 +158,11 @@ public class StudentManagement implements StudentApi {
 
         List<Student> students = studentRepository.findByIdIn(Set.copyOf(studentIds));
 
-        return students.stream().map(studentEntityMapper::toResponseDto).collect(Collectors.toList());
+        return students.stream().map(s -> {
+            StudentResponseDto dto = studentEntityMapper.toResponseDto(s);
+            enrichWithUserProfile(dto, s.getUserId());
+            return dto;
+        }).collect(Collectors.toList());
     }
 
     @Override
@@ -170,7 +190,26 @@ public class StudentManagement implements StudentApi {
         classEnrollmentRepository.save(enrollment);
         log.info("Successfully enrolled student {} to class {}", studentId, classId);
 
-        return studentEntityMapper.toResponseDto(student);
+        StudentResponseDto dto = studentEntityMapper.toResponseDto(student);
+        enrichWithUserProfile(dto, student.getUserId());
+        return dto;
+    }
+
+    private void enrichWithUserProfile(StudentResponseDto dto, String userId) {
+        if (dto == null || userId == null) return;
+        try {
+            UserProfileResponse profile = userProfileApi.getUserProfile(userId);
+            if (profile != null) {
+                dto.setFirstName(profile.getFirstName());
+                dto.setLastName(profile.getLastName());
+                dto.setAvatarUrl(profile.getAvatarUrl());
+                dto.setPhoneNumber(profile.getPhoneNumber());
+                // populate email if not already set
+                if (dto.getEmail() == null) dto.setEmail(profile.getEmail());
+            }
+        } catch (Exception ex) {
+            log.debug("Failed to enrich student DTO with user profile for userId {}: {}", userId, ex.getMessage());
+        }
     }
 
     @Override

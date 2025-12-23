@@ -7,6 +7,7 @@ import com.datn.datnbe.student.enums.StudentStatus;
 import com.datn.datnbe.student.mapper.StudentEntityMapper;
 import com.datn.datnbe.student.repository.ClassEnrollmentRepository;
 import com.datn.datnbe.student.repository.StudentRepository;
+import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,6 +38,9 @@ class StudentManagementTest {
 
     @Mock
     private StudentEntityMapper studentEntityMapper;
+
+    @Mock
+    private UserProfileApi userProfileApi;
 
     @InjectMocks
     private StudentManagement studentManagement;
@@ -77,6 +81,17 @@ class StudentManagementTest {
             when(studentRepository.findById("std_001")).thenReturn(Optional.of(testStudent));
             when(studentEntityMapper.toResponseDto(testStudent)).thenReturn(testResponseDto);
 
+            // mock user profile enrichment
+            var profile = com.datn.datnbe.auth.dto.response.UserProfileResponse.builder()
+                .id("user_001")
+                .firstName("John")
+                .lastName("Doe")
+                .email("john.doe@example.com")
+                .avatarUrl("https://cdn/avatar.png")
+                .phoneNumber("0123456789")
+                .build();
+            when(userProfileApi.getUserProfile("user_001")).thenReturn(profile);
+
             // When
             StudentResponseDto result = studentManagement.getStudentById("std_001");
 
@@ -85,6 +100,11 @@ class StudentManagementTest {
             assertThat(result.getId()).isEqualTo("std_001");
             assertThat(result.getUserId()).isEqualTo("user_001");
             verify(studentRepository).findById("std_001");
+            verify(userProfileApi).getUserProfile("user_001");
+            assertThat(result.getFirstName()).isEqualTo("John");
+            assertThat(result.getLastName()).isEqualTo("Doe");
+            assertThat(result.getAvatarUrl()).isEqualTo("https://cdn/avatar.png");
+            assertThat(result.getPhoneNumber()).isEqualTo("0123456789");
         }
 
         @Test
