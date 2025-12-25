@@ -14,6 +14,7 @@ public class MindmapListResponseDto {
     private String id;
     private String title;
     private String description;
+    private String thumbnail;
     //    private String ownerId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

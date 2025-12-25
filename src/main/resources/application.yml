@@ -71,9 +71,6 @@ server:
       force: true
   address: 0.0.0.0
 app:
-  init:
-    enabled: false
-    exit-after-init: false
   models:
     configurations:
       openai:

@@ -25,6 +25,8 @@ public class MindmapUpdateRequest {
     @Size(max = 1000, message = "Description must not exceed 1000 characters")
     private String description;
 
+    private String thumbnail;
+
     private List<MindmapNodeDto> nodes;
 
     private List<MindmapEdgeDto> edges;
