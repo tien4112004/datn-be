@@ -44,10 +44,9 @@ public interface MindmapEntityMapper {
     MindmapListResponseDto entityToListResponse(Mindmap mindmap);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", expression = "java(LocalDateTime.now())")
     @Mapping(target = "nodes", source = "nodes")
     @Mapping(target = "edges", source = "edges")
+    @Mapping(target = "thumbnail", source = "thumbnail")
     void updateEntityFromRequest(MindmapUpdateRequest request, @MappingTarget Mindmap mindmap);
 
     @Mapping(target = "id", expression = "java(nodeDto.getId() != null ? nodeDto.getId() : UUID.randomUUID().toString())")
