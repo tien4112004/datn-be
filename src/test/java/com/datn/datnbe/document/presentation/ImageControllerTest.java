@@ -85,7 +85,7 @@ class ImageControllerTest {
         when(imageManagement.getImages(any(Pageable.class))).thenReturn(paginatedResponse);
 
         // When & Then
-        mockMvc.perform(get("/api/images").param("page", "0").param("size", "10"))
+        mockMvc.perform(get("/api/images").param("page", "1").param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.pagination.totalItems").value(2))
                 .andExpect(jsonPath("$.pagination.totalPages").value(1))
@@ -185,7 +185,7 @@ class ImageControllerTest {
         when(imageManagement.getImages(any(Pageable.class))).thenReturn(paginatedResponse);
 
         // When & Then
-        mockMvc.perform(get("/api/images").param("page", "0").param("size", "1"))
+        mockMvc.perform(get("/api/images").param("page", "1").param("size", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.pagination.pageSize").value(1))
                 .andExpect(jsonPath("$.data").isArray())
