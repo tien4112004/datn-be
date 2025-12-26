@@ -67,8 +67,7 @@ public class PermissionHeaderResponseWrapper implements Filter {
                 ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder
                         .getRequestAttributes();
                 if (attributes != null) {
-                    @SuppressWarnings("unchecked")
-                    Set<String> permissions = (Set<String>) attributes.getAttribute(
+                    @SuppressWarnings("unchecked") Set<String> permissions = (Set<String>) attributes.getAttribute(
                             DocumentPermissionAspect.USER_PERMISSIONS_ATTRIBUTE,
                             ServletRequestAttributes.SCOPE_REQUEST);
 

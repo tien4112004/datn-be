@@ -12,7 +12,6 @@ import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
 import com.datn.datnbe.document.entity.Presentation;
 import com.datn.datnbe.document.management.validation.PresentationValidation;
-import java.util.stream.Stream;
 import com.datn.datnbe.document.mapper.PresentationEntityMapper;
 import com.datn.datnbe.document.repository.PresentationRepository;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
@@ -32,7 +31,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -46,6 +44,7 @@ public class PresentationManagement implements PresentationApi {
     private final PresentationEntityMapper mapper;
     private final PresentationValidation validation;
     private final ResourcePermissionApi resourcePermissionApi;
+    private final ThumbnailStorageManagement thumbnailStorageManagement;
 
     private String generateUniqueTitle(String originalTitle) {
         log.info("Generating unique title for {}", originalTitle);
@@ -166,6 +165,17 @@ public class PresentationManagement implements PresentationApi {
 
         Presentation existingPresentation = presentation.get();
 
+        // Process thumbnail: convert base64 to URL if needed
+        if (request.getThumbnail() != null) {
+            String ownerId = getCurrentUserId();
+            String processedThumbnail = thumbnailStorageManagement
+                    .processThumbnail(request.getThumbnail(), "presentation", id, ownerId);
+            request.setThumbnail(processedThumbnail);
+
+            // Delete old thumbnail if it was a URL
+            thumbnailStorageManagement.deleteOldThumbnail(existingPresentation.getThumbnail());
+        }
+
         mapper.updateEntity(request, existingPresentation);
 
         Presentation savedPresentation = presentationRepository.save(existingPresentation);
@@ -224,93 +234,22 @@ public class PresentationManagement implements PresentationApi {
         presentationRepository.save(presentation);
     }
 
-    @Override
-    public long insertImageToPresentation(String presentationId, String slideId, String elementId, String imageUrl) {
-        var presentation = presentationRepository.findById(presentationId);
+    /**
+     * Get current user ID from security context
+     */
+    private String getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication.getPrincipal();
 
-        if (presentation.isEmpty()) {
-            throw new AppException(ErrorCode.PRESENTATION_NOT_FOUND);
+        if (principal instanceof Jwt jwt) {
+            return jwt.getSubject();
         }
 
-        Presentation existingPresentation = presentation.get();
-
-        // Get Image - extract elements from extraFields
-        var imageElement = existingPresentation.getSlides()
-                .stream()
-                .filter(slide -> slide.getId().equals(slideId))
-                .flatMap(slide -> {
-                    Object elementsObj = slide.getExtraFields().get("elements");
-                    if (elementsObj instanceof List) {
-                        return ((List<?>) elementsObj).stream()
-                                .filter(obj -> obj instanceof Map)
-                                .map(obj -> (Map<String, Object>) obj);
-                    }
-                    return Stream.empty();
-                })
-                .filter(element -> elementId.equals(element.get("id")))
-                .findFirst();
-        Object finalClip = getClip(imageElement);
-        log.info("Update image element with ID: {} on slide ID: {} in presentation ID: {} with URL: {} and clip: {}",
-                elementId,
-                slideId,
-                presentationId,
-                imageUrl,
-                finalClip);
-
-        // Update the slide element in memory
-        existingPresentation.getSlides().forEach(slide -> {
-            if (slide.getId().equals(slideId)) {
-                Object elementsObj = slide.getExtraFields().get("elements");
-                if (elementsObj instanceof List) {
-                    ((List<?>) elementsObj).stream()
-                            .filter(obj -> obj instanceof Map)
-                            .map(obj -> (Map<String, Object>) obj)
-                            .filter(element -> elementId.equals(element.get("id")))
-                            .forEach(element -> {
-                                element.put("src", imageUrl);
-                                element.put("clip", finalClip);
-                            });
-                }
-            }
-        });
-
-        presentationRepository.save(existingPresentation);
-        return 1;
-    }
-
-    private static Object getClip(Optional<Map<String, Object>> imageElement) {
-        if (imageElement.isEmpty()) {
-            throw new AppException(ErrorCode.PRESENTATION_NOT_FOUND);
+        // Fallback for tests
+        if (principal instanceof String username) {
+            return username;
         }
 
-        Map<String, Object> element = imageElement.get();
-        Number widthNum = (Number) element.get("width");
-        Number heightNum = (Number) element.get("height");
-
-        if (widthNum == null || heightNum == null) {
-            throw new AppException(ErrorCode.PRESENTATION_NOT_FOUND);
-        }
-
-        float width = widthNum.floatValue();
-        float height = heightNum.floatValue();
-        var containerRatio = width / height;
-
-        Object finalClip = 1 > containerRatio ? new java.util.HashMap<String, Object>() {
-            {
-                put("shape", "rect");
-                put("range",
-                        new double[][]{{((1 - containerRatio) / 2) * 100, 0},
-                                {100 - ((1 - containerRatio) / 2) * 100, 100}});
-            }
-        } : new java.util.HashMap<String, Object>() {
-            {
-                put("shape", "rect");
-                put("range",
-                        new double[][]{{0, ((1 - 1 / containerRatio) / 2) * 100},
-                                {100, 100 - ((1 - 1 / containerRatio) / 2) * 100}});
-            }
-        };
-
-        return finalClip;
+        throw new AppException(ErrorCode.UNAUTHORIZED, "Invalid authentication");
     }
 }

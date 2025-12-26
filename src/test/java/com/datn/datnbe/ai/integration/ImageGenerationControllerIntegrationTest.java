@@ -110,11 +110,6 @@ public class ImageGenerationControllerIntegrationTest extends BaseIntegrationTes
 
         // Create test presentation with slide and element
         testPresentation = createTestPresentation();
-
-        // Mock presentationApi.insertImageToPresentation to return success (1)
-        when(presentationApi
-                .insertImageToPresentation(any(String.class), any(String.class), any(String.class), any(String.class)))
-                .thenReturn(1L);
     }
 
     private Presentation createTestPresentation() {
