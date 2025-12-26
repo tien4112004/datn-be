@@ -18,8 +18,7 @@ public class ImageController {
     ImageManagement imageManagement;
 
     @GetMapping
-    public ResponseEntity<AppResponseDto> getImages(
-            @RequestParam(defaultValue = "1") Integer page,
+    public ResponseEntity<AppResponseDto> getImages(@RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) String search) {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
