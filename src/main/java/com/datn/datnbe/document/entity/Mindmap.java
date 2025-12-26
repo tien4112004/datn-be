@@ -9,7 +9,9 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Entity
 @Table(name = "mindmaps")
@@ -47,6 +49,11 @@ public class Mindmap {
 
     @Column(name = "thumbnail")
     String thumbnail;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "extra_fields", columnDefinition = "jsonb")
+    @Builder.Default
+    Map<String, Object> extraFields = new HashMap<>();
 
     @PrePersist
     protected void onCreate() {
