@@ -45,6 +45,7 @@ public class MindmapManagement implements MindmapApi {
     private final MindmapEntityMapper mapper;
     private final MindmapValidation validation;
     private final ResourcePermissionApi resourcePermissionApi;
+    private final ThumbnailStorageManagement thumbnailStorageManagement;
 
     @Override
     public MindmapCreateResponseDto createMindmap(MindmapCreateRequest request) {
@@ -130,6 +131,18 @@ public class MindmapManagement implements MindmapApi {
             validation.validateMindmapExists(id);
 
             Mindmap existingMindmap = findMindmapById(id);
+
+            // Process thumbnail: convert base64 to URL if needed
+            if (request.getThumbnail() != null) {
+                String ownerId = getCurrentUserId();
+                String processedThumbnail = thumbnailStorageManagement
+                        .processThumbnail(request.getThumbnail(), "mindmap", id, ownerId);
+                request.setThumbnail(processedThumbnail);
+
+                // Delete old thumbnail if it was a URL
+                thumbnailStorageManagement.deleteOldThumbnail(existingMindmap.getThumbnail());
+            }
+
             mapper.updateEntityFromRequest(request, existingMindmap);
 
             mindmapRepository.save(existingMindmap);
@@ -218,5 +231,24 @@ public class MindmapManagement implements MindmapApi {
     private Mindmap findMindmapById(String id) {
         return mindmapRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Mindmap not found with id: " + id));
+    }
+
+    /**
+    * Get current user ID from security context
+    */
+    private String getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof Jwt jwt) {
+            return jwt.getSubject();
+        }
+
+        // Fallback for tests
+        if (principal instanceof String username) {
+            return username;
+        }
+
+        throw new AppException(ErrorCode.UNAUTHORIZED, "Invalid authentication");
     }
 }
