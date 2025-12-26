@@ -29,10 +29,12 @@ public interface MindmapEntityMapper {
     @Mapping(target = "updatedAt", expression = "java(LocalDateTime.now())")
     @Mapping(target = "nodes", source = "nodes")
     @Mapping(target = "edges", source = "edges")
+    @Mapping(target = "extraFields", source = "extraFields")
     Mindmap createRequestToEntity(MindmapCreateRequest request);
 
     @Mapping(source = "nodes", target = "nodes")
     @Mapping(source = "edges", target = "edges")
+    @Mapping(source = "extraFields", target = "extraFields")
     MindmapDto entityToDto(Mindmap mindmap);
 
     @Mapping(source = "id", target = "id")
@@ -47,6 +49,7 @@ public interface MindmapEntityMapper {
     @Mapping(target = "nodes", source = "nodes")
     @Mapping(target = "edges", source = "edges")
     @Mapping(target = "thumbnail", source = "thumbnail")
+    @Mapping(target = "extraFields", source = "extraFields")
     void updateEntityFromRequest(MindmapUpdateRequest request, @MappingTarget Mindmap mindmap);
 
     @Mapping(target = "id", expression = "java(nodeDto.getId() != null ? nodeDto.getId() : UUID.randomUUID().toString())")
