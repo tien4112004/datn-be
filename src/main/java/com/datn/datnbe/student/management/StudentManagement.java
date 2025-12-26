@@ -12,6 +12,8 @@ import com.datn.datnbe.student.repository.ClassEnrollmentRepository;
 import com.datn.datnbe.student.repository.StudentRepository;
 import com.datn.datnbe.student.utils.StudentCredentialGenerator;
 import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
+import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
+import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.dto.request.SignupRequest;
 import com.datn.datnbe.auth.dto.response.UserProfileResponse;
@@ -19,6 +21,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -87,7 +90,7 @@ public class StudentManagement implements StudentApi {
         Student savedStudent = studentRepository.save(student);
 
         log.info("Successfully created student with ID: {}", savedStudent.getId());
-        
+
         // Build response with credentials
         StudentResponseDto response = studentEntityMapper.toResponseDto(savedStudent);
         response.setUsername(email);

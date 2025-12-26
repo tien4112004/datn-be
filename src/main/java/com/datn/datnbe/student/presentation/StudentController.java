@@ -18,8 +18,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 
 @RestController
 @RequestMapping("/api")
@@ -32,10 +32,16 @@ public class StudentController {
     StudentApi studentApi;
 
     @GetMapping("/classes/{classId}/students")
-    public ResponseEntity<AppResponseDto<List<StudentResponseDto>>> getStudentsByClass(@PathVariable String classId) {
-        log.info("Received request to get students for class: {}", classId);
-        List<StudentResponseDto> students = studentApi.getStudentsByClass(classId);
-        return ResponseEntity.ok(AppResponseDto.success(students, "Students retrieved successfully"));
+    public ResponseEntity<AppResponseDto<?>> getStudentsByClass(
+            @PathVariable String classId,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size) {
+        log.info("Received request to get students for class: {} with pagination", classId);
+
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        var response = studentApi.getStudentsByClass(classId, pageable);
+
+        return ResponseEntity.ok(AppResponseDto.successWithPagination(response.getData(), response.getPagination()));
     }
 
     @PostMapping("/classes/{classId}/students")
@@ -43,13 +49,9 @@ public class StudentController {
             @Valid @RequestBody StudentCreateRequest createRequest) {
         log.info("Received request to create and enroll student in class: {}", classId);
 
-        // Step 1: Create the student entity
         StudentResponseDto createdStudent = studentApi.createStudent(createRequest);
-
-        // Step 2: Enroll the created student in the class
-        StudentResponseDto response = studentApi.enrollStudent(classId, createdStudent.getId());
-
-        return ResponseEntity.ok(AppResponseDto.success(response, "Student created and enrolled successfully"));
+        studentApi.enrollStudent(classId, createdStudent.getId());
+        return ResponseEntity.ok(AppResponseDto.success(createdStudent));
     }
 
     @DeleteMapping("/classes/{classId}/students/{studentId}")
@@ -97,17 +99,16 @@ public class StudentController {
                 classId,
                 file != null ? file.getOriginalFilename() : "null");
 
-        StudentImportResponseDto result = studentImportApi.importStudentsFromCsv(file);
+        StudentImportResponseDto result = studentImportApi.importStudentsFromCsv(classId, file);
 
         if (result.isSuccess()) {
-            return ResponseEntity.ok(AppResponseDto.success(result, result.getMessage()));
+            return ResponseEntity.ok(AppResponseDto.success(result));
         } else {
             return ResponseEntity.badRequest()
                     .body(AppResponseDto.<StudentImportResponseDto>builder()
                             .success(false)
                             .code(400)
                             .data(result)
-                            .message(result.getMessage())
                             .build());
         }
     }
@@ -117,13 +118,13 @@ public class StudentController {
             @Valid @RequestBody StudentUpdateRequest request) {
         log.info("Received request to update student with ID: {}", studentId);
         StudentResponseDto response = studentApi.updateStudent(studentId, request);
-        return ResponseEntity.ok(AppResponseDto.success(response, "Student updated successfully"));
+        return ResponseEntity.ok(AppResponseDto.success(response));
     }
 
     @GetMapping("/students/{studentId}")
     public ResponseEntity<AppResponseDto<StudentResponseDto>> getStudentById(@PathVariable String studentId) {
         log.info("Received request to get student with ID: {}", studentId);
         StudentResponseDto response = studentApi.getStudentById(studentId);
-        return ResponseEntity.ok(AppResponseDto.success(response, "Student retrieved successfully"));
+        return ResponseEntity.ok(AppResponseDto.success(response));
     }
 }
