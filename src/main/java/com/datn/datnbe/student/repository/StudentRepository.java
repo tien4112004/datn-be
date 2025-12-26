@@ -1,6 +1,8 @@
 package com.datn.datnbe.student.repository;
 
 import com.datn.datnbe.student.entity.Student;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,6 +14,8 @@ import java.util.Set;
 public interface StudentRepository extends JpaRepository<Student, String> {
 
     List<Student> findByIdIn(Set<String> ids);
+
+    Page<Student> findByIdIn(Set<String> ids, Pageable pageable);
 
     boolean existsByIdIn(Set<String> ids);
 

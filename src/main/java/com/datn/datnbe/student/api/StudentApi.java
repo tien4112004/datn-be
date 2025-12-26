@@ -3,8 +3,8 @@ package com.datn.datnbe.student.api;
 import com.datn.datnbe.student.dto.request.StudentCreateRequest;
 import com.datn.datnbe.student.dto.request.StudentUpdateRequest;
 import com.datn.datnbe.student.dto.response.StudentResponseDto;
-
-import java.util.List;
+import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
+import org.springframework.data.domain.Pageable;
 
 /**
  * API interface for student CRUD operations.
@@ -14,10 +14,11 @@ public interface StudentApi {
     /**
      * Get all students in a class.
      *
-     * @param classId the class ID
-     * @return list of students
+     * @param classId  the class ID
+     * @param pageable pagination parameters
+     * @return paginated list of students
      */
-    List<StudentResponseDto> getStudentsByClass(String classId);
+    PaginatedResponseDto<StudentResponseDto> getStudentsByClass(String classId, Pageable pageable);
 
     /**
      * Enroll an existing student in a class.

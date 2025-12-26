@@ -12,6 +12,8 @@ import com.datn.datnbe.student.repository.ClassEnrollmentRepository;
 import com.datn.datnbe.student.repository.StudentRepository;
 import com.datn.datnbe.student.utils.StudentCredentialGenerator;
 import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
+import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
+import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.dto.request.SignupRequest;
 import com.datn.datnbe.auth.dto.response.UserProfileResponse;
@@ -19,6 +21,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -87,7 +90,7 @@ public class StudentManagement implements StudentApi {
         Student savedStudent = studentRepository.save(student);
 
         log.info("Successfully created student with ID: {}", savedStudent.getId());
-        
+
         // Build response with credentials
         StudentResponseDto response = studentEntityMapper.toResponseDto(savedStudent);
         response.setUsername(email);
@@ -146,23 +149,46 @@ public class StudentManagement implements StudentApi {
     }
 
     @Override
-    public List<StudentResponseDto> getStudentsByClass(String classId) {
-        log.info("Getting students for class ID: {}", classId);
+    public PaginatedResponseDto<StudentResponseDto> getStudentsByClass(String classId, Pageable pageable) {
+        log.info("Getting students for class ID: {} with pagination", classId);
 
-        List<ClassEnrollment> enrollments = classEnrollmentRepository.findByClassId(classId);
-        List<String> studentIds = enrollments.stream().map(ClassEnrollment::getStudentId).collect(Collectors.toList());
+        // Get all enrollments for the class (we'll need to handle pagination
+        // differently)
+        List<ClassEnrollment> allEnrollments = classEnrollmentRepository.findByClassId(classId);
+        List<String> studentIds = allEnrollments.stream()
+                .map(ClassEnrollment::getStudentId)
+                .collect(Collectors.toList());
 
         if (studentIds.isEmpty()) {
-            return List.of();
+            return PaginatedResponseDto.<StudentResponseDto>builder()
+                    .data(List.of())
+                    .pagination(PaginationDto.builder()
+                            .currentPage(pageable.getPageNumber())
+                            .pageSize(pageable.getPageSize())
+                            .totalItems(0L)
+                            .totalPages(0)
+                            .build())
+                    .build();
         }
 
-        List<Student> students = studentRepository.findByIdIn(Set.copyOf(studentIds));
+        // Get students with pagination
+        org.springframework.data.domain.Page<Student> studentsPage = studentRepository
+                .findByIdIn(Set.copyOf(studentIds), pageable);
 
-        return students.stream().map(s -> {
+        List<StudentResponseDto> studentDtos = studentsPage.getContent().stream().map(s -> {
             StudentResponseDto dto = studentEntityMapper.toResponseDto(s);
             enrichWithUserProfile(dto, s.getUserId());
             return dto;
         }).collect(Collectors.toList());
+
+        var paginationDto = PaginationDto.getFromPageable(pageable);
+        paginationDto.setTotalItems(studentsPage.getTotalElements());
+        paginationDto.setTotalPages(studentsPage.getTotalPages());
+
+        return PaginatedResponseDto.<StudentResponseDto>builder()
+                .data(studentDtos)
+                .pagination(paginationDto)
+                .build();
     }
 
     @Override

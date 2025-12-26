@@ -9,12 +9,15 @@ import org.springframework.web.multipart.MultipartFile;
 public interface StudentImportApi {
 
     /**
-     * Import students from a CSV file.
-     * The CSV should contain columns: firstName, lastName, email, phoneNumber, avatarUrl, status
-     * Required columns: firstName, lastName, email
+     * Import students from a CSV file and enroll them in the specified class.
+     * The CSV should contain columns: fullName, dateOfBirth, gender, address,
+     * parentName, parentPhone, parentContactEmail
+     * Required columns: fullName
      *
-     * @param file the CSV file to import
-     * @return import result with success status, count of created students, and any errors
+     * @param classId the class ID to enroll students in
+     * @param file    the CSV file to import
+     * @return import result with success status, count of created students, and any
+     *         errors
      */
-    StudentImportResponseDto importStudentsFromCsv(MultipartFile file);
+    StudentImportResponseDto importStudentsFromCsv(String classId, MultipartFile file);
 }
