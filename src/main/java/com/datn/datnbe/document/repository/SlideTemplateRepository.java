@@ -10,4 +10,6 @@ import org.springframework.stereotype.Repository;
 public interface SlideTemplateRepository extends JpaRepository<SlideTemplate, String> {
 
     Page<SlideTemplate> findAllByIsEnabledTrue(Pageable pageable);
+
+    Page<SlideTemplate> findByLayoutAndIsEnabledTrue(String layout, Pageable pageable);
 }
