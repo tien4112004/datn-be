@@ -1,5 +1,6 @@
 package com.datn.datnbe.cms.dto.response;
 
+import com.datn.datnbe.auth.dto.response.UserMinimalInfoDto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -19,6 +20,7 @@ public class ClassListResponseDto {
     String name;
     String joinCode;
     Boolean isActive;
+    UserMinimalInfoDto teacher;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 }

@@ -1,5 +1,8 @@
 package com.datn.datnbe.cms.service;
 
+import com.datn.datnbe.auth.dto.response.UserMinimalInfoDto;
+import com.datn.datnbe.auth.entity.UserProfile;
+import com.datn.datnbe.auth.repository.UserProfileRepo;
 import com.datn.datnbe.cms.api.ClassApi;
 import com.datn.datnbe.cms.dto.request.ClassCollectionRequest;
 import com.datn.datnbe.cms.dto.request.ClassCreateRequest;
@@ -33,6 +36,7 @@ public class ClassService implements ClassApi {
     private final ClassRepository classRepository;
     private final ClassEntityMapper classEntityMapper;
     private final SecurityContextUtils securityContextUtils;
+    private final UserProfileRepo userProfileRepo;
 
     @Override
     @Transactional
@@ -44,7 +48,9 @@ public class ClassService implements ClassApi {
         ClassEntity savedEntity = classRepository.save(entity);
 
         log.info("Successfully created class with id: {}", savedEntity.getId());
-        return classEntityMapper.toResponseDto(savedEntity);
+        ClassResponseDto dto = classEntityMapper.toResponseDto(savedEntity);
+        populateTeacherInfo(dto, savedEntity.getOwnerId());
+        return dto;
     }
 
     @Override
@@ -58,7 +64,11 @@ public class ClassService implements ClassApi {
         Page<ClassEntity> page = classRepository
                 .findAllWithFilters(request.getSearch(), ownerId, request.getIsActive(), pageable);
 
-        List<ClassListResponseDto> data = page.getContent().stream().map(classEntityMapper::toListResponseDto).toList();
+        List<ClassListResponseDto> data = page.getContent().stream().map(entity -> {
+            ClassListResponseDto dto = classEntityMapper.toListResponseDto(entity);
+            populateTeacherInfo(dto, entity.getOwnerId());
+            return dto;
+        }).toList();
 
         PaginationDto pagination = PaginationDto.builder()
                 .currentPage(request.getPage())
@@ -79,7 +89,9 @@ public class ClassService implements ClassApi {
                 .orElseThrow(() -> new AppException(ErrorCode.CLASS_NOT_FOUND,
                         String.format("Class with id '%s' not found", id)));
 
-        return classEntityMapper.toResponseDto(entity);
+        ClassResponseDto dto = classEntityMapper.toResponseDto(entity);
+        populateTeacherInfo(dto, entity.getOwnerId());
+        return dto;
     }
 
     @Override
@@ -95,7 +107,31 @@ public class ClassService implements ClassApi {
         ClassEntity updatedEntity = classRepository.save(entity);
 
         log.info("Successfully updated class with id: {}", id);
-        return classEntityMapper.toResponseDto(updatedEntity);
+        ClassResponseDto dto = classEntityMapper.toResponseDto(updatedEntity);
+        populateTeacherInfo(dto, updatedEntity.getOwnerId());
+        return dto;
+    }
+
+    private void populateTeacherInfo(ClassListResponseDto dto, String ownerId) {
+        userProfileRepo.findByIdOrKeycloakUserId(ownerId).ifPresent(teacher -> {
+            dto.setTeacher(mapToUserMinimalInfo(teacher));
+        });
+    }
+
+    private void populateTeacherInfo(ClassResponseDto dto, String ownerId) {
+        userProfileRepo.findByIdOrKeycloakUserId(ownerId).ifPresent(teacher -> {
+            dto.setTeacher(mapToUserMinimalInfo(teacher));
+        });
+    }
+
+    private UserMinimalInfoDto mapToUserMinimalInfo(UserProfile userProfile) {
+        return UserMinimalInfoDto.builder()
+                .id(userProfile.getId())
+                .firstName(userProfile.getFirstName())
+                .lastName(userProfile.getLastName())
+                .email(userProfile.getEmail())
+                .avatarUrl(userProfile.getAvatarUrl())
+                .build();
     }
 
     private Sort buildSort(String sortParam) {
