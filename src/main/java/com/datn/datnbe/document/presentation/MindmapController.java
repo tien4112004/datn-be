@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.datn.datnbe.document.api.MindmapApi;
 import com.datn.datnbe.document.dto.request.MindmapCollectionRequest;
@@ -77,12 +79,15 @@ public class MindmapController {
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 
-    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @RequireDocumentPermission
     public ResponseEntity<AppResponseDto<Void>> updateMindmap(@PathVariable String id,
-            @Valid @RequestBody MindmapUpdateRequest request) {
+            @RequestPart("data") MindmapUpdateRequest request,
+            @RequestPart(value = "file", required = false) MultipartFile thumbnail) {
+
         log.info("Received request to update mindmap with id: {}", id);
-        mindmapApi.updateMindmap(id, request);
+
+        mindmapApi.updateMindmap(id, request, thumbnail);
         return ResponseEntity.noContent().build();
     }
 

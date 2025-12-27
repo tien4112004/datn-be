@@ -18,8 +18,13 @@ import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+import com.datn.datnbe.sharedkernel.service.R2StorageService;
+import com.datn.datnbe.sharedkernel.utils.MediaStorageUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +34,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -38,13 +44,19 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class PresentationManagement implements PresentationApi {
 
-    private final PresentationRepository presentationRepository;
-    private final PresentationEntityMapper mapper;
-    private final PresentationValidation validation;
-    private final ResourcePermissionApi resourcePermissionApi;
-    private final ThumbnailStorageManagement thumbnailStorageManagement;
+    PresentationRepository presentationRepository;
+    PresentationEntityMapper mapper;
+    PresentationValidation validation;
+    ResourcePermissionApi resourcePermissionApi;
+    ThumbnailStorageManagement thumbnailStorageManagement;
+    R2StorageService r2StorageService;
+
+    @NonFinal
+    @Value("${cloudflare.r2.public-url}")
+    String cdnDomain;
 
     private String generateUniqueTitle(String originalTitle) {
         log.info("Generating unique title for {}", originalTitle);
@@ -173,6 +185,40 @@ public class PresentationManagement implements PresentationApi {
             request.setThumbnail(processedThumbnail);
 
             // Delete old thumbnail if it was a URL
+            thumbnailStorageManagement.deleteOldThumbnail(existingPresentation.getThumbnail());
+        }
+
+        mapper.updateEntity(request, existingPresentation);
+
+        Presentation savedPresentation = presentationRepository.save(existingPresentation);
+
+        log.info("Presentation updated with ID: {}", savedPresentation.getId());
+    }
+
+    @Override
+    public void updatePresentation(String id, PresentationUpdateRequest request, MultipartFile thumbnailFile) {
+        log.info("Updating presentation with ID: {} (multipart)", id);
+
+        Optional<Presentation> presentation = presentationRepository.findById(id);
+
+        validation.validatePresentationExists(presentation, id);
+
+        Presentation existingPresentation = presentation.get();
+
+        // Process thumbnail file if provided
+        if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
+            // Build storage key
+            String storageKey = String.format("thumbnails/presentation/%s.png", id);
+
+            // Upload to R2 directly
+            String uploadedKey = r2StorageService.uploadFile(thumbnailFile, storageKey, "image/png");
+
+            // Build CDN URL
+            String cdnUrl = MediaStorageUtils.buildCdnUrl(uploadedKey, cdnDomain);
+
+            request.setThumbnail(cdnUrl);
+
+            // Delete old thumbnail if exists
             thumbnailStorageManagement.deleteOldThumbnail(existingPresentation.getThumbnail());
         }
 

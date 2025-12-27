@@ -19,11 +19,16 @@ import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
+import com.datn.datnbe.sharedkernel.service.R2StorageService;
+import com.datn.datnbe.sharedkernel.utils.MediaStorageUtils;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,18 +39,25 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 @Transactional
+@FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class MindmapManagement implements MindmapApi {
 
-    private final MindmapRepository mindmapRepository;
-    private final MindmapEntityMapper mapper;
-    private final MindmapValidation validation;
-    private final ResourcePermissionApi resourcePermissionApi;
-    private final ThumbnailStorageManagement thumbnailStorageManagement;
+    MindmapRepository mindmapRepository;
+    MindmapEntityMapper mapper;
+    MindmapValidation validation;
+    ResourcePermissionApi resourcePermissionApi;
+    ThumbnailStorageManagement thumbnailStorageManagement;
+    R2StorageService r2StorageService;
+
+    @NonFinal
+    @Value("${cloudflare.r2.public-url}")
+    String cdnDomain;
 
     @Override
     public MindmapCreateResponseDto createMindmap(MindmapCreateRequest request) {
@@ -140,6 +152,45 @@ public class MindmapManagement implements MindmapApi {
                 request.setThumbnail(processedThumbnail);
 
                 // Delete old thumbnail if it was a URL
+                thumbnailStorageManagement.deleteOldThumbnail(existingMindmap.getThumbnail());
+            }
+
+            mapper.updateEntityFromRequest(request, existingMindmap);
+
+            mindmapRepository.save(existingMindmap);
+            log.info("Successfully updated mindmap with id: '{}'", id);
+        } catch (ResourceNotFoundException e) {
+            log.error("Mindmap not found with id: '{}'", id);
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to update mindmap with id: '{}'. Error: {}", id, e.getMessage());
+            throw e;
+        }
+    }
+
+    @Override
+    public void updateMindmap(String id, MindmapUpdateRequest request, MultipartFile thumbnailFile) {
+        log.info("Updating mindmap with id: '{}' (multipart)", id);
+
+        try {
+            validation.validateMindmapExists(id);
+
+            Mindmap existingMindmap = findMindmapById(id);
+
+            // Process thumbnail file if provided
+            if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
+                // Build storage key
+                String storageKey = String.format("thumbnails/mindmap/%s.png", id);
+
+                // Upload to R2 directly
+                String uploadedKey = r2StorageService.uploadFile(thumbnailFile, storageKey, "image/png");
+
+                // Build CDN URL
+                String cdnUrl = MediaStorageUtils.buildCdnUrl(uploadedKey, cdnDomain);
+
+                request.setThumbnail(cdnUrl);
+
+                // Delete old thumbnail if exists
                 thumbnailStorageManagement.deleteOldThumbnail(existingMindmap.getThumbnail());
             }
 
