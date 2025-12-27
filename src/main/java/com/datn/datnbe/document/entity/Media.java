@@ -46,6 +46,22 @@ public class Media {
     @Column(name = "owner_id", nullable = true, length = 36)
     String ownerId;
 
+    @Column(name = "is_generated", nullable = false)
+    @Builder.Default
+    Boolean isGenerated = false;
+
+    @Column(name = "presentation_id", length = 255)
+    String presentationId;
+
+    @Column(name = "prompt", columnDefinition = "TEXT")
+    String prompt;
+
+    @Column(name = "model", length = 100)
+    String model;
+
+    @Column(name = "provider", length = 50)
+    String provider;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     LocalDateTime createdAt;

@@ -5,6 +5,7 @@ import com.datn.datnbe.ai.api.ModelSelectionApi;
 import com.datn.datnbe.ai.apiclient.AIApiClient;
 import com.datn.datnbe.ai.dto.request.ImagePromptRequest;
 import com.datn.datnbe.ai.dto.response.ImageGeneratedResponseDto;
+import com.datn.datnbe.ai.service.PicsumPhotoService;
 import com.datn.datnbe.ai.utils.MappingParamsUtils;
 import com.datn.datnbe.sharedkernel.utils.Base64MultipartFile;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
@@ -34,6 +35,8 @@ public class ImageGenerationManagement implements ImageGenerationApi {
 
     ModelSelectionApi modelSelectionApi;
 
+    PicsumPhotoService picsumPhotoService;
+
     @Override
     public List<MultipartFile> generateImage(ImagePromptRequest request) {
         log.info("Image generation start");
@@ -61,28 +64,14 @@ public class ImageGenerationManagement implements ImageGenerationApi {
 
     @Override
     public List<MultipartFile> generateMockImage(ImagePromptRequest request) {
-        log.info("Image generation start");
+        log.info("Mock image generation start");
 
-        // if (!modelSelectionApi.isModelEnabled(request.getModel())) {
-        //     log.error("Model {} is not enabled for image generation", request.getModel());
-        //     throw new AppException(ErrorCode.MODEL_NOT_ENABLED);
-        // }
+        // Download image from picsum.photos with fixed dimensions
+        MultipartFile mockImage = picsumPhotoService.downloadRandomImage(800, 600);
 
-        //TODO: check if model supports image generation
+        log.info("Mock image generation completed");
 
-        ImageGeneratedResponseDto generatedImage = aiApiClient.post("/api/image/generate/mock",
-                MappingParamsUtils.constructParams(request),
-                ImageGeneratedResponseDto.class);
-
-        if (generatedImage.getError() != null || generatedImage.getImages() == null
-                || generatedImage.getImages().isEmpty()) {
-            log.error("Error during image generation: {}", generatedImage.getError());
-            throw new AppException(ErrorCode.GENERATION_ERROR, generatedImage.getError());
-        }
-
-        log.info("Image generation completed");
-
-        return generatedImage.getImages().stream().map(this::convertBase64ToMultipartFile).toList();
+        return List.of(mockImage);
     }
 
     private MultipartFile convertBase64ToMultipartFile(String base64Image) {
