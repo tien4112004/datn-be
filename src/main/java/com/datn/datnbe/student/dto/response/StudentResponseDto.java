@@ -33,7 +33,6 @@ public class StudentResponseDto {
     // Credentials (only populated during create operations)
     String username;
     String password;
-    String email;
     // User profile fields (joined from auth.user_profile)
     String firstName;
     String lastName;

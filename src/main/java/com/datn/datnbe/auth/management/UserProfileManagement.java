@@ -292,4 +292,44 @@ public class UserProfileManagement implements UserProfileApi {
 
         log.info("Successfully removed avatar for user ID: {}", userId);
     }
+
+    @Override
+    @Transactional
+    public UserProfileResponse createUserProfileByUsername(SignupRequest request) {
+        log.info("Creating user profile for username: {}", request.getUsername());
+
+        if (userProfileRepo.existsByEmail(request.getUsername())) {
+            log.error("User profile already exists for username: {}", request.getUsername());
+            throw new AppException(ErrorCode.RESOURCE_ALREADY_EXISTS,
+                    "User with username '" + request.getUsername() + "' already exists in authentication system.");
+        }
+
+        String keycloakUserId = null;
+
+        try {
+            keycloakUserId = keycloakAuthService.createKeycloakUser(request
+                    .getUsername(), request.getPassword(), request.getFirstName(), request.getLastName(), "user");
+
+            log.info("Successfully created user in Keycloak with ID: {}", keycloakUserId);
+            UserProfile userProfile = userProfileMapper.toEntity(request);
+            userProfile.setKeycloakUserId(keycloakUserId);
+            userProfile.setEmail(request.getUsername());
+
+            UserProfile savedProfile = userProfileRepo.save(userProfile);
+
+            log.info("Successfully created user profile in database with ID: {}", savedProfile.getId());
+            UserProfileResponse response = userProfileMapper.toResponseDto(savedProfile);
+            response.setUsername(request.getUsername());
+            return response;
+
+        } catch (Exception e) {
+            if (keycloakUserId != null) {
+                log.error("Failed to save user profile to database. Rolling back Keycloak user creation.", e);
+                keycloakAuthService.deleteKeycloakUser(keycloakUserId);
+            }
+
+            log.error("Error creating user profile: {}", e.getMessage(), e);
+            throw new AppException(ErrorCode.USER_CREATION_FAILED);
+        }
+    }
 }

@@ -100,6 +100,20 @@ public class StudentImportManagement implements StudentImportApi {
         }
 
         // Step 5: Check for existing students in database
+        // Step 5: Detect duplicate user IDs within the CSV (should fail fast)
+        Set<String> seenUserIds = new HashSet<>();
+        Set<String> duplicateUserIds = new HashSet<>();
+        for (Student student : students) {
+            if (!seenUserIds.add(student.getUserId())) {
+                duplicateUserIds.add(student.getUserId());
+            }
+        }
+        if (!duplicateUserIds.isEmpty()) {
+            log.warn("Duplicate user IDs found in CSV: {}", duplicateUserIds);
+            errors.add(String.format("Duplicate user IDs found in CSV: %s", String.join(", ", duplicateUserIds)));
+            return StudentImportResponseDto.failure(errors);
+        }
+
         List<Student> newStudents = new ArrayList<>();
         for (Student student : students) {
             if (studentRepository.existsByUserId(student.getUserId())) {
@@ -143,11 +157,11 @@ public class StudentImportManagement implements StudentImportApi {
         }
 
         return StudentImportResponseDto.builder()
-                .success(true)
-                .studentsCreated(savedStudents.size())
-                .credentials(createdCredentials)
-                .errors(errors.isEmpty() ? null : errors) // Include warnings if any
-                .build();
+            .success(true)
+            .studentsCreated(savedStudents.size())
+            .credentials(createdCredentials)
+            .errors(errors) // Include warnings if any (empty list when none)
+            .build();
     }
 
     /**
@@ -173,7 +187,7 @@ public class StudentImportManagement implements StudentImportApi {
             String lastName = names.length > 1 ? names[1] : firstName;
 
             // Generate email from fullName (replace spaces with dots)
-            String email = StudentCredentialGenerator.generateEmail(csvRow.getFullName());
+            String email = StudentCredentialGenerator.generateUsername(csvRow.getFullName(), csvRow.getDateOfBirth());
 
             // Generate a temporary password
             String temporaryPassword = StudentCredentialGenerator.generatePassword();
