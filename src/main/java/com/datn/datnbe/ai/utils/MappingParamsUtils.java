@@ -60,7 +60,7 @@ public class MappingParamsUtils {
                 request.getProvider());
     }
 
-    private static String createPrompt(ImagePromptRequest request) {
+    public static String createPrompt(ImagePromptRequest request) {
         StringBuilder promptBuilder = new StringBuilder(request.getPrompt());
 
         if (request.getArtStyle() != null && !request.getArtStyle().isEmpty()) {

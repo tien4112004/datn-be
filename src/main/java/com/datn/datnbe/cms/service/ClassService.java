@@ -64,9 +64,19 @@ public class ClassService implements ClassApi {
         Page<ClassEntity> page = classRepository
                 .findAllWithFilters(request.getSearch(), ownerId, request.getIsActive(), pageable);
 
+        // Fetch all teachers in a single query to avoid N+1 problem
+        List<String> ownerIds = page.getContent().stream().map(ClassEntity::getOwnerId).distinct().toList();
+
+        var teacherMap = new java.util.HashMap<String, UserMinimalInfoDto>();
+        userProfileRepo.findAllByIdOrKeycloakUserIdIn(ownerIds).forEach(teacher -> {
+            UserMinimalInfoDto teacherDto = mapToUserMinimalInfo(teacher);
+            teacherMap.put(teacher.getId(), teacherDto);
+            teacherMap.put(teacher.getKeycloakUserId(), teacherDto);
+        });
+
         List<ClassListResponseDto> data = page.getContent().stream().map(entity -> {
             ClassListResponseDto dto = classEntityMapper.toListResponseDto(entity);
-            populateTeacherInfo(dto, entity.getOwnerId());
+            dto.setTeacher(teacherMap.get(entity.getOwnerId()));
             return dto;
         }).toList();
 
@@ -110,12 +120,6 @@ public class ClassService implements ClassApi {
         ClassResponseDto dto = classEntityMapper.toResponseDto(updatedEntity);
         populateTeacherInfo(dto, updatedEntity.getOwnerId());
         return dto;
-    }
-
-    private void populateTeacherInfo(ClassListResponseDto dto, String ownerId) {
-        userProfileRepo.findByIdOrKeycloakUserId(ownerId).ifPresent(teacher -> {
-            dto.setTeacher(mapToUserMinimalInfo(teacher));
-        });
     }
 
     private void populateTeacherInfo(ClassResponseDto dto, String ownerId) {

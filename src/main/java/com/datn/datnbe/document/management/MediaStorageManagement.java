@@ -1,6 +1,7 @@
 package com.datn.datnbe.document.management;
 
 import com.datn.datnbe.document.api.MediaStorageApi;
+import com.datn.datnbe.document.dto.MediaMetadataDto;
 import com.datn.datnbe.document.dto.response.UploadedMediaResponseDto;
 import com.datn.datnbe.document.entity.Media;
 import com.datn.datnbe.sharedkernel.enums.MediaType;
@@ -60,6 +61,65 @@ public class MediaStorageManagement implements MediaStorageApi {
                 savedMedia.getId(),
                 originalFilename,
                 ownerId);
+
+        return UploadedMediaResponseDto.builder()
+                .id(savedMedia.getId())
+                .mediaType(mediaType.name())
+                .cdnUrl(savedMedia.getCdnUrl())
+                .extension(extension)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public UploadedMediaResponseDto upload(MultipartFile file, String ownerId, MediaMetadataDto metadata) {
+        var mediaType = MediaValidation.getValidatedMediaType(file);
+
+        String originalFilename = getOriginalFilename(file);
+        String contentType = getContentType(file);
+        String extension = MediaType.getFileExtension(originalFilename);
+        String sanitizedFilename = sanitizeFilename(originalFilename);
+
+        String storageKey = buildObjectKey(mediaType.getFolder(), sanitizedFilename);
+        String uploadedKey = r2StorageService.uploadFile(file, storageKey, contentType);
+
+        Media.MediaBuilder mediaBuilder = Media.builder()
+                .originalFilename(originalFilename)
+                .storageKey(uploadedKey)
+                .cdnUrl(buildCdnUrl(uploadedKey, cdnDomain))
+                .mediaType(mediaType)
+                .fileSize(file.getSize())
+                .contentType(contentType)
+                .ownerId(ownerId);
+
+        // Add metadata if provided
+        if (metadata != null) {
+            if (metadata.getIsGenerated() != null) {
+                mediaBuilder.isGenerated(metadata.getIsGenerated());
+            }
+            if (metadata.getPresentationId() != null) {
+                mediaBuilder.presentationId(metadata.getPresentationId());
+            }
+            if (metadata.getPrompt() != null) {
+                mediaBuilder.prompt(metadata.getPrompt());
+            }
+            if (metadata.getModel() != null) {
+                mediaBuilder.model(metadata.getModel());
+            }
+            if (metadata.getProvider() != null) {
+                mediaBuilder.provider(metadata.getProvider());
+            }
+        }
+
+        Media media = mediaBuilder.build();
+        Media savedMedia = mediaRepository.save(media);
+
+        log.info("Saved media record with ID: {} for file: {} (owner: {}, generated: {}, presentationId: {})",
+                savedMedia.getId(),
+                originalFilename,
+                ownerId,
+                savedMedia.getIsGenerated(),
+                savedMedia.getPresentationId());
 
         return UploadedMediaResponseDto.builder()
                 .id(savedMedia.getId())

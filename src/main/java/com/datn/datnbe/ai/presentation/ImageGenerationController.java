@@ -5,7 +5,9 @@ import com.datn.datnbe.ai.dto.request.ImagePromptRequest;
 import com.datn.datnbe.ai.dto.response.ImageResponseDto;
 import com.datn.datnbe.ai.management.ImageGenerationIdempotencyService;
 import com.datn.datnbe.ai.mapper.ImageGenerateMapper;
+import com.datn.datnbe.ai.utils.MappingParamsUtils;
 import com.datn.datnbe.document.api.MediaStorageApi;
+import com.datn.datnbe.document.dto.MediaMetadataDto;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.idempotency.api.Idempotent;
 import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
@@ -52,9 +54,19 @@ public class ImageGenerationController {
 
         List<MultipartFile> imageResponse = imageGenerationApi.generateMockImage(request);
 
-        log.info("uploading images to media storage");
+        // Prepare metadata
+        String fullPrompt = MappingParamsUtils.createPrompt(request);
+        MediaMetadataDto metadata = MediaMetadataDto.builder()
+                .isGenerated(true)
+                .presentationId(null)
+                .prompt(fullPrompt)
+                .model(request.getModel())
+                .provider(request.getProvider())
+                .build();
+
+        log.info("uploading images to media storage with metadata");
         ImageResponseDto uploadedMedia = imageGenerateMapper
-                .toImageResponseDto(imageResponse, mediaStorageApi, ownerId);
+                .toImageResponseDtoWithMetadata(imageResponse, mediaStorageApi, ownerId, metadata);
         log.info("Images uploaded successfully: {}", uploadedMedia);
 
         return ResponseEntity.ok(AppResponseDto.<ImageResponseDto>builder().data(uploadedMedia).build());
@@ -80,13 +92,24 @@ public class ImageGenerationController {
     @Idempotent(serviceType = ImageGenerationIdempotencyService.class)
     public ResponseEntity<AppResponseDto<ImageResponseDto>> generateMockImageWithIdempotency(
             @RequestBody ImagePromptRequest request) {
+        log.info("Received mock image generation request with idempotency: {}", request);
         String ownerId = securityContextUtils.getCurrentUserId();
 
         List<MultipartFile> imageResponse = imageGenerationApi.generateMockImage(request);
 
-        log.info("uploading images to media storage");
+        // Prepare metadata with presentation context
+        String fullPrompt = MappingParamsUtils.createPrompt(request);
+        MediaMetadataDto metadata = MediaMetadataDto.builder()
+                .isGenerated(true)
+                .presentationId(request.getPresentationId())
+                .prompt(fullPrompt)
+                .model(request.getModel())
+                .provider(request.getProvider())
+                .build();
+
+        log.info("uploading images to media storage with metadata (presentationId: {})", request.getPresentationId());
         ImageResponseDto uploadedMedia = imageGenerateMapper
-                .toImageResponseDto(imageResponse, mediaStorageApi, ownerId);
+                .toImageResponseDtoWithMetadata(imageResponse, mediaStorageApi, ownerId, metadata);
         log.info("Images uploaded successfully: {}", uploadedMedia);
 
         return ResponseEntity.ok(AppResponseDto.<ImageResponseDto>builder().data(uploadedMedia).build());
