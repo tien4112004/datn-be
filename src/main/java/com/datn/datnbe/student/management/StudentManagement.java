@@ -59,7 +59,7 @@ public class StudentManagement implements StudentApi {
         log.info("Creating new student with full name: {}", request.getFullName());
 
         // Phase 1: Create user via UserProfileAPI
-        String email = StudentCredentialGenerator.generateEmail(request.getFullName());
+        String username = StudentCredentialGenerator.generateUsername(request.getFullName(), request.getDateOfBirth());
         String password = StudentCredentialGenerator.generatePassword();
 
         // Parse fullName into firstName and lastName
@@ -68,13 +68,13 @@ public class StudentManagement implements StudentApi {
         String lastName = names.length > 1 ? names[1] : firstName;
 
         SignupRequest signupRequest = SignupRequest.builder()
-                .email(email)
+                .username(username)
                 .password(password)
                 .firstName(firstName)
                 .lastName(lastName)
                 .build();
 
-        UserProfileResponse createdUser = userProfileApi.createUserProfile(signupRequest);
+        UserProfileResponse createdUser = userProfileApi.createUserProfileByUsername(signupRequest);
         String userId = createdUser.getId();
 
         log.info("User created via UserProfileAPI with ID: {}", userId);
@@ -93,9 +93,8 @@ public class StudentManagement implements StudentApi {
 
         // Build response with credentials
         StudentResponseDto response = studentEntityMapper.toResponseDto(savedStudent);
-        response.setUsername(email);
+        response.setUsername(username);
         response.setPassword(password);
-        response.setEmail(email);
         // populate profile fields from created user
         try {
             var profile = userProfileApi.getUserProfile(createdUser.getId());

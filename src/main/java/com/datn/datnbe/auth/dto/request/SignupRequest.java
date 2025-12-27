@@ -42,4 +42,7 @@ public class SignupRequest {
 
     @JsonIgnore
     String role;
+
+    @JsonIgnore
+    String username; // this is for create student only
 }

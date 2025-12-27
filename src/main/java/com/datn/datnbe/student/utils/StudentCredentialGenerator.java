@@ -1,12 +1,17 @@
 package com.datn.datnbe.student.utils;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Random;
+import java.text.Normalizer;
+
 public final class StudentCredentialGenerator {
 
     private StudentCredentialGenerator() {
         // Utility class, should not be instantiated
     }
 
-    public static String generateEmail(String fullName) {
+    public static String generateUsername(String fullName, LocalDate dateOfBirth) {
         if (fullName == null || fullName.isBlank()) {
             throw new IllegalArgumentException("Full name cannot be null or blank");
         }
@@ -31,7 +36,7 @@ public final class StudentCredentialGenerator {
     public static String generatePassword() {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         StringBuilder password = new StringBuilder("Temp@");
-        java.util.Random random = new java.util.Random();
+        Random random = new Random();
 
         for (int i = 0; i < 8; i++) {
             password.append(chars.charAt(random.nextInt(chars.length())));

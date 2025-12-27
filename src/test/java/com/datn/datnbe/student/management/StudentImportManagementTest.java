@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import com.datn.datnbe.student.api.StudentApi;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
@@ -41,6 +42,9 @@ class StudentImportManagementTest {
 
     @Mock
     private UserProfileApi userProfileApi;
+
+    @Mock
+    private StudentApi studentApi;
 
     @InjectMocks
     private StudentImportManagement studentImportManagement;
@@ -94,7 +98,7 @@ class StudentImportManagementTest {
             when(studentRepository.existsByUserId(anyString())).thenReturn(false);
             when(studentRepository.saveAll(anyList())).thenReturn(List.of(student));
 
-            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv(validFile);
+            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv("cls_001", validFile);
 
             assertThat(result.isSuccess()).isTrue();
             assertThat(result.getStudentsCreated()).isEqualTo(1);
@@ -144,7 +148,7 @@ class StudentImportManagementTest {
             when(studentRepository.existsByUserId(anyString())).thenReturn(false);
             when(studentRepository.saveAll(anyList())).thenReturn(List.of(student1, student2));
 
-            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv(validFile);
+            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv("cls_001", validFile);
 
             assertThat(result.isSuccess()).isTrue();
             assertThat(result.getStudentsCreated()).isEqualTo(2);
@@ -162,7 +166,7 @@ class StudentImportManagementTest {
             when(csvParserService.parseStudentCsv(any()))
                     .thenReturn(new CsvParserService.ParseResult(new ArrayList<>(), new ArrayList<>(parseErrors)));
 
-            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv(validFile);
+            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv("cls_001", validFile);
 
             assertThat(result.isSuccess()).isFalse();
             assertThat(result.getStudentsCreated()).isEqualTo(0);
@@ -198,11 +202,12 @@ class StudentImportManagementTest {
 
             when(csvParserService.parseStudentCsv(any()))
                     .thenReturn(new CsvParserService.ParseResult(List.of(csvRow1, csvRow2), new ArrayList<>()));
-            when(userProfileApi.createUserProfile(any())).thenReturn(createdUser);
-            when(studentMapper.toEntity(eq(csvRow1), anyInt(), anyList())).thenReturn(student1);
-            when(studentMapper.toEntity(eq(csvRow2), anyInt(), anyList())).thenReturn(student2);
+            // These stubbings may not be exercised if duplicate user ids are detected early
+            lenient().when(userProfileApi.createUserProfile(any())).thenReturn(createdUser);
+            lenient().when(studentMapper.toEntity(eq(csvRow1), anyInt(), anyList())).thenReturn(student1);
+            lenient().when(studentMapper.toEntity(eq(csvRow2), anyInt(), anyList())).thenReturn(student2);
 
-            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv(validFile);
+            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv("cls_001", validFile);
 
             assertThat(result.isSuccess()).isFalse();
             assertThat(result.getErrors()).anyMatch(e -> e.contains("Duplicate user IDs found in CSV"));
@@ -234,7 +239,7 @@ class StudentImportManagementTest {
             when(studentMapper.toEntity(eq(csvRow), anyInt(), anyList())).thenReturn(student);
             when(studentRepository.existsByUserId("user_001")).thenReturn(true);
 
-            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv(validFile);
+            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv("cls_001", validFile);
 
             assertThat(result.isSuccess()).isFalse();
             assertThat(result.getErrors()).anyMatch(e -> e.contains("Student already exists for user ID"));
@@ -262,7 +267,7 @@ class StudentImportManagementTest {
                 return null;
             });
 
-            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv(validFile);
+            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv("cls_001", validFile);
 
             assertThat(result.isSuccess()).isFalse();
             assertThat(result.getErrors()).anyMatch(e -> e.contains("userId is required"));
@@ -295,7 +300,7 @@ class StudentImportManagementTest {
             when(studentRepository.existsByUserId(anyString())).thenReturn(false);
             when(studentRepository.saveAll(anyList())).thenThrow(new RuntimeException("DB Error"));
 
-            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv(validFile);
+            StudentImportResponseDto result = studentImportManagement.importStudentsFromCsv("cls_001", validFile);
 
             assertThat(result.isSuccess()).isFalse();
             assertThat(result.getErrors()).anyMatch(e -> e.contains("Database error"));
