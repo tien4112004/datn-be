@@ -69,13 +69,19 @@ public class SecurityConfig {
                                 "/api/slide-themes",
                                 "/api/slide-themes/**",
                                 "/api/slide-templates",
-                                "/api/slide-templates/**")
+                                "/api/slide-templates/**",
+                                "/api/students/import")
                         .permitAll()
                         .requestMatchers(HttpMethod.PUT,
                                 "/api/slide-themes",
                                 "/api/slide-themes/**",
                                 "/api/slide-templates",
-                                "/api/slide-templates/**")
+                                "/api/slide-templates/**",
+                                "/api/students/**")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/students/**")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/students/**")
                         .permitAll()
 
                         // Admin endpoints - requires ADMIN role

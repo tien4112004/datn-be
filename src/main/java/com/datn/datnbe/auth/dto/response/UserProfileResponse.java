@@ -36,4 +36,8 @@ public class UserProfileResponse {
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     LocalDateTime updatedAt;
+
+    String username;
+
+    String role;
 }
