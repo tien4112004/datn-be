@@ -65,19 +65,19 @@ public class UserProfileManagement implements UserProfileApi {
     @Override
     @Transactional
     public UserProfileResponse createUserProfile(SignupRequest request) {
-        log.info("Creating user profile for email: {}", request.getEmail());
+        String account = request.getEmail() != null ? request.getEmail() : request.getUsername();
+        log.info("Creating user profile for account: {}", account);
 
-        if (userProfileRepo.existsByEmail(request.getEmail())) {
-            log.error("User profile already exists for email: {}", request.getEmail());
+        if (userProfileRepo.existsByEmail(account)) {
+            log.error("User profile already exists for account: {}", account);
             throw new AppException(ErrorCode.RESOURCE_ALREADY_EXISTS,
-                    "User with email '" + request.getEmail() + "' already exists in authentication system.");
+                    "User with account '" + account + "' already exists in authentication system.");
         }
 
         String keycloakUserId = null;
 
         try {
-            keycloakUserId = keycloakAuthService.createKeycloakUser(request
-                    .getEmail(), request.getPassword(), request.getFirstName(), request.getLastName(), "user");
+            keycloakUserId = keycloakAuthService.createKeycloakUser(account, request.getPassword(), request.getFirstName(), request.getLastName(), "user");
 
             log.info("Successfully created user in Keycloak with ID: {}", keycloakUserId);
             UserProfile userProfile = userProfileMapper.toEntity(request);

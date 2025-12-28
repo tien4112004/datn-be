@@ -32,11 +32,12 @@ public class AuthenticationService {
      * Authenticate user with email and password and return tokens with user profile
      */
     public SignInResponse signIn(SigninRequest request) {
-        log.info("Attempting to sign in user: {}", request.getEmail());
+        String account = request.getEmail() != null ? request.getEmail() : request.getUsername();
+        log.info("Attempting to sign in user: {}", account);
 
-        var userProfileOpt = userProfileRepo.findByEmail(request.getEmail());
+        var userProfileOpt = userProfileRepo.findByEmail(account);
         if (userProfileOpt.isEmpty()) {
-            log.error("User profile not found for email: {}", request.getEmail());
+            log.error("User profile not found for username or email: {}", account);
             throw new AppException(ErrorCode.USER_PROFILE_NOT_FOUND, "User not found");
         }
 
@@ -44,7 +45,7 @@ public class AuthenticationService {
             var userKeycloakId = userProfileOpt.get().getKeycloakUserId();
             AuthTokenResponse tokenResponse = keycloakAuthService.signIn(request, userKeycloakId);
             if (tokenResponse == null || tokenResponse.getAccessToken() == null) {
-                log.error("Failed to retrieve tokens from Keycloak for user: {}", request.getEmail());
+                log.error("Failed to retrieve tokens from Keycloak for user: {}", account);
                 throw new AppException(ErrorCode.AUTH_INVALID_CREDENTIALS, "Authentication failed");
             }
 

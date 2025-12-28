@@ -59,17 +59,16 @@ public class KeycloakAuthService {
      * Create user in Keycloak
      * Returns the Keycloak user ID
      */
-    public String createKeycloakUser(String email, String password, String firstName, String lastName, String role) {
+    public String createKeycloakUser(String account, String password, String firstName, String lastName, String role) {
         try {
 
             // Create user representation
             UserRepresentation user = new UserRepresentation();
             user.setEnabled(true);
-            user.setUsername(email);
-            if(!email.contains("@")){
-                email = email + "@datn.com";
+            user.setUsername(account);
+            if(account.contains("@")){
+                user.setEmail(account);
             }
-            user.setEmail(email);
             user.setFirstName(firstName);
             user.setLastName(lastName);
             user.setEmailVerified(false);
@@ -177,9 +176,10 @@ public class KeycloakAuthService {
     }
 
     public AuthTokenResponse signIn(SigninRequest request, String userKeycloakId) {
+        String account = request.getEmail() != null ? request.getEmail() : request.getUsername();
         log.info("url signin: {}", authProperties.getTokenUri());
 
-        var requestBody = "client_id=" + authProperties.getClientId() + "&username=" + request.getEmail() + "&password="
+        var requestBody = "client_id=" + authProperties.getClientId() + "&username=" + account + "&password="
                 + request.getPassword() + "&grant_type=password" + "&client_secret=" + authProperties.getClientSecret()
                 + "&user_id=" + userKeycloakId;
 
