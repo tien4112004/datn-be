@@ -69,7 +69,6 @@ public class KeycloakAuthService {
             if (account.contains("@")) {
                 user.setEmail(account);
             }
-            user.setEmail(email);
             user.setFirstName(firstName);
             user.setLastName(lastName);
             user.setEmailVerified(false);
