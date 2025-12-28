@@ -27,9 +27,17 @@ public class CsvParserService {
 
     private static final Set<String> REQUIRED_HEADERS = Set.of("fullName");
 
-    private static final Set<String> VALID_HEADERS = Set
-            .of("id", "fullName", "dateOfBirth", "gender", "address", "parentName", "parentPhone", 
-                "parentContactEmail", "classId", "enrollmentDate", "status");
+    private static final Set<String> VALID_HEADERS = Set.of("id",
+            "fullName",
+            "dateOfBirth",
+            "gender",
+            "address",
+            "parentName",
+            "parentPhone",
+            "parentContactEmail",
+            "classId",
+            "enrollmentDate",
+            "status");
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
 
@@ -58,11 +66,10 @@ public class CsvParserService {
 
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
-             CSVParser csvParser = CSVFormat.DEFAULT
-                     .withFirstRecordAsHeader()
-                     .withAllowMissingColumnNames()
-                     .withIgnoreEmptyLines()
-                     .parse(reader)) {
+                CSVParser csvParser = CSVFormat.DEFAULT.withFirstRecordAsHeader()
+                        .withAllowMissingColumnNames()
+                        .withIgnoreEmptyLines()
+                        .parse(reader)) {
 
             Map<String, Integer> headerMap = buildHeaderMap(csvParser.getHeaderMap(), errors);
             if (!errors.isEmpty()) {
@@ -96,7 +103,7 @@ public class CsvParserService {
 
     private Map<String, Integer> buildHeaderMap(Map<String, Integer> csvHeaderMap, List<String> errors) {
         Map<String, Integer> headerMap = new HashMap<>();
-        
+
         for (Map.Entry<String, Integer> entry : csvHeaderMap.entrySet()) {
             String header = entry.getKey().trim();
             if (VALID_HEADERS.contains(header)) {
@@ -118,7 +125,7 @@ public class CsvParserService {
             Map<String, Integer> headerMap,
             int rowNumber,
             List<String> errors) {
-        
+
         String fullName = getValueFromRecord(record, "fullName");
         String dateOfBirthStr = getValueFromRecord(record, "dateOfBirth");
         String gender = getValueFromRecord(record, "gender");
@@ -196,4 +203,3 @@ public class CsvParserService {
         }
     }
 }
-

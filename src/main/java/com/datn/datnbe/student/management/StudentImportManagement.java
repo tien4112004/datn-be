@@ -157,16 +157,16 @@ public class StudentImportManagement implements StudentImportApi {
         }
 
         return StudentImportResponseDto.builder()
-            .success(true)
-            .studentsCreated(savedStudents.size())
-            .credentials(createdCredentials)
-            .errors(errors) // Include warnings if any (empty list when none)
-            .build();
+                .success(true)
+                .studentsCreated(savedStudents.size())
+                .credentials(createdCredentials)
+                .errors(errors) // Include warnings if any (empty list when none)
+                .build();
     }
 
     /**
      * Create a user via UserProfileAPI and get credentials.
-     * 
+     *
      * @param csvRow    the CSV row containing user data
      * @param rowNumber the row number for error reporting
      * @param errors    list to collect errors

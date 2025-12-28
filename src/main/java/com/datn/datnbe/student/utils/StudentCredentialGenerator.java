@@ -16,12 +16,10 @@ public final class StudentCredentialGenerator {
             throw new IllegalArgumentException("Full name cannot be null or blank");
         }
 
-    String normalized = Normalizer.normalize(fullName, Normalizer.Form.NFD)
-        .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+        String normalized = Normalizer.normalize(fullName, Normalizer.Form.NFD)
+                .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
 
-    String base = normalized.toLowerCase().trim()
-        .replaceAll("\\s+", "")
-        .replaceAll("[^a-z0-9]", "");
+        String base = normalized.toLowerCase().trim().replaceAll("\\s+", "").replaceAll("[^a-z0-9]", "");
 
         String dobPart = "nodob";
         if (dateOfBirth != null) {
