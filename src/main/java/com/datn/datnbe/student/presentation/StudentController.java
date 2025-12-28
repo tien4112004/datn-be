@@ -8,7 +8,6 @@ import com.datn.datnbe.student.dto.response.StudentImportResponseDto;
 import com.datn.datnbe.student.dto.response.StudentResponseDto;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -16,12 +15,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
-import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 
 @RestController
 @RequestMapping("/api")
@@ -34,8 +30,7 @@ public class StudentController {
     StudentApi studentApi;
 
     @GetMapping("/classes/{classId}/students")
-    public ResponseEntity<AppResponseDto<?>> getStudentsByClass(
-            @PathVariable String classId,
+    public ResponseEntity<AppResponseDto<?>> getStudentsByClass(@PathVariable String classId,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size) {
         log.info("Received request to get students for class: {} with pagination", classId);

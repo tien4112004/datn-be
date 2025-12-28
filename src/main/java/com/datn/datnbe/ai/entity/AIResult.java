@@ -27,4 +27,7 @@ public class AIResult {
 
     @Column(name = "presentation_id", nullable = false)
     String presentationId;
+
+    @Column(name = "generation_options", columnDefinition = "JSONB")
+    String generationOptions;
 }

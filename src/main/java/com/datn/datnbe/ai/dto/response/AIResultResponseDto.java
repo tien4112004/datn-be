@@ -12,4 +12,5 @@ public class AIResultResponseDto {
     String result;
     String createdAt;
     String presentationId;
+    String generationOptions;
 }

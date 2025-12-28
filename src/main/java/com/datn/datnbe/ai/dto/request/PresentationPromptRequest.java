@@ -27,4 +27,5 @@ public class PresentationPromptRequest {
     String provider;
     String presentationId;
     String topic;
+    GenerationOptionsDto generationOptions;
 }

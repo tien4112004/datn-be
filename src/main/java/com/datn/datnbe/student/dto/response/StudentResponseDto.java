@@ -29,7 +29,7 @@ public class StudentResponseDto {
     StudentStatus status;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
-    
+
     // Credentials (only populated during create operations)
     String username;
     String password;

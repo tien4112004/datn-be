@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("CSV Parser Service Tests")
-class   CsvParserServiceTest {
+class CsvParserServiceTest {
 
     private CsvParserService csvParserService;
 

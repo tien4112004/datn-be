@@ -24,8 +24,14 @@ public class AIResultManagement implements AIResultApi {
     AIResultMapper aiResultMapper;
 
     @Override
-    public AIResultResponseDto saveAIResult(String aiResult, String presentationId) {
-        AIResult aiResultEntity = AIResult.builder().result(aiResult).presentationId(presentationId).build();
+    public AIResultResponseDto saveAIResult(String aiResult, String presentationId, String generationOptions) {
+        log.info("Saving AI result for presentation {} with generation options: {}", presentationId, generationOptions);
+
+        AIResult aiResultEntity = AIResult.builder()
+                .result(aiResult)
+                .presentationId(presentationId)
+                .generationOptions(generationOptions)
+                .build();
 
         AIResult savedEntity = aiResultRepo.save(aiResultEntity);
 
@@ -46,6 +52,7 @@ public class AIResultManagement implements AIResultApi {
                 .result(aiResult.getResult())
                 .createdAt(aiResult.getCreatedAt().toString())
                 .presentationId(aiResult.getPresentationId())
+                .generationOptions(aiResult.getGenerationOptions())
                 .build();
     }
 }

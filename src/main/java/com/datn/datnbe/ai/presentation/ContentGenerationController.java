@@ -84,6 +84,21 @@ public class ContentGenerationController {
 
         String presentationId = request.getPresentationId();
 
+        // Serialize generation options to JSON
+        String generationOptionsJson = null;
+        if (request.getGenerationOptions() != null) {
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                generationOptionsJson = mapper.writeValueAsString(request.getGenerationOptions());
+                log.info("Generation options for presentation {}: {}", presentationId, generationOptionsJson);
+            } catch (Exception e) {
+                log.error("Failed to serialize generation options", e);
+                // Continue without options rather than failing
+            }
+        }
+
+        final String optionsJson = generationOptionsJson; // Make effectively final for lambda
+
         // Return the flux with all processing attached
         var slideSse = contentGenerationExternalApi.generateSlides(request)
                 .doOnNext(response -> log.info("Received response chunk: {}", response))
@@ -93,8 +108,8 @@ public class ContentGenerationController {
                     result.append(slide);
                 })
                 .doOnComplete(() -> {
-                    aiResultApi.saveAIResult(result.toString(), presentationId);
-                    log.info("Slide generation completed, result saved with ID: {}", presentationId);
+                    aiResultApi.saveAIResult(result.toString(), presentationId, optionsJson);
+                    log.info("Slide generation completed, result saved with ID: {} and options", presentationId);
                 })
                 .doOnError(err -> log.error("Error generating slides for ID: {}", presentationId, err))
                 .onErrorResume(err -> {
@@ -125,7 +140,19 @@ public class ContentGenerationController {
                     "Failed to generate slides in batch mode: " + error.getMessage());
         }
         String presentationId = UUID.randomUUID().toString();
-        aiResultApi.saveAIResult(result, presentationId);
+
+        // Serialize generation options to JSON
+        String generationOptionsJson = null;
+        if (request.getGenerationOptions() != null) {
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                generationOptionsJson = mapper.writeValueAsString(request.getGenerationOptions());
+            } catch (Exception e) {
+                log.error("Failed to serialize generation options", e);
+            }
+        }
+
+        aiResultApi.saveAIResult(result, presentationId, generationOptionsJson);
 
         String title = (request.getTopic() != null && !request.getTopic().trim().isEmpty())
                 ? request.getTopic()
