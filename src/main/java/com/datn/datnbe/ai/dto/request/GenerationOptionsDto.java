@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 public class GenerationOptionsDto {
     private String artStyle;
     private String artStyleModifiers;
+    private String themeStyle;
+    private String themeStyleModifiers;
     private ModelDto imageModel;
 
     @Data

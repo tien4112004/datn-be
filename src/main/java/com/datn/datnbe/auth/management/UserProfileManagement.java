@@ -77,7 +77,11 @@ public class UserProfileManagement implements UserProfileApi {
         String keycloakUserId = null;
 
         try {
-            keycloakUserId = keycloakAuthService.createKeycloakUser(account, request.getPassword(), request.getFirstName(), request.getLastName(), "user");
+            keycloakUserId = keycloakAuthService.createKeycloakUser(account,
+                    request.getPassword(),
+                    request.getFirstName(),
+                    request.getLastName(),
+                    "user");
 
             log.info("Successfully created user in Keycloak with ID: {}", keycloakUserId);
             UserProfile userProfile = userProfileMapper.toEntity(request);

@@ -80,7 +80,6 @@ public class ContentGenerationController {
 
     @PostMapping(value = "presentations/generate", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<Flux<String>> generateSlides(@RequestBody PresentationPromptRequest request) {
-        StringBuilder result = new StringBuilder();
 
         String presentationId = request.getPresentationId();
 
@@ -99,26 +98,37 @@ public class ContentGenerationController {
 
         final String optionsJson = generationOptionsJson; // Make effectively final for lambda
 
-        // Return the flux with all processing attached
-        var slideSse = contentGenerationExternalApi.generateSlides(request)
+        // Use StringBuffer for thread safety, or AtomicReference<StringBuilder>
+        StringBuffer result = new StringBuffer();
+
+        Flux<String> slideSse = contentGenerationExternalApi.generateSlides(request)
                 .doOnNext(response -> log.info("Received response chunk: {}", response))
                 .map(slide -> slide.substring("data: ".length()) + "\n\n")
                 .delayElements(Duration.ofMillis(SLIDE_DELAY))
-                .doOnNext(slide -> {
-                    result.append(slide);
-                })
-                .doOnComplete(() -> {
-                    aiResultApi.saveAIResult(result.toString(), presentationId, optionsJson);
-                    log.info("Slide generation completed, result saved with ID: {} and options", presentationId);
-                })
+                .doOnNext(result::append)
                 .doOnError(err -> log.error("Error generating slides for ID: {}", presentationId, err))
-                .onErrorResume(err -> {
-                    log.error("Error generating slides", err);
-                    return Flux.error(new AppException(ErrorCode.GENERATION_ERROR,
-                            "Failed to generate slides: " + err.getMessage()));
-                })
+                .onErrorResume(err -> Flux.error(
+                        new AppException(ErrorCode.GENERATION_ERROR, "Failed to generate slides: " + err.getMessage())))
                 .doOnSubscribe(s -> log.info("Client subscribed to slide generation stream for ID: {}", presentationId))
-                .cache();
+                .publish()
+                .autoConnect(0); // Start immediately, never cancel due to subscriber count
+
+        // Subscribe internally to guarantee completion and saving
+        slideSse.doFinally(signalType -> {
+            if (result.length() > 0) {
+                try {
+                    aiResultApi.saveAIResult(result.toString(), presentationId, optionsJson);
+                    log.info("Slide generation completed with signal {}, saved {} bytes for ID: {}",
+                            signalType,
+                            result.length(),
+                            presentationId);
+                } catch (Exception e) {
+                    log.error("Failed to save AI result for presentation ID: {}", presentationId, e);
+                }
+            }
+        }).subscribe(item -> {
+        }, // Already handled in doOnNext
+                err -> log.error("Internal subscriber error for ID: {}", presentationId, err));
 
         return ResponseEntity.ok().header("X-Presentation", presentationId).body(slideSse);
     }

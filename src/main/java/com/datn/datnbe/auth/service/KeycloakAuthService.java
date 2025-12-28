@@ -66,7 +66,7 @@ public class KeycloakAuthService {
             UserRepresentation user = new UserRepresentation();
             user.setEnabled(true);
             user.setUsername(account);
-            if(account.contains("@")){
+            if (account.contains("@")) {
                 user.setEmail(account);
             }
             user.setFirstName(firstName);
