@@ -13,9 +13,10 @@ import lombok.experimental.FieldDefaults;
 public class SigninRequest {
 
     @Email
-    @NotBlank(message = "Email is required")
     String email;
 
     @NotBlank(message = "Password is required")
     String password;
+
+    String username;
 }

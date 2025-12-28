@@ -194,12 +194,13 @@ public class StudentImportManagement implements StudentImportApi {
 
             // Create signup request
             SignupRequest signupRequest = SignupRequest.builder()
-                    .email(email)
+                    .username(email)
                     .firstName(firstName)
                     .lastName(lastName)
                     .password(temporaryPassword)
                     .dateOfBirth(csvRow.getDateOfBirth())
                     .phoneNumber(csvRow.getParentPhone())
+                    .role("student")
                     .build();
 
             // Call UserProfileAPI to create user
