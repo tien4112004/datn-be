@@ -13,8 +13,6 @@ public interface PresentationApi {
 
     PaginatedResponseDto<PresentationListResponseDto> getAllPresentations(PresentationCollectionRequest request);
 
-    void updatePresentation(String id, PresentationUpdateRequest request);
-
     void updatePresentation(String id, PresentationUpdateRequest request, MultipartFile thumbnailFile);
 
     void updateTitlePresentation(String id, PresentationUpdateTitleRequest request);

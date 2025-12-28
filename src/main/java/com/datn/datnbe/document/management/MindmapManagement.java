@@ -55,7 +55,6 @@ public class MindmapManagement implements MindmapApi {
     MindmapEntityMapper mapper;
     MindmapValidation validation;
     ResourcePermissionApi resourcePermissionApi;
-    ThumbnailStorageManagement thumbnailStorageManagement;
     R2StorageService r2StorageService;
 
     @NonFinal
@@ -139,39 +138,6 @@ public class MindmapManagement implements MindmapApi {
     }
 
     @Override
-    public void updateMindmap(String id, MindmapUpdateRequest request) {
-        log.info("Updating mindmap with id: '{}'", id);
-
-        try {
-            validation.validateMindmapExists(id);
-
-            Mindmap existingMindmap = findMindmapById(id);
-
-            // Process thumbnail: convert base64 to URL if needed
-            if (request.getThumbnail() != null) {
-                String ownerId = getCurrentUserId();
-                String processedThumbnail = thumbnailStorageManagement
-                        .processThumbnail(request.getThumbnail(), "mindmap", id, ownerId);
-                request.setThumbnail(processedThumbnail);
-
-                // Delete old thumbnail if it was a URL
-                thumbnailStorageManagement.deleteOldThumbnail(existingMindmap.getThumbnail());
-            }
-
-            mapper.updateEntityFromRequest(request, existingMindmap);
-
-            mindmapRepository.save(existingMindmap);
-            log.info("Successfully updated mindmap with id: '{}'", id);
-        } catch (ResourceNotFoundException e) {
-            log.error("Mindmap not found with id: '{}'", id);
-            throw e;
-        } catch (Exception e) {
-            log.error("Failed to update mindmap with id: '{}'. Error: {}", id, e.getMessage());
-            throw e;
-        }
-    }
-
-    @Override
     public void updateMindmap(String id, MindmapUpdateRequest request, MultipartFile thumbnailFile) {
         log.info("Updating mindmap with id: '{}' (multipart)", id);
 
@@ -182,19 +148,25 @@ public class MindmapManagement implements MindmapApi {
 
             // Process thumbnail file if provided
             if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
-                // Build storage key
-                String storageKey = String.format("thumbnails/mindmap/%s.png", id);
+                // Determine file extension and content type from uploaded file
+                String contentType = thumbnailFile.getContentType();
+                if (contentType == null || contentType.isEmpty()) {
+                    contentType = "image/jpeg"; // Default to JPEG
+                }
+
+                String extension = contentType.equals("image/png") ? "png" : "jpg";
+
+                // Build storage key with appropriate extension
+                String storageKey = String.format("thumbnails/mindmap/%s.%s", id, extension);
 
                 // Upload to R2 directly
-                String uploadedKey = r2StorageService.uploadFile(thumbnailFile, storageKey, "image/png");
+                String uploadedKey = r2StorageService.uploadFile(thumbnailFile, storageKey, contentType);
 
                 // Build CDN URL
                 String cdnUrl = MediaStorageUtils.buildCdnUrl(uploadedKey, cdnDomain);
 
                 request.setThumbnail(cdnUrl);
-
-                // Delete old thumbnail if exists
-                thumbnailStorageManagement.deleteOldThumbnail(existingMindmap.getThumbnail());
+                // No deletion needed - putObject overwrites existing file automatically
             }
 
             mapper.updateEntityFromRequest(request, existingMindmap);

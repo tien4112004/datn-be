@@ -51,7 +51,6 @@ public class PresentationManagement implements PresentationApi {
     PresentationEntityMapper mapper;
     PresentationValidation validation;
     ResourcePermissionApi resourcePermissionApi;
-    ThumbnailStorageManagement thumbnailStorageManagement;
     R2StorageService r2StorageService;
 
     @NonFinal
@@ -168,34 +167,6 @@ public class PresentationManagement implements PresentationApi {
     }
 
     @Override
-    public void updatePresentation(String id, PresentationUpdateRequest request) {
-        log.info("Updating presentation with ID: {}", id);
-
-        Optional<Presentation> presentation = presentationRepository.findById(id);
-
-        validation.validatePresentationExists(presentation, id);
-
-        Presentation existingPresentation = presentation.get();
-
-        // Process thumbnail: convert base64 to URL if needed
-        if (request.getThumbnail() != null) {
-            String ownerId = getCurrentUserId();
-            String processedThumbnail = thumbnailStorageManagement
-                    .processThumbnail(request.getThumbnail(), "presentation", id, ownerId);
-            request.setThumbnail(processedThumbnail);
-
-            // Delete old thumbnail if it was a URL
-            thumbnailStorageManagement.deleteOldThumbnail(existingPresentation.getThumbnail());
-        }
-
-        mapper.updateEntity(request, existingPresentation);
-
-        Presentation savedPresentation = presentationRepository.save(existingPresentation);
-
-        log.info("Presentation updated with ID: {}", savedPresentation.getId());
-    }
-
-    @Override
     public void updatePresentation(String id, PresentationUpdateRequest request, MultipartFile thumbnailFile) {
         log.info("Updating presentation with ID: {} (multipart)", id);
 
@@ -207,19 +178,25 @@ public class PresentationManagement implements PresentationApi {
 
         // Process thumbnail file if provided
         if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
-            // Build storage key
-            String storageKey = String.format("thumbnails/presentation/%s.png", id);
+            // Determine file extension and content type from uploaded file
+            String contentType = thumbnailFile.getContentType();
+            if (contentType == null || contentType.isEmpty()) {
+                contentType = "image/jpeg"; // Default to JPEG
+            }
+
+            String extension = contentType.equals("image/png") ? "png" : "jpg";
+
+            // Build storage key with appropriate extension
+            String storageKey = String.format("thumbnails/presentation/%s.%s", id, extension);
 
             // Upload to R2 directly
-            String uploadedKey = r2StorageService.uploadFile(thumbnailFile, storageKey, "image/png");
+            String uploadedKey = r2StorageService.uploadFile(thumbnailFile, storageKey, contentType);
 
             // Build CDN URL
             String cdnUrl = MediaStorageUtils.buildCdnUrl(uploadedKey, cdnDomain);
 
             request.setThumbnail(cdnUrl);
-
-            // Delete old thumbnail if exists
-            thumbnailStorageManagement.deleteOldThumbnail(existingPresentation.getThumbnail());
+            // No deletion needed - putObject overwrites existing file automatically
         }
 
         mapper.updateEntity(request, existingPresentation);

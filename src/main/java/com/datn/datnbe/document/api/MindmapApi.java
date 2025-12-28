@@ -16,8 +16,6 @@ public interface MindmapApi {
 
     PaginatedResponseDto<MindmapListResponseDto> getAllMindmaps(MindmapCollectionRequest request);
 
-    void updateMindmap(String id, MindmapUpdateRequest request);
-
     void updateMindmap(String id, MindmapUpdateRequest request, MultipartFile thumbnailFile);
 
     void updateTitleAndDescriptionMindmap(String id, MindmapUpdateTitleAndDescriptionRequest request);
