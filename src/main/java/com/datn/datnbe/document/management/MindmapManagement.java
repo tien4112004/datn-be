@@ -1,33 +1,9 @@
 package com.datn.datnbe.document.management;
 
-import com.datn.datnbe.auth.api.ResourcePermissionApi;
-import com.datn.datnbe.auth.dto.request.ResourceRegistrationRequest;
-import com.datn.datnbe.document.api.MindmapApi;
-import com.datn.datnbe.document.dto.request.MindmapCollectionRequest;
-import com.datn.datnbe.document.dto.request.MindmapCreateRequest;
-import com.datn.datnbe.document.dto.request.MindmapUpdateRequest;
-import com.datn.datnbe.document.dto.request.MindmapUpdateTitleAndDescriptionRequest;
-import com.datn.datnbe.document.dto.response.MindmapDto;
-import com.datn.datnbe.document.dto.response.MindmapCreateResponseDto;
-import com.datn.datnbe.document.dto.response.MindmapListResponseDto;
-import com.datn.datnbe.document.entity.Mindmap;
-import com.datn.datnbe.document.mapper.MindmapEntityMapper;
-import com.datn.datnbe.document.repository.MindmapRepository;
-import com.datn.datnbe.document.management.validation.MindmapValidation;
-import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
-import com.datn.datnbe.sharedkernel.dto.PaginationDto;
-import com.datn.datnbe.sharedkernel.exceptions.AppException;
-import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
-import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
-import com.datn.datnbe.sharedkernel.service.R2StorageService;
-import com.datn.datnbe.sharedkernel.utils.MediaStorageUtils;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
-import lombok.experimental.NonFinal;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -40,6 +16,33 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.datn.datnbe.auth.api.ResourcePermissionApi;
+import com.datn.datnbe.auth.dto.request.ResourceRegistrationRequest;
+import com.datn.datnbe.document.api.MindmapApi;
+import com.datn.datnbe.document.dto.request.MindmapCollectionRequest;
+import com.datn.datnbe.document.dto.request.MindmapCreateRequest;
+import com.datn.datnbe.document.dto.request.MindmapUpdateRequest;
+import com.datn.datnbe.document.dto.request.MindmapUpdateTitleAndDescriptionRequest;
+import com.datn.datnbe.document.dto.response.MindmapCreateResponseDto;
+import com.datn.datnbe.document.dto.response.MindmapDto;
+import com.datn.datnbe.document.dto.response.MindmapListResponseDto;
+import com.datn.datnbe.document.entity.Mindmap;
+import com.datn.datnbe.document.management.validation.MindmapValidation;
+import com.datn.datnbe.document.mapper.MindmapEntityMapper;
+import com.datn.datnbe.document.repository.MindmapRepository;
+import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
+import com.datn.datnbe.sharedkernel.dto.PaginationDto;
+import com.datn.datnbe.sharedkernel.exceptions.AppException;
+import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
+import com.datn.datnbe.sharedkernel.service.R2StorageService;
+import com.datn.datnbe.sharedkernel.utils.MediaStorageUtils;
+
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor

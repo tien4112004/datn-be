@@ -59,7 +59,10 @@ public enum ErrorCode {
 
     // CMS Module - Seating Layout errors
     SEATING_LAYOUT_NOT_FOUND("Seating layout not found", 404),
-    INVALID_SEATING_LAYOUT("Invalid seating layout configuration", 400);
+    INVALID_SEATING_LAYOUT("Invalid seating layout configuration", 400),
+
+    // External API errors
+    EXTERNAL_API_ERROR("External service error", 502);
 
     private final String defaultMessage;
     private final Integer statusCode;

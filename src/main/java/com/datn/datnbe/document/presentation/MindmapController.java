@@ -80,7 +80,7 @@ public class MindmapController {
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @RequireDocumentPermission
+    @RequireDocumentPermission(scopes = {"edit"})
     public ResponseEntity<AppResponseDto<Void>> updateMindmap(@PathVariable String id,
             @RequestPart("data") MindmapUpdateRequest request,
             @RequestPart(value = "file", required = false) MultipartFile thumbnail) {
@@ -92,7 +92,7 @@ public class MindmapController {
     }
 
     @PatchMapping(value = "/{id}/title", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @RequireDocumentPermission
+    @RequireDocumentPermission(scopes = {"edit"})
     public ResponseEntity<AppResponseDto<Void>> updateMindmapTitle(@PathVariable String id,
             @Valid @RequestBody MindmapUpdateTitleAndDescriptionRequest request) {
         log.info("Received request to update mindmap title with id: {}", id);

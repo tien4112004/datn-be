@@ -127,9 +127,13 @@ public class ContentGenerationController {
         String presentationId = UUID.randomUUID().toString();
         aiResultApi.saveAIResult(result, presentationId);
 
+        String title = (request.getTopic() != null && !request.getTopic().trim().isEmpty())
+                ? request.getTopic()
+                : "AI Generated Presentation";
+
         PresentationCreateRequest createRequest = PresentationCreateRequest.builder()
                 .id(presentationId)
-                .title("AI Generated Presentation")
+                .title(title)
                 .slides(new ArrayList<>())
                 .isParsed(false)
                 .build();

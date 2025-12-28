@@ -26,4 +26,5 @@ public class PresentationPromptRequest {
     Integer slideCount;
     String provider;
     String presentationId;
+    String topic;
 }

@@ -1,9 +1,13 @@
 package com.datn.datnbe.document.presentation;
 
+import com.datn.datnbe.document.dto.request.PexelsImageSearchRequest;
 import com.datn.datnbe.document.management.ImageManagement;
+import com.datn.datnbe.document.management.ImageSearchManagement;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -14,8 +18,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/images")
 @RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class ImageController {
     ImageManagement imageManagement;
+    ImageSearchManagement imageSearchManagement;
 
     @GetMapping
     public ResponseEntity<AppResponseDto> getImages(@RequestParam(defaultValue = "1") Integer page,
@@ -32,5 +38,22 @@ public class ImageController {
         var response = imageManagement.getImageById(id);
 
         return ResponseEntity.ok(AppResponseDto.success(response));
+    }
+
+    /**
+     * Search images from Pexels
+     * Handles Pexels API rate limits gracefully
+     */
+    @PostMapping("/search-pexels")
+    public ResponseEntity<AppResponseDto> searchPexelsImages(@Valid @RequestBody PexelsImageSearchRequest request) {
+
+        log.info("POST /api/images/search-pexels - Searching Pexels with query: {}, orientation: {}, page: {}",
+                request.getQuery(),
+                request.getOrientation(),
+                request.getPage());
+
+        var response = imageSearchManagement.searchImages(request);
+
+        return ResponseEntity.ok(AppResponseDto.successWithPagination(response.getData(), response.getPagination()));
     }
 }
