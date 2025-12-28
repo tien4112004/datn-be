@@ -1,0 +1,8 @@
+fullName,dateOfBirth,gender,address,parentName,parentPhone,parentContactEmail
+Nguyen Van A,2015-03-15,Male,123 Main St,Nguyen Van B,0901234567,parent1@email.com
+Tran Thi B,2015-05-20,Female,456 Oak Ave,Tran Van C,0912345678,parent2@email.com
+Le Van C,2015-01-10,Male,789 Pine Rd,Le Thi D,0923456789,parent3@email.com
+Pham Van D,2015-06-12,Male,100 First St,Pham Thi E,0934567890,parent4@email.com
+Hoang Thi E,2015-08-25,Female,200 Second Ave,Hoang Van F,0945678901,parent5@email.com
+Vu Van F,2015-02-18,Male,300 Third Rd,Vu Thi G,0956789012,parent6@email.com
+Dang Thi G,2015-11-03,Female,400 Fourth Blvd,Dang Van H,0967890123,parent7@email.com

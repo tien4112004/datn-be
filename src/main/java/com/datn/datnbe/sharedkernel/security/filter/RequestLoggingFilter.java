@@ -35,15 +35,30 @@ public class RequestLoggingFilter {
                 HttpServletResponse response,
                 FilterChain filterChain) throws ServletException, IOException {
 
-            // Use custom wrapper that caches body on first read
+            String contentType = request.getContentType();
+
+            // Skip body caching for multipart requests to allow Spring's multipart resolver to work
+            boolean isMultipart = contentType != null && contentType.toLowerCase().contains("multipart/");
+
+            HttpServletRequest requestToUse = request;
+            if (!isMultipart) {
+                // Use custom wrapper that caches body on first read (only for non-multipart)
+                requestToUse = new CachedBodyHttpServletRequest(request);
+            }
+
             long startTime = System.currentTimeMillis();
 
             String method = request.getMethod();
             String path = request.getRequestURI();
             String queryString = request.getQueryString();
             String origin = request.getHeader("Origin");
-            String contentType = request.getContentType();
             String remoteAddr = getClientIp(request);
+
+            // Log incoming request with body if applicable
+            String bodyStr = "";
+            if (!isMultipart && shouldLogBody(method, contentType)) {
+                bodyStr = ((CachedBodyHttpServletRequest) requestToUse).getBody();
+            }
 
             String pathWithQuery = path + (queryString != null ? "?" + queryString : "");
             String headers = getHeadersAsString(request);
@@ -55,10 +70,11 @@ public class RequestLoggingFilter {
                     origin != null ? origin : "N/A",
                     remoteAddr,
                     contentType != null ? contentType : "N/A",
-                    headers);
+                    headers,
+                    bodyStr.isEmpty() ? "N/A" : bodyStr);
 
             try {
-                filterChain.doFilter(request, response);
+                filterChain.doFilter(requestToUse, response);
             } finally {
                 long duration = System.currentTimeMillis() - startTime;
                 int status = response.getStatus();

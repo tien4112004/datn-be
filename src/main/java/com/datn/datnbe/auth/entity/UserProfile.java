@@ -55,6 +55,10 @@ public class UserProfile {
     @Column(name = "deleted_at")
     LocalDateTime deletedAt;
 
+    @Builder.Default
+    @Column(name = "role")
+    String role = "teacher";
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
