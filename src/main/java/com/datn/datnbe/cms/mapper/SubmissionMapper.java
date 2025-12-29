@@ -8,7 +8,8 @@ import org.springframework.stereotype.Component;
 public class SubmissionMapper {
 
     public SubmissionResponseDto toDto(Submission s) {
-        if (s == null) return null;
+        if (s == null)
+            return null;
         return SubmissionResponseDto.builder()
                 .id(s.getId())
                 .lessonId(s.getLessonId())

@@ -23,7 +23,8 @@ public class SubmissionController {
 
     @PostMapping("/lessons/{lessonId}/submissions")
     public ResponseEntity<AppResponseDto<SubmissionResponseDto>> createSubmission(@PathVariable String lessonId,
-            @RequestParam(required = false) String content, @RequestParam(required = false) MultipartFile file) {
+            @RequestParam(required = false) String content,
+            @RequestParam(required = false) MultipartFile file) {
         log.debug("POST /api/lessons/{}/submissions", lessonId);
         SubmissionResponseDto response = submissionApi.createSubmission(lessonId, content, file);
         return ResponseEntity.status(HttpStatus.CREATED).body(AppResponseDto.success(response));

@@ -37,8 +37,10 @@ public class PostService implements PostApi {
         post.setClassId(classId);
         post.setAuthorId(securityContextUtils.getCurrentUserId());
         post.setAllowComments(Boolean.TRUE.equals(request.getAllowComments()));
-        if (post.getIsPinned() == null) post.setIsPinned(Boolean.FALSE);
-        if (post.getCommentCount() == null) post.setCommentCount(0);
+        if (post.getIsPinned() == null)
+            post.setIsPinned(Boolean.FALSE);
+        if (post.getCommentCount() == null)
+            post.setCommentCount(0);
         Post saved = postRepository.save(post);
         return postMapper.toResponseDto(saved);
     }

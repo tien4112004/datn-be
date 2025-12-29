@@ -32,9 +32,10 @@ public class SubmissionService implements SubmissionApi {
 
     @Override
     public synchronized com.datn.datnbe.cms.dto.response.SubmissionResponseDto createSubmission(String lessonId,
-            String content, MultipartFile file) {
-    lessonRepository.findById(lessonId)
-        .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Lesson not found"));
+            String content,
+            MultipartFile file) {
+        lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Lesson not found"));
 
         String userId = securityContextUtils.getCurrentUserId();
 

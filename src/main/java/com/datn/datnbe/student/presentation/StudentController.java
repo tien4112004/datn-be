@@ -18,8 +18,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
-import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 
 @RestController
 @RequestMapping("/api")
@@ -32,8 +30,7 @@ public class StudentController {
     StudentApi studentApi;
 
     @GetMapping("/classes/{classId}/students")
-    public ResponseEntity<AppResponseDto<?>> getStudentsByClass(
-            @PathVariable String classId,
+    public ResponseEntity<AppResponseDto<?>> getStudentsByClass(@PathVariable String classId,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size) {
         log.info("Received request to get students for class: {} with pagination", classId);

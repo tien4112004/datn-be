@@ -47,7 +47,7 @@ class SubmissionServiceTest {
         when(lessonRepository.findById(lessonId)).thenReturn(Optional.of(Lesson.builder().id(lessonId).build()));
         when(securityContextUtils.getCurrentUserId()).thenReturn(userId);
 
-    // no file provided in this test, so upload should not be invoked
+        // no file provided in this test, so upload should not be invoked
 
         when(submissionRepository.save(any(Submission.class))).thenAnswer(inv -> {
             Submission s = inv.getArgument(0);
@@ -72,7 +72,7 @@ class SubmissionServiceTest {
         assertEquals(lessonId, dto.getLessonId());
         assertEquals(userId, dto.getStudentId());
 
-    // no media interactions expected
+        // no media interactions expected
     }
 
 }

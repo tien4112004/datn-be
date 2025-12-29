@@ -223,6 +223,7 @@ public class StudentManagement implements StudentApi {
         try {
             UserProfileResponse profile = userProfileApi.getUserProfile(userId);
             if (profile != null) {
+                dto.setUsername(profile.getEmail());
                 dto.setFirstName(profile.getFirstName());
                 dto.setLastName(profile.getLastName());
                 dto.setAvatarUrl(profile.getAvatarUrl());
