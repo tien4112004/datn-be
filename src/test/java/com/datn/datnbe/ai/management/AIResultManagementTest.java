@@ -74,7 +74,7 @@ class AIResultManagementTest {
         when(aiResultMapper.toResponseDto(mockAIResult)).thenReturn(expectedResponse);
 
         // Act
-        AIResultResponseDto result = aiResultManagement.saveAIResult(testAIResultContent, testPresentationId);
+        AIResultResponseDto result = aiResultManagement.saveAIResult(testAIResultContent, testPresentationId, null);
 
         // Assert
         assertNotNull(result);
@@ -113,7 +113,7 @@ class AIResultManagementTest {
         when(aiResultMapper.toResponseDto(savedEntity)).thenReturn(expectedResponse);
 
         // Act
-        AIResultResponseDto result = aiResultManagement.saveAIResult(nullContent, testPresentationId);
+        AIResultResponseDto result = aiResultManagement.saveAIResult(nullContent, testPresentationId, null);
 
         // Assert
         assertNotNull(result);
@@ -149,7 +149,7 @@ class AIResultManagementTest {
         when(aiResultMapper.toResponseDto(savedEntity)).thenReturn(expectedResponse);
 
         // Act
-        AIResultResponseDto result = aiResultManagement.saveAIResult(emptyContent, testPresentationId);
+        AIResultResponseDto result = aiResultManagement.saveAIResult(emptyContent, testPresentationId, null);
 
         // Assert
         assertNotNull(result);
@@ -232,7 +232,7 @@ class AIResultManagementTest {
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
-            aiResultManagement.saveAIResult(testAIResultContent, testPresentationId));
+            aiResultManagement.saveAIResult(testAIResultContent, testPresentationId, null));
 
         assertEquals("Database connection failed", exception.getMessage());
         verify(aiResultRepo, times(1)).save(any(AIResult.class));

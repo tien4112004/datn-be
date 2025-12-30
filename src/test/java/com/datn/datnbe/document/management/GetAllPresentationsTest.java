@@ -50,6 +50,9 @@ class GetAllPresentationsTest {
     @Mock
     private Jwt jwt;
 
+    @Mock
+    private com.datn.datnbe.sharedkernel.service.R2StorageService r2StorageService;
+
     private MockedStatic<SecurityContextHolder> securityContextHolderMock;
 
     private PresentationEntityMapper mapper;
@@ -67,7 +70,7 @@ class GetAllPresentationsTest {
     void setUp() {
         mapper = Mappers.getMapper(PresentationEntityMapper.class);
         presentationService = new PresentationManagement(presentationRepository, mapper, validation,
-                resourcePermissionApi);
+                resourcePermissionApi, r2StorageService);
 
         // Setup security context mock
         securityContextHolderMock = mockStatic(SecurityContextHolder.class);

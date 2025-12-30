@@ -40,6 +40,9 @@ class ImageGenerationManagementTest {
     @Mock
     private ModelSelectionApi modelSelectionApi;
 
+    @Mock
+    private com.datn.datnbe.ai.service.PicsumPhotoService picsumPhotoService;
+
     private ImageGenerationManagement imageGenerationManagement;
 
     private static final String IMAGE_API_ENDPOINT = "/api/image/generate";
@@ -48,7 +51,7 @@ class ImageGenerationManagementTest {
 
     @BeforeEach
     void setUp() {
-        imageGenerationManagement = new ImageGenerationManagement(aiApiClient, modelSelectionApi);
+        imageGenerationManagement = new ImageGenerationManagement(aiApiClient, modelSelectionApi, picsumPhotoService);
         ReflectionTestUtils.setField(imageGenerationManagement, "IMAGE_API_ENDPOINT", IMAGE_API_ENDPOINT);
     }
 
