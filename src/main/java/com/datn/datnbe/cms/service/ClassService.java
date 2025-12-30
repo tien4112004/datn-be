@@ -1,8 +1,7 @@
 package com.datn.datnbe.cms.service;
 
 import com.datn.datnbe.auth.dto.response.UserMinimalInfoDto;
-import com.datn.datnbe.auth.entity.UserProfile;
-import com.datn.datnbe.auth.repository.UserProfileRepo;
+import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.cms.api.ClassApi;
 import com.datn.datnbe.cms.dto.request.ClassCollectionRequest;
 import com.datn.datnbe.cms.dto.request.ClassCreateRequest;
@@ -36,7 +35,7 @@ public class ClassService implements ClassApi {
     private final ClassRepository classRepository;
     private final ClassEntityMapper classEntityMapper;
     private final SecurityContextUtils securityContextUtils;
-    private final UserProfileRepo userProfileRepo;
+    private final UserProfileApi userProfileApi;
 
     @Override
     @Transactional
@@ -64,15 +63,16 @@ public class ClassService implements ClassApi {
         Page<ClassEntity> page = classRepository
                 .findAllWithFilters(request.getSearch(), ownerId, request.getIsActive(), pageable);
 
-        // Fetch all teachers in a single query to avoid N+1 problem
+        // Fetch all teachers
         List<String> ownerIds = page.getContent().stream().map(ClassEntity::getOwnerId).distinct().toList();
 
         var teacherMap = new java.util.HashMap<String, UserMinimalInfoDto>();
-        userProfileRepo.findAllByIdOrKeycloakUserIdIn(ownerIds).forEach(teacher -> {
-            UserMinimalInfoDto teacherDto = mapToUserMinimalInfo(teacher);
-            teacherMap.put(teacher.getId(), teacherDto);
-            teacherMap.put(teacher.getKeycloakUserId(), teacherDto);
-        });
+        for (String teacherOwnerId : ownerIds) {
+            UserMinimalInfoDto teacherDto = userProfileApi.getUserMinimalInfo(teacherOwnerId);
+            if (teacherDto != null) {
+                teacherMap.put(teacherOwnerId, teacherDto);
+            }
+        }
 
         List<ClassListResponseDto> data = page.getContent().stream().map(entity -> {
             ClassListResponseDto dto = classEntityMapper.toListResponseDto(entity);
@@ -123,19 +123,10 @@ public class ClassService implements ClassApi {
     }
 
     private void populateTeacherInfo(ClassResponseDto dto, String ownerId) {
-        userProfileRepo.findByIdOrKeycloakUserId(ownerId).ifPresent(teacher -> {
-            dto.setTeacher(mapToUserMinimalInfo(teacher));
-        });
-    }
-
-    private UserMinimalInfoDto mapToUserMinimalInfo(UserProfile userProfile) {
-        return UserMinimalInfoDto.builder()
-                .id(userProfile.getId())
-                .firstName(userProfile.getFirstName())
-                .lastName(userProfile.getLastName())
-                .email(userProfile.getEmail())
-                .avatarUrl(userProfile.getAvatarUrl())
-                .build();
+        UserMinimalInfoDto teacher = userProfileApi.getUserMinimalInfo(ownerId);
+        if (teacher != null) {
+            dto.setTeacher(teacher);
+        }
     }
 
     private Sort buildSort(String sortParam) {

@@ -41,6 +41,9 @@ class ImageControllerTest {
     @MockitoBean
     private ImageManagement imageManagement;
 
+    @MockitoBean
+    private com.datn.datnbe.document.management.ImageSearchManagement imageSearchManagement;
+
     private MediaResponseDto testMediaDto1;
     private MediaResponseDto testMediaDto2;
 

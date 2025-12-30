@@ -336,4 +336,17 @@ public class UserProfileManagement implements UserProfileApi {
             throw new AppException(ErrorCode.USER_CREATION_FAILED);
         }
     }
+
+    @Override
+    public com.datn.datnbe.auth.dto.response.UserMinimalInfoDto getUserMinimalInfo(String userId) {
+        return userProfileRepo.findByIdOrKeycloakUserId(userId)
+                .map(userProfile -> com.datn.datnbe.auth.dto.response.UserMinimalInfoDto.builder()
+                        .id(userProfile.getId())
+                        .firstName(userProfile.getFirstName())
+                        .lastName(userProfile.getLastName())
+                        .email(userProfile.getEmail())
+                        .avatarUrl(userProfile.getAvatarUrl())
+                        .build())
+                .orElse(null);
+    }
 }
