@@ -32,7 +32,7 @@ public class Presentation {
     @Column(name = "title", nullable = false)
     String title;
 
-    @Column(name = "thumbnail", nullable = true)
+    @Column(name = "thumbnail", columnDefinition = "text", nullable = true)
     String thumbnail;
 
     @JdbcTypeCode(SqlTypes.JSON)
