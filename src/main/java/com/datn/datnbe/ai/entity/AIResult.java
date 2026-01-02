@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity(name = "ai_result")
 @Getter
@@ -28,6 +30,7 @@ public class AIResult {
     @Column(name = "presentation_id", nullable = false)
     String presentationId;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "generation_options", columnDefinition = "JSONB")
     String generationOptions;
 }

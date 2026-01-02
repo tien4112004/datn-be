@@ -47,7 +47,7 @@ public class Mindmap {
     @Column(name = "updated_at", nullable = false)
     LocalDateTime updatedAt;
 
-    @Column(name = "thumbnail")
+    @Column(name = "thumbnail", columnDefinition = "TEXT", nullable = true)
     String thumbnail;
 
     @JdbcTypeCode(SqlTypes.JSON)
