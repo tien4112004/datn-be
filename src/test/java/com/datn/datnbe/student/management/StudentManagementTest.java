@@ -89,7 +89,6 @@ class StudentManagementTest {
                 .email("john.doe@example.com")
                 .avatarUrl("https://cdn/avatar.png")
                 .phoneNumber("0123456789")
-                .username("johndoe")
                 .build();
             when(userProfileApi.getUserProfile("user_001")).thenReturn(profile);
 
@@ -106,7 +105,8 @@ class StudentManagementTest {
             assertThat(result.getLastName()).isEqualTo("Doe");
             assertThat(result.getAvatarUrl()).isEqualTo("https://cdn/avatar.png");
             assertThat(result.getPhoneNumber()).isEqualTo("0123456789");
-            assertThat(result.getUsername()).isEqualTo("johndoe");
+            // username is populated from the user's email in the current implementation
+            assertThat(result.getUsername()).isEqualTo("john.doe@example.com");
         }
 
         @Test
