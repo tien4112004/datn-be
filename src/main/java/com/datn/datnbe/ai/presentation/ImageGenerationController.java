@@ -80,9 +80,19 @@ public class ImageGenerationController {
 
         List<MultipartFile> imageResponse = imageGenerationApi.generateImage(request);
 
-        log.info("uploading images to media storage");
+        // Prepare metadata with presentation context
+        String fullPrompt = MappingParamsUtils.createPrompt(request);
+        MediaMetadataDto metadata = MediaMetadataDto.builder()
+                .isGenerated(true)
+                .presentationId(request.getPresentationId())
+                .prompt(fullPrompt)
+                .model(request.getModel())
+                .provider(request.getProvider())
+                .build();
+
+        log.info("uploading images to media storage with metadata (presentationId: {})", request.getPresentationId());
         ImageResponseDto uploadedMedia = imageGenerateMapper
-                .toImageResponseDto(imageResponse, mediaStorageApi, ownerId);
+                .toImageResponseDtoWithMetadata(imageResponse, mediaStorageApi, ownerId, metadata);
         log.info("Images uploaded successfully: {}", uploadedMedia);
 
         return ResponseEntity.ok(AppResponseDto.<ImageResponseDto>builder().data(uploadedMedia).build());

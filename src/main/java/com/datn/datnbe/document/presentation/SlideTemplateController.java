@@ -58,4 +58,14 @@ public class SlideTemplateController {
 
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteSlideTemplate(@PathVariable String id) {
+
+        log.info("DELETE /api/slide-templates/{} - Deleting slide template", id);
+
+        slideTemplateApi.deleteSlideTemplate(id);
+
+        return ResponseEntity.noContent().build();
+    }
 }

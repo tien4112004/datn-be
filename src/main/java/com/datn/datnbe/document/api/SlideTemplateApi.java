@@ -13,4 +13,6 @@ public interface SlideTemplateApi {
     SlideTemplateResponseDto createSlideTemplate(SlideTemplateCreateRequest request);
 
     SlideTemplateResponseDto updateSlideTemplate(String id, SlideTemplateUpdateRequest request);
+
+    void deleteSlideTemplate(String id);
 }

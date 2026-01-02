@@ -106,4 +106,18 @@ public class SlideTemplateManagement implements SlideTemplateApi {
         log.info("Updated slide template with id: {}", savedEntity.getId());
         return slideTemplateMapper.toResponseDto(savedEntity);
     }
+
+    @Override
+    @Transactional
+    public void deleteSlideTemplate(String id) {
+        log.info("Deleting slide template with ID: {}", id);
+
+        SlideTemplate template = slideTemplateRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Slide template not found with id: " + id));
+
+        template.setIsEnabled(false);
+        slideTemplateRepository.save(template);
+
+        log.info("Successfully deleted slide template with ID: {}", id);
+    }
 }
