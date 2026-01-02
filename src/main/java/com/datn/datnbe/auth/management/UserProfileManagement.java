@@ -77,7 +77,11 @@ public class UserProfileManagement implements UserProfileApi {
         String keycloakUserId = null;
 
         try {
-            keycloakUserId = keycloakAuthService.createKeycloakUser(account, request.getPassword(), request.getFirstName(), request.getLastName(), "user");
+            keycloakUserId = keycloakAuthService.createKeycloakUser(account,
+                    request.getPassword(),
+                    request.getFirstName(),
+                    request.getLastName(),
+                    "user");
 
             log.info("Successfully created user in Keycloak with ID: {}", keycloakUserId);
             UserProfile userProfile = userProfileMapper.toEntity(request);
@@ -331,5 +335,18 @@ public class UserProfileManagement implements UserProfileApi {
             log.error("Error creating user profile: {}", e.getMessage(), e);
             throw new AppException(ErrorCode.USER_CREATION_FAILED);
         }
+    }
+
+    @Override
+    public com.datn.datnbe.auth.dto.response.UserMinimalInfoDto getUserMinimalInfo(String userId) {
+        return userProfileRepo.findByIdOrKeycloakUserId(userId)
+                .map(userProfile -> com.datn.datnbe.auth.dto.response.UserMinimalInfoDto.builder()
+                        .id(userProfile.getId())
+                        .firstName(userProfile.getFirstName())
+                        .lastName(userProfile.getLastName())
+                        .email(userProfile.getEmail())
+                        .avatarUrl(userProfile.getAvatarUrl())
+                        .build())
+                .orElse(null);
     }
 }

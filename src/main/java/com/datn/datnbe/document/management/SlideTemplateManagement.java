@@ -35,14 +35,22 @@ public class SlideTemplateManagement implements SlideTemplateApi {
 
     @Override
     public PaginatedResponseDto<SlideTemplateResponseDto> getAllSlideTemplates(SlideTemplateCollectionRequest request) {
-        log.info("Fetching slide templates - page: {}, pageSize: {}", request.getPage(), request.getPageSize());
+        log.info("Fetching slide templates - page: {}, pageSize: {}, layout: {}",
+                request.getPage(),
+                request.getPageSize(),
+                request.getLayout());
 
         // Create pageable with sort by createdAt descending
         Pageable pageable = PageRequest
                 .of(request.getPage() - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
 
         // Query PostgreSQL for metadata and pagination info
-        Page<SlideTemplate> templatePage = slideTemplateRepository.findAllByIsEnabledTrue(pageable);
+        Page<SlideTemplate> templatePage;
+        if (request.getLayout() != null && !request.getLayout().isEmpty()) {
+            templatePage = slideTemplateRepository.findByLayoutAndIsEnabledTrue(request.getLayout(), pageable);
+        } else {
+            templatePage = slideTemplateRepository.findAllByIsEnabledTrue(pageable);
+        }
 
         // Map JPA entities (which now contain jsonb `data`) to response DTOs preserving order
         List<SlideTemplateResponseDto> responseDtos = templatePage.getContent().stream().map(template -> {
@@ -97,5 +105,19 @@ public class SlideTemplateManagement implements SlideTemplateApi {
 
         log.info("Updated slide template with id: {}", savedEntity.getId());
         return slideTemplateMapper.toResponseDto(savedEntity);
+    }
+
+    @Override
+    @Transactional
+    public void deleteSlideTemplate(String id) {
+        log.info("Deleting slide template with ID: {}", id);
+
+        SlideTemplate template = slideTemplateRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Slide template not found with id: " + id));
+
+        template.setIsEnabled(false);
+        slideTemplateRepository.save(template);
+
+        log.info("Successfully deleted slide template with ID: {}", id);
     }
 }

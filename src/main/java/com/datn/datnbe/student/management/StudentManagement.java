@@ -184,10 +184,7 @@ public class StudentManagement implements StudentApi {
         paginationDto.setTotalItems(studentsPage.getTotalElements());
         paginationDto.setTotalPages(studentsPage.getTotalPages());
 
-        return PaginatedResponseDto.<StudentResponseDto>builder()
-                .data(studentDtos)
-                .pagination(paginationDto)
-                .build();
+        return PaginatedResponseDto.<StudentResponseDto>builder().data(studentDtos).pagination(paginationDto).build();
     }
 
     @Override
@@ -221,7 +218,8 @@ public class StudentManagement implements StudentApi {
     }
 
     private void enrichWithUserProfile(StudentResponseDto dto, String userId) {
-        if (dto == null || userId == null) return;
+        if (dto == null || userId == null)
+            return;
         try {
             UserProfileResponse profile = userProfileApi.getUserProfile(userId);
             if (profile != null) {

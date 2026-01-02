@@ -2,6 +2,7 @@ package com.datn.datnbe.ai.mapper;
 
 import com.datn.datnbe.ai.dto.response.ImageResponseDto;
 import com.datn.datnbe.document.api.MediaStorageApi;
+import com.datn.datnbe.document.dto.MediaMetadataDto;
 import org.mapstruct.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,5 +29,29 @@ public interface ImageGenerateMapper {
             @Context MediaStorageApi mediaStorageApi,
             String ownerId) {
         return ImageResponseDto.builder().images(toElements(images, mediaStorageApi, ownerId)).build();
+    }
+
+    @Named("toElementWithMetadata")
+    default Map<String, Object> toElementWithMetadata(MultipartFile image,
+            @Context MediaStorageApi mediaStorageApi,
+            @Context String ownerId,
+            @Context MediaMetadataDto metadata) {
+        var uploaded = mediaStorageApi.upload(image, ownerId, metadata);
+        return Map.of("id", uploaded.getId(), "cdnUrl", uploaded.getCdnUrl());
+    }
+
+    @IterableMapping(qualifiedByName = "toElementWithMetadata")
+    List<Map<String, Object>> toElementsWithMetadata(List<MultipartFile> images,
+            @Context MediaStorageApi mediaStorageApi,
+            @Context String ownerId,
+            @Context MediaMetadataDto metadata);
+
+    default ImageResponseDto toImageResponseDtoWithMetadata(List<MultipartFile> images,
+            @Context MediaStorageApi mediaStorageApi,
+            String ownerId,
+            MediaMetadataDto metadata) {
+        return ImageResponseDto.builder()
+                .images(toElementsWithMetadata(images, mediaStorageApi, ownerId, metadata))
+                .build();
     }
 }

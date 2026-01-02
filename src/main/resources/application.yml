@@ -1,191 +1,201 @@
 spring:
-  profiles:
-    active: default
-  application:
-    name: 'datn-be'
-  config:
-    import: optional:file:.env[.properties]
-  # AI MODULE CONFIGURATION
-  ai:
-    model:
-      chat: none
-    chat:
-      client:
-        enabled: false
-    openai:
-      api-key: ${OPENAI_KEY}
-    vertex:
-      ai:
-        gemini:
-          project-id: ${VERTEX_PROJECT_ID}
-          location: ${VERTEX_LOCATION}
-  # HTTP CLIENT CONFIGURATION - Disable auto-configuration
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.http.client.HttpClientAutoConfiguration
-      - org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration
-      - org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration
-  datasource:
-    url: ${POSTGRES_DB_URL:jdbc:postgresql://localhost:5432/datn_monolith_db}
-    username: ${POSTGRES_DB_USERNAME:postgres}
-    password: ${POSTGRES_DB_PASSWORD:postgres}
-    driver-class-name: org.postgresql.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: false
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-  security:
-    oauth2:
-      client:
-        registration:
-          keycloak:
+    profiles:
+        active: default
+    application:
+        name: "datn-be"
+    config:
+        import: optional:file:.env[.properties]
+    # AI MODULE CONFIGURATION
+    ai:
+        model:
+            chat: none
+        chat:
+            client:
+                enabled: false
+        openai:
+            api-key: ${OPENAI_KEY}
+        vertex:
+            ai:
+                gemini:
+                    project-id: ${VERTEX_PROJECT_ID}
+                    location: ${VERTEX_LOCATION}
+    # HTTP CLIENT CONFIGURATION - Disable auto-configuration
+    autoconfigure:
+        exclude:
+            - org.springframework.boot.autoconfigure.http.client.HttpClientAutoConfiguration
+            - org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration
+            - org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration
+    datasource:
+        url: ${POSTGRES_DB_URL:jdbc:postgresql://localhost:5432/datn_monolith_db}
+        username: ${POSTGRES_DB_USERNAME:postgres}
+        password: ${POSTGRES_DB_PASSWORD:postgres}
+        driver-class-name: org.postgresql.Driver
+    jpa:
+        hibernate:
+            ddl-auto: update
+        show-sql: false
+        properties:
+            hibernate:
+                format_sql: true
+                dialect: org.hibernate.dialect.PostgreSQLDialect
+        database-platform: org.hibernate.dialect.PostgreSQLDialect
+    security:
+        oauth2:
+            client:
+                registration:
+                    keycloak:
+                        client-id: ${KEYCLOAK_CLIENT_ID:ai-primary}
+                        client-secret: ${KEYCLOAK_CLIENT_SECRET:change-me}
+                        authorization-grant-type: authorization_code
+                        redirect-uri: ${KEYCLOAK_REDIRECT_URI:http://localhost:8080/login/oauth2/code/keycloak}
+                        scope: openid, profile, email
+                provider:
+                    keycloak:
+                        issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8082/realms/ai-primary-dev }
+                        user-info-authentication-method: header
+            resourceserver:
+                jwt:
+                    issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8082/realms/ai-primary-dev }
+    servlet:
+        multipart:
+            enabled: true
+            max-file-size: 10MB
+            max-request-size: 10MB
+server:
+    servlet:
+        session:
+            cookie:
+                secure: true
+                same-site: none
+        encoding:
+            charset: UTF-8
+            enabled: true
+            force: true
+    address: 0.0.0.0
+app:
+    models:
+        configurations:
+            openai:
+                - model-name: "gpt-4o-mini-2024-07-18"
+                  display-name: "GPT-4 Optimized"
+                  provider: "OpenAI"
+                  default-model: false
+                  model-type: text
+                - model-name: "gpt-4.1-nano-2025-04-14"
+                  display-name: "GPT-4.1 Nano"
+                  provider: "OpenAI"
+                  default-model: false
+                  model-type: text
+            gemini:
+                - model-name: "gemini-2.5-flash"
+                  display-name: "Gemini 2.5 Flash"
+                  provider: "Google"
+                  default-model: true
+                  model-type: text
+                - model-name: "gemini-2.5-flash-lite"
+                  display-name: "Gemini 2.5 Flash Lite"
+                  provider: "Google"
+                  default-model: false
+                  model-type: text
+                - model-name: "gemini-2.5-flash-image-preview"
+                  display-name: "Nano Banana"
+                  provider: "Google"
+                  default-model: true
+                  model-type: image
+            openRouter:
+                - model-name: "google/gemini-2.5-flash-image-preview"
+                  display-name: "Nano Banana"
+                  provider: "openRouter"
+                  default-model: true
+                  model-type: image
+                - model-name: "mistralai/mistral-small-3.2-24b-instruct:free"
+                  display-name: "mistral-small-3.2-24b-instruct"
+                  provider: "openRouter"
+                  default-model: false
+                  model-type: text
+
+    cors:
+        allowed-origins:
+            - "http://localhost:5173"
+            - "http://localhost:8080"
+            - "https://datn-fe.vercel.app"
+            - "https://api.huy-devops.site"
+            - "https://app.huy-devops.site"
+        # Use allowed-origin-patterns for wildcard matching with Spring AntPathMatcher syntax
+        # * matches any characters except /
+        # ** matches any characters including /
+        allowed-origin-patterns:
+            - "https://datn-fe-*.vercel.app"
+            - "http://localhost:*"
+            - "https://localhost:*"
+            - "https://*.huy-devops.site"
+        allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+        allow-credentials: true
+        max-age: 3600
+        exposed-headers: X-Presentation, permission
+    media:
+        file-size-limit: 10485760 # 10MB
+        avatar-size-limit: "5242880" # 10MB
+    api-client:
+        timeout: 30000 # 30 seconds
+        max-in-memory-size: 10485760 # 10MB
+    auth:
+        properties:
+            realm: ${KEYCLOAK_REALM:ai-primary-dev}
+            issuer: ${KEYCLOAK_ISSUER_URI:http://localhost:8082/realms/ai-primary-dev}
             client-id: ${KEYCLOAK_CLIENT_ID:ai-primary}
             client-secret: ${KEYCLOAK_CLIENT_SECRET:change-me}
-            authorization-grant-type: authorization_code
-            redirect-uri: ${KEYCLOAK_REDIRECT_URI:http://localhost:8080/login/oauth2/code/keycloak}
-            scope: openid, profile, email
-        provider:
-          keycloak:
-            issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8082/realms/ai-primary-dev }
-            user-info-authentication-method: header
-      resourceserver:
-        jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8082/realms/ai-primary-dev }
-  servlet:
-    multipart:
-      enabled: true
-server:
-  servlet:
-    session:
-      cookie:
-        secure: true
-        same-site: none
-    encoding:
-      charset: UTF-8
-      enabled: true
-      force: true
-  address: 0.0.0.0
-app:
-  models:
-    configurations:
-      openai:
-        - model-name: "gpt-4o-mini-2024-07-18"
-          display-name: "GPT-4 Optimized"
-          provider: "OpenAI"
-          default-model: false
-          model-type: text
-        - model-name: "gpt-4.1-nano-2025-04-14"
-          display-name: "GPT-4.1 Nano"
-          provider: "OpenAI"
-          default-model: false
-          model-type: text
-      gemini:
-        - model-name: "gemini-2.5-flash"
-          display-name: "Gemini 2.5 Flash"
-          provider: "Google"
-          default-model: true
-          model-type: text
-        - model-name: "gemini-2.5-flash-lite"
-          display-name: "Gemini 2.5 Flash Lite"
-          provider: "Google"
-          default-model: false
-          model-type: text
-        - model-name: "gemini-2.5-flash-image-preview"
-          display-name: "Nano Banana"
-          provider: "Google"
-          default-model: true
-          model-type: image
-      openRouter:
-        - model-name: "google/gemini-2.5-flash-image-preview"
-          display-name: "Nano Banana"
-          provider: "openRouter"
-          default-model: true
-          model-type: image
-        - model-name: "mistralai/mistral-small-3.2-24b-instruct:free"
-          display-name: "mistral-small-3.2-24b-instruct"
-          provider: "openRouter"
-          default-model: false
-          model-type: text
+            redirect-uri: ${KEYCLOAK_REDIRECT_URI:https://adequately-sharing-imp.ngrok-free.app/login/oauth2/code/keycloak} # Command line: ngrok http 8080 --url=adequately-sharing-imp.ngrok-free.app
+            signIn-uri: /oauth2/authorization/keycloak
+            signup-uri: ${KEYCLOAK_ISSUER_URI}/login-actions/registration
+            logout-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/logout
+            token-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/token
+            server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8082}
+            google-callback-uri: ${GOOGLE_CALLBACK_URI:http://localhost:8080/api/auth/google/callback}
+            fe-redirect-url: ${FE_REDIRECT_URI:http://localhost:5173}
+            mobile-redirect-url: ${MOBILE_REDIRECT_URI:aiprimary://auth-callback}
 
-  cors:
-    allowed-origins: 
-      - "http://localhost:5173"
-      - "http://localhost:8080"
-      - "https://datn-fe.vercel.app"
-      - "https://api.huy-devops.site"
-      - "https://app.huy-devops.site"
-    # Use allowed-origin-patterns for wildcard matching with Spring AntPathMatcher syntax
-    # * matches any characters except /
-    # ** matches any characters including /
-    allowed-origin-patterns:
-      - "https://datn-fe-*.vercel.app"
-      - "http://localhost:*"
-      - "https://localhost:*"
-      - "https://*.huy-devops.site"
-    allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
-    allow-credentials: true
-    max-age: 3600
-    exposed-headers: X-Presentation, permission
-  media:
-    file-size-limit: 10485760 # 10MB
-    avatar-size-limit: '5242880' # 10MB
-  api-client:
-    timeout: 30000 # 30 seconds
-    max-in-memory-size: 10485760 # 10MB
-  auth:
-    properties:
-      realm: ${KEYCLOAK_REALM:ai-primary-dev}
-      issuer: ${KEYCLOAK_ISSUER_URI:http://localhost:8082/realms/ai-primary-dev}
-      client-id: ${KEYCLOAK_CLIENT_ID:ai-primary}
-      client-secret: ${KEYCLOAK_CLIENT_SECRET:change-me}
-      redirect-uri: ${KEYCLOAK_REDIRECT_URI:https://adequately-sharing-imp.ngrok-free.app/login/oauth2/code/keycloak} # Command line: ngrok http 8080 --url=adequately-sharing-imp.ngrok-free.app
-      signIn-uri: /oauth2/authorization/keycloak
-      signup-uri: ${KEYCLOAK_ISSUER_URI}/login-actions/registration
-      logout-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/logout
-      token-uri: ${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/token
-      server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8082}
-      google-callback-uri: ${GOOGLE_CALLBACK_URI:http://localhost:8080/api/auth/google/callback}
-      fe-redirect-url: ${FE_REDIRECT_URI:http://localhost:5173}
-      mobile-redirect-url: ${MOBILE_REDIRECT_URI:aiprimary://auth-callback}
-
-    authorization:
-      server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8082}
-      realm: ${KEYCLOAK_REALM:ai-primary-dev}
-      client-id: ${KEYCLOAK_CLIENT_ID:ai-primary}
-      client-secret: ${KEYCLOAK_CLIENT_SECRET:change-me}
-      client-uuid: ${KEYCLOAK_CLIENT_UUID:}
-      connection-timeout: 5000
-      read-timeout: 30000
-  security:
-    document-permission:
-      enabled: ${DOCUMENT_PERMISSION_ENABLED:true}
+        authorization:
+            server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8082}
+            realm: ${KEYCLOAK_REALM:ai-primary-dev}
+            client-id: ${KEYCLOAK_CLIENT_ID:ai-primary}
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:change-me}
+            client-uuid: ${KEYCLOAK_CLIENT_UUID:}
+            connection-timeout: 5000
+            read-timeout: 30000
+    security:
+        document-permission:
+            enabled: ${DOCUMENT_PERMISSION_ENABLED:true}
 
 ai:
-  api:
-    base-url: ${AI_API_BASE_URL:http://ai-worker:8081}
-    timeout: ${AI_API_TIMEOUT:30000}
-    outline-endpoint: ${AI_API_OUTLINE_ENDPOINT:/api/outline/generate/stream/mock}
-    outline-batch-endpoint: ${AI_API_OUTLINE_BATCH_ENDPOINT:/api/outline/generate/mock}
-    presentation-endpoint: ${AI_API_PRESENTATION_ENDPOINT:/api/presentations/generate/stream/mock}
-    presentation-batch-endpoint: ${AI_API_PRESENTATION_BATCH_ENDPOINT:/api/presentations/generate/mock}
-    image-endpoint: ${AI_API_IMAGE_ENDPOINT:/api/image/generate/mock}
-    mindmap-endpoint: ${AI_API_MINDMAP_ENDPOINT:/api/mindmap/generate/mock}
+    api:
+        base-url: ${AI_API_BASE_URL:http://ai-worker:8081}
+        timeout: ${AI_API_TIMEOUT:30000}
+        outline-endpoint: ${AI_API_OUTLINE_ENDPOINT:/api/outline/generate/stream/mock}
+        outline-batch-endpoint: ${AI_API_OUTLINE_BATCH_ENDPOINT:/api/outline/generate/mock}
+        presentation-endpoint: ${AI_API_PRESENTATION_ENDPOINT:/api/presentations/generate/stream/mock}
+        presentation-batch-endpoint: ${AI_API_PRESENTATION_BATCH_ENDPOINT:/api/presentations/generate/mock}
+        image-endpoint: ${AI_API_IMAGE_ENDPOINT:/api/image/generate/mock}
+        mindmap-endpoint: ${AI_API_MINDMAP_ENDPOINT:/api/mindmap/generate/mock}
 
 cloudflare:
-  r2:
-    endpoint: https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com
-    accessKey: ${S3_ACCESS_KEY_ID}
-    secretKey: ${S3_SECRET_ACCESS_KEY}
-    bucket: ${R2_BUCKET_NAME}
-    public-url: ${R2_PUBLIC_URL_DEV}
+    r2:
+        endpoint: https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com
+        accessKey: ${S3_ACCESS_KEY_ID}
+        secretKey: ${S3_SECRET_ACCESS_KEY}
+        bucket: ${R2_BUCKET_NAME}
+        public-url: ${R2_PUBLIC_URL_DEV}
+
+pexels:
+    api:
+        key: ${PEXELS_API_KEY:your-api-key-here}
+        base-url: https://api.pexels.com/v1
+        rate-limit:
+            requests: 200
+            duration-minutes: 60
 
 logging:
-  level:
-    "org.springframework.data.mongodb.core.MongoTemplate": DEBUG
-    com.datn.datnbe.auth.config.SecurityConfig: WARN
-    com.datn.datnbe.sharedkernel.security.filter: DEBUG
+    level:
+        "org.springframework.data.mongodb.core.MongoTemplate": DEBUG
+        com.datn.datnbe.auth.config.SecurityConfig: WARN
+        com.datn.datnbe.sharedkernel.security.filter: DEBUG

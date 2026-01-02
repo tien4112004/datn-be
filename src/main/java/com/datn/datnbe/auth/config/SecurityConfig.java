@@ -63,7 +63,7 @@ public class SecurityConfig {
                                 "/api/slide-templates/**")
                         .permitAll()
 
-                        // TODO: Remove this - Temporary allow POST/PUT for slide-themes and
+                        // TODO: Remove this - Temporary allow POST/PUT/DELETE for slide-themes and
                         // slide-templates
                         .requestMatchers(HttpMethod.POST,
                                 "/api/slide-themes",
@@ -79,7 +79,10 @@ public class SecurityConfig {
                                 "/api/slide-templates/**",
                                 "/api/students/**")
                         .permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/api/students/**")
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/api/slide-templates",
+                                "/api/slide-templates/**",
+                                "/api/students/**")
                         .permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/students/**")
                         .permitAll()

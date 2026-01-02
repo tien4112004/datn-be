@@ -12,15 +12,19 @@ import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
 import com.datn.datnbe.document.entity.Presentation;
 import com.datn.datnbe.document.management.validation.PresentationValidation;
-import java.util.stream.Stream;
 import com.datn.datnbe.document.mapper.PresentationEntityMapper;
 import com.datn.datnbe.document.repository.PresentationRepository;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+import com.datn.datnbe.sharedkernel.service.R2StorageService;
+import com.datn.datnbe.sharedkernel.utils.MediaStorageUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,9 +34,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -40,12 +44,18 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class PresentationManagement implements PresentationApi {
 
-    private final PresentationRepository presentationRepository;
-    private final PresentationEntityMapper mapper;
-    private final PresentationValidation validation;
-    private final ResourcePermissionApi resourcePermissionApi;
+    PresentationRepository presentationRepository;
+    PresentationEntityMapper mapper;
+    PresentationValidation validation;
+    ResourcePermissionApi resourcePermissionApi;
+    R2StorageService r2StorageService;
+
+    @NonFinal
+    @Value("${cloudflare.r2.public-url}")
+    String cdnDomain;
 
     private String generateUniqueTitle(String originalTitle) {
         log.info("Generating unique title for {}", originalTitle);
@@ -157,14 +167,37 @@ public class PresentationManagement implements PresentationApi {
     }
 
     @Override
-    public void updatePresentation(String id, PresentationUpdateRequest request) {
-        log.info("Updating presentation with ID: {}", id);
+    public void updatePresentation(String id, PresentationUpdateRequest request, MultipartFile thumbnailFile) {
+        log.info("Updating presentation with ID: {} (multipart)", id);
 
         Optional<Presentation> presentation = presentationRepository.findById(id);
 
         validation.validatePresentationExists(presentation, id);
 
         Presentation existingPresentation = presentation.get();
+
+        // Process thumbnail file if provided
+        if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
+            // Determine file extension and content type from uploaded file
+            String contentType = thumbnailFile.getContentType();
+            if (contentType == null || contentType.isEmpty()) {
+                contentType = "image/jpeg"; // Default to JPEG
+            }
+
+            String extension = contentType.equals("image/png") ? "png" : "jpg";
+
+            // Build storage key with appropriate extension
+            String storageKey = String.format("thumbnails/presentation/%s.%s", id, extension);
+
+            // Upload to R2 directly
+            String uploadedKey = r2StorageService.uploadFile(thumbnailFile, storageKey, contentType);
+
+            // Build CDN URL
+            String cdnUrl = MediaStorageUtils.buildCdnUrl(uploadedKey, cdnDomain);
+
+            request.setThumbnail(cdnUrl);
+            // No deletion needed - putObject overwrites existing file automatically
+        }
 
         mapper.updateEntity(request, existingPresentation);
 
@@ -224,93 +257,22 @@ public class PresentationManagement implements PresentationApi {
         presentationRepository.save(presentation);
     }
 
-    @Override
-    public long insertImageToPresentation(String presentationId, String slideId, String elementId, String imageUrl) {
-        var presentation = presentationRepository.findById(presentationId);
+    /**
+     * Get current user ID from security context
+     */
+    private String getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication.getPrincipal();
 
-        if (presentation.isEmpty()) {
-            throw new AppException(ErrorCode.PRESENTATION_NOT_FOUND);
+        if (principal instanceof Jwt jwt) {
+            return jwt.getSubject();
         }
 
-        Presentation existingPresentation = presentation.get();
-
-        // Get Image - extract elements from extraFields
-        var imageElement = existingPresentation.getSlides()
-                .stream()
-                .filter(slide -> slide.getId().equals(slideId))
-                .flatMap(slide -> {
-                    Object elementsObj = slide.getExtraFields().get("elements");
-                    if (elementsObj instanceof List) {
-                        return ((List<?>) elementsObj).stream()
-                                .filter(obj -> obj instanceof Map)
-                                .map(obj -> (Map<String, Object>) obj);
-                    }
-                    return Stream.empty();
-                })
-                .filter(element -> elementId.equals(element.get("id")))
-                .findFirst();
-        Object finalClip = getClip(imageElement);
-        log.info("Update image element with ID: {} on slide ID: {} in presentation ID: {} with URL: {} and clip: {}",
-                elementId,
-                slideId,
-                presentationId,
-                imageUrl,
-                finalClip);
-
-        // Update the slide element in memory
-        existingPresentation.getSlides().forEach(slide -> {
-            if (slide.getId().equals(slideId)) {
-                Object elementsObj = slide.getExtraFields().get("elements");
-                if (elementsObj instanceof List) {
-                    ((List<?>) elementsObj).stream()
-                            .filter(obj -> obj instanceof Map)
-                            .map(obj -> (Map<String, Object>) obj)
-                            .filter(element -> elementId.equals(element.get("id")))
-                            .forEach(element -> {
-                                element.put("src", imageUrl);
-                                element.put("clip", finalClip);
-                            });
-                }
-            }
-        });
-
-        presentationRepository.save(existingPresentation);
-        return 1;
-    }
-
-    private static Object getClip(Optional<Map<String, Object>> imageElement) {
-        if (imageElement.isEmpty()) {
-            throw new AppException(ErrorCode.PRESENTATION_NOT_FOUND);
+        // Fallback for tests
+        if (principal instanceof String username) {
+            return username;
         }
 
-        Map<String, Object> element = imageElement.get();
-        Number widthNum = (Number) element.get("width");
-        Number heightNum = (Number) element.get("height");
-
-        if (widthNum == null || heightNum == null) {
-            throw new AppException(ErrorCode.PRESENTATION_NOT_FOUND);
-        }
-
-        float width = widthNum.floatValue();
-        float height = heightNum.floatValue();
-        var containerRatio = width / height;
-
-        Object finalClip = 1 > containerRatio ? new java.util.HashMap<String, Object>() {
-            {
-                put("shape", "rect");
-                put("range",
-                        new double[][]{{((1 - containerRatio) / 2) * 100, 0},
-                                {100 - ((1 - containerRatio) / 2) * 100, 100}});
-            }
-        } : new java.util.HashMap<String, Object>() {
-            {
-                put("shape", "rect");
-                put("range",
-                        new double[][]{{0, ((1 - 1 / containerRatio) / 2) * 100},
-                                {100, 100 - ((1 - 1 / containerRatio) / 2) * 100}});
-            }
-        };
-
-        return finalClip;
+        throw new AppException(ErrorCode.UNAUTHORIZED, "Invalid authentication");
     }
 }

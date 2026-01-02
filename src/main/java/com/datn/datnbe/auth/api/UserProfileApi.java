@@ -76,6 +76,13 @@ public interface UserProfileApi {
      */
     void removeUserAvatar(String userId);
 
-
     UserProfileResponse createUserProfileByUsername(SignupRequest request);
+
+    /**
+     * Retrieves minimal user information by user ID or Keycloak user ID.
+     *
+     * @param userId the user ID or Keycloak user ID
+     * @return UserMinimalInfoDto containing minimal user information, or null if not found
+     */
+    com.datn.datnbe.auth.dto.response.UserMinimalInfoDto getUserMinimalInfo(String userId);
 }

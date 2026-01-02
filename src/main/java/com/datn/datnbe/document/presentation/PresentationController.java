@@ -2,6 +2,7 @@ package com.datn.datnbe.document.presentation;
 
 import java.util.List;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,7 +13,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.datn.datnbe.document.api.PresentationApi;
 import com.datn.datnbe.document.api.SlidesApi;
@@ -60,11 +63,13 @@ public class PresentationController {
                 AppResponseDto.successWithPagination(paginatedResponse.getData(), paginatedResponse.getPagination()));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @RequireDocumentPermission(scopes = {"edit"})
     public ResponseEntity<AppResponseDto<Void>> updatePresentation(@PathVariable String id,
-            @Valid @RequestBody PresentationUpdateRequest request) {
-        presentationApi.updatePresentation(id, request);
+            @RequestPart("data") PresentationUpdateRequest request,
+            @RequestPart(value = "file", required = false) MultipartFile thumbnail) {
+
+        presentationApi.updatePresentation(id, request, thumbnail);
         return ResponseEntity.noContent().build();
     }
 

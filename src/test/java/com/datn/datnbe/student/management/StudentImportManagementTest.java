@@ -1,7 +1,6 @@
 package com.datn.datnbe.student.management;
 
 import com.datn.datnbe.auth.api.UserProfileApi;
-import com.datn.datnbe.auth.dto.request.SignupRequest;
 import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.student.dto.request.StudentCsvRow;
 import com.datn.datnbe.student.dto.response.StudentImportResponseDto;
@@ -143,9 +142,7 @@ class StudentImportManagementTest {
 
             when(csvParserService.parseStudentCsv(any()))
                     .thenReturn(new CsvParserService.ParseResult(List.of(csvRow1, csvRow2), new ArrayList<>()));
-            when(userProfileApi.createUserProfile(any()))
-                    .thenReturn(createdUser1)
-                    .thenReturn(createdUser2);
+            when(userProfileApi.createUserProfile(any())).thenReturn(createdUser1).thenReturn(createdUser2);
             when(studentMapper.toEntity(eq(csvRow1), anyInt(), anyList())).thenReturn(student1);
             when(studentMapper.toEntity(eq(csvRow2), anyInt(), anyList())).thenReturn(student2);
             when(studentRepository.existsByUserId(anyString())).thenReturn(false);

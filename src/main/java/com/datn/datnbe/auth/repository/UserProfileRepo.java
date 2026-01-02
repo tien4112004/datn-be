@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -27,6 +28,13 @@ public interface UserProfileRepo
                 WHERE id = ?1 OR keycloak_user_id = ?1
             """, nativeQuery = true)
     Optional<UserProfile> findByIdOrKeycloakUserId(String id);
+
+    @Query(value = """
+                SELECT *
+                FROM user_profile
+                WHERE id IN (?1) OR keycloak_user_id IN (?1)
+            """, nativeQuery = true)
+    List<UserProfile> findAllByIdOrKeycloakUserIdIn(List<String> ids);
 
     boolean existsByEmail(String email);
 }

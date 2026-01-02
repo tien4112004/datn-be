@@ -1,29 +1,10 @@
 package com.datn.datnbe.document.management;
 
-import com.datn.datnbe.auth.api.ResourcePermissionApi;
-import com.datn.datnbe.auth.dto.request.ResourceRegistrationRequest;
-import com.datn.datnbe.document.api.MindmapApi;
-import com.datn.datnbe.document.dto.request.MindmapCollectionRequest;
-import com.datn.datnbe.document.dto.request.MindmapCreateRequest;
-import com.datn.datnbe.document.dto.request.MindmapUpdateRequest;
-import com.datn.datnbe.document.dto.request.MindmapUpdateTitleAndDescriptionRequest;
-import com.datn.datnbe.document.dto.response.MindmapDto;
-import com.datn.datnbe.document.dto.response.MindmapCreateResponseDto;
-import com.datn.datnbe.document.dto.response.MindmapListResponseDto;
-import com.datn.datnbe.document.entity.Mindmap;
-import com.datn.datnbe.document.mapper.MindmapEntityMapper;
-import com.datn.datnbe.document.repository.MindmapRepository;
-import com.datn.datnbe.document.management.validation.MindmapValidation;
-import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
-import com.datn.datnbe.sharedkernel.dto.PaginationDto;
-import com.datn.datnbe.sharedkernel.exceptions.AppException;
-import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
-import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,17 +15,51 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.datn.datnbe.auth.api.ResourcePermissionApi;
+import com.datn.datnbe.auth.dto.request.ResourceRegistrationRequest;
+import com.datn.datnbe.document.api.MindmapApi;
+import com.datn.datnbe.document.dto.request.MindmapCollectionRequest;
+import com.datn.datnbe.document.dto.request.MindmapCreateRequest;
+import com.datn.datnbe.document.dto.request.MindmapUpdateRequest;
+import com.datn.datnbe.document.dto.request.MindmapUpdateTitleAndDescriptionRequest;
+import com.datn.datnbe.document.dto.response.MindmapCreateResponseDto;
+import com.datn.datnbe.document.dto.response.MindmapDto;
+import com.datn.datnbe.document.dto.response.MindmapListResponseDto;
+import com.datn.datnbe.document.entity.Mindmap;
+import com.datn.datnbe.document.management.validation.MindmapValidation;
+import com.datn.datnbe.document.mapper.MindmapEntityMapper;
+import com.datn.datnbe.document.repository.MindmapRepository;
+import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
+import com.datn.datnbe.sharedkernel.dto.PaginationDto;
+import com.datn.datnbe.sharedkernel.exceptions.AppException;
+import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
+import com.datn.datnbe.sharedkernel.service.R2StorageService;
+import com.datn.datnbe.sharedkernel.utils.MediaStorageUtils;
+
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 @Transactional
+@FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class MindmapManagement implements MindmapApi {
 
-    private final MindmapRepository mindmapRepository;
-    private final MindmapEntityMapper mapper;
-    private final MindmapValidation validation;
-    private final ResourcePermissionApi resourcePermissionApi;
+    MindmapRepository mindmapRepository;
+    MindmapEntityMapper mapper;
+    MindmapValidation validation;
+    ResourcePermissionApi resourcePermissionApi;
+    R2StorageService r2StorageService;
+
+    @NonFinal
+    @Value("${cloudflare.r2.public-url}")
+    String cdnDomain;
 
     @Override
     public MindmapCreateResponseDto createMindmap(MindmapCreateRequest request) {
@@ -123,13 +138,37 @@ public class MindmapManagement implements MindmapApi {
     }
 
     @Override
-    public void updateMindmap(String id, MindmapUpdateRequest request) {
-        log.info("Updating mindmap with id: '{}'", id);
+    public void updateMindmap(String id, MindmapUpdateRequest request, MultipartFile thumbnailFile) {
+        log.info("Updating mindmap with id: '{}' (multipart)", id);
 
         try {
             validation.validateMindmapExists(id);
 
             Mindmap existingMindmap = findMindmapById(id);
+
+            // Process thumbnail file if provided
+            if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
+                // Determine file extension and content type from uploaded file
+                String contentType = thumbnailFile.getContentType();
+                if (contentType == null || contentType.isEmpty()) {
+                    contentType = "image/jpeg"; // Default to JPEG
+                }
+
+                String extension = contentType.equals("image/png") ? "png" : "jpg";
+
+                // Build storage key with appropriate extension
+                String storageKey = String.format("thumbnails/mindmap/%s.%s", id, extension);
+
+                // Upload to R2 directly
+                String uploadedKey = r2StorageService.uploadFile(thumbnailFile, storageKey, contentType);
+
+                // Build CDN URL
+                String cdnUrl = MediaStorageUtils.buildCdnUrl(uploadedKey, cdnDomain);
+
+                request.setThumbnail(cdnUrl);
+                // No deletion needed - putObject overwrites existing file automatically
+            }
+
             mapper.updateEntityFromRequest(request, existingMindmap);
 
             mindmapRepository.save(existingMindmap);
@@ -218,5 +257,24 @@ public class MindmapManagement implements MindmapApi {
     private Mindmap findMindmapById(String id) {
         return mindmapRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Mindmap not found with id: " + id));
+    }
+
+    /**
+    * Get current user ID from security context
+    */
+    private String getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof Jwt jwt) {
+            return jwt.getSubject();
+        }
+
+        // Fallback for tests
+        if (principal instanceof String username) {
+            return username;
+        }
+
+        throw new AppException(ErrorCode.UNAUTHORIZED, "Invalid authentication");
     }
 }
