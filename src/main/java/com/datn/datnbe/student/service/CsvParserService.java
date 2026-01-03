@@ -71,7 +71,7 @@ public class CsvParserService {
                         .withIgnoreEmptyLines()
                         .parse(reader)) {
 
-            Map<String, Integer> headerMap = parseHeaderLine(headerLine, errors);
+            Map<String, Integer> headerMap = buildHeaderMap(csvParser.getHeaderMap(), errors);
             if (!errors.isEmpty()) {
                 return new ParseResult(rows, errors);
             }
@@ -103,6 +103,7 @@ public class CsvParserService {
 
     private Map<String, Integer> buildHeaderMap(Map<String, Integer> csvHeaderMap, List<String> errors) {
         Map<String, Integer> headerMap = new HashMap<>();
+
         for (Map.Entry<String, Integer> entry : csvHeaderMap.entrySet()) {
             String header = entry.getKey().trim();
             if (VALID_HEADERS.contains(header)) {
@@ -124,6 +125,7 @@ public class CsvParserService {
             Map<String, Integer> headerMap,
             int rowNumber,
             List<String> errors) {
+
         String fullName = getValueFromRecord(record, "fullName");
         String dateOfBirthStr = getValueFromRecord(record, "dateOfBirth");
         String gender = getValueFromRecord(record, "gender");

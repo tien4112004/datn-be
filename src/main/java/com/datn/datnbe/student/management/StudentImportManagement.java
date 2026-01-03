@@ -199,66 +199,6 @@ public class StudentImportManagement implements StudentImportApi {
 
             // Create signup request
             SignupRequest signupRequest = SignupRequest.builder()
-                    .username(email)
-                    .firstName(firstName)
-                    .lastName(lastName)
-                    .password(temporaryPassword)
-                    .dateOfBirth(csvRow.getDateOfBirth())
-                    .phoneNumber(csvRow.getParentPhone())
-                    .role("student")
-                    .build();
-
-            // Call UserProfileAPI to create user
-            UserProfileResponse createdUser = userProfileApi.createUserProfile(signupRequest);
-
-            log.info("Created user {} with email {} for row {}", createdUser.getId(), email, rowNumber);
-
-            // Return credentials
-            return StudentCredentialDto.builder()
-                    .studentId(createdUser.getId())
-                    .username(email)
-                    .password(temporaryPassword)
-                    .email(email)
-                    .fullName(csvRow.getFullName())
-                    .build();
-
-        } catch (Exception e) {
-            log.error("Error saving students to database", e);
-            errors.add("Database error: " + e.getMessage());
-            return StudentImportResponseDto.failure(errors);
-        }
-    }
-
-    /**
-     * Create a user via UserProfileAPI and get credentials.
-     *
-     * @param csvRow    the CSV row containing user data
-     * @param rowNumber the row number for error reporting
-     * @param errors    list to collect errors
-     * @return StudentCredentialDto with username/password, or null if creation
-     *         failed
-     */
-    private StudentCredentialDto createUserAndGetCredentials(StudentCsvRow csvRow, int rowNumber, List<String> errors) {
-        try {
-            // Validate required user fields
-            if (csvRow.getFullName() == null || csvRow.getFullName().isBlank()) {
-                errors.add(String.format("Row %d: fullName is required for user creation", rowNumber));
-                return null;
-            }
-
-            // Parse fullName into firstName and lastName
-            String[] names = csvRow.getFullName().trim().split("\\s+", 2);
-            String firstName = names[0];
-            String lastName = names.length > 1 ? names[1] : firstName;
-
-            // Generate email from fullName (replace spaces with dots)
-            String email = StudentCredentialGenerator.generateUsername(csvRow.getFullName(), csvRow.getDateOfBirth());
-
-            // Generate a temporary password
-            String temporaryPassword = StudentCredentialGenerator.generatePassword();
-
-            // Create signup request
-            SignupRequest signupRequest = SignupRequest.builder()
                     .email(email)
                     .firstName(firstName)
                     .lastName(lastName)
