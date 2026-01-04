@@ -20,4 +20,6 @@ public class ResourceRegistrationRequest {
 
     @NotBlank(message = "document's type is required")
     private String resourceType;
+
+    private String thumbnail;
 }

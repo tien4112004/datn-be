@@ -2,6 +2,7 @@ package com.datn.datnbe.auth.entity;
 
 import java.time.LocalDateTime;
 
+import org.checkerframework.checker.units.qual.C;
 import org.hibernate.annotations.CreationTimestamp;
 
 import jakarta.persistence.Column;
@@ -59,4 +60,7 @@ public class DocumentResourceMapping {
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     LocalDateTime createdAt;
+    
+    @Column(nullable = true)
+    String thumbnail;
 }
