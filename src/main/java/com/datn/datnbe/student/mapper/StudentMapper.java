@@ -1,13 +1,14 @@
 package com.datn.datnbe.student.mapper;
 
-import com.datn.datnbe.student.dto.request.StudentCsvRow;
-import com.datn.datnbe.student.entity.Student;
-import com.datn.datnbe.student.enums.StudentStatus;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.springframework.stereotype.Component;
+
+import com.datn.datnbe.student.dto.request.StudentCsvRow;
+import com.datn.datnbe.student.entity.Student;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Mapper for converting StudentCsvRow to Student entity with validation.
@@ -33,9 +34,6 @@ public class StudentMapper {
             rowErrors.add(String.format("Row %d: userId is required", rowNumber));
         }
 
-        // Validate status
-        StudentStatus status = parseStatus(csvRow.getStatus(), rowNumber, rowErrors);
-
         // Validate address (optional but has length limit)
         if (csvRow.getAddress() != null && csvRow.getAddress().length() > 255) {
             rowErrors.add(String.format("Row %d: address exceeds maximum length of 255 characters", rowNumber));
@@ -58,26 +56,10 @@ public class StudentMapper {
 
         return Student.builder()
                 .userId(csvRow.getUserId())
-                .enrollmentDate(csvRow.getEnrollmentDate())
+                .enrollmentDate(java.time.LocalDate.now())
                 .address(csvRow.getAddress())
                 .parentContactEmail(csvRow.getParentContactEmail())
-                .status(status != null ? status : StudentStatus.ACTIVE)
                 .build();
-    }
-
-    private StudentStatus parseStatus(String statusStr, int rowNumber, List<String> errors) {
-        if (statusStr == null || statusStr.isBlank()) {
-            return StudentStatus.ACTIVE;
-        }
-        try {
-            return StudentStatus.fromValue(statusStr);
-        } catch (IllegalArgumentException e) {
-            errors.add(String.format(
-                    "Row %d: Invalid status value. Expected active/transferred/graduated/dropped, got: %s",
-                    rowNumber,
-                    statusStr));
-            return null;
-        }
     }
 
     private boolean isValidEmailFormat(String email) {

@@ -1,14 +1,20 @@
 package com.datn.datnbe.student.dto.request;
 
-import com.datn.datnbe.student.enums.StudentStatus;
-import jakarta.validation.constraints.Size;
-import lombok.*;
-import lombok.experimental.FieldDefaults;
-
 import java.time.LocalDate;
+
+import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.Size;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 
 /**
  * Request DTO for updating a student.
+ * Updates both UserProfile fields (dateOfBirth, phoneNumber) and Student entity fields (address, parentContactEmail).
  */
 @Getter
 @Setter
@@ -18,13 +24,14 @@ import java.time.LocalDate;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class StudentUpdateRequest {
 
-    LocalDate enrollmentDate;
+    @Past(message = "Date of birth must be in the past")
+    LocalDate dateOfBirth;
+
+    String phoneNumber;
 
     @Size(max = 255, message = "Address must not exceed 255 characters")
     String address;
 
     @Size(max = 100, message = "Parent contact email must not exceed 100 characters")
     String parentContactEmail;
-
-    StudentStatus status;
 }

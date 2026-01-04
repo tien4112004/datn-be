@@ -1,21 +1,27 @@
 package com.datn.datnbe.student.service;
 
-import com.datn.datnbe.student.dto.request.StudentCsvRow;
-import com.datn.datnbe.sharedkernel.exceptions.AppException;
-import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
-import lombok.extern.slf4j.Slf4j;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
+import com.datn.datnbe.sharedkernel.exceptions.AppException;
+import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+import com.datn.datnbe.student.dto.request.StudentCsvRow;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Service for parsing CSV files for student import.
@@ -35,9 +41,7 @@ public class CsvParserService {
             "parentName",
             "parentPhone",
             "parentContactEmail",
-            "classId",
-            "enrollmentDate",
-            "status");
+            "classId");
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
 
@@ -134,8 +138,6 @@ public class CsvParserService {
         String parentPhone = getValueFromRecord(record, "parentPhone");
         String parentContactEmail = getValueFromRecord(record, "parentContactEmail");
         String classId = getValueFromRecord(record, "classId");
-        String enrollmentDateStr = getValueFromRecord(record, "enrollmentDate");
-        String status = getValueFromRecord(record, "status");
 
         // Validate required fields
         List<String> rowErrors = new ArrayList<>();
@@ -153,16 +155,6 @@ public class CsvParserService {
             }
         }
 
-        // Parse enrollment date if provided
-        LocalDate enrollmentDate = null;
-        if (enrollmentDateStr != null && !enrollmentDateStr.isBlank()) {
-            try {
-                enrollmentDate = LocalDate.parse(enrollmentDateStr, DATE_FORMATTER);
-            } catch (Exception e) {
-                rowErrors.add("Invalid enrollmentDate format (expected YYYY-MM-DD): " + enrollmentDateStr);
-            }
-        }
-
         if (!rowErrors.isEmpty()) {
             errors.add(String.format("Row %d: %s", rowNumber, String.join(", ", rowErrors)));
             return null;
@@ -177,8 +169,6 @@ public class CsvParserService {
                 .parentPhone(parentPhone)
                 .parentContactEmail(parentContactEmail)
                 .classId(classId)
-                .enrollmentDate(enrollmentDate)
-                .status(status)
                 .build();
     }
 

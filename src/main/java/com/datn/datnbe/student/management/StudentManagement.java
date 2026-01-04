@@ -1,5 +1,19 @@
 package com.datn.datnbe.student.management;
 
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.datn.datnbe.auth.api.UserProfileApi;
+import com.datn.datnbe.auth.dto.request.SignupRequest;
+import com.datn.datnbe.auth.dto.response.UserProfileResponse;
+import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
+import com.datn.datnbe.sharedkernel.dto.PaginationDto;
+import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
 import com.datn.datnbe.student.api.StudentApi;
 import com.datn.datnbe.student.dto.request.StudentCreateRequest;
 import com.datn.datnbe.student.dto.request.StudentUpdateRequest;
@@ -11,23 +25,11 @@ import com.datn.datnbe.student.mapper.StudentEntityMapper;
 import com.datn.datnbe.student.repository.ClassEnrollmentRepository;
 import com.datn.datnbe.student.repository.StudentRepository;
 import com.datn.datnbe.student.utils.StudentCredentialGenerator;
-import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
-import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
-import com.datn.datnbe.sharedkernel.dto.PaginationDto;
-import com.datn.datnbe.auth.api.UserProfileApi;
-import com.datn.datnbe.auth.dto.request.SignupRequest;
-import com.datn.datnbe.auth.dto.response.UserProfileResponse;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Management service for student CRUD operations.
@@ -82,7 +84,7 @@ public class StudentManagement implements StudentApi {
         // Phase 2: Create student entity linked to the user
         Student student = Student.builder()
                 .userId(userId)
-                .enrollmentDate(request.getEnrollmentDate())
+                .enrollmentDate(java.time.LocalDate.now())
                 .address(request.getAddress())
                 .parentContactEmail(request.getParentContactEmail())
                 .build();
@@ -119,8 +121,23 @@ public class StudentManagement implements StudentApi {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + id));
 
+        // Update Student entity fields
         studentEntityMapper.updateEntityFromRequest(student, request);
         Student savedStudent = studentRepository.save(student);
+
+        // Update UserProfile fields if provided
+        if (request.getDateOfBirth() != null || request.getPhoneNumber() != null) {
+            com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest profileUpdateRequest = com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest
+                    .builder()
+                    .dateOfBirth(request.getDateOfBirth())
+                    .phoneNumber(request.getPhoneNumber())
+                    .build();
+            try {
+                userProfileApi.updateUserProfile(savedStudent.getUserId(), profileUpdateRequest);
+            } catch (Exception e) {
+                log.error("Failed to update user profile for student {}: {}", id, e.getMessage());
+            }
+        }
 
         log.info("Successfully updated student with ID: {}", id);
         StudentResponseDto dto = studentEntityMapper.toResponseDto(savedStudent);
