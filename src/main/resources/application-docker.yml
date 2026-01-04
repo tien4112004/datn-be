@@ -116,6 +116,7 @@ app:
       - "http://localhost:5173"
       - "https://api.huy-devops.site"
     allowed-origin-patterns:
+      - "https://*.ngrok-free.app"
       - "http://localhost:*"
       - "https://localhost:*"
       - "https://datn-fe-*.vercel.app"  # Vercel preview deployments with any container ID
