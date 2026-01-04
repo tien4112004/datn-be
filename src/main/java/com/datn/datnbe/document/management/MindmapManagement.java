@@ -79,6 +79,7 @@ public class MindmapManagement implements MindmapApi {
                     .id(savedMindmap.getId())
                     .name(savedMindmap.getTitle())
                     .resourceType("mindmap")
+                    .thumbnail(savedMindmap.getThumbnail())
                     .build();
             resourcePermissionApi.registerResource(resourceRegistrationRequest, ownerId);
 

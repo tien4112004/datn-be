@@ -6,6 +6,7 @@ import com.datn.datnbe.auth.dto.request.ResourceRegistrationRequest;
 import com.datn.datnbe.auth.dto.request.ResourceShareRequest;
 import com.datn.datnbe.auth.dto.response.DocumentRegistrationResponse;
 import com.datn.datnbe.auth.dto.response.ResourcePermissionResponse;
+import com.datn.datnbe.auth.dto.response.ResourceResponse;
 import com.datn.datnbe.auth.dto.response.ResourceShareResponse;
 
 public interface ResourcePermissionApi {
@@ -15,4 +16,5 @@ public interface ResourcePermissionApi {
     public ResourceShareResponse shareDocument(String documentId, ResourceShareRequest request, String currentUserId);
     public void revokeDocumentAccess(String documentId, String targetUserId, String currentUserId);
     public List<String> getAllResourceByTypeOfOwner(String ownerId, String resourceType);
+    public List<ResourceResponse> getAllResource(String ownerId);
 }

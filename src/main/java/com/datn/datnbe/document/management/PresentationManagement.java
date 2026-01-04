@@ -111,6 +111,7 @@ public class PresentationManagement implements PresentationApi {
                 .id(savedPresentation.getId())
                 .name(savedPresentation.getTitle())
                 .resourceType("presentation")
+                .thumbnail(savedPresentation.getThumbnail())
                 .build();
         resourcePermissionApi.registerResource(resourceRegistrationRequest, ownerId);
 

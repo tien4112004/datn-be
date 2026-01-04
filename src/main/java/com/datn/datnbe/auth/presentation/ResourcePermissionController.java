@@ -1,6 +1,9 @@
 package com.datn.datnbe.auth.presentation;
 
 import com.datn.datnbe.auth.api.ResourcePermissionApi;
+
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -17,6 +20,7 @@ import com.datn.datnbe.auth.dto.request.RevokeAccessRequest;
 import com.datn.datnbe.auth.dto.response.DocumentRegistrationResponse;
 import com.datn.datnbe.auth.dto.response.ResourceShareResponse;
 import com.datn.datnbe.auth.dto.response.ResourcePermissionResponse;
+import com.datn.datnbe.auth.dto.response.ResourceResponse;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 
 import jakarta.validation.Valid;
@@ -105,5 +109,15 @@ public class ResourcePermissionController {
         resourcePermissionApi.revokeDocumentAccess(documentId, request.getTargetUserId(), currentUserId);
 
         return ResponseEntity.ok(AppResponseDto.success("Access revoked successfully"));
+    }
+
+    @GetMapping
+    public ResponseEntity<AppResponseDto<List<ResourceResponse>>> getAllResources(Authentication authentication) {
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String currentUserId = jwt.getSubject();
+        log.info("get all resource for user {}", currentUserId);
+        
+        var response = resourcePermissionApi.getAllResource(currentUserId);
+        return ResponseEntity.ok(AppResponseDto.success(response));
     }
 }
