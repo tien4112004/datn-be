@@ -91,8 +91,13 @@ public class StudentImportManagement implements StudentImportApi {
         List<Student> students = new ArrayList<>();
         rowNumber = 0;
 
-        for (StudentCsvRow csvRow : successfulRows) {
+        for (StudentCsvRow csvRow : parseResult.rows()) {
             rowNumber++;
+            if (csvRow.getUserId() == null) {
+                errors.add(String.format("Row %d: User ID not created", rowNumber));
+                continue;
+            }
+
             Student student = studentMapper.toEntity(csvRow, rowNumber, errors);
             if (student != null) {
                 students.add(student);
@@ -194,13 +199,12 @@ public class StudentImportManagement implements StudentImportApi {
 
             // Create signup request
             SignupRequest signupRequest = SignupRequest.builder()
-                    .username(email)
+                    .email(email)
                     .firstName(firstName)
                     .lastName(lastName)
                     .password(temporaryPassword)
                     .dateOfBirth(csvRow.getDateOfBirth())
                     .phoneNumber(csvRow.getParentPhone())
-                    .role("student")
                     .build();
 
             // Call UserProfileAPI to create user

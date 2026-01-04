@@ -1,10 +1,11 @@
 package com.datn.datnbe.student.mapper;
 
+import org.springframework.stereotype.Component;
+
 import com.datn.datnbe.student.dto.request.StudentCreateRequest;
 import com.datn.datnbe.student.dto.request.StudentUpdateRequest;
 import com.datn.datnbe.student.dto.response.StudentResponseDto;
 import com.datn.datnbe.student.entity.Student;
-import org.springframework.stereotype.Component;
 
 /**
  * Mapper for Student entity to/from DTOs.
@@ -26,7 +27,6 @@ public class StudentEntityMapper {
                 .enrollmentDate(entity.getEnrollmentDate())
                 .address(entity.getAddress())
                 .parentContactEmail(entity.getParentContactEmail())
-                .status(entity.getStatus())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
@@ -43,7 +43,6 @@ public class StudentEntityMapper {
         }
 
         return Student.builder()
-                .enrollmentDate(request.getEnrollmentDate())
                 .address(request.getAddress())
                 .parentContactEmail(request.getParentContactEmail())
                 .build();
@@ -57,17 +56,11 @@ public class StudentEntityMapper {
             return;
         }
 
-        if (request.getEnrollmentDate() != null) {
-            entity.setEnrollmentDate(request.getEnrollmentDate());
-        }
         if (request.getAddress() != null) {
             entity.setAddress(request.getAddress());
         }
         if (request.getParentContactEmail() != null) {
             entity.setParentContactEmail(request.getParentContactEmail());
-        }
-        if (request.getStatus() != null) {
-            entity.setStatus(request.getStatus());
         }
     }
 }

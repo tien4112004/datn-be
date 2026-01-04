@@ -3,7 +3,6 @@ package com.datn.datnbe.student.management;
 import com.datn.datnbe.student.dto.request.StudentUpdateRequest;
 import com.datn.datnbe.student.dto.response.StudentResponseDto;
 import com.datn.datnbe.student.entity.Student;
-import com.datn.datnbe.student.enums.StudentStatus;
 import com.datn.datnbe.student.mapper.StudentEntityMapper;
 import com.datn.datnbe.student.repository.ClassEnrollmentRepository;
 import com.datn.datnbe.student.repository.StudentRepository;
@@ -56,7 +55,6 @@ class StudentManagementTest {
                 .enrollmentDate(LocalDate.of(2024, 1, 15))
                 .address("123 Main St")
                 .parentContactEmail("parent@example.com")
-                .status(StudentStatus.ACTIVE)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
@@ -67,7 +65,6 @@ class StudentManagementTest {
                 .enrollmentDate(LocalDate.of(2024, 1, 15))
                 .address("123 Main St")
                 .parentContactEmail("parent@example.com")
-                .status(StudentStatus.ACTIVE)
                 .build();
     }
 
@@ -105,6 +102,8 @@ class StudentManagementTest {
             assertThat(result.getLastName()).isEqualTo("Doe");
             assertThat(result.getAvatarUrl()).isEqualTo("https://cdn/avatar.png");
             assertThat(result.getPhoneNumber()).isEqualTo("0123456789");
+            // username is populated from the user's email in the current implementation
+            assertThat(result.getUsername()).isEqualTo("john.doe@example.com");
         }
 
         @Test
@@ -126,11 +125,7 @@ class StudentManagementTest {
         @Test
         void updateStudent_withValidRequest_returnsUpdatedStudent() {
             // Given
-            StudentUpdateRequest request = StudentUpdateRequest.builder()
-                    .enrollmentDate(LocalDate.of(2024, 1, 20))
-                    .address("456 New St")
-                    .status(StudentStatus.ACTIVE)
-                    .build();
+            StudentUpdateRequest request = StudentUpdateRequest.builder().address("456 New St").build();
 
             when(studentRepository.findById("std_001")).thenReturn(Optional.of(testStudent));
             when(studentRepository.save(any(Student.class))).thenReturn(testStudent);
@@ -149,9 +144,7 @@ class StudentManagementTest {
         @Test
         void updateStudent_withNonExistentId_throwsException() {
             // Given
-            StudentUpdateRequest request = StudentUpdateRequest.builder()
-                    .enrollmentDate(LocalDate.of(2024, 1, 15))
-                    .build();
+            StudentUpdateRequest request = StudentUpdateRequest.builder().build();
 
             when(studentRepository.findById("non_existent")).thenReturn(Optional.empty());
 

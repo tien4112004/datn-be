@@ -5,7 +5,6 @@ import com.datn.datnbe.student.entity.Student;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,10 +20,8 @@ class StudentMapperTest {
         // Given
         StudentCsvRow csvRow = StudentCsvRow.builder()
                 .userId("user_001")
-                .enrollmentDate(LocalDate.of(2024, 1, 15))
                 .address("123 Main St")
                 .parentContactEmail("parent@example.com")
-                .status("ACTIVE")
                 .build();
         List<String> errors = new ArrayList<>();
 
@@ -35,7 +32,6 @@ class StudentMapperTest {
         assertThat(errors).isEmpty();
         assertThat(student).isNotNull();
         assertThat(student.getUserId()).isEqualTo("user_001");
-        assertThat(student.getEnrollmentDate()).isEqualTo(LocalDate.of(2024, 1, 15));
         assertThat(student.getAddress()).isEqualTo("123 Main St");
         assertThat(student.getParentContactEmail()).isEqualTo("parent@example.com");
     }
@@ -60,7 +56,7 @@ class StudentMapperTest {
     @DisplayName("Invalid mapping - missing userId")
     void toEntity_withMissingUserId_returnsError() {
         // Given
-        StudentCsvRow csvRow = StudentCsvRow.builder().enrollmentDate(LocalDate.of(2024, 1, 15)).build();
+        StudentCsvRow csvRow = StudentCsvRow.builder().build();
         List<String> errors = new ArrayList<>();
 
         // When

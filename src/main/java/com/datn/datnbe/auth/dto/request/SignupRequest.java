@@ -1,6 +1,7 @@
 package com.datn.datnbe.auth.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -39,8 +40,9 @@ public class SignupRequest {
 
     String phoneNumber;
 
-    @Builder.Default
-    String role = "teacher";
+    @JsonIgnore
+    String role;
 
+    @JsonIgnore
     String username; // this is for create student only
 }
