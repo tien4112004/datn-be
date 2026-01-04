@@ -1,6 +1,6 @@
 spring:
   application:
-    name: 'datn-be'
+    name: "datn-be"
   # AI MODULE CONFIGURATION
   ai:
     model:
@@ -117,13 +117,14 @@ app:
       - "https://api.huy-devops.site"
     allowed-origin-patterns:
       - "https://*.ngrok-free.app"
-      - "https://*.ts.net"
+      - "https://*.ts.net:*"
+      - "http://*.ts.net:*"
       - "http://localhost:*"
       - "https://localhost:*"
-      - "https://datn-fe-*.vercel.app"  # Vercel preview deployments with any container ID
-      - "https://datn-fe.vercel.app"  # Production Vercel deployment
-      - "https://*.vercel.app"  # All Vercel apps (more permissive, use with caution)
-      - "https://*.huy-devops.site"  # Any subdomain on huy-devops.site
+      - "https://datn-fe-*.vercel.app" # Vercel preview deployments with any container ID
+      - "https://datn-fe.vercel.app" # Production Vercel deployment
+      - "https://*.vercel.app" # All Vercel apps (more permissive, use with caution)
+      - "https://*.huy-devops.site" # Any subdomain on huy-devops.site
     allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
     allow-credentials: true
     max-age: 3600
@@ -171,7 +172,6 @@ ai:
     presentation-batch-endpoint: ${AI_API_PRESENTATION_BATCH_ENDPOINT:/api/presentations/generate/mock}
     image-endpoint: ${AI_API_IMAGE_ENDPOINT:/api/image/generate/mock}
     mindmap-endpoint: ${AI_API_MINDMAP_ENDPOINT:/api/mindmap/generate/mock}
-
 
 cloudflare:
   r2:

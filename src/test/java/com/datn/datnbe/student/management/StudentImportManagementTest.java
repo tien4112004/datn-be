@@ -73,8 +73,6 @@ class StudentImportManagementTest {
                     .parentPhone("+84987654321")
                     .parentContactEmail("parent@example.com")
                     .classId("cls_001")
-                    .enrollmentDate(LocalDate.of(2024, 1, 15))
-                    .status("active")
                     .build();
 
             UserProfileResponse createdUser = UserProfileResponse.builder()
