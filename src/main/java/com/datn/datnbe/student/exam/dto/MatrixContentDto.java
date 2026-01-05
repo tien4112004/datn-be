@@ -16,11 +16,11 @@ import java.util.List;
 @AllArgsConstructor
 public class MatrixContentDto {
     private ExamDifficulty difficulty;
-    
+
     @JsonProperty("numberOfQuestions")
     @JsonAlias("number_of_questions")
     private Integer numberOfQuestions;
-    
+
     @JsonProperty("selectedQuestions")
     @JsonAlias("selected_questions")
     private List<String> selectedQuestions;
