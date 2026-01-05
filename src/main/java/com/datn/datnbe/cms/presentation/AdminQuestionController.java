@@ -7,7 +7,6 @@ import com.datn.datnbe.cms.dto.request.QuestionCollectionRequest;
 import com.datn.datnbe.cms.dto.response.QuestionResponseDto;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
-import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -20,26 +19,20 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/questionbank")
+@RequestMapping("/api/admin/questionbank")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
-public class QuestionController {
+public class AdminQuestionController {
 
     QuestionApi questionApi;
-    SecurityContextUtils securityContextUtils;
 
     
     @GetMapping({"", "/"})
-    public ResponseEntity<AppResponseDto<List<QuestionResponseDto>>> getAllQuestions(
+    public ResponseEntity<AppResponseDto<List<QuestionResponseDto>>> getAllPublicQuestions(
             @Valid @ModelAttribute QuestionCollectionRequest request) {
-        String currentUserId = null;
-        if ("personal".equalsIgnoreCase(request.getBankType())) {
-            currentUserId = securityContextUtils.getCurrentUserId();
-        }
 
-        PaginatedResponseDto<QuestionResponseDto> paginatedResponse = questionApi.getAllQuestions(request,
-                currentUserId);
+        PaginatedResponseDto<QuestionResponseDto> paginatedResponse = questionApi.getAllQuestions(request, null);
 
         return ResponseEntity.ok(
                 AppResponseDto.successWithPagination(paginatedResponse.getData(), paginatedResponse.getPagination()));
@@ -47,10 +40,10 @@ public class QuestionController {
 
     
     @PostMapping({"", "/"})
-    public ResponseEntity<AppResponseDto<QuestionResponseDto>> createQuestion(
+    public ResponseEntity<AppResponseDto<QuestionResponseDto>> createPublicQuestion(
             @Valid @RequestBody QuestionCreateRequest request) {
-        String currentUserId = securityContextUtils.getCurrentUserId();
-        QuestionResponseDto response = questionApi.createQuestion(request, currentUserId);
+
+        QuestionResponseDto response = questionApi.createQuestion(request, null);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(AppResponseDto.success(response));
     }
@@ -58,6 +51,7 @@ public class QuestionController {
     
     @GetMapping("/{id}")
     public ResponseEntity<AppResponseDto<QuestionResponseDto>> getQuestionById(@PathVariable String id) {
+
         QuestionResponseDto response = questionApi.getQuestionById(id);
 
         return ResponseEntity.ok(AppResponseDto.success(response));
@@ -67,6 +61,7 @@ public class QuestionController {
     @PutMapping("/{id}")
     public ResponseEntity<AppResponseDto<QuestionResponseDto>> updateQuestion(@PathVariable String id,
             @Valid @RequestBody QuestionUpdateRequest request) {
+
         QuestionResponseDto response = questionApi.updateQuestion(id, request);
 
         return ResponseEntity.ok(AppResponseDto.success(response));
@@ -75,9 +70,9 @@ public class QuestionController {
     
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteQuestion(@PathVariable String id) {
+
         questionApi.deleteQuestion(id);
 
         return ResponseEntity.noContent().build();
     }
 }
-
