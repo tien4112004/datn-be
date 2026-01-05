@@ -65,6 +65,13 @@ public enum ErrorCode {
     // External API errors
     EXTERNAL_API_ERROR("External service error", 502),
 
+    // Student Module - Exam errors
+    EXAM_NOT_FOUND("Exam not found", 404), EXAM_CREATION_FAILED("Failed to create exam", 500),
+    EXAM_UPDATE_FAILED("Failed to update exam", 500), EXAM_DELETE_FAILED("Failed to delete exam", 500),
+    EXAM_HAS_ASSIGNMENTS("Cannot delete exam with existing assignments", 400),
+    INVALID_EXAM_DATA("Invalid exam data", 400), QUESTION_NOT_FOUND("Question not found", 404),
+    CONTEXT_NOT_FOUND("Question context not found", 404),
+
     // Coin Pricing errors
     COIN_PRICING_NOT_FOUND("Coin pricing configuration not found", 404),
     COIN_PRICING_ALREADY_EXISTS("Coin pricing configuration already exists for this resource type and model", 409);

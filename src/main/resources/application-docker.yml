@@ -159,6 +159,8 @@ ai:
     presentation-batch-endpoint: ${AI_API_PRESENTATION_BATCH_ENDPOINT:/api/presentations/generate/mock}
     image-endpoint: ${AI_API_IMAGE_ENDPOINT:/api/image/generate/mock}
     mindmap-endpoint: ${AI_API_MINDMAP_ENDPOINT:/api/mindmap/generate}
+    exam-matrix-endpoint: ${AI_API_EXAM_MATRIX_ENDPOINT:/exams/generate-matrix/mock}
+    exam-questions-endpoint: ${AI_API_EXAM_QUESTIONS_ENDPOINT:/exams/generate-questions/mock}
 
 rustfs:
   endpoint: ${S3_ENDPOINT:http://localhost:9000}
