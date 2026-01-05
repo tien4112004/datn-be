@@ -1,5 +1,7 @@
 package com.datn.datnbe.cms.service;
 
+import com.datn.datnbe.auth.api.UserProfileApi;
+import com.datn.datnbe.auth.dto.response.UserMinimalInfoDto;
 import com.datn.datnbe.cms.api.PostApi;
 import com.datn.datnbe.cms.dto.request.PostCreateRequest;
 import com.datn.datnbe.cms.dto.request.PostUpdateRequest;
@@ -19,6 +21,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,6 +34,7 @@ public class PostService implements PostApi {
     private final PostRepository postRepository;
     private final PostMapper postMapper;
     private final SecurityContextUtils securityContextUtils;
+    private final UserProfileApi userProfileApi;
 
     @Override
     @Transactional
@@ -42,7 +48,9 @@ public class PostService implements PostApi {
         if (post.getCommentCount() == null)
             post.setCommentCount(0);
         Post saved = postRepository.save(post);
-        return postMapper.toResponseDto(saved);
+        PostResponseDto dto = postMapper.toResponseDto(saved);
+        populateAuthorInfo(dto, saved.getAuthorId());
+        return dto;
     }
 
     @Override
@@ -54,8 +62,28 @@ public class PostService implements PostApi {
             String search) {
         PageRequest pr = PageRequest.of(Math.max(0, page), size);
         Page<Post> p = postRepository.findAllWithFilters(classId, type, search, pr);
+
+        // Extract unique author IDs
+        List<String> authorIds = p.getContent().stream().map(Post::getAuthorId).distinct().toList();
+
+        // Fetch all authors into map
+        Map<String, UserMinimalInfoDto> authorMap = new HashMap<>();
+        for (String authorId : authorIds) {
+            UserMinimalInfoDto author = userProfileApi.getUserMinimalInfo(authorId);
+            if (author != null) {
+                authorMap.put(authorId, author);
+            }
+        }
+
+        // Map and enrich posts
+        List<PostResponseDto> posts = p.getContent().stream().map(post -> {
+            PostResponseDto dto = postMapper.toResponseDto(post);
+            dto.setAuthor(authorMap.get(post.getAuthorId()));
+            return dto;
+        }).collect(Collectors.toList());
+
         PaginatedResponseDto<PostResponseDto> resp = new PaginatedResponseDto<>();
-        resp.setData(p.stream().map(postMapper::toResponseDto).collect(Collectors.toList()));
+        resp.setData(posts);
         resp.setPagination(PaginationDto.builder()
                 .currentPage(p.getNumber() + 1)
                 .pageSize(p.getSize())
@@ -70,7 +98,9 @@ public class PostService implements PostApi {
     public PostResponseDto getPostById(String postId) {
         Post p = postRepository.findById(postId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Post not found"));
-        return postMapper.toResponseDto(p);
+        PostResponseDto dto = postMapper.toResponseDto(p);
+        populateAuthorInfo(dto, p.getAuthorId());
+        return dto;
     }
 
     @Override
@@ -80,7 +110,9 @@ public class PostService implements PostApi {
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Post not found"));
         postMapper.updateEntity(request, exist);
         Post saved = postRepository.save(exist);
-        return postMapper.toResponseDto(saved);
+        PostResponseDto dto = postMapper.toResponseDto(saved);
+        populateAuthorInfo(dto, saved.getAuthorId());
+        return dto;
     }
 
     @Override
@@ -96,6 +128,15 @@ public class PostService implements PostApi {
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Post not found"));
         exist.setIsPinned(Boolean.TRUE);
         Post saved = postRepository.save(exist);
-        return postMapper.toResponseDto(saved);
+        PostResponseDto dto = postMapper.toResponseDto(saved);
+        populateAuthorInfo(dto, saved.getAuthorId());
+        return dto;
+    }
+
+    private void populateAuthorInfo(PostResponseDto dto, String authorId) {
+        UserMinimalInfoDto author = userProfileApi.getUserMinimalInfo(authorId);
+        if (author != null) {
+            dto.setAuthor(author);
+        }
     }
 }

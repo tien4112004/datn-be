@@ -1,5 +1,7 @@
 package com.datn.datnbe.cms.service;
 
+import com.datn.datnbe.auth.api.UserProfileApi;
+import com.datn.datnbe.auth.dto.response.UserMinimalInfoDto;
 import com.datn.datnbe.cms.api.CommentApi;
 import com.datn.datnbe.cms.dto.request.CommentCreateRequest;
 import com.datn.datnbe.cms.dto.response.CommentResponseDto;
@@ -14,7 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,6 +30,7 @@ public class CommentService implements CommentApi {
     private final CommentMapper commentMapper;
     private final SecurityContextUtils securityContextUtils;
     private final com.datn.datnbe.cms.repository.PostRepository postRepository;
+    private final UserProfileApi userProfileApi;
 
     @Override
     @Transactional
@@ -47,16 +52,34 @@ public class CommentService implements CommentApi {
         // increment post comment count via repository update for atomicity
         postRepository.updateCommentCount(postId, 1);
 
-        return commentMapper.toResponseDto(saved);
+        CommentResponseDto dto = commentMapper.toResponseDto(saved);
+        populateUserInfo(dto, saved.getUserId());
+        return dto;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<CommentResponseDto> getPostComments(String postId) {
-        return commentRepository.findByPostId(postId)
-                .stream()
-                .map(commentMapper::toResponseDto)
-                .collect(Collectors.toList());
+        List<Comment> comments = commentRepository.findByPostId(postId);
+
+        // Extract unique user IDs
+        List<String> userIds = comments.stream().map(Comment::getUserId).distinct().toList();
+
+        // Fetch all users into map
+        Map<String, UserMinimalInfoDto> userMap = new HashMap<>();
+        for (String userId : userIds) {
+            UserMinimalInfoDto user = userProfileApi.getUserMinimalInfo(userId);
+            if (user != null) {
+                userMap.put(userId, user);
+            }
+        }
+
+        // Map and enrich comments
+        return comments.stream().map(comment -> {
+            CommentResponseDto dto = commentMapper.toResponseDto(comment);
+            dto.setUser(userMap.get(comment.getUserId()));
+            return dto;
+        }).collect(Collectors.toList());
     }
 
     @Override
@@ -64,7 +87,9 @@ public class CommentService implements CommentApi {
     public CommentResponseDto getCommentById(String id) {
         Comment c = commentRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Comment not found"));
-        return commentMapper.toResponseDto(c);
+        CommentResponseDto dto = commentMapper.toResponseDto(c);
+        populateUserInfo(dto, c.getUserId());
+        return dto;
     }
 
     @Override
@@ -75,5 +100,12 @@ public class CommentService implements CommentApi {
         // delete and decrement post comment count
         commentRepository.deleteById(id);
         postRepository.updateCommentCount(comment.getPostId(), -1);
+    }
+
+    private void populateUserInfo(CommentResponseDto dto, String userId) {
+        UserMinimalInfoDto user = userProfileApi.getUserMinimalInfo(userId);
+        if (user != null) {
+            dto.setUser(user);
+        }
     }
 }
