@@ -1,6 +1,5 @@
 package com.datn.datnbe.cms.entity.questiondata;
 
-import com.datn.datnbe.cms.entity.QuestionData;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import java.util.List;
@@ -10,7 +9,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class MatchingData implements QuestionData {
+public class MatchingData {
 
     List<MatchingPair> pairs;
 

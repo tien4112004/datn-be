@@ -2,7 +2,6 @@ package com.datn.datnbe.cms.entity;
 
 import com.datn.datnbe.cms.entity.questiondata.Difficulty;
 import com.datn.datnbe.cms.entity.questiondata.QuestionType;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -20,7 +19,6 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Table(name = "questions")
-@JsonDeserialize(using = QuestionDeserializer.class)
 public class Question {
 
     @Id
@@ -50,7 +48,7 @@ public class Question {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "data", columnDefinition = "jsonb")
-    QuestionData data;
+    Object data;
 
     @Column(name = "owner_id", length = 36)
     String ownerId;

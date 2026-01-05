@@ -1,6 +1,5 @@
 package com.datn.datnbe.cms.entity.questiondata;
 
-import com.datn.datnbe.cms.entity.QuestionData;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -9,7 +8,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class OpenEndedData implements QuestionData {
+public class OpenEndedData {
 
     String expectedAnswer;
     Integer maxLength;

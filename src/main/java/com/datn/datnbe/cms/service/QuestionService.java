@@ -55,8 +55,7 @@ public class QuestionService implements QuestionApi {
 
         Sort.Direction direction = Sort.Direction.DESC;
         if (request.getSortDirection() != null) {
-            direction = request.getSortDirection().equalsIgnoreCase("ASC") ? Sort.Direction.ASC
-                    : Sort.Direction.DESC;
+            direction = request.getSortDirection().equalsIgnoreCase("ASC") ? Sort.Direction.ASC : Sort.Direction.DESC;
         }
 
         String sortBy = request.getSortBy() != null ? request.getSortBy() : "createdAt";
@@ -66,19 +65,18 @@ public class QuestionService implements QuestionApi {
 
         if (ownerIdFilter != null) {
             if (request.getSearch() != null && !request.getSearch().isBlank()) {
-                questionPage = questionRepository.findByOwnerIdAndTitleContainingIgnoreCase(ownerIdFilter,
-                        request.getSearch(),
-                        pageable);
+                questionPage = questionRepository
+                        .findByOwnerIdAndTitleContainingIgnoreCase(ownerIdFilter, request.getSearch(), pageable);
             } else {
                 questionPage = questionRepository.findByOwnerId(ownerIdFilter, pageable);
             }
             log.debug("Fetched {} personal questions for user {}", questionPage.getSize(), ownerIdFilter);
         } else {
+            // For public bank, get all questions regardless of ownerId
             if (request.getSearch() != null && !request.getSearch().isBlank()) {
-                questionPage = questionRepository.findByOwnerIdIsNullAndTitleContainingIgnoreCase(
-                        request.getSearch(), pageable);
+                questionPage = questionRepository.findByTitleContainingIgnoreCase(request.getSearch(), pageable);
             } else {
-                questionPage = questionRepository.findByOwnerIdIsNull(pageable);
+                questionPage = questionRepository.findAll(pageable);
             }
             log.debug("Fetched {} public questions", questionPage.getSize());
         }
@@ -95,16 +93,15 @@ public class QuestionService implements QuestionApi {
                 .totalItems(questionPage.getTotalElements())
                 .build();
 
-        return PaginatedResponseDto.<QuestionResponseDto>builder()
-                .data(dtos)
-                .pagination(paginationInfo)
-                .build();
+        return PaginatedResponseDto.<QuestionResponseDto>builder().data(dtos).pagination(paginationInfo).build();
     }
 
     @Override
     public QuestionResponseDto createQuestion(QuestionCreateRequest request, String ownerId) {
 
-        log.info("Creating new question - type: {}, title: {}, ownerId: {}", request.getType(), request.getTitle(),
+        log.info("Creating new question - type: {}, title: {}, ownerId: {}",
+                request.getType(),
+                request.getTitle(),
                 ownerId);
 
         Question question = questionMapper.toEntity(request);
@@ -118,16 +115,32 @@ public class QuestionService implements QuestionApi {
     }
 
     @Override
+    public List<QuestionResponseDto> createQuestionsBatch(List<QuestionCreateRequest> requests, String ownerId) {
+
+        log.info("Creating batch of {} questions - ownerId: {}", requests.size(), ownerId);
+
+        List<Question> questions = requests.stream().map(request -> {
+            Question question = questionMapper.toEntity(request);
+            question.setOwnerId(ownerId);
+            return question;
+        }).collect(Collectors.toList());
+
+        List<Question> savedQuestions = questionRepository.saveAll(questions);
+
+        log.info("Batch of {} questions created successfully", savedQuestions.size());
+
+        return savedQuestions.stream().map(questionMapper::toResponseDto).collect(Collectors.toList());
+    }
+
     @Transactional(readOnly = true)
     public QuestionResponseDto getQuestionById(String id) {
 
         log.info("Fetching question - id: {}", id);
 
-        Question question = questionRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.warn("Question not found - id: {}", id);
-                    return new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Question not found with id: " + id);
-                });
+        Question question = questionRepository.findById(id).orElseThrow(() -> {
+            log.warn("Question not found - id: {}", id);
+            return new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Question not found with id: " + id);
+        });
 
         return questionMapper.toResponseDto(question);
     }
@@ -137,11 +150,10 @@ public class QuestionService implements QuestionApi {
 
         log.info("Updating question - id: {}", id);
 
-        Question question = questionRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.warn("Question not found for update - id: {}", id);
-                    return new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Question not found with id: " + id);
-                });
+        Question question = questionRepository.findById(id).orElseThrow(() -> {
+            log.warn("Question not found for update - id: {}", id);
+            return new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Question not found with id: " + id);
+        });
 
         questionMapper.updateEntity(request, question);
 

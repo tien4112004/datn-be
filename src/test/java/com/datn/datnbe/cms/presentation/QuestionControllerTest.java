@@ -77,9 +77,7 @@ class QuestionControllerTest {
                 .points(10)
                 .build();
 
-        updateRequest = QuestionUpdateRequest.builder()
-                .title("Updated Title")
-                .build();
+        updateRequest = QuestionUpdateRequest.builder().title("Updated Title").build();
 
         PaginationDto pagination = PaginationDto.builder()
                 .currentPage(1)
@@ -187,10 +185,8 @@ class QuestionControllerTest {
 
                 .build();
 
-        mockMvc.perform(post("/api/questionbank")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
+        mockMvc.perform(post("/api/questionbank").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(invalidRequest))).andExpect(status().isBadRequest());
 
         verify(questionApi, never()).createQuestion(any(), any());
     }
@@ -245,8 +241,7 @@ class QuestionControllerTest {
 
         when(questionApi.updateQuestion("q-001", updateRequest)).thenReturn(updatedResponse);
 
-        mockMvc.perform(put("/api/questionbank/q-001")
-                .contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/questionbank/q-001").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success", is(true)))
@@ -278,8 +273,7 @@ class QuestionControllerTest {
 
         doNothing().when(questionApi).deleteQuestion("q-001");
 
-        mockMvc.perform(delete("/api/questionbank/q-001")
-                .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(delete("/api/questionbank/q-001").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
         verify(questionApi, times(1)).deleteQuestion("q-001");
@@ -289,11 +283,10 @@ class QuestionControllerTest {
     @DisplayName("Should return 404 when deleting non-existent question")
     void deleteQuestion_WithInvalidId_ReturnsNotFound() throws Exception {
 
-        doThrow(new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Question not found"))
-                .when(questionApi).deleteQuestion("q-invalid");
+        doThrow(new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Question not found")).when(questionApi)
+                .deleteQuestion("q-invalid");
 
-        mockMvc.perform(delete("/api/questionbank/q-invalid")
-                .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(delete("/api/questionbank/q-invalid").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success", is(false)));
 

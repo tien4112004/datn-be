@@ -26,10 +26,10 @@ public interface DocumentResourceMappingRepository extends JpaRepository<Documen
     List<String> findResourcesByTypeOfOwner(String resourceType, String ownerId);
 
     @Query(value = """
-        SELECT drm.document_id as id, drm.resource_type AS type, drm.title AS title, drm.thumbnail AS thumbnail
-        FROM document_resource_mappings drm
-        JOIN resource_server_resource rsr ON drm.keycloak_resource_id = rsr.id
-        WHERE drm.resource_type = :resourceType AND rsr.owner = :ownerId
-        """, nativeQuery = true)  
+            SELECT drm.document_id as id, drm.resource_type AS type, drm.title AS title, drm.thumbnail AS thumbnail
+            FROM document_resource_mappings drm
+            JOIN resource_server_resource rsr ON drm.keycloak_resource_id = rsr.id
+            WHERE drm.resource_type = :resourceType AND rsr.owner = :ownerId
+            """, nativeQuery = true)
     List<ResourceResponse> findAllResourcesByOwner(String ownerId);
 }

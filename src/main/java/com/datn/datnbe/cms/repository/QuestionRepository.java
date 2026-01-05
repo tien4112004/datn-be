@@ -19,6 +19,8 @@ public interface QuestionRepository extends JpaRepository<Question, String> {
 
     Page<Question> findByOwnerIdAndTitleContainingIgnoreCase(String ownerId, String search, Pageable pageable);
 
+    Page<Question> findByTitleContainingIgnoreCase(String search, Pageable pageable);
+
     boolean existsByIdAndOwnerId(String id, String ownerId);
 
     boolean existsByIdAndOwnerIdIsNull(String id);

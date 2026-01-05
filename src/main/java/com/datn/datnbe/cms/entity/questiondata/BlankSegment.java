@@ -17,7 +17,6 @@ public class BlankSegment {
     List<String> acceptableAnswers;
 
     public enum SegmentType {
-        TEXT,
-        BLANK
+        TEXT, BLANK
     }
 }

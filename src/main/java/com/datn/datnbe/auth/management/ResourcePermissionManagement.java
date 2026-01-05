@@ -20,7 +20,6 @@ import com.datn.datnbe.auth.repository.UserProfileRepo;
 import com.datn.datnbe.auth.service.KeycloakAuthorizationService;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
-import com.google.rpc.context.AttributeContext.Resource;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

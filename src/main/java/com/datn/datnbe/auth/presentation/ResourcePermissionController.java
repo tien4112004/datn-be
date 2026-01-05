@@ -116,7 +116,7 @@ public class ResourcePermissionController {
         Jwt jwt = (Jwt) authentication.getPrincipal();
         String currentUserId = jwt.getSubject();
         log.info("get all resource for user {}", currentUserId);
-        
+
         var response = resourcePermissionApi.getAllResource(currentUserId);
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
