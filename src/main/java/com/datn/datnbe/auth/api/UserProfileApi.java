@@ -76,6 +76,5 @@ public interface UserProfileApi {
      */
     void removeUserAvatar(String userId);
 
-
     UserProfileResponse createUserProfileByUsername(SignupRequest request);
 }
