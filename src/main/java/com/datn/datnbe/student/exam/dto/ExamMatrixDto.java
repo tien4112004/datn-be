@@ -17,26 +17,26 @@ public class ExamMatrixDto {
     private String id;
     private String name;
     private String description;
-    
+
     @JsonProperty("subjectCode")
     @JsonAlias("subject_code")
     private String subjectCode;
-    
+
     @JsonProperty("targetTotalPoints")
     @JsonAlias("target_total_points")
     private Integer targetTotalPoints;
-    
+
     private List<TopicDto> topics;
     private List<MatrixContentDto> contents;
-    
+
     @JsonProperty("createdAt")
     @JsonAlias("created_at")
     private String createdAt;
-    
+
     @JsonProperty("updatedAt")
     @JsonAlias("updated_at")
     private String updatedAt;
-    
+
     @JsonProperty("createdBy")
     @JsonAlias("created_by")
     private String createdBy;
