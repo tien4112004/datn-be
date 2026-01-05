@@ -10,7 +10,7 @@ public class PostCreateRequest {
     @NotBlank
     private String content;
 
-    private String type; // announcement, schedule_event, general
+    private String type; // Post, Assignment
 
     private List<String> attachments;
 

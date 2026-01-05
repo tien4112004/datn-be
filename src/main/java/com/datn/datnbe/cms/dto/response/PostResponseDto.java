@@ -21,7 +21,7 @@ public class PostResponseDto {
     private String authorId;
     private UserMinimalInfoDto author;
     private String content;
-    private String type;
+    private String type; // Post, Assignment
     private List<String> attachments;
     private List<String> linkedResourceIds;
     private String linkedLessonId;

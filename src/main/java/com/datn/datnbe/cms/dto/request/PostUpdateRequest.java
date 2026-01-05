@@ -7,7 +7,7 @@ import java.util.List;
 @Data
 public class PostUpdateRequest {
     private String content;
-    private String type;
+    private String type; // Post, Assignment
     private List<String> attachments;
     private List<String> linkedResourceIds;
     private String linkedLessonId;

@@ -15,7 +15,8 @@ public interface PostRepository extends JpaRepository<Post, String> {
 
     @Query("SELECT p FROM Post p WHERE (:classId IS NULL OR p.classId = :classId) AND "
             + "(:type IS NULL OR p.type = :type) AND "
-            + "(:search IS NULL OR LOWER(p.content) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+            + "(:search IS NULL OR LOWER(p.content) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) "
+            + "ORDER BY p.isPinned DESC, p.createdAt DESC")
     Page<Post> findAllWithFilters(String classId, String type, String search, Pageable pageable);
 
     @Modifying

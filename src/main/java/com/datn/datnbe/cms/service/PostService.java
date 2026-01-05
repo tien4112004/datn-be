@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,7 +61,8 @@ public class PostService implements PostApi {
             int size,
             String type,
             String search) {
-        PageRequest pr = PageRequest.of(Math.max(0, page), size);
+        Sort sort = Sort.by(Sort.Order.desc("isPinned"), Sort.Order.desc("createdAt"));
+        PageRequest pr = PageRequest.of(Math.max(0, page), size, sort);
         Page<Post> p = postRepository.findAllWithFilters(classId, type, search, pr);
 
         // Extract unique author IDs
@@ -126,7 +128,7 @@ public class PostService implements PostApi {
     public PostResponseDto pinPost(String postId) {
         Post exist = postRepository.findById(postId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Post not found"));
-        exist.setIsPinned(Boolean.TRUE);
+        exist.setIsPinned(!Boolean.TRUE.equals(exist.getIsPinned()));
         Post saved = postRepository.save(exist);
         PostResponseDto dto = postMapper.toResponseDto(saved);
         populateAuthorInfo(dto, saved.getAuthorId());
