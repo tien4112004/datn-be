@@ -11,6 +11,9 @@ import com.datn.datnbe.sharedkernel.security.annotation.RequireTeacherPermission
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,44 +27,43 @@ public class PostController {
     private final PostApi postApi;
 
     @GetMapping("/classes/{classId}/posts")
-    public ResponseEntity<AppResponseDto<PaginatedResponseDto<PostResponseDto>>> getClassPosts(
+    public ResponseEntity<AppResponseDto<List<PostResponseDto>>> getClassPosts(
             @PathVariable String classId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String search) {
-        log.debug("GET /api/classes/{}/posts", classId);
+
+        PaginatedResponseDto<PostResponseDto> paginatedResponse =
+                postApi.getClassPosts(classId, Math.max(0, page - 1), size, type, search);
+        
         return ResponseEntity
-                .ok(AppResponseDto.success(postApi.getClassPosts(classId, Math.max(0, page - 1), size, type, search)));
+                .ok(AppResponseDto.successWithPagination(paginatedResponse.getData(), paginatedResponse.getPagination()));
     }
 
     @PostMapping("/classes/{classId}/posts")
     @RequireTeacherPermission
     public ResponseEntity<AppResponseDto<PostResponseDto>> createPost(@PathVariable String classId,
             @Valid @RequestBody PostCreateRequest request) {
-        log.debug("POST /api/classes/{}/posts", classId);
         PostResponseDto resp = postApi.createPost(classId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(AppResponseDto.success(resp));
     }
 
     @GetMapping("/posts/{postId}")
     public ResponseEntity<AppResponseDto<PostResponseDto>> getPost(@PathVariable String postId) {
-        log.debug("GET /api/posts/{}", postId);
         return ResponseEntity.ok(AppResponseDto.success(postApi.getPostById(postId)));
     }
 
     @PutMapping("/posts/{postId}")
     @RequireTeacherPermission
     public ResponseEntity<AppResponseDto<PostResponseDto>> updatePost(@PathVariable String postId,
-            @Valid @RequestBody PostUpdateRequest request) {
-        log.debug("PUT /api/posts/{}", postId);
+                @Valid @RequestBody PostUpdateRequest request) {
         return ResponseEntity.ok(AppResponseDto.success(postApi.updatePost(postId, request)));
     }
 
     @DeleteMapping("/posts/{postId}")
     @RequireTeacherPermission
     public ResponseEntity<AppResponseDto<Void>> deletePost(@PathVariable String postId) {
-        log.debug("DELETE /api/posts/{}", postId);
         postApi.deletePost(postId);
         return ResponseEntity.ok(AppResponseDto.success());
     }
@@ -70,7 +72,6 @@ public class PostController {
     @RequireTeacherPermission
     public ResponseEntity<AppResponseDto<PostResponseDto>> pinPost(@PathVariable String postId,
             @Valid @RequestBody PinPostRequest request) {
-        log.debug("POST /api/posts/{}/pin", postId);
         return ResponseEntity.ok(AppResponseDto.success(postApi.pinPost(postId, request)));
     }
 }
