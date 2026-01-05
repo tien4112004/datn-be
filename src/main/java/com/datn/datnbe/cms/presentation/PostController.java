@@ -1,6 +1,7 @@
 package com.datn.datnbe.cms.presentation;
 
 import com.datn.datnbe.cms.api.PostApi;
+import com.datn.datnbe.cms.dto.request.PinPostRequest;
 import com.datn.datnbe.cms.dto.request.PostCreateRequest;
 import com.datn.datnbe.cms.dto.request.PostUpdateRequest;
 import com.datn.datnbe.cms.dto.response.PostResponseDto;
@@ -67,8 +68,9 @@ public class PostController {
 
     @PostMapping("/posts/{postId}/pin")
     @RequireTeacherPermission
-    public ResponseEntity<AppResponseDto<PostResponseDto>> pinPost(@PathVariable String postId) {
+    public ResponseEntity<AppResponseDto<PostResponseDto>> pinPost(@PathVariable String postId,
+            @Valid @RequestBody PinPostRequest request) {
         log.debug("POST /api/posts/{}/pin", postId);
-        return ResponseEntity.ok(AppResponseDto.success(postApi.pinPost(postId)));
+        return ResponseEntity.ok(AppResponseDto.success(postApi.pinPost(postId, request)));
     }
 }
