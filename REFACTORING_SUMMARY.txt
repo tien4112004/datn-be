@@ -1,0 +1,65 @@
+REFACTORING COMPLETE - NEW STRUCTURE
+=====================================
+
+REMOVED:
+- ✅ BaseQuestionEntity.java (old inheritance base)
+- ✅ /question/ folder with old subclasses:
+  - MultipleChoiceQuestion.java
+  - MatchingQuestion.java
+  - OpenEndedQuestion.java
+  - FillInBlankQuestion.java
+
+NEW STRUCTURE:
+=====================================
+
+Question.java
+- Single unified class
+- Contains: id, type, difficulty, title, titleImageUrl, explanation, points, data
+- Clean and simple!
+
+QuestionData.java (Interface)
+- Located in: /entity/
+- Has @JsonTypeInfo and @JsonSubTypes for polymorphic deserialization
+- Maps "dataType" field to correct implementation class
+
+Data Classes (all in /questiondata/ folder):
+- MultipleChoiceData
+- MatchingData
+- OpenEndedData
+- FillInBlankData
+- All implement QuestionData interface
+
+Enums (in /questiondata/ folder):
+- QuestionType: MULTIPLE_CHOICE, MATCHING, OPEN_ENDED, FILL_IN_BLANK
+- Difficulty: KNOWLEDGE, COMPREHENSION, APPLICATION, ADVANCED_APPLICATION
+
+Support Classes (in /questiondata/ folder):
+- MultipleChoiceOption
+- MatchingPair
+- BlankSegment (with SegmentType enum)
+
+USAGE EXAMPLE:
+=====================================
+
+Controller receives:
+@PostMapping("/batch")
+public ResponseEntity<?> saveQuestionBatch(@RequestBody List<Question> questions)
+
+JSON from frontend:
+{
+  "id": "q-001",
+  "type": "MULTIPLE_CHOICE",
+  "difficulty": "EASY",
+  "title": "Question text",
+  "points": 5,
+  "data": {
+    "dataType": "MULTIPLE_CHOICE",
+    "options": [...],
+    "shuffleOptions": true
+  }
+}
+
+Jackson automatically converts:
+- question.getData() -> MultipleChoiceData instance
+- No inheritance needed
+- Type-safe, clean, simple!
