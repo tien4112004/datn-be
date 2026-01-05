@@ -3,6 +3,7 @@ package com.datn.datnbe.cms.service;
 import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.dto.response.UserMinimalInfoDto;
 import com.datn.datnbe.cms.api.PostApi;
+import com.datn.datnbe.cms.dto.request.PinPostRequest;
 import com.datn.datnbe.cms.dto.request.PostCreateRequest;
 import com.datn.datnbe.cms.dto.request.PostUpdateRequest;
 import com.datn.datnbe.cms.dto.response.PostResponseDto;
@@ -125,10 +126,10 @@ public class PostService implements PostApi {
 
     @Override
     @Transactional
-    public PostResponseDto pinPost(String postId) {
+    public PostResponseDto pinPost(String postId, PinPostRequest request) {
         Post exist = postRepository.findById(postId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Post not found"));
-        exist.setIsPinned(!Boolean.TRUE.equals(exist.getIsPinned()));
+        exist.setIsPinned(request.getPinned());
         Post saved = postRepository.save(exist);
         PostResponseDto dto = postMapper.toResponseDto(saved);
         populateAuthorInfo(dto, saved.getAuthorId());

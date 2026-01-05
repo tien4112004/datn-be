@@ -1,5 +1,6 @@
 package com.datn.datnbe.cms.api;
 
+import com.datn.datnbe.cms.dto.request.PinPostRequest;
 import com.datn.datnbe.cms.dto.request.PostCreateRequest;
 import com.datn.datnbe.cms.dto.request.PostUpdateRequest;
 import com.datn.datnbe.cms.dto.response.PostResponseDto;
@@ -16,5 +17,5 @@ public interface PostApi {
 
     void deletePost(String postId);
 
-    PostResponseDto pinPost(String postId);
+    PostResponseDto pinPost(String postId, PinPostRequest request);
 }
