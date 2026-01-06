@@ -5,6 +5,7 @@ import com.datn.datnbe.cms.dto.request.QuestionCollectionRequest;
 import com.datn.datnbe.cms.dto.request.QuestionCreateRequest;
 import com.datn.datnbe.cms.dto.request.QuestionUpdateRequest;
 import com.datn.datnbe.cms.dto.response.QuestionResponseDto;
+import com.datn.datnbe.cms.dto.response.BatchCreateQuestionResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
@@ -25,6 +26,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -160,19 +163,33 @@ class QuestionControllerTest {
     void createQuestion_WithValidRequest_CreatesQuestionSuccessfully() throws Exception {
 
         when(securityContextUtils.getCurrentUserId()).thenReturn("user-123");
-        when(questionApi.createQuestion(any(QuestionCreateRequest.class), eq("user-123")))
-                .thenReturn(testResponse);
+        
+        BatchCreateQuestionResponseDto batchResponse = BatchCreateQuestionResponseDto.builder()
+                .successful(Arrays.asList(testResponse))
+                .failed(Collections.emptyList())
+                .totalProcessed(1)
+                .totalSuccessful(1)
+                .totalFailed(0)
+                .build();
+        
+        when(questionApi.createQuestionsBatchWithPartialSuccess(anyList(), eq("user-123")))
+                .thenReturn(batchResponse);
 
         mockMvc.perform(post("/api/questionbank")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(createRequest)))
+                .content(objectMapper.writeValueAsString(Arrays.asList(createRequest))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success", is(true)))
-                .andExpect(jsonPath("$.data.id", is("q-001")))
-                .andExpect(jsonPath("$.data.ownerId", is("user-123")));
+                .andExpect(jsonPath("$.data.successful", hasSize(1)))
+                .andExpect(jsonPath("$.data.successful[0].id", is("q-001")))
+                .andExpect(jsonPath("$.data.successful[0].ownerId", is("user-123")))
+                .andExpect(jsonPath("$.data.failed", hasSize(0)))
+                .andExpect(jsonPath("$.data.totalProcessed", is(1)))
+                .andExpect(jsonPath("$.data.totalSuccessful", is(1)))
+                .andExpect(jsonPath("$.data.totalFailed", is(0)));
 
         verify(securityContextUtils, times(1)).getCurrentUserId();
-        verify(questionApi, times(1)).createQuestion(any(QuestionCreateRequest.class), eq("user-123"));
+        verify(questionApi, times(1)).createQuestionsBatchWithPartialSuccess(anyList(), eq("user-123"));
     }
 
     @Test
@@ -239,7 +256,8 @@ class QuestionControllerTest {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        when(questionApi.updateQuestion("q-001", updateRequest)).thenReturn(updatedResponse);
+        when(securityContextUtils.getCurrentUserId()).thenReturn("user-123");
+        when(questionApi.updateQuestion("q-001", updateRequest, "user-123")).thenReturn(updatedResponse);
 
         mockMvc.perform(put("/api/questionbank/q-001").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateRequest)))
@@ -248,14 +266,16 @@ class QuestionControllerTest {
                 .andExpect(jsonPath("$.data.id", is("q-001")))
                 .andExpect(jsonPath("$.data.title", is("Updated Title")));
 
-        verify(questionApi, times(1)).updateQuestion("q-001", updateRequest);
+        verify(securityContextUtils, times(1)).getCurrentUserId();
+        verify(questionApi, times(1)).updateQuestion("q-001", updateRequest, "user-123");
     }
 
     @Test
     @DisplayName("Should return 404 when updating non-existent question")
     void updateQuestion_WithInvalidId_ReturnsNotFound() throws Exception {
 
-        when(questionApi.updateQuestion("q-invalid", updateRequest))
+        when(securityContextUtils.getCurrentUserId()).thenReturn("user-123");
+        when(questionApi.updateQuestion("q-invalid", updateRequest, "user-123"))
                 .thenThrow(new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Question not found"));
 
         mockMvc.perform(put("/api/questionbank/q-invalid")
@@ -264,32 +284,72 @@ class QuestionControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success", is(false)));
 
-        verify(questionApi, times(1)).updateQuestion(eq("q-invalid"), any());
+        verify(securityContextUtils, times(1)).getCurrentUserId();
+        verify(questionApi, times(1)).updateQuestion(eq("q-invalid"), any(), eq("user-123"));
+    }
+
+    @Test
+    @DisplayName("Should return 403 when user tries to update question they don't own")
+    void updateQuestion_WithoutOwnership_ReturnsForbidden() throws Exception {
+
+        when(securityContextUtils.getCurrentUserId()).thenReturn("user-456");
+        when(questionApi.updateQuestion("q-001", updateRequest, "user-456"))
+                .thenThrow(new AppException(ErrorCode.FORBIDDEN, "You do not have permission to modify this question"));
+
+        mockMvc.perform(put("/api/questionbank/q-001").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success", is(false)))
+                .andExpect(jsonPath("$.errorCode", is("FORBIDDEN")));
+
+        verify(securityContextUtils, times(1)).getCurrentUserId();
+        verify(questionApi, times(1)).updateQuestion(eq("q-001"), any(), eq("user-456"));
     }
 
     @Test
     @DisplayName("Should delete a question successfully")
     void deleteQuestion_WithValidId_DeletesQuestionSuccessfully() throws Exception {
 
-        doNothing().when(questionApi).deleteQuestion("q-001");
+        when(securityContextUtils.getCurrentUserId()).thenReturn("user-123");
+        doNothing().when(questionApi).deleteQuestion("q-001", "user-123");
 
         mockMvc.perform(delete("/api/questionbank/q-001").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
-        verify(questionApi, times(1)).deleteQuestion("q-001");
+        verify(securityContextUtils, times(1)).getCurrentUserId();
+        verify(questionApi, times(1)).deleteQuestion("q-001", "user-123");
     }
 
     @Test
     @DisplayName("Should return 404 when deleting non-existent question")
     void deleteQuestion_WithInvalidId_ReturnsNotFound() throws Exception {
 
+        when(securityContextUtils.getCurrentUserId()).thenReturn("user-123");
         doThrow(new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Question not found")).when(questionApi)
-                .deleteQuestion("q-invalid");
+                .deleteQuestion("q-invalid", "user-123");
 
         mockMvc.perform(delete("/api/questionbank/q-invalid").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success", is(false)));
 
-        verify(questionApi, times(1)).deleteQuestion("q-invalid");
+        verify(securityContextUtils, times(1)).getCurrentUserId();
+        verify(questionApi, times(1)).deleteQuestion("q-invalid", "user-123");
+    }
+
+    @Test
+    @DisplayName("Should return 403 when user tries to delete question they don't own")
+    void deleteQuestion_WithoutOwnership_ReturnsForbidden() throws Exception {
+
+        when(securityContextUtils.getCurrentUserId()).thenReturn("user-456");
+        doThrow(new AppException(ErrorCode.FORBIDDEN, "You do not have permission to modify this question")).when(questionApi)
+                .deleteQuestion("q-001", "user-456");
+
+        mockMvc.perform(delete("/api/questionbank/q-001").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success", is(false)))
+                .andExpect(jsonPath("$.errorCode", is("FORBIDDEN")));
+
+        verify(securityContextUtils, times(1)).getCurrentUserId();
+        verify(questionApi, times(1)).deleteQuestion("q-001", "user-456");
     }
 }

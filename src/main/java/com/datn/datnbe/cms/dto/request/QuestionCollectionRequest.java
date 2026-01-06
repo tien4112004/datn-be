@@ -1,6 +1,7 @@
 package com.datn.datnbe.cms.dto.request;
 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -12,6 +13,8 @@ import lombok.experimental.FieldDefaults;
 public class QuestionCollectionRequest {
 
     @NotNull(message = "Bank type is required (personal or public)")
+    @Pattern(regexp = "personal|public", flags = Pattern.Flag.CASE_INSENSITIVE,
+            message = "Bank type must be either 'personal' or 'public'")
     String bankType;
 
     @Builder.Default

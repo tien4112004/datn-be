@@ -5,9 +5,9 @@ import com.datn.datnbe.cms.dto.request.QuestionCreateRequest;
 import com.datn.datnbe.cms.dto.request.QuestionUpdateRequest;
 import com.datn.datnbe.cms.dto.request.QuestionCollectionRequest;
 import com.datn.datnbe.cms.dto.response.QuestionResponseDto;
+import com.datn.datnbe.cms.dto.response.BatchCreateQuestionResponseDto;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,6 @@ import java.util.List;
 public class AdminQuestionController {
 
     QuestionApi questionApi;
-    ObjectMapper objectMapper;
 
     @GetMapping({"", "/"})
     public ResponseEntity<AppResponseDto<List<QuestionResponseDto>>> getAllPublicQuestions(
@@ -40,29 +39,9 @@ public class AdminQuestionController {
     }
 
     @PostMapping({"", "/"})
-    public ResponseEntity<AppResponseDto<?>> createPublicQuestion(@RequestBody Object requestBody) {
-
-        // Check if it's a list (batch) or single object
-        if (requestBody instanceof List) {
-            try {
-                List<QuestionCreateRequest> requests = objectMapper.convertValue(requestBody,
-                        objectMapper.getTypeFactory().constructCollectionType(List.class, QuestionCreateRequest.class));
-                List<QuestionResponseDto> responses = questionApi.createQuestionsBatch(requests, null);
-                return ResponseEntity.status(HttpStatus.CREATED).body(AppResponseDto.success(responses));
-            } catch (Exception e) {
-                log.error("Error converting batch request", e);
-                throw e;
-            }
-        } else {
-            try {
-                QuestionCreateRequest request = objectMapper.convertValue(requestBody, QuestionCreateRequest.class);
-                QuestionResponseDto response = questionApi.createQuestion(request, null);
-                return ResponseEntity.status(HttpStatus.CREATED).body(AppResponseDto.success(response));
-            } catch (Exception e) {
-                log.error("Error converting single question request", e);
-                throw e;
-            }
-        }
+    public ResponseEntity<AppResponseDto<?>> createPublicQuestion(@RequestBody List<QuestionCreateRequest> requests) {
+        BatchCreateQuestionResponseDto response = questionApi.createQuestionsBatchWithPartialSuccess(requests, null);
+        return ResponseEntity.status(HttpStatus.CREATED).body(AppResponseDto.success(response));
     }
 
     @GetMapping("/{id}")
@@ -77,7 +56,7 @@ public class AdminQuestionController {
     public ResponseEntity<AppResponseDto<QuestionResponseDto>> updateQuestion(@PathVariable String id,
             @Valid @RequestBody QuestionUpdateRequest request) {
 
-        QuestionResponseDto response = questionApi.updateQuestion(id, request);
+        QuestionResponseDto response = questionApi.updateQuestion(id, request, null);
 
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
@@ -85,7 +64,7 @@ public class AdminQuestionController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteQuestion(@PathVariable String id) {
 
-        questionApi.deleteQuestion(id);
+        questionApi.deleteQuestion(id, null);
 
         return ResponseEntity.noContent().build();
     }

@@ -4,7 +4,6 @@ import com.datn.datnbe.cms.dto.request.QuestionCreateRequest;
 import com.datn.datnbe.cms.dto.request.QuestionUpdateRequest;
 import com.datn.datnbe.cms.dto.response.QuestionResponseDto;
 import com.datn.datnbe.cms.entity.Question;
-import com.datn.datnbe.cms.entity.questiondata.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.mapstruct.Mapper;
@@ -73,7 +72,14 @@ public abstract class QuestionEntityMapper {
     public void updateEntity(QuestionUpdateRequest request, Question entity) {
         mapUpdateEntity(request, entity);
         if (request.getData() != null) {
-            entity.setData(request.getData());
+            try {
+                // Convert to JSON string for Hibernate to serialize properly, consistent with toEntity
+                String jsonData = objectMapper.writeValueAsString(request.getData());
+                entity.setData(jsonData);
+            } catch (Exception e) {
+                log.error("Failed to convert data to JSON string", e);
+                entity.setData(request.getData());
+            }
         }
     }
 

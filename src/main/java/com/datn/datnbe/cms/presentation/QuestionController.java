@@ -5,10 +5,12 @@ import com.datn.datnbe.cms.dto.request.QuestionCreateRequest;
 import com.datn.datnbe.cms.dto.request.QuestionUpdateRequest;
 import com.datn.datnbe.cms.dto.request.QuestionCollectionRequest;
 import com.datn.datnbe.cms.dto.response.QuestionResponseDto;
+import com.datn.datnbe.cms.dto.response.BatchCreateQuestionResponseDto;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
+import com.datn.datnbe.sharedkernel.exceptions.AppException;
+import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +31,6 @@ public class QuestionController {
 
     QuestionApi questionApi;
     SecurityContextUtils securityContextUtils;
-    ObjectMapper objectMapper;
 
     @GetMapping({"", "/"})
     public ResponseEntity<AppResponseDto<List<QuestionResponseDto>>> getAllQuestions(
@@ -47,31 +48,10 @@ public class QuestionController {
     }
 
     @PostMapping({"", "/"})
-    public ResponseEntity<AppResponseDto<?>> createQuestion(@RequestBody Object requestBody) {
+    public ResponseEntity<AppResponseDto<?>> createQuestion(@RequestBody List<QuestionCreateRequest> requests) {
         String currentUserId = securityContextUtils.getCurrentUserId();
-
-        // Check if it's a list (batch) or single object
-        if (requestBody instanceof List) {
-            try {
-                List<QuestionCreateRequest> requests = objectMapper.convertValue(requestBody,
-                        objectMapper.getTypeFactory().constructCollectionType(List.class, QuestionCreateRequest.class));
-                List<QuestionResponseDto> responses = questionApi.createQuestionsBatch(requests, currentUserId);
-                return ResponseEntity.status(HttpStatus.CREATED).body(AppResponseDto.success(responses));
-            } catch (Exception e) {
-                log.error("Error converting batch request", e);
-                log.error("Error details:", e.getCause());
-                throw e;
-            }
-        } else {
-            try {
-                QuestionCreateRequest request = objectMapper.convertValue(requestBody, QuestionCreateRequest.class);
-                QuestionResponseDto response = questionApi.createQuestion(request, currentUserId);
-                return ResponseEntity.status(HttpStatus.CREATED).body(AppResponseDto.success(response));
-            } catch (Exception e) {
-                log.error("Error converting single question request", e);
-                throw e;
-            }
-        }
+        BatchCreateQuestionResponseDto response = questionApi.createQuestionsBatchWithPartialSuccess(requests, currentUserId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(AppResponseDto.success(response));
     }
 
     @GetMapping("/{id}")
@@ -84,14 +64,16 @@ public class QuestionController {
     @PutMapping("/{id}")
     public ResponseEntity<AppResponseDto<QuestionResponseDto>> updateQuestion(@PathVariable String id,
             @Valid @RequestBody QuestionUpdateRequest request) {
-        QuestionResponseDto response = questionApi.updateQuestion(id, request);
+        String currentUserId = securityContextUtils.getCurrentUserId();
+        QuestionResponseDto response = questionApi.updateQuestion(id, request, currentUserId);
 
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteQuestion(@PathVariable String id) {
-        questionApi.deleteQuestion(id);
+        String currentUserId = securityContextUtils.getCurrentUserId();
+        questionApi.deleteQuestion(id, currentUserId);
 
         return ResponseEntity.noContent().build();
     }

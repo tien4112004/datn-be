@@ -5,6 +5,7 @@ import com.datn.datnbe.cms.dto.request.QuestionCollectionRequest;
 import com.datn.datnbe.cms.dto.request.QuestionCreateRequest;
 import com.datn.datnbe.cms.dto.request.QuestionUpdateRequest;
 import com.datn.datnbe.cms.dto.response.QuestionResponseDto;
+import com.datn.datnbe.cms.dto.response.BatchCreateQuestionResponseDto;
 import com.datn.datnbe.cms.entity.Question;
 import com.datn.datnbe.cms.mapper.QuestionEntityMapper;
 import com.datn.datnbe.cms.repository.QuestionRepository;
@@ -20,8 +21,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.SmartValidator;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +37,7 @@ public class QuestionService implements QuestionApi {
 
     private final QuestionRepository questionRepository;
     private final QuestionEntityMapper questionMapper;
+    private final SmartValidator validator;
 
     @Override
     @Transactional(readOnly = true)
@@ -132,6 +139,65 @@ public class QuestionService implements QuestionApi {
         return savedQuestions.stream().map(questionMapper::toResponseDto).collect(Collectors.toList());
     }
 
+    @Override
+    public BatchCreateQuestionResponseDto createQuestionsBatchWithPartialSuccess(List<QuestionCreateRequest> requests, String ownerId) {
+        log.info("Creating batch of {} questions with partial success handling - ownerId: {}", requests.size(), ownerId);
+
+        List<QuestionResponseDto> successful = new ArrayList<>();
+        List<BatchCreateQuestionResponseDto.BatchItemErrorDto> failed = new ArrayList<>();
+
+        for (int i = 0; i < requests.size(); i++) {
+            QuestionCreateRequest request = requests.get(i);
+            try {
+                // Validate the individual request
+                org.springframework.validation.BeanPropertyBindingResult bindingResult = 
+                    new org.springframework.validation.BeanPropertyBindingResult(request, "request");
+                validator.validate(request, bindingResult);
+
+                if (bindingResult.hasErrors()) {
+                    // Collect field errors
+                    Map<String, String> fieldErrors = new HashMap<>();
+                    bindingResult.getFieldErrors().forEach(error -> 
+                        fieldErrors.put(error.getField(), error.getDefaultMessage())
+                    );
+
+                    failed.add(BatchCreateQuestionResponseDto.BatchItemErrorDto.builder()
+                            .index(i)
+                            .title(request.getTitle())
+                            .errorMessage("Validation failed")
+                            .fieldErrors(fieldErrors)
+                            .build());
+                    continue;
+                }
+
+                // Create and save the question
+                Question question = questionMapper.toEntity(request);
+                question.setOwnerId(ownerId);
+                Question savedQuestion = questionRepository.save(question);
+                successful.add(questionMapper.toResponseDto(savedQuestion));
+
+            } catch (Exception e) {
+                log.error("Error processing question at index {} - title: {}", i, request.getTitle(), e);
+                failed.add(BatchCreateQuestionResponseDto.BatchItemErrorDto.builder()
+                        .index(i)
+                        .title(request.getTitle())
+                        .errorMessage(e.getMessage())
+                        .build());
+            }
+        }
+
+        log.info("Batch processed - successful: {}, failed: {}", successful.size(), failed.size());
+
+        return BatchCreateQuestionResponseDto.builder()
+                .successful(successful)
+                .failed(failed)
+                .totalProcessed(requests.size())
+                .totalSuccessful(successful.size())
+                .totalFailed(failed.size())
+                .build();
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public QuestionResponseDto getQuestionById(String id) {
 
@@ -146,14 +212,16 @@ public class QuestionService implements QuestionApi {
     }
 
     @Override
-    public QuestionResponseDto updateQuestion(String id, QuestionUpdateRequest request) {
+    public QuestionResponseDto updateQuestion(String id, QuestionUpdateRequest request, String userId) {
 
-        log.info("Updating question - id: {}", id);
+        log.info("Updating question - id: {}, userId: {}", id, userId);
 
         Question question = questionRepository.findById(id).orElseThrow(() -> {
             log.warn("Question not found for update - id: {}", id);
             return new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Question not found with id: " + id);
         });
+
+        verifyOwnership(question, userId, id);
 
         questionMapper.updateEntity(request, question);
 
@@ -165,17 +233,26 @@ public class QuestionService implements QuestionApi {
     }
 
     @Override
-    public void deleteQuestion(String id) {
+    public void deleteQuestion(String id, String userId) {
 
-        log.info("Deleting question - id: {}", id);
+        log.info("Deleting question - id: {}, userId: {}", id, userId);
 
-        if (!questionRepository.existsById(id)) {
+        Question question = questionRepository.findById(id).orElseThrow(() -> {
             log.warn("Question not found for deletion - id: {}", id);
-            throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Question not found with id: " + id);
-        }
+            return new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Question not found with id: " + id);
+        });
+
+        verifyOwnership(question, userId, id);
 
         questionRepository.deleteById(id);
 
         log.info("Question deleted successfully - id: {}", id);
+    }
+
+    private void verifyOwnership(Question question, String userId, String questionId) {
+        if (question.getOwnerId() == null || !question.getOwnerId().equals(userId)) {
+            log.warn("User {} attempted to modify question {} owned by {}", userId, questionId, question.getOwnerId());
+            throw new AppException(ErrorCode.FORBIDDEN, "You do not have permission to modify this question");
+        }
     }
 }

@@ -62,10 +62,7 @@ public enum ErrorCode {
     INVALID_SEATING_LAYOUT("Invalid seating layout configuration", 400),
 
     // External API errors
-    EXTERNAL_API_ERROR("External service error", 502),
-
-    QUESTION_TYPE_MISMATCH("Question type does not match the data provided", 400),
-    QUESTION_NOT_FOUND("Question not found", 404);
+    EXTERNAL_API_ERROR("External service error", 502);
 
     private final String defaultMessage;
     private final Integer statusCode;
