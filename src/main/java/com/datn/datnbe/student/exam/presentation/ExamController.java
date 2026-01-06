@@ -28,7 +28,7 @@ public class ExamController {
     public ResponseEntity<AppResponseDto<ExamMatrixDto>> generateMatrix(
             @Valid @RequestBody GenerateMatrixRequest request,
             @AuthenticationPrincipal Jwt jwt) {
-        UUID teacherId = UUID.fromString(jwt.getSubject());
+        UUID teacherId = jwt != null ? UUID.fromString(jwt.getSubject()) : null;
         log.info("Generate matrix request from teacher: {}", teacherId);
 
         ExamMatrixDto matrix = examApi.generateMatrix(request);
