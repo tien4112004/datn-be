@@ -4,6 +4,7 @@ import com.datn.datnbe.document.api.SlideThemeApi;
 import com.datn.datnbe.document.dto.request.SlideThemeCollectionRequest;
 import com.datn.datnbe.document.dto.request.SlideThemeCreateRequest;
 import com.datn.datnbe.document.dto.request.SlideThemeUpdateRequest;
+import com.datn.datnbe.document.dto.request.SlideThemesByIdsRequest;
 import com.datn.datnbe.document.dto.response.SlideThemeResponseDto;
 import com.datn.datnbe.document.entity.SlideTheme;
 import com.datn.datnbe.document.mapper.SlideThemeMapper;
@@ -22,6 +23,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -93,5 +96,35 @@ public class SlideThemeManagement implements SlideThemeApi {
 
         log.info("Updated slide theme with id: {}", savedEntity.getId());
         return slideThemeMapper.toResponseDto(savedEntity);
+    }
+
+    @Override
+    public List<SlideThemeResponseDto> getSlideThemesByIds(SlideThemesByIdsRequest request) {
+        log.info("Fetching slide themes by IDs: {}", request.getIds());
+
+        // Fetch themes by IDs
+        List<SlideTheme> themes = slideThemeRepository.findByIdInAndIsEnabledTrue(request.getIds());
+
+        // Create a map for O(1) lookup
+        Map<String, SlideTheme> themeMap = themes.stream().collect(Collectors.toMap(SlideTheme::getId, theme -> theme));
+
+        // Preserve order from request - return in same order as IDs provided
+        List<SlideThemeResponseDto> orderedThemes = request.getIds()
+                .stream()
+                .map(themeMap::get)
+                .filter(Objects::nonNull) // Skip IDs that weren't found
+                .map(theme -> {
+                    try {
+                        return slideThemeMapper.toResponseDto(theme);
+                    } catch (Exception ex) {
+                        log.warn("Failed to map SlideTheme to DTO for ID {}: {}", theme.getId(), ex.getMessage());
+                        return SlideThemeResponseDto.builder().id(theme.getId()).name(theme.getName()).build();
+                    }
+                })
+                .collect(Collectors.toList());
+
+        log.info("Retrieved {} slide themes out of {} requested IDs", orderedThemes.size(), request.getIds().size());
+
+        return orderedThemes;
     }
 }
