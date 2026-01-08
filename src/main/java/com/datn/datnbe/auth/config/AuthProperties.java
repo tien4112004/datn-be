@@ -7,6 +7,8 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Getter
 @Setter
 @Component
@@ -26,4 +28,6 @@ public class AuthProperties {
     String googleCallbackUri;
     String feRedirectUrl;
     String mobileRedirectUrl;
+    List<String> adminOrigins;
+    List<String> appOrigins;
 }

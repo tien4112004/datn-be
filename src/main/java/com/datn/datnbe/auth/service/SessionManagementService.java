@@ -19,6 +19,8 @@ public class SessionManagementService {
 
     private static final String ACCESS_TOKEN = "access_token";
     private static final String REFRESH_TOKEN = "refresh_token";
+    private static final String ADMIN_ACCESS_TOKEN = "admin_access_token";
+    private static final String ADMIN_REFRESH_TOKEN = "admin_refresh_token";
     private static final String JSESSIONID = "JSESSIONID";
     private static final int REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
 
@@ -182,5 +184,46 @@ public class SessionManagementService {
         String origin = scheme + "://" + host;
         log.debug("Built origin URL from request: {}", origin);
         return origin;
+    }
+
+    /**
+     * Create authenticated session for admin with admin-specific cookies
+     *
+     * @param response HTTP response to add cookies to
+     * @param signInResponse Sign-in response containing tokens
+     */
+    public void createAdminSession(HttpServletResponse response, SignInResponse signInResponse) {
+        Cookie accessTokenCookie = createSecureCookie(ADMIN_ACCESS_TOKEN,
+                signInResponse.getAccessToken(),
+                signInResponse.getExpiresIn());
+        Cookie refreshTokenCookie = createSecureCookie(ADMIN_REFRESH_TOKEN,
+                signInResponse.getRefreshToken(),
+                REFRESH_TOKEN_MAX_AGE);
+
+        response.addCookie(accessTokenCookie);
+        response.addCookie(refreshTokenCookie);
+        log.debug("Created authenticated session for admin client");
+    }
+
+    /**
+     * Clear admin session and remove admin authentication cookies
+     *
+     * @param response HTTP response to clear cookies from
+     */
+    public void clearAdminSession(HttpServletResponse response) {
+        deleteCookie(response, ADMIN_ACCESS_TOKEN);
+        deleteCookie(response, ADMIN_REFRESH_TOKEN);
+        deleteCookie(response, JSESSIONID);
+        log.debug("Cleared authenticated session for admin client");
+    }
+
+    /**
+     * Extract admin refresh token from request cookies
+     *
+     * @param request HTTP request containing cookies
+     * @return Admin refresh token value or null if not found
+     */
+    public String extractAdminRefreshToken(HttpServletRequest request) {
+        return extractTokenFromCookies(request, ADMIN_REFRESH_TOKEN);
     }
 }
