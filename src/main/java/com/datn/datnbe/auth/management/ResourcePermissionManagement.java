@@ -9,6 +9,7 @@ import com.datn.datnbe.auth.dto.request.ResourceRegistrationRequest;
 import com.datn.datnbe.auth.dto.request.ResourceShareRequest;
 import com.datn.datnbe.auth.dto.response.DocumentRegistrationResponse;
 import com.datn.datnbe.auth.dto.response.ResourcePermissionResponse;
+import com.datn.datnbe.auth.dto.response.ResourceResponse;
 import com.datn.datnbe.auth.dto.response.ResourceShareResponse;
 import com.datn.datnbe.auth.entity.DocumentResourceMapping;
 import com.datn.datnbe.auth.entity.UserProfile;
@@ -19,6 +20,7 @@ import com.datn.datnbe.auth.repository.UserProfileRepo;
 import com.datn.datnbe.auth.service.KeycloakAuthorizationService;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -153,6 +155,7 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
                 .resourceType(resourceType)
                 .resourceUri(resourcePath)
                 .ownerId(ownerId)
+                .thumbnail(request.getThumbnail())
                 .build();
 
         DocumentResourceMapping saved = mappingRepository.save(mapping);
@@ -446,5 +449,11 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
     public List<String> getAllResourceByTypeOfOwner(String ownerId, String resourceType) {
         log.info("Getting all resources of type {} for owner {}", resourceType, ownerId);
         return mappingRepository.findResourcesByTypeOfOwner(resourceType, ownerId);
+    }
+
+    @Override
+    public List<ResourceResponse> getAllResource(String ownerId) {
+        log.info("Getting all resources for owner {}", ownerId);
+        return mappingRepository.findAllResourcesByOwner(ownerId);
     }
 }

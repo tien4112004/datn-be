@@ -70,9 +70,12 @@ public class CsvParserService {
 
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
-                CSVParser csvParser = CSVFormat.DEFAULT.withFirstRecordAsHeader()
-                        .withAllowMissingColumnNames()
-                        .withIgnoreEmptyLines()
+                CSVParser csvParser = CSVFormat.DEFAULT.builder()
+                        .setHeader()
+                        .setSkipHeaderRecord(true)
+                        .setAllowMissingColumnNames(true)
+                        .setIgnoreEmptyLines(true)
+                        .build()
                         .parse(reader)) {
 
             Map<String, Integer> headerMap = buildHeaderMap(csvParser.getHeaderMap(), errors);
