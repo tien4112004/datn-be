@@ -63,6 +63,17 @@ public class UserProfileManagement implements UserProfileApi {
     }
 
     @Override
+    public PaginatedResponseDto<UserProfileResponse> getUserProfiles(Pageable pageable, String searchTerm) {
+        log.debug("Retrieving user profiles with search term: {}", searchTerm);
+
+        var userProfilesPage = userProfileRepo.findBySearchTerm(searchTerm, pageable);
+        var userProfiles = userProfilesPage.getContent().stream().map(userProfileMapper::toResponseDto).toList();
+        var responseList = PaginationDto.getFromPageable(pageable);
+
+        return PaginatedResponseDto.<UserProfileResponse>builder().data(userProfiles).pagination(responseList).build();
+    }
+
+    @Override
     @Transactional
     public UserProfileResponse createUserProfile(SignupRequest request) {
         String account = request.getEmail() != null ? request.getEmail() : request.getUsername();

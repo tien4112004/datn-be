@@ -19,6 +19,15 @@ public interface UserProfileApi {
     PaginatedResponseDto<UserProfileResponse> getUserProfiles(Pageable pageable);
 
     /**
+     * Retrieves a list of user profiles filtered by search term (name or email).
+     *
+     * @param pageable the Pageable object for pagination
+     * @param searchTerm the search term to filter by name or email (optional)
+     * @return List of UserProfileResponseDto containing the profile data
+     */
+    PaginatedResponseDto<UserProfileResponse> getUserProfiles(Pageable pageable, String searchTerm);
+
+    /**
      * Creates a new user profile.
      *
      * @param request the UserProfileCreateRequest containing the profile data

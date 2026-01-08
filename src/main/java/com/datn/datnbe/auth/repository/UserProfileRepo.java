@@ -1,6 +1,8 @@
 package com.datn.datnbe.auth.repository;
 
 import com.datn.datnbe.auth.entity.UserProfile;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -37,4 +39,17 @@ public interface UserProfileRepo
     List<UserProfile> findAllByIdOrKeycloakUserIdIn(List<String> ids);
 
     boolean existsByEmail(String email);
+
+    /**
+     * Find user profiles by name or email with pagination
+     * Searches in first name, last name, and email fields
+     */
+    @Query("""
+            SELECT u FROM UserProfile u
+            WHERE (:searchTerm IS NULL OR :searchTerm = '' OR
+                   LOWER(u.firstName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR
+                   LOWER(u.lastName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR
+                   LOWER(u.email) LIKE LOWER(CONCAT('%', :searchTerm, '%')))
+            """)
+    Page<UserProfile> findBySearchTerm(String searchTerm, Pageable pageable);
 }

@@ -95,6 +95,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/resources/**", "/api/classes/**")
                         .authenticated()
 
+                        // User endpoints - accessible to all authenticated users
+                        .requestMatchers("/api/users/**")
+                        .authenticated()
+
                         // API endpoints - requires USER role
                         .requestMatchers("/api/**")
                         .hasAnyRole("user", "admin")
