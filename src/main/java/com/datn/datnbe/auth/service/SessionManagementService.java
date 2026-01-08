@@ -31,6 +31,10 @@ public class SessionManagementService {
      * @param signInResponse Sign-in response containing tokens
      */
     public void createSession(HttpServletResponse response, SignInResponse signInResponse) {
+        // Clear any existing admin cookies to prevent conflicts on localhost
+        deleteCookie(response, ADMIN_ACCESS_TOKEN);
+        deleteCookie(response, ADMIN_REFRESH_TOKEN);
+
         Cookie accessTokenCookie = createSecureCookie(ACCESS_TOKEN,
                 signInResponse.getAccessToken(),
                 signInResponse.getExpiresIn());
@@ -193,6 +197,10 @@ public class SessionManagementService {
      * @param signInResponse Sign-in response containing tokens
      */
     public void createAdminSession(HttpServletResponse response, SignInResponse signInResponse) {
+        // Clear any existing regular app cookies to prevent conflicts on localhost
+        deleteCookie(response, ACCESS_TOKEN);
+        deleteCookie(response, REFRESH_TOKEN);
+
         Cookie accessTokenCookie = createSecureCookie(ADMIN_ACCESS_TOKEN,
                 signInResponse.getAccessToken(),
                 signInResponse.getExpiresIn());

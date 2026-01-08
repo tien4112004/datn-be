@@ -127,6 +127,7 @@ app:
     allowed-origin-patterns:
       - "https://datn-fe-*.vercel.app"
       - "http://localhost:*"
+      - "http://*.localhost:*"
       - "https://localhost:*"
       - "https://*.huy-devops.site"
     allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
