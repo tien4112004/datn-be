@@ -121,6 +121,7 @@ app:
       - "http://*.ts.net:*"
       - "http://localhost:*"
       - "https://localhost:*"
+      - "http://*.localhost:*"
       - "https://datn-fe-*.vercel.app" # Vercel preview deployments with any container ID
       - "https://datn-fe.vercel.app" # Production Vercel deployment
       - "https://*.vercel.app" # All Vercel apps (more permissive, use with caution)
