@@ -197,10 +197,6 @@ public class SessionManagementService {
      * @param signInResponse Sign-in response containing tokens
      */
     public void createAdminSession(HttpServletResponse response, SignInResponse signInResponse) {
-        // Clear any existing regular app cookies to prevent conflicts on localhost
-        deleteCookie(response, ACCESS_TOKEN);
-        deleteCookie(response, REFRESH_TOKEN);
-
         Cookie accessTokenCookie = createSecureCookie(ADMIN_ACCESS_TOKEN,
                 signInResponse.getAccessToken(),
                 signInResponse.getExpiresIn());

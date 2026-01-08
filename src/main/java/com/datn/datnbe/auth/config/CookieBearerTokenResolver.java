@@ -46,8 +46,8 @@ public class CookieBearerTokenResolver implements BearerTokenResolver {
 
         // Fall back to cookies with origin validation
         if (request.getCookies() != null) {
+            log.info("Token resolution for {}: {}", request.getRequestURI(), token != null ? "FOUND" : "NOT FOUND");
             String origin = originValidator.extractOrigin(request);
-
             for (Cookie c : request.getCookies()) {
                 if (c.getValue() == null || c.getValue().isBlank()) {
                     continue;
@@ -56,10 +56,10 @@ public class CookieBearerTokenResolver implements BearerTokenResolver {
                 // Check admin cookie - only accept from admin origins
                 if ("admin_access_token".equals(c.getName())) {
                     if (originValidator.isAdminOrigin(origin)) {
-                        log.debug("admin token used from admin origin: {}", origin);
+                        log.info("admin token used from admin origin: {}", origin);
                         return c.getValue();
                     } else {
-                        log.debug("admin token rejected from non-admin origin: {}", origin);
+                        log.info("admin token rejected from non-admin origin: {}", origin);
                         continue;
                     }
                 }
@@ -67,10 +67,10 @@ public class CookieBearerTokenResolver implements BearerTokenResolver {
                 // Check app cookie - only accept from app origins
                 if ("access_token".equals(c.getName())) {
                     if (originValidator.isAppOrigin(origin)) {
-                        log.debug("app token used from app origin: {}", origin);
+                        log.info("app token used from app origin: {}", origin);
                         return c.getValue();
                     } else {
-                        log.debug("app token rejected from non-app origin: {}", origin);
+                        log.info("app token rejected from non-app origin: {}", origin);
                         continue;
                     }
                 }

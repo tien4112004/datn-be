@@ -52,7 +52,11 @@ public class SecurityConfig {
                         .permitAll()
 
                         // Public endpoints - no authentication required (must come BEFORE /api/**)
-                        .requestMatchers("/public/**", "/api/auth/**", "/api/resources/register", "/v3/**")
+                        .requestMatchers("/public/**",
+                                "/api/auth/**",
+                                "/api/admin/auth/**",
+                                "/api/resources/register",
+                                "/v3/**")
                         .permitAll()
 
                         // Public GET endpoints - allow anonymous access
