@@ -52,25 +52,28 @@ public class UserProfileManagement implements UserProfileApi {
 
     @Override
     public PaginatedResponseDto<UserProfileResponse> getUserProfiles(Pageable pageable) {
-        var userProfiles = userProfileRepo.findAll(pageable)
-                .getContent()
-                .stream()
-                .map(userProfileMapper::toResponseDto)
-                .toList();
-        var responseList = PaginationDto.getFromPageable(pageable);
+        Page<UserProfile> userProfilesPage = userProfileRepo.findAll(pageable);
 
-        return PaginatedResponseDto.<UserProfileResponse>builder().data(userProfiles).pagination(responseList).build();
+        var userProfiles = userProfilesPage.getContent().stream().map(userProfileMapper::toResponseDto).toList();
+
+        PaginationDto pagination = new PaginationDto(userProfilesPage.getNumber() + 1,      // Spring uses 0-based, API uses 1-based
+                userProfilesPage.getSize(), userProfilesPage.getTotalElements(), userProfilesPage.getTotalPages());
+
+        return PaginatedResponseDto.<UserProfileResponse>builder().data(userProfiles).pagination(pagination).build();
     }
 
     @Override
     public PaginatedResponseDto<UserProfileResponse> getUserProfiles(Pageable pageable, String searchTerm) {
         log.debug("Retrieving user profiles with search term: {}", searchTerm);
 
-        var userProfilesPage = userProfileRepo.findBySearchTerm(searchTerm, pageable);
-        var userProfiles = userProfilesPage.getContent().stream().map(userProfileMapper::toResponseDto).toList();
-        var responseList = PaginationDto.getFromPageable(pageable);
+        Page<UserProfile> userProfilesPage = userProfileRepo.findBySearchTerm(searchTerm, pageable);
 
-        return PaginatedResponseDto.<UserProfileResponse>builder().data(userProfiles).pagination(responseList).build();
+        var userProfiles = userProfilesPage.getContent().stream().map(userProfileMapper::toResponseDto).toList();
+
+        PaginationDto pagination = new PaginationDto(userProfilesPage.getNumber() + 1,      // Spring uses 0-based, API uses 1-based
+                userProfilesPage.getSize(), userProfilesPage.getTotalElements(), userProfilesPage.getTotalPages());
+
+        return PaginatedResponseDto.<UserProfileResponse>builder().data(userProfiles).pagination(pagination).build();
     }
 
     @Override

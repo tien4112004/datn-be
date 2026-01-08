@@ -48,9 +48,9 @@ public interface UserProfileRepo
     @Query("""
             SELECT u FROM user_profile u
             WHERE (:searchTerm IS NULL OR :searchTerm = '' OR
-                   LOWER(u.firstName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR
-                   LOWER(u.lastName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR
-                   LOWER(u.email) LIKE LOWER(CONCAT('%', :searchTerm, '%')))
+                   LOWER(u.firstName) LIKE LOWER(CONCAT('%', CAST(:searchTerm AS string), '%')) OR
+                   LOWER(u.lastName) LIKE LOWER(CONCAT('%', CAST(:searchTerm AS string), '%')) OR
+                   LOWER(u.email) LIKE LOWER(CONCAT('%', CAST(:searchTerm AS string), '%')))
             """)
     Page<UserProfile> findBySearchTerm(@Param("searchTerm") String searchTerm, Pageable pageable);
 }
