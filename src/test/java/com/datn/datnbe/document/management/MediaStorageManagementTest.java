@@ -38,6 +38,9 @@ class MediaStorageManagementTest {
     private MediaRepository mediaRepository;
 
     @Mock
+    private com.datn.datnbe.document.service.DocumentVisitService documentVisitService;
+
+    @Mock
     private MultipartFile mockFile;
 
     @InjectMocks
@@ -231,6 +234,7 @@ class MediaStorageManagementTest {
         when(mediaRepository.findById(mediaId)).thenReturn(Optional.of(testMedia));
         doNothing().when(r2StorageService).deleteFile(testMedia.getStorageKey());
         doNothing().when(mediaRepository).delete(testMedia);
+        doNothing().when(documentVisitService).deleteDocumentVisits(anyString());
 
         // When
         mediaStorageManagement.deleteMedia(mediaId);
@@ -239,6 +243,7 @@ class MediaStorageManagementTest {
         verify(mediaRepository).findById(mediaId);
         verify(r2StorageService).deleteFile(testMedia.getStorageKey());
         verify(mediaRepository).delete(testMedia);
+        verify(documentVisitService).deleteDocumentVisits(String.valueOf(mediaId));
     }
 
     @Test
@@ -315,6 +320,7 @@ class MediaStorageManagementTest {
         // R2 delete succeeds (no exception thrown)
         doNothing().when(r2StorageService).deleteFile(testMedia.getStorageKey());
         doNothing().when(mediaRepository).delete(testMedia);
+        doNothing().when(documentVisitService).deleteDocumentVisits(anyString());
 
         // When
         mediaStorageManagement.deleteMedia(mediaId);
@@ -323,6 +329,7 @@ class MediaStorageManagementTest {
         verify(mediaRepository).findById(mediaId);
         verify(r2StorageService).deleteFile(testMedia.getStorageKey());
         verify(mediaRepository).delete(testMedia);
+        verify(documentVisitService).deleteDocumentVisits(String.valueOf(mediaId));
     }
 
     @Test
