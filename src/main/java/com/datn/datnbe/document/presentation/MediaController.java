@@ -2,6 +2,7 @@ package com.datn.datnbe.document.presentation;
 
 import com.datn.datnbe.document.api.MediaStorageApi;
 import com.datn.datnbe.document.dto.response.UploadedMediaResponseDto;
+import com.datn.datnbe.document.entity.Media;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -20,6 +21,12 @@ public class MediaController {
     public ResponseEntity<AppResponseDto<UploadedMediaResponseDto>> upload(MultipartFile file) {
         UploadedMediaResponseDto response = mediaStorageApi.upload(file);
         return ResponseEntity.ok(AppResponseDto.success(response));
+    }
+
+    @GetMapping("/{mediaId}")
+    public ResponseEntity<AppResponseDto<Media>> getMedia(@PathVariable Long mediaId) {
+        Media media = mediaStorageApi.getMedia(mediaId);
+        return ResponseEntity.ok(AppResponseDto.success(media));
     }
 
     @DeleteMapping("/{mediaId}")
