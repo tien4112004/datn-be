@@ -8,14 +8,23 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import com.datn.datnbe.auth.api.ResourcePermissionApi;
@@ -24,7 +33,6 @@ import com.datn.datnbe.document.dto.response.PresentationDto;
 import com.datn.datnbe.document.entity.Presentation;
 import com.datn.datnbe.document.entity.valueobject.Slide;
 import com.datn.datnbe.document.management.validation.PresentationValidation;
-import com.datn.datnbe.document.mapper.PresentationEntityMapper;
 import com.datn.datnbe.document.repository.PresentationRepository;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
@@ -32,6 +40,7 @@ import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 @SpringBootTest(classes = {TestConfig.class, PresentationManagement.class,
         PresentationValidation.class}, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class GetPresentationTest {
 
     @MockitoBean
@@ -43,13 +52,19 @@ class GetPresentationTest {
     @MockitoBean
     private com.datn.datnbe.sharedkernel.service.RustfsStorageService rustfsStorageService;
 
-    @Autowired
-    private PresentationEntityMapper presentationEntityMapper;
+    @MockitoBean
+    private com.datn.datnbe.document.service.DocumentVisitService documentVisitService;
 
     @Autowired
-    private PresentationValidation presentationValidation;
-
     private PresentationManagement presentationService;
+
+    private MockedStatic<SecurityContextHolder> securityContextHolderMock;
+
+    private SecurityContext securityContext;
+
+    private Authentication authentication;
+
+    private Jwt jwt;
 
     private SlideDto slideDto;
 
@@ -77,6 +92,13 @@ class GetPresentationTest {
         slideExtraFields.put("background", background);
 
         slideDto = SlideDto.builder().id("slide-1").extraFields(slideExtraFields).build();
+    }
+
+    @AfterEach
+    void tearDown() {
+        if (securityContextHolderMock != null) {
+            securityContextHolderMock.close();
+        }
     }
 
     @Test
@@ -107,8 +129,6 @@ class GetPresentationTest {
     void getPresentation_WithNonExistentId_ShouldThrowPRESENTATION_NOT_FOUND() {
         // Given
         String nonExistentId = "507f1f77bcf86cd799439011"; // Valid ObjectId format but non-existent
-
-        when(presentationRepository.findById(any(String.class))).thenReturn(Optional.empty());
 
         // When & Then
         assertThatThrownBy(() -> presentationService.getPresentation(nonExistentId)).isInstanceOf(AppException.class)

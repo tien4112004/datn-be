@@ -27,13 +27,13 @@ public class DocumentVisitController {
     SecurityContextUtils securityContextUtils;
 
 
-    @GetMapping(params = "limit")
+    @GetMapping
     public ResponseEntity<AppResponseDto<List<RecentDocumentDto>>> getRecentDocuments(
-            @RequestParam(required = false, defaultValue = "7") int limit) {
+            @RequestParam(required = false, defaultValue = "7") String limit) {
         String userId = securityContextUtils.getCurrentUserId();
         log.info("Fetching recent documents for user: {}", userId, limit);
 
-        List<DocumentVisit> recentVisits = documentVisitService.getRecentDocuments(userId, limit);
+        List<DocumentVisit> recentVisits = documentVisitService.getRecentDocuments(userId, Integer.parseInt(limit));
         
         List<RecentDocumentDto> response = recentVisits.stream()
             .map(documentVisitMapper::toRecentDocumentDto)
