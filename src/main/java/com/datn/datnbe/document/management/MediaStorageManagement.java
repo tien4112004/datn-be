@@ -7,6 +7,7 @@ import com.datn.datnbe.document.entity.Media;
 import com.datn.datnbe.sharedkernel.enums.MediaType;
 import com.datn.datnbe.document.management.validation.MediaValidation;
 import com.datn.datnbe.document.repository.MediaRepository;
+import com.datn.datnbe.document.service.DocumentVisitService;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.service.RustfsStorageService;
@@ -28,6 +29,7 @@ import static com.datn.datnbe.sharedkernel.utils.MediaStorageUtils.*;
 public class MediaStorageManagement implements MediaStorageApi {
     RustfsStorageService rustfsStorageService;
     MediaRepository mediaRepository;
+    DocumentVisitService documentVisitService;
 
     @NonFinal
     @Value("${rustfs.public-url}")
@@ -150,6 +152,55 @@ public class MediaStorageManagement implements MediaStorageApi {
 
         // Delete from database
         mediaRepository.delete(media);
+        
+        // Clean up visit records
+        documentVisitService.deleteDocumentVisits(String.valueOf(mediaId));
+        
         log.info("Successfully deleted media with ID: {}", mediaId);
+    }
+
+    /**
+     * Get media by ID (track visit only for non-image types)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Media getMedia(Long mediaId) {
+        Media media = mediaRepository.findById(mediaId)
+                .orElseThrow(() -> new AppException(ErrorCode.MEDIA_NOT_FOUND, "Media not found with ID: " + mediaId));
+
+        // Only track visits for non-image types (audio, video, document, etc)
+        if (media.getMediaType() != MediaType.IMAGE) {
+            String userId = getCurrentUserId();
+            if (userId != null) {
+                documentVisitService.trackDocumentVisit(userId, String.valueOf(mediaId), media.getMediaType().name().toLowerCase());
+            }
+        }
+
+        log.info("Retrieved media with ID: {}", mediaId);
+        return media;
+    }
+
+    /**
+     * Get current user ID from security context
+     */
+    private String getCurrentUserId() {
+        try {
+            org.springframework.security.core.Authentication authentication = 
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            Object principal = authentication.getPrincipal();
+
+            if (principal instanceof org.springframework.security.oauth2.jwt.Jwt jwt) {
+                return jwt.getSubject();
+            }
+
+            if (principal instanceof String username) {
+                return username;
+            }
+
+            return null;
+        } catch (Exception e) {
+            log.debug("Could not retrieve current user ID: {}", e.getMessage());
+            return null;
+        }
     }
 }

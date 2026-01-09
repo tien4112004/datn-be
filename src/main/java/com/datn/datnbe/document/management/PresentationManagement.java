@@ -14,6 +14,7 @@ import com.datn.datnbe.document.entity.Presentation;
 import com.datn.datnbe.document.management.validation.PresentationValidation;
 import com.datn.datnbe.document.mapper.PresentationEntityMapper;
 import com.datn.datnbe.document.repository.PresentationRepository;
+import com.datn.datnbe.document.service.DocumentVisitService;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
@@ -52,6 +53,7 @@ public class PresentationManagement implements PresentationApi {
     PresentationValidation validation;
     ResourcePermissionApi resourcePermissionApi;
     RustfsStorageService rustfsStorageService;
+    DocumentVisitService documentVisitService;
 
     @NonFinal
     @Value("${rustfs.public-url}")
@@ -235,6 +237,12 @@ public class PresentationManagement implements PresentationApi {
                 presentation.getTitle(),
                 presentation.getSlides() != null ? presentation.getSlides().size() : 0);
 
+        // Track document visit
+        String userId = getCurrentUserId();
+        if (userId != null) {
+            documentVisitService.trackDocumentVisit(userId, id, "presentation");
+        }
+
         return mapper.toDetailedDto(presentation);
     }
 
@@ -256,6 +264,10 @@ public class PresentationManagement implements PresentationApi {
         Presentation presentation = presentationOpt.get();
         presentation.setDeletedAt(java.time.LocalDate.now());
         presentationRepository.save(presentation);
+        
+        // Clean up document visit records
+        documentVisitService.deleteDocumentVisits(id);
+        log.info("Deleted all visit records for presentation: {}", id);
     }
 
     /**

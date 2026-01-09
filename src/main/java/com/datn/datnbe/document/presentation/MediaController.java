@@ -2,6 +2,7 @@ package com.datn.datnbe.document.presentation;
 
 import com.datn.datnbe.document.api.MediaStorageApi;
 import com.datn.datnbe.document.dto.response.UploadedMediaResponseDto;
+import com.datn.datnbe.document.entity.Media;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
@@ -33,6 +34,12 @@ public class MediaController {
         
         UploadedMediaResponseDto response = mediaStorageApi.upload(file, ownerId);
         return ResponseEntity.ok(AppResponseDto.success(response));
+    }
+
+    @GetMapping("/{mediaId}")
+    public ResponseEntity<AppResponseDto<Media>> getMedia(@PathVariable Long mediaId) {
+        Media media = mediaStorageApi.getMedia(mediaId);
+        return ResponseEntity.ok(AppResponseDto.success(media));
     }
 
     @DeleteMapping("/{mediaId}")
