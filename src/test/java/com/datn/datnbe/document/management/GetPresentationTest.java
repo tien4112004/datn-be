@@ -13,8 +13,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -52,12 +52,6 @@ class GetPresentationTest {
     @MockitoBean
     private com.datn.datnbe.sharedkernel.service.RustfsStorageService rustfsStorageService;
 
-    @Autowired
-    private com.datn.datnbe.document.mapper.PresentationEntityMapper presentationEntityMapper;
-
-    @Autowired
-    private PresentationValidation presentationValidation;
-
     @MockitoBean
     private com.datn.datnbe.document.service.DocumentVisitService documentVisitService;
 
@@ -65,11 +59,11 @@ class GetPresentationTest {
     private PresentationManagement presentationService;
 
     private MockedStatic<SecurityContextHolder> securityContextHolderMock;
-    
+
     private SecurityContext securityContext;
-    
+
     private Authentication authentication;
-    
+
     private Jwt jwt;
 
     private SlideDto slideDto;

@@ -52,6 +52,8 @@ class GetAllPresentationsTest {
 
     @Mock
     private com.datn.datnbe.sharedkernel.service.RustfsStorageService rustfsStorageService;
+    @Mock
+    private com.datn.datnbe.document.service.DocumentVisitService documentVisitService;
 
     private MockedStatic<SecurityContextHolder> securityContextHolderMock;
 
