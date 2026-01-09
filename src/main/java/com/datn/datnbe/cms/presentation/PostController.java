@@ -27,18 +27,17 @@ public class PostController {
     private final PostApi postApi;
 
     @GetMapping("/classes/{classId}/posts")
-    public ResponseEntity<AppResponseDto<List<PostResponseDto>>> getClassPosts(
-            @PathVariable String classId,
+    public ResponseEntity<AppResponseDto<List<PostResponseDto>>> getClassPosts(@PathVariable String classId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String search) {
 
-        PaginatedResponseDto<PostResponseDto> paginatedResponse =
-                postApi.getClassPosts(classId, Math.max(0, page - 1), size, type, search);
-        
-        return ResponseEntity
-                .ok(AppResponseDto.successWithPagination(paginatedResponse.getData(), paginatedResponse.getPagination()));
+        PaginatedResponseDto<PostResponseDto> paginatedResponse = postApi
+                .getClassPosts(classId, Math.max(0, page - 1), size, type, search);
+
+        return ResponseEntity.ok(
+                AppResponseDto.successWithPagination(paginatedResponse.getData(), paginatedResponse.getPagination()));
     }
 
     @PostMapping("/classes/{classId}/posts")
@@ -57,7 +56,7 @@ public class PostController {
     @PutMapping("/posts/{postId}")
     @RequireTeacherPermission
     public ResponseEntity<AppResponseDto<PostResponseDto>> updatePost(@PathVariable String postId,
-                @Valid @RequestBody PostUpdateRequest request) {
+            @Valid @RequestBody PostUpdateRequest request) {
         return ResponseEntity.ok(AppResponseDto.success(postApi.updatePost(postId, request)));
     }
 

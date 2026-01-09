@@ -27,7 +27,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -163,7 +162,7 @@ class QuestionControllerTest {
     void createQuestion_WithValidRequest_CreatesQuestionSuccessfully() throws Exception {
 
         when(securityContextUtils.getCurrentUserId()).thenReturn("user-123");
-        
+
         BatchCreateQuestionResponseDto batchResponse = BatchCreateQuestionResponseDto.builder()
                 .successful(Arrays.asList(testResponse))
                 .failed(Collections.emptyList())
@@ -171,7 +170,7 @@ class QuestionControllerTest {
                 .totalSuccessful(1)
                 .totalFailed(0)
                 .build();
-        
+
         when(questionApi.createQuestionsBatchWithPartialSuccess(anyList(), eq("user-123")))
                 .thenReturn(batchResponse);
 

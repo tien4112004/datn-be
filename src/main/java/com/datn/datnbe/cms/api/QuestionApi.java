@@ -17,7 +17,8 @@ public interface QuestionApi {
 
     List<QuestionResponseDto> createQuestionsBatch(List<QuestionCreateRequest> requests, String ownerId);
 
-    BatchCreateQuestionResponseDto createQuestionsBatchWithPartialSuccess(List<QuestionCreateRequest> requests, String ownerId);
+    BatchCreateQuestionResponseDto createQuestionsBatchWithPartialSuccess(List<QuestionCreateRequest> requests,
+            String ownerId);
 
     QuestionResponseDto getQuestionById(String id);
 

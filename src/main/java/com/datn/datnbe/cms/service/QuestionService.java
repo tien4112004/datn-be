@@ -21,7 +21,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.BindingResult;
 import org.springframework.validation.SmartValidator;
 
 import java.util.ArrayList;
@@ -140,8 +139,11 @@ public class QuestionService implements QuestionApi {
     }
 
     @Override
-    public BatchCreateQuestionResponseDto createQuestionsBatchWithPartialSuccess(List<QuestionCreateRequest> requests, String ownerId) {
-        log.info("Creating batch of {} questions with partial success handling - ownerId: {}", requests.size(), ownerId);
+    public BatchCreateQuestionResponseDto createQuestionsBatchWithPartialSuccess(List<QuestionCreateRequest> requests,
+            String ownerId) {
+        log.info("Creating batch of {} questions with partial success handling - ownerId: {}",
+                requests.size(),
+                ownerId);
 
         List<QuestionResponseDto> successful = new ArrayList<>();
         List<BatchCreateQuestionResponseDto.BatchItemErrorDto> failed = new ArrayList<>();
@@ -150,16 +152,15 @@ public class QuestionService implements QuestionApi {
             QuestionCreateRequest request = requests.get(i);
             try {
                 // Validate the individual request
-                org.springframework.validation.BeanPropertyBindingResult bindingResult = 
-                    new org.springframework.validation.BeanPropertyBindingResult(request, "request");
+                org.springframework.validation.BeanPropertyBindingResult bindingResult = new org.springframework.validation.BeanPropertyBindingResult(
+                        request, "request");
                 validator.validate(request, bindingResult);
 
                 if (bindingResult.hasErrors()) {
                     // Collect field errors
                     Map<String, String> fieldErrors = new HashMap<>();
-                    bindingResult.getFieldErrors().forEach(error -> 
-                        fieldErrors.put(error.getField(), error.getDefaultMessage())
-                    );
+                    bindingResult.getFieldErrors()
+                            .forEach(error -> fieldErrors.put(error.getField(), error.getDefaultMessage()));
 
                     failed.add(BatchCreateQuestionResponseDto.BatchItemErrorDto.builder()
                             .index(i)

@@ -74,6 +74,7 @@ public class StudentManagement implements StudentApi {
                 .password(password)
                 .firstName(firstName)
                 .lastName(lastName)
+                .role("student")
                 .build();
 
         UserProfileResponse createdUser = userProfileApi.createUserProfileByUsername(signupRequest);
