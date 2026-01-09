@@ -17,7 +17,8 @@ public class RecentDocumentDto {
     private String id;
     private String documentId;
     private String documentType;
-    private String title;
+    private String documentTitle;
     private String thumbnail;
     private LocalDateTime lastVisited;
+    private Integer visitCount;
 }

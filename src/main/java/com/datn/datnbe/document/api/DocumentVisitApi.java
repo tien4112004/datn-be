@@ -1,6 +1,5 @@
 package com.datn.datnbe.document.api;
 
-import com.datn.datnbe.document.dto.DocumentMetadataDto;
 import com.datn.datnbe.document.dto.response.RecentDocumentDto;
 
 import java.util.List;
@@ -18,7 +17,7 @@ public interface DocumentVisitApi {
     List<RecentDocumentDto> getRecentDocuments(int limit);
 
     /**
-     * Track a document visit with metadata
+     * Track a document visit
      */
-    void trackDocumentVisit(DocumentMetadataDto metadata);
+    void trackDocumentVisit(String userId, String documentId, String documentType);
 }

@@ -35,12 +35,6 @@ public class DocumentVisit {
     @Column(name = "document_type", nullable = false)
     String documentType;
 
-    @Column(name = "title")
-    String title;
-
-    @Column(name = "thumbnail", columnDefinition = "text")
-    String thumbnail;
-
     @Column(name = "last_visited", nullable = false)
     LocalDateTime lastVisited;
 

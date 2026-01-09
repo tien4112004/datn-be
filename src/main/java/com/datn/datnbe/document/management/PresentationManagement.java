@@ -54,6 +54,7 @@ public class PresentationManagement implements PresentationApi {
     PresentationValidation validation;
     ResourcePermissionApi resourcePermissionApi;
     RustfsStorageService rustfsStorageService;
+    DocumentVisitService documentVisitService;
 
     @NonFinal
     @Value("${rustfs.public-url}")
@@ -240,14 +241,7 @@ public class PresentationManagement implements PresentationApi {
         // Track document visit
         String userId = getCurrentUserId();
         if (userId != null) {
-            var metadata = DocumentMetadataDto.builder()
-                .userId(userId)
-                .documentId(id)
-                .type("presentation")
-                .title(presentation.getTitle())
-                .thumbnail(presentation.getThumbnail())
-                .build();
-            documentVisitService.trackDocumentVisit(metadata);
+            documentVisitService.trackDocumentVisit(userId, id, "presentation");
         }
 
         return mapper.toDetailedDto(presentation);

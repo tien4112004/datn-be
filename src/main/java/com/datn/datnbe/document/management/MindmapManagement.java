@@ -58,6 +58,7 @@ public class MindmapManagement implements MindmapApi {
     MindmapValidation validation;
     ResourcePermissionApi resourcePermissionApi;
     RustfsStorageService rustfsStorageService;
+    DocumentVisitService documentVisitService;
 
     @NonFinal
     @Value("${rustfs.public-url}")
@@ -227,14 +228,7 @@ public class MindmapManagement implements MindmapApi {
             // Track document visit asynchronously
             String userId = getCurrentUserId();
             if (userId != null) {
-                var metadata = DocumentMetadataDto.builder()
-                    .userId(userId)
-                    .documentId(id)
-                    .type("mindmap")
-                    .title(mindmap.getTitle())
-                    .thumbnail(mindmap.getThumbnail())
-                    .build();
-                documentVisitService.trackDocumentVisit(metadata);
+                documentVisitService.trackDocumentVisit(userId, id, "mindmap");
             }
 
             log.info("Successfully retrieved mindmap with id: '{}'", id);
