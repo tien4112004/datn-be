@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -45,11 +46,11 @@ public interface UserProfileRepo
      * Searches in first name, last name, and email fields
      */
     @Query("""
-            SELECT u FROM UserProfile u
+            SELECT u FROM user_profile u
             WHERE (:searchTerm IS NULL OR :searchTerm = '' OR
                    LOWER(u.firstName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR
                    LOWER(u.lastName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR
                    LOWER(u.email) LIKE LOWER(CONCAT('%', :searchTerm, '%')))
             """)
-    Page<UserProfile> findBySearchTerm(String searchTerm, Pageable pageable);
+    Page<UserProfile> findBySearchTerm(@Param("searchTerm") String searchTerm, Pageable pageable);
 }

@@ -17,15 +17,11 @@ public class QuestionCreateRequest {
     String title;
 
     @NotNull(message = "Question type is required")
-    @Pattern(regexp = "MULTIPLE_CHOICE|MATCHING|FILL_IN_THE_BLANK|OPEN_ENDED",
-            flags = Pattern.Flag.CASE_INSENSITIVE,
-            message = "Invalid question type")
+    @Pattern(regexp = "MULTIPLE_CHOICE|MATCHING|FILL_IN_THE_BLANK|OPEN_ENDED", flags = Pattern.Flag.CASE_INSENSITIVE, message = "Invalid question type")
     String type;
 
     @NotBlank(message = "Difficulty is required")
-    @Pattern(regexp = "KNOWLEDGE|COMPREHENSION|APPLICATION|ADVANCED_APPLICATION",
-            flags = Pattern.Flag.CASE_INSENSITIVE,
-            message = "Invalid difficulty level")
+    @Pattern(regexp = "KNOWLEDGE|COMPREHENSION|APPLICATION|ADVANCED_APPLICATION", flags = Pattern.Flag.CASE_INSENSITIVE, message = "Invalid difficulty level")
     String difficulty;
 
     String explanation;

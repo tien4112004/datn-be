@@ -8,8 +8,6 @@ import com.datn.datnbe.cms.dto.response.QuestionResponseDto;
 import com.datn.datnbe.cms.dto.response.BatchCreateQuestionResponseDto;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
-import com.datn.datnbe.sharedkernel.exceptions.AppException;
-import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -50,7 +48,8 @@ public class QuestionController {
     @PostMapping({"", "/"})
     public ResponseEntity<AppResponseDto<?>> createQuestion(@RequestBody List<QuestionCreateRequest> requests) {
         String currentUserId = securityContextUtils.getCurrentUserId();
-        BatchCreateQuestionResponseDto response = questionApi.createQuestionsBatchWithPartialSuccess(requests, currentUserId);
+        BatchCreateQuestionResponseDto response = questionApi.createQuestionsBatchWithPartialSuccess(requests,
+                currentUserId);
         return ResponseEntity.status(HttpStatus.CREATED).body(AppResponseDto.success(response));
     }
 
