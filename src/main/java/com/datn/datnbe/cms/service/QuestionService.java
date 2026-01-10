@@ -6,7 +6,7 @@ import com.datn.datnbe.cms.dto.request.QuestionCreateRequest;
 import com.datn.datnbe.cms.dto.request.QuestionUpdateRequest;
 import com.datn.datnbe.cms.dto.response.QuestionResponseDto;
 import com.datn.datnbe.cms.dto.response.BatchCreateQuestionResponseDto;
-import com.datn.datnbe.cms.entity.Question;
+import com.datn.datnbe.cms.entity.QuestionBankItem;
 import com.datn.datnbe.cms.mapper.QuestionEntityMapper;
 import com.datn.datnbe.cms.repository.QuestionRepository;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
@@ -19,9 +19,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.SmartValidator;
+import jakarta.persistence.criteria.Predicate;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,11 +45,15 @@ public class QuestionService implements QuestionApi {
     public PaginatedResponseDto<QuestionResponseDto> getAllQuestions(QuestionCollectionRequest request,
             String ownerIdFilter) {
 
-        log.info("Fetching questions - bankType: {}, page: {}, pageSize: {}, search: {}, ownerIdFilter: {}",
+        log.info("Fetching questions - bankType: {}, page: {}, pageSize: {}, search: {}, difficulty: {}, type: {}, grade: {}, chapter: {}, ownerIdFilter: {}",
                 request.getBankType(),
                 request.getPage(),
                 request.getPageSize(),
                 request.getSearch(),
+                request.getDifficulty(),
+                request.getType(),
+                request.getGrade(),
+                request.getChapter(),
                 ownerIdFilter);
 
         if (request.getPage() < 1) {
@@ -67,25 +73,12 @@ public class QuestionService implements QuestionApi {
         String sortBy = request.getSortBy() != null ? request.getSortBy() : "createdAt";
         Pageable pageable = PageRequest.of(pageIndex, request.getPageSize(), direction, sortBy);
 
-        Page<Question> questionPage;
+        // Build specifications for filtering
+        Specification<QuestionBankItem> spec = buildSpecification(request, ownerIdFilter);
 
-        if (ownerIdFilter != null) {
-            if (request.getSearch() != null && !request.getSearch().isBlank()) {
-                questionPage = questionRepository
-                        .findByOwnerIdAndTitleContainingIgnoreCase(ownerIdFilter, request.getSearch(), pageable);
-            } else {
-                questionPage = questionRepository.findByOwnerId(ownerIdFilter, pageable);
-            }
-            log.debug("Fetched {} personal questions for user {}", questionPage.getSize(), ownerIdFilter);
-        } else {
-            // For public bank, get all questions regardless of ownerId
-            if (request.getSearch() != null && !request.getSearch().isBlank()) {
-                questionPage = questionRepository.findByTitleContainingIgnoreCase(request.getSearch(), pageable);
-            } else {
-                questionPage = questionRepository.findAll(pageable);
-            }
-            log.debug("Fetched {} public questions", questionPage.getSize());
-        }
+        Page<QuestionBankItem> questionPage = questionRepository.findAll(spec, pageable);
+
+        log.debug("Fetched {} questions", questionPage.getSize());
 
         List<QuestionResponseDto> dtos = questionPage.getContent()
                 .stream()
@@ -110,10 +103,10 @@ public class QuestionService implements QuestionApi {
                 request.getTitle(),
                 ownerId);
 
-        Question question = questionMapper.toEntity(request);
+        QuestionBankItem question = questionMapper.toEntity(request);
         question.setOwnerId(ownerId);
 
-        Question savedQuestion = questionRepository.save(question);
+        QuestionBankItem savedQuestion = questionRepository.save(question);
 
         log.info("Question created successfully - id: {}, ownerId: {}", savedQuestion.getId(), ownerId);
 
@@ -125,13 +118,13 @@ public class QuestionService implements QuestionApi {
 
         log.info("Creating batch of {} questions - ownerId: {}", requests.size(), ownerId);
 
-        List<Question> questions = requests.stream().map(request -> {
-            Question question = questionMapper.toEntity(request);
+        List<QuestionBankItem> questions = requests.stream().map(request -> {
+            QuestionBankItem question = questionMapper.toEntity(request);
             question.setOwnerId(ownerId);
             return question;
         }).collect(Collectors.toList());
 
-        List<Question> savedQuestions = questionRepository.saveAll(questions);
+        List<QuestionBankItem> savedQuestions = questionRepository.saveAll(questions);
 
         log.info("Batch of {} questions created successfully", savedQuestions.size());
 
@@ -172,9 +165,9 @@ public class QuestionService implements QuestionApi {
                 }
 
                 // Create and save the question
-                Question question = questionMapper.toEntity(request);
+                QuestionBankItem question = questionMapper.toEntity(request);
                 question.setOwnerId(ownerId);
-                Question savedQuestion = questionRepository.save(question);
+                QuestionBankItem savedQuestion = questionRepository.save(question);
                 successful.add(questionMapper.toResponseDto(savedQuestion));
 
             } catch (Exception e) {
@@ -204,7 +197,7 @@ public class QuestionService implements QuestionApi {
 
         log.info("Fetching question - id: {}", id);
 
-        Question question = questionRepository.findById(id).orElseThrow(() -> {
+        QuestionBankItem question = questionRepository.findById(id).orElseThrow(() -> {
             log.warn("Question not found - id: {}", id);
             return new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Question not found with id: " + id);
         });
@@ -217,7 +210,7 @@ public class QuestionService implements QuestionApi {
 
         log.info("Updating question - id: {}, userId: {}", id, userId);
 
-        Question question = questionRepository.findById(id).orElseThrow(() -> {
+        QuestionBankItem question = questionRepository.findById(id).orElseThrow(() -> {
             log.warn("Question not found for update - id: {}", id);
             return new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Question not found with id: " + id);
         });
@@ -226,7 +219,7 @@ public class QuestionService implements QuestionApi {
 
         questionMapper.updateEntity(request, question);
 
-        Question updatedQuestion = questionRepository.save(question);
+        QuestionBankItem updatedQuestion = questionRepository.save(question);
 
         log.info("Question updated successfully - id: {}", id);
 
@@ -238,7 +231,7 @@ public class QuestionService implements QuestionApi {
 
         log.info("Deleting question - id: {}, userId: {}", id, userId);
 
-        Question question = questionRepository.findById(id).orElseThrow(() -> {
+        QuestionBankItem question = questionRepository.findById(id).orElseThrow(() -> {
             log.warn("Question not found for deletion - id: {}", id);
             return new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Question not found with id: " + id);
         });
@@ -250,10 +243,52 @@ public class QuestionService implements QuestionApi {
         log.info("Question deleted successfully - id: {}", id);
     }
 
-    private void verifyOwnership(Question question, String userId, String questionId) {
+    private void verifyOwnership(QuestionBankItem question, String userId, String questionId) {
         if (question.getOwnerId() == null || !question.getOwnerId().equals(userId)) {
             log.warn("User {} attempted to modify question {} owned by {}", userId, questionId, question.getOwnerId());
             throw new AppException(ErrorCode.FORBIDDEN, "You do not have permission to modify this question");
         }
+    }
+
+    private Specification<QuestionBankItem> buildSpecification(QuestionCollectionRequest request, String ownerIdFilter) {
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            
+            // Owner filter
+            if (ownerIdFilter != null) {
+                predicates.add(cb.equal(root.get("ownerId"), ownerIdFilter));
+            }
+            
+            // Search by title
+            if (request.getSearch() != null && !request.getSearch().isBlank()) {
+                predicates.add(cb.like(cb.lower(root.get("title")), "%" + request.getSearch().toLowerCase() + "%"));
+            }
+            
+            // Filter by difficulty
+            if (request.getDifficulty() != null && !request.getDifficulty().isBlank()) {
+                predicates.add(cb.equal(root.get("difficulty"), request.getDifficulty()));
+            }
+            
+            // Filter by type
+            if (request.getType() != null && !request.getType().isBlank()) {
+                predicates.add(cb.equal(root.get("type"), request.getType()));
+            }
+            
+            // Filter by grade
+            if (request.getGrade() != null && !request.getGrade().isBlank()) {
+                predicates.add(cb.equal(root.get("grade"), request.getGrade()));
+            }
+            
+            // Filter by chapter
+            if (request.getChapter() != null && !request.getChapter().isBlank()) {
+                predicates.add(cb.equal(root.get("chapter"), request.getChapter()));
+            }
+            
+            if (predicates.isEmpty()) {
+                return cb.conjunction();
+            }
+            
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
     }
 }

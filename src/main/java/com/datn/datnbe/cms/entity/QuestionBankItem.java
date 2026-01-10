@@ -1,7 +1,14 @@
 package com.datn.datnbe.cms.entity;
 
 import com.datn.datnbe.cms.entity.questiondata.Difficulty;
+import com.datn.datnbe.cms.entity.questiondata.FillInBlankData;
+import com.datn.datnbe.cms.entity.questiondata.MatchingData;
+import com.datn.datnbe.cms.entity.questiondata.MultipleChoiceData;
+import com.datn.datnbe.cms.entity.questiondata.OpenEndedData;
 import com.datn.datnbe.cms.entity.questiondata.QuestionType;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -19,7 +26,7 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Table(name = "questions")
-public class Question {
+public class QuestionBankItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -43,9 +50,23 @@ public class Question {
     @Column(name = "explanation", columnDefinition = "TEXT")
     String explanation;
 
-    @Column(name = "points")
-    Integer points;
+    @Column(name = "grade")
+    String grade;
 
+    @Column(name = "chapter")
+    String chapter;
+
+    @JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "type"
+    )
+    @JsonSubTypes({
+        @JsonSubTypes.Type(value = OpenEndedData.class, name = "OPEN_ENDED"),
+        @JsonSubTypes.Type(value = MultipleChoiceData.class, name = "MULTIPLE_CHOICE"),
+        @JsonSubTypes.Type(value = MatchingData.class, name = "MATCHING"),
+        @JsonSubTypes.Type(value = FillInBlankData.class, name = "FILL_IN_BLANK")
+    })
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "data", columnDefinition = "jsonb")
     Object data;

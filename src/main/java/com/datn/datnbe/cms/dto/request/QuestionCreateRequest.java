@@ -28,7 +28,9 @@ public class QuestionCreateRequest {
 
     String titleImageUrl;
 
-    Integer points;
+    String grade;
+
+    String chapter;
 
     Object data;
 }

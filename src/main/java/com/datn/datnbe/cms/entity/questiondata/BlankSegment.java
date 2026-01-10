@@ -3,6 +3,7 @@ package com.datn.datnbe.cms.entity.questiondata;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -11,7 +12,8 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class BlankSegment {
 
-    String id;
+    @Builder.Default
+    String id = UUID.randomUUID().toString();
     SegmentType type;
     String content;
     List<String> acceptableAnswers;
