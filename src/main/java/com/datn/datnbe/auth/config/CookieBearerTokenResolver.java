@@ -53,26 +53,26 @@ public class CookieBearerTokenResolver implements BearerTokenResolver {
                     continue;
                 }
 
-                // Check admin cookie - only accept from admin origins
+                // Check admin cookie - STRICT: only accept from admin origins
                 if ("admin_access_token".equals(c.getName())) {
                     if (originValidator.isAdminOrigin(origin)) {
                         log.info("admin token used from admin origin: {}", origin);
                         return c.getValue();
                     } else {
-                        log.info("admin token rejected from non-admin origin: {}", origin);
+                        log.warn("admin token rejected from non-admin origin: {}", origin);
                         continue;
                     }
                 }
 
-                // Check app cookie - only accept from app origins
+                // Check app cookie - RELAXED: accept unless from admin origin (prevents cross-contamination)
                 if ("access_token".equals(c.getName())) {
-                    if (originValidator.isAppOrigin(origin)) {
-                        log.info("app token used from app origin: {}", origin);
-                        return c.getValue();
-                    } else {
-                        log.info("app token rejected from non-app origin: {}", origin);
+                    if (originValidator.isAdminOrigin(origin)) {
+                        log.warn("app token rejected from admin origin: {}", origin);
                         continue;
                     }
+                    // Accept from any non-admin origin (including Postman, mobile apps, etc.)
+                    log.info("app token used from origin: {}", origin);
+                    return c.getValue();
                 }
             }
         }

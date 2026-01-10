@@ -45,7 +45,8 @@ public class QuestionService implements QuestionApi {
     public PaginatedResponseDto<QuestionResponseDto> getAllQuestions(QuestionCollectionRequest request,
             String ownerIdFilter) {
 
-        log.info("Fetching questions - bankType: {}, page: {}, pageSize: {}, search: {}, difficulty: {}, type: {}, grade: {}, chapter: {}, ownerIdFilter: {}",
+        log.info(
+                "Fetching questions - bankType: {}, page: {}, pageSize: {}, search: {}, difficulty: {}, type: {}, grade: {}, chapter: {}, ownerIdFilter: {}",
                 request.getBankType(),
                 request.getPage(),
                 request.getPageSize(),
@@ -250,44 +251,45 @@ public class QuestionService implements QuestionApi {
         }
     }
 
-    private Specification<QuestionBankItem> buildSpecification(QuestionCollectionRequest request, String ownerIdFilter) {
+    private Specification<QuestionBankItem> buildSpecification(QuestionCollectionRequest request,
+            String ownerIdFilter) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
-            
+
             // Owner filter
             if (ownerIdFilter != null) {
                 predicates.add(cb.equal(root.get("ownerId"), ownerIdFilter));
             }
-            
+
             // Search by title
             if (request.getSearch() != null && !request.getSearch().isBlank()) {
                 predicates.add(cb.like(cb.lower(root.get("title")), "%" + request.getSearch().toLowerCase() + "%"));
             }
-            
+
             // Filter by difficulty
             if (request.getDifficulty() != null && !request.getDifficulty().isBlank()) {
                 predicates.add(cb.equal(root.get("difficulty"), request.getDifficulty()));
             }
-            
+
             // Filter by type
             if (request.getType() != null && !request.getType().isBlank()) {
                 predicates.add(cb.equal(root.get("type"), request.getType()));
             }
-            
+
             // Filter by grade
             if (request.getGrade() != null && !request.getGrade().isBlank()) {
                 predicates.add(cb.equal(root.get("grade"), request.getGrade()));
             }
-            
+
             // Filter by chapter
             if (request.getChapter() != null && !request.getChapter().isBlank()) {
                 predicates.add(cb.equal(root.get("chapter"), request.getChapter()));
             }
-            
+
             if (predicates.isEmpty()) {
                 return cb.conjunction();
             }
-            
+
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }

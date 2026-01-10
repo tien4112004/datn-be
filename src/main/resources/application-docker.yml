@@ -115,6 +115,10 @@ app:
       google-callback-uri: ${GOOGLE_CALLBACK_URI:http://datn-be:8080/api/auth/google/callback}
       fe-redirect-url: ${FE_REDIRECT_URI:http://localhost:5173}
       mobile-redirect-url: ${MOBILE_REDIRECT_URI:aiprimary://auth-callback}
+      admin-origins:
+        - http://localhost:5175
+        - http://admin.localhost:5175
+        - https://admin.huy-devops.site
 
     authorization:
       server-url: ${KEYCLOAK_SERVER_URL:http://keycloak:8080}

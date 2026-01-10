@@ -119,9 +119,6 @@ app:
         - http://localhost:5175
         - http://admin.localhost:5175
         - https://admin.huy-devops.site
-      app-origins:
-        - http://localhost:5173
-        - https://app.huy-devops.site
 
     authorization:
       server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8082}

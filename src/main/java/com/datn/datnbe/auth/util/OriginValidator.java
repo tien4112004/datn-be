@@ -9,13 +9,12 @@ import java.net.URI;
 import java.util.List;
 
 /**
- * Utility component to validate request origins for admin vs app frontend isolation.
- * Prevents cookie misuse by ensuring requests from admin origins only use admin cookies,
- * and requests from app origins only use app cookies.
+ * Utility component to validate request origins for admin frontend isolation.
+ * Prevents privilege escalation by ensuring admin cookies are only accepted from admin origins.
+ * Regular app cookies are accepted from any non-admin origin.
  *
  * Origins are configured via application.yml:
  * - app.auth.properties.admin-origins
- * - app.auth.properties.app-origins
  */
 @Component
 @RequiredArgsConstructor
@@ -33,18 +32,6 @@ public class OriginValidator {
         List<String> adminOrigins = authProperties.getAdminOrigins();
         return origin != null && adminOrigins != null
                 && adminOrigins.stream().anyMatch(adminOrigin -> origin.startsWith(adminOrigin));
-    }
-
-    /**
-     * Check if the given origin matches app frontend origins
-     *
-     * @param origin the origin URL to check
-     * @return true if origin is from app frontend
-     */
-    public boolean isAppOrigin(String origin) {
-        List<String> appOrigins = authProperties.getAppOrigins();
-        return origin != null && appOrigins != null
-                && appOrigins.stream().anyMatch(appOrigin -> origin.startsWith(appOrigin));
     }
 
     /**

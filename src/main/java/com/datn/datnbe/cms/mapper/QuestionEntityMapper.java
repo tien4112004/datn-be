@@ -94,17 +94,17 @@ public abstract class QuestionEntityMapper {
         if (type == null) {
             return Object.class;
         }
-        
+
         switch (type) {
-            case OPEN_ENDED:
+            case OPEN_ENDED :
                 return OpenEndedData.class;
-            case MULTIPLE_CHOICE:
+            case MULTIPLE_CHOICE :
                 return MultipleChoiceData.class;
-            case MATCHING:
+            case MATCHING :
                 return MatchingData.class;
-            case FILL_IN_BLANK:
+            case FILL_IN_BLANK :
                 return FillInBlankData.class;
-            default:
+            default :
                 log.warn("Unknown question type: {}, defaulting to Object.class", type);
                 return Object.class;
         }
