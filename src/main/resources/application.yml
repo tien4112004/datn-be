@@ -144,7 +144,7 @@ ai:
     presentation-endpoint: ${AI_API_PRESENTATION_ENDPOINT:/api/presentations/generate/stream/mock}
     presentation-batch-endpoint: ${AI_API_PRESENTATION_BATCH_ENDPOINT:/api/presentations/generate/mock}
     image-endpoint: ${AI_API_IMAGE_ENDPOINT:/api/image/generate/mock}
-    mindmap-endpoint: ${AI_API_MINDMAP_ENDPOINT:/api/mindmap/generate/mock}
+    mindmap-endpoint: ${AI_API_MINDMAP_ENDPOINT:/api/mindmap/generate}
 
 cloudflare:
   r2:
