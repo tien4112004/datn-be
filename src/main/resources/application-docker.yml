@@ -70,47 +70,8 @@ server:
       charset: UTF-8
       enabled: true
       force: true
+
 app:
-  models:
-    configurations:
-      openai:
-        - model-name: "gpt-4o-mini-2024-07-18"
-          display-name: "GPT-4 Optimized"
-          provider: "OpenAI"
-          default-model: false
-          model-type: text
-        - model-name: "gpt-4.1-nano-2025-04-14"
-          display-name: "GPT-4.1 Nano"
-          provider: "OpenAI"
-          default-model: false
-          model-type: text
-      gemini:
-        - model-name: "gemini-2.5-flash"
-          display-name: "Gemini 2.5 Flash"
-          provider: "Google"
-          default-model: true
-          model-type: text
-        - model-name: "gemini-2.5-flash-lite"
-          display-name: "Gemini 2.5 Flash Lite"
-          provider: "Google"
-          default-model: false
-          model-type: text
-        - model-name: "gemini-2.5-flash-image-preview"
-          display-name: "Nano Banana"
-          provider: "Google"
-          default-model: true
-          model-type: image
-      openRouter:
-        - model-name: "google/gemini-2.5-flash-image-preview"
-          display-name: "Nano Banana"
-          provider: "openRouter"
-          default-model: true
-          model-type: image
-        - model-name: "mistralai/mistral-small-3.2-24b-instruct:free"
-          display-name: "mistral-small-3.2-24b-instruct"
-          provider: "openRouter"
-          default-model: false
-          model-type: text
   cors:
     allowed-origins:
       - "http://localhost:5173"
@@ -121,6 +82,7 @@ app:
       - "http://*.ts.net:*"
       - "http://localhost:*"
       - "https://localhost:*"
+      - "http://*.localhost:*"
       - "https://datn-fe-*.vercel.app" # Vercel preview deployments with any container ID
       - "https://datn-fe.vercel.app" # Production Vercel deployment
       - "https://*.vercel.app" # All Vercel apps (more permissive, use with caution)

@@ -9,10 +9,11 @@ import org.hibernate.annotations.SQLRestriction;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Entity(name = "user_profile")
+@Entity
 @Getter
 @Setter
-@Table(uniqueConstraints = {@UniqueConstraint(name = "uk_keycloak_user_id", columnNames = {"keycloak_user_id"})})
+@Table(name = "user_profile", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_keycloak_user_id", columnNames = {"keycloak_user_id"})})
 @SQLDelete(sql = "UPDATE user_profile SET deleted_at = NOW() WHERE id = ?")
 @SQLRestriction("deleted_at IS NULL")
 @FieldDefaults(level = AccessLevel.PRIVATE)

@@ -46,9 +46,8 @@ public interface UserProfileRepo
      * Searches in first name, last name, and email fields
      */
     @Query("""
-            SELECT u FROM user_profile u
-            WHERE (:searchTerm IS NULL OR :searchTerm = '' OR
-                   LOWER(u.firstName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR
+            SELECT u FROM UserProfile u
+            WHERE (LOWER(u.firstName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR
                    LOWER(u.lastName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR
                    LOWER(u.email) LIKE LOWER(CONCAT('%', :searchTerm, '%')))
             """)

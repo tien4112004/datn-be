@@ -4,6 +4,7 @@ import com.datn.datnbe.document.api.SlideThemeApi;
 import com.datn.datnbe.document.dto.request.SlideThemeCollectionRequest;
 import com.datn.datnbe.document.dto.request.SlideThemeCreateRequest;
 import com.datn.datnbe.document.dto.request.SlideThemeUpdateRequest;
+import com.datn.datnbe.document.dto.request.SlideThemesByIdsRequest;
 import com.datn.datnbe.document.dto.response.SlideThemeResponseDto;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import jakarta.validation.Valid;
@@ -55,6 +56,17 @@ public class SlideThemeController {
         log.info("PUT /api/slide-themes/{} - Updating slide theme", id);
 
         var response = slideThemeApi.updateSlideTheme(id, request);
+
+        return ResponseEntity.ok(AppResponseDto.success(response));
+    }
+
+    @PostMapping("/by-ids")
+    public ResponseEntity<AppResponseDto<List<SlideThemeResponseDto>>> getSlideThemesByIds(
+            @Valid @RequestBody SlideThemesByIdsRequest request) {
+
+        log.info("POST /api/slide-themes/by-ids - Fetching themes for {} IDs", request.getIds().size());
+
+        List<SlideThemeResponseDto> response = slideThemeApi.getSlideThemesByIds(request);
 
         return ResponseEntity.ok(AppResponseDto.success(response));
     }

@@ -89,4 +89,29 @@ public class AuthenticationService {
         keycloakAuthService.signOut(refreshToken);
         log.info("Successfully logged out from Keycloak");
     }
+
+    /**
+     * Handles admin logout with admin-specific refresh token extraction.
+     * Note: Cookie clearing is handled separately by SessionManagementService
+     *
+     * @param request  the HTTP request
+     * @param response the HTTP response
+     * @param auth     the current user's authentication
+     */
+    public void adminLogout(HttpServletRequest request, HttpServletResponse response, Authentication auth) {
+        // Invalidate local session
+        new SecurityContextLogoutHandler().logout(request, response, auth);
+        log.info("Admin session invalidated for user: {}", auth != null ? auth.getName() : "unknown");
+
+        // Extract admin refresh token from cookies
+        final String refreshToken = sessionService.extractAdminRefreshToken(request);
+        if (refreshToken == null || refreshToken.isEmpty()) {
+            log.warn("No admin refresh token found in cookies during logout.");
+            throw new AppException(ErrorCode.UNCATEGORIZED_ERROR, "Invalid refresh token during logout");
+        }
+
+        // Logout from Keycloak
+        keycloakAuthService.signOut(refreshToken);
+        log.info("Successfully logged out admin from Keycloak");
+    }
 }

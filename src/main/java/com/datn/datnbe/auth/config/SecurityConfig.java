@@ -18,6 +18,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 import com.datn.datnbe.auth.handler.CustomAuthenticationEntryPoint;
+import com.datn.datnbe.auth.util.OriginValidator;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -37,6 +38,7 @@ public class SecurityConfig {
     private final ObjectMapper objectMapper;
     private final CorsConfigurationSource corsConfigurationSource;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private final OriginValidator originValidator;
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -50,7 +52,11 @@ public class SecurityConfig {
                         .permitAll()
 
                         // Public endpoints - no authentication required (must come BEFORE /api/**)
-                        .requestMatchers("/public/**", "/api/auth/**", "/api/resources/register", "/v3/**")
+                        .requestMatchers("/public/**",
+                                "/api/auth/**",
+                                "/api/admin/auth/**",
+                                "/api/resources/register",
+                                "/v3/**")
                         .permitAll()
 
                         // Public GET endpoints - allow anonymous access
@@ -106,9 +112,9 @@ public class SecurityConfig {
                         // Default deny
                         .anyRequest()
                         .authenticated())
-                .oauth2ResourceServer(
-                        oauth2 -> oauth2.bearerTokenResolver(new CookieBearerTokenResolver("access_token"))
-                                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtConverter)))
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .bearerTokenResolver(new CookieBearerTokenResolver("access_token", originValidator))
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtConverter)))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(customAuthenticationEntryPoint)
                         .accessDeniedHandler(this::handleAccessDeniedException));
