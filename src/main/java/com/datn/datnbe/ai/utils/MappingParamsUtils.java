@@ -57,7 +57,7 @@ public class MappingParamsUtils {
                 "model",
                 request.getModel(),
                 "provider",
-                request.getProvider());
+                request.getProvider().toLowerCase());
     }
 
     public static String createPrompt(ImagePromptRequest request) {
