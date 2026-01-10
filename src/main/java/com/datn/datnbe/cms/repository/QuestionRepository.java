@@ -10,7 +10,10 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface QuestionRepository extends JpaRepository<QuestionBankItem, String>, JpaSpecificationExecutor<QuestionBankItem> {
+public interface QuestionRepository
+        extends
+            JpaRepository<QuestionBankItem, String>,
+            JpaSpecificationExecutor<QuestionBankItem> {
 
     Page<QuestionBankItem> findByOwnerId(String ownerId, Pageable pageable);
 

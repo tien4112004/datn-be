@@ -29,5 +29,4 @@ public class AuthProperties {
     String feRedirectUrl;
     String mobileRedirectUrl;
     List<String> adminOrigins;
-    List<String> appOrigins;
 }

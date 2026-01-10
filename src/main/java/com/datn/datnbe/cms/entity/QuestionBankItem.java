@@ -56,17 +56,11 @@ public class QuestionBankItem {
     @Column(name = "chapter")
     String chapter;
 
-    @JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.PROPERTY,
-        property = "type"
-    )
-    @JsonSubTypes({
-        @JsonSubTypes.Type(value = OpenEndedData.class, name = "OPEN_ENDED"),
-        @JsonSubTypes.Type(value = MultipleChoiceData.class, name = "MULTIPLE_CHOICE"),
-        @JsonSubTypes.Type(value = MatchingData.class, name = "MATCHING"),
-        @JsonSubTypes.Type(value = FillInBlankData.class, name = "FILL_IN_BLANK")
-    })
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
+    @JsonSubTypes({@JsonSubTypes.Type(value = OpenEndedData.class, name = "OPEN_ENDED"),
+            @JsonSubTypes.Type(value = MultipleChoiceData.class, name = "MULTIPLE_CHOICE"),
+            @JsonSubTypes.Type(value = MatchingData.class, name = "MATCHING"),
+            @JsonSubTypes.Type(value = FillInBlankData.class, name = "FILL_IN_BLANK")})
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "data", columnDefinition = "jsonb")
     Object data;
