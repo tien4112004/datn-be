@@ -6,6 +6,8 @@ import com.datn.datnbe.student.dto.response.StudentResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 /**
  * API interface for student CRUD operations.
  */
@@ -51,4 +53,11 @@ public interface StudentApi {
     StudentResponseDto getStudentById(String id);
 
     void deleteStudent(String id);
+
+    /**
+     * Regenerate passwords for multiple students
+     * @param studentIds list of student IDs
+     * @return list of updated student responses with new passwords
+     */
+    List<StudentResponseDto> regeneratePasswords(List<String> studentIds);
 }

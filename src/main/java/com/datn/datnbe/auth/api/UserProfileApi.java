@@ -94,4 +94,12 @@ public interface UserProfileApi {
      * @return UserMinimalInfoDto containing minimal user information, or null if not found
      */
     com.datn.datnbe.auth.dto.response.UserMinimalInfoDto getUserMinimalInfo(String userId);
+
+    /**
+     * Updates the password of a user profile.
+     *
+     * @param userId the user ID
+     * @param newPassword the new password
+     */
+    void updatePassword(String userId, String newPassword);
 }

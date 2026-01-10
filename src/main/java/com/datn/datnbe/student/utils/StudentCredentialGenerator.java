@@ -4,19 +4,21 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
 import java.text.Normalizer;
+import com.datn.datnbe.student.repository.StudentRepository;
 
 public final class StudentCredentialGenerator {
 
     private StudentCredentialGenerator() {
-        // Utility class, should not be instantiated
     }
 
-    public static String generateUsername(String fullName, LocalDate dateOfBirth) {
+    public static String generateUsername(String fullName, LocalDate dateOfBirth, StudentRepository studentRepository) {
         if (fullName == null || fullName.isBlank()) {
             throw new IllegalArgumentException("Full name cannot be null or blank");
         }
 
-        String normalized = Normalizer.normalize(fullName, Normalizer.Form.NFD)
+        String nameBase = extractMiddleAndLastName(fullName);
+        
+        String normalized = Normalizer.normalize(nameBase, Normalizer.Form.NFD)
                 .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
 
         String base = normalized.toLowerCase().trim().replaceAll("\\s+", "").replaceAll("[^a-z0-9]", "");
@@ -26,11 +28,32 @@ public final class StudentCredentialGenerator {
             dobPart = dateOfBirth.format(DateTimeFormatter.ofPattern("ddMMyy"));
         }
 
-        int suffix = (int) (System.currentTimeMillis() % 1000);
-        String suffixStr = String.format("%03d", suffix);
+        String baseUsername = String.format("%s%s", base, dobPart);
+        
+        int count = studentRepository.countExistingUsernames(baseUsername + "%");
+        
+        if (count == 0) {
+            // Base username doesn't exist, use it
+            return baseUsername;
+        } else {
+            // Add counter: baseUsername_count
+            return String.format("%s_%d", baseUsername, count);
+        }
+    }
 
-        // Concatenate without separators: {base}{ddMMyy|nodob}{sss}
-        return String.format("%s%s%s", base, dobPart, suffixStr);
+    private static String extractMiddleAndLastName(String fullName) {
+        String[] parts = fullName.trim().split("\\s+");
+        
+        if (parts.length >= 3) {
+            StringBuilder result = new StringBuilder();
+            for (int i = 1; i < parts.length; i++) {
+                if (i > 1) result.append(" ");
+                result.append(parts[i]);
+            }
+            return result.toString();
+        } else {
+            return fullName.trim();
+        }
     }
 
     public static String generatePassword() {

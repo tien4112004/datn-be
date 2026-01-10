@@ -4,6 +4,7 @@ import com.datn.datnbe.student.api.StudentApi;
 import com.datn.datnbe.student.api.StudentImportApi;
 import com.datn.datnbe.student.dto.request.StudentCreateRequest;
 import com.datn.datnbe.student.dto.request.StudentUpdateRequest;
+import com.datn.datnbe.student.dto.request.RegeneratePasswordRequest;
 import com.datn.datnbe.student.dto.response.StudentImportResponseDto;
 import com.datn.datnbe.student.dto.response.StudentResponseDto;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
@@ -18,6 +19,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -93,5 +96,12 @@ public class StudentController {
         log.info("Received request to get student with ID: {}", studentId);
         StudentResponseDto response = studentApi.getStudentById(studentId);
         return ResponseEntity.ok(AppResponseDto.success(response));
+    }
+
+    @PostMapping("/students/regenerate-passwords")
+    public ResponseEntity<AppResponseDto<List<StudentResponseDto>>> regeneratePasswords(@RequestBody RegeneratePasswordRequest request) {
+        log.info("Received request to regenerate passwords for {} students", request.getStudents().size());
+        List<StudentResponseDto> students = studentApi.regeneratePasswords(request.getStudents());
+        return ResponseEntity.ok(AppResponseDto.success(students));
     }
 }
