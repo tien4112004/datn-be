@@ -2,6 +2,7 @@ package com.datn.datnbe.cms.entity.questiondata;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -10,7 +11,8 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class MatchingPair {
 
-    String id;
+    @Builder.Default
+    String id = UUID.randomUUID().toString();
     String left;
     String leftImageUrl;
     String right;

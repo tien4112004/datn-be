@@ -26,7 +26,9 @@ public class QuestionResponseDto {
 
     String titleImageUrl;
 
-    Integer points;
+    String grade;
+
+    String chapter;
 
     Object data;
 

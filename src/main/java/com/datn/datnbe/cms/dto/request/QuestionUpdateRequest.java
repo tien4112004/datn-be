@@ -21,7 +21,9 @@ public class QuestionUpdateRequest {
 
     String titleImageUrl;
 
-    Integer points;
+    String grade;
+
+    String chapter;
 
     @Valid
     Object data;

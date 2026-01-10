@@ -24,6 +24,14 @@ public class QuestionCollectionRequest {
 
     String search;
 
+    String grade;
+
+    String chapter;
+
+    String difficulty;
+
+    String type;
+
     String sortBy;
 
     String sortDirection;
