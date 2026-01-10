@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ClassRepository extends JpaRepository<ClassEntity, String>, JpaSpecificationExecutor<ClassEntity> {
-    @Query(value = "SELECT c.* FROM classes c " +
+    @Query(value = "SELECT DISTINCT(c.*) FROM classes c " +
             "LEFT JOIN class_enrollments ce on ce.class_id = c.id " +
             "LEFT JOIN students s on s.id = ce.student_id " +
 			"LEFT JOIN user_profile up on up.id = s.user_id " +
