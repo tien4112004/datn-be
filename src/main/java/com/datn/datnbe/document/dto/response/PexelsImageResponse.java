@@ -33,7 +33,7 @@ public class PexelsImageResponse {
         private String photographerUrl;
 
         @JsonProperty("photographer_id")
-        private Integer photographerId;
+        private Long photographerId;
 
         @JsonProperty("avg_color")
         private String avgColor;

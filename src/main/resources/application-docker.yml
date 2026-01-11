@@ -156,3 +156,11 @@ logging:
     "org.springframework.data.mongodb.core.MongoTemplate": DEBUG
     com.datn.datnbe.sharedkernel.security.interceptor: DEBUG
     com.datn.datnbe.auth.config.SecurityConfig: WARN
+
+pexels:
+  api:
+    key: ${PEXELS_API_KEY:your-api-key-here}
+    base-url: https://api.pexels.com/v1
+    rate-limit:
+      requests: 200
+      duration-minutes: 60
