@@ -183,6 +183,14 @@ public class QuestionService implements QuestionApi {
 
         log.info("Batch processed - successful: {}, failed: {}", successful.size(), failed.size());
 
+        // If no items were successfully created, throw an exception with the first error
+        if (successful.isEmpty() && !failed.isEmpty()) {
+            BatchCreateQuestionResponseDto.BatchItemErrorDto firstError = failed.get(0);
+            log.error("Batch creation failed completely. First error - index: {}, title: {}, message: {}",
+                    firstError.getIndex(), firstError.getTitle(), firstError.getErrorMessage());
+            throw new AppException(ErrorCode.VALIDATION_ERROR, firstError.getErrorMessage());
+        }
+
         return BatchCreateQuestionResponseDto.builder()
                 .successful(successful)
                 .failed(failed)
