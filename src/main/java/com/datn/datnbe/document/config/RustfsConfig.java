@@ -26,7 +26,7 @@ public class RustfsConfig {
     private String secretKey;
     private String publicUrl;
 
-    @Bean(name = "rustfsS3Client")
+    @Bean
     @ConditionalOnProperty(name = "rustfs.endpoint", matchIfMissing = false)
     public S3Client rustfsS3Client() {
         S3Configuration serviceConfig = S3Configuration.builder()

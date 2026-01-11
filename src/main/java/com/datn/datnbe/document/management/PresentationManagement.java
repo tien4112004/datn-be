@@ -54,7 +54,6 @@ public class PresentationManagement implements PresentationApi {
     PresentationValidation validation;
     ResourcePermissionApi resourcePermissionApi;
     RustfsStorageService rustfsStorageService;
-    DocumentVisitService documentVisitService;
 
     @NonFinal
     @Value("${rustfs.public-url}")

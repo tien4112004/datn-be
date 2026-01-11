@@ -144,11 +144,12 @@ ai:
     mindmap-endpoint: ${AI_API_MINDMAP_ENDPOINT:/api/mindmap/generate}
 
 rustfs:
-  endpoint: ${S3_ENDPOINT:http://localhost:9000}
-  bucket: ${S3_BUCKET:default}
-  accessKey: ${S3_ACCESS_KEY:minioadmin}
-  secretKey: ${S3_SECRET_KEY:minioadmin}
-  public-url: ${S3_PUBLIC_URL:http://localhost:9000}
+  endpoint: ${RUSTFS_ENDPOINT:http://localhost:9000}
+  bucket: ${RUSTFS_BUCKET:default}
+  accessKey: ${RUSTFS_ACCESS_KEY:minioadmin}
+  secretKey: ${RUSTFS_SECRET_KEY:minioadmin}
+  public-url: ${RUSTFS_PUBLIC_URL:http://localhost:9000}
+
 cloudflare:
   r2:
     endpoint: ${S3_ENDPOINT:http://localhost:9000}

@@ -76,17 +76,9 @@ class GetPresentationTest {
 
     @BeforeEach
     void setUp() {
-        // Setup security context mock
-        securityContextHolderMock = mockStatic(SecurityContextHolder.class);
-        securityContext = org.mockito.Mockito.mock(SecurityContext.class);
-        authentication = org.mockito.Mockito.mock(Authentication.class);
-        jwt = org.mockito.Mockito.mock(Jwt.class);
-        
-        securityContextHolderMock.when(SecurityContextHolder::getContext).thenReturn(securityContext);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.getPrincipal()).thenReturn(jwt);
-        when(jwt.getSubject()).thenReturn("test-user-id");
-        
+        presentationService = new PresentationManagement(presentationRepository, presentationEntityMapper,
+                presentationValidation, resourcePermissionApi, rustfsStorageService);
+
         Map<String, Object> background = new HashMap<>();
         background.put("type", "color");
         background.put("color", "#ffffff");

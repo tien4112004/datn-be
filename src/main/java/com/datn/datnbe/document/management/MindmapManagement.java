@@ -58,7 +58,6 @@ public class MindmapManagement implements MindmapApi {
     MindmapValidation validation;
     ResourcePermissionApi resourcePermissionApi;
     RustfsStorageService rustfsStorageService;
-    DocumentVisitService documentVisitService;
 
     @NonFinal
     @Value("${rustfs.public-url}")

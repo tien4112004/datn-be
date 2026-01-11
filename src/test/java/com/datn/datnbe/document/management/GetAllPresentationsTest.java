@@ -52,8 +52,6 @@ class GetAllPresentationsTest {
 
     @Mock
     private com.datn.datnbe.sharedkernel.service.RustfsStorageService rustfsStorageService;
-    @Mock
-    private com.datn.datnbe.document.service.DocumentVisitService documentVisitService;
 
     private MockedStatic<SecurityContextHolder> securityContextHolderMock;
 
@@ -73,7 +71,7 @@ class GetAllPresentationsTest {
     void setUp() {
         mapper = Mappers.getMapper(PresentationEntityMapper.class);
         presentationService = new PresentationManagement(presentationRepository, mapper, validation,
-                resourcePermissionApi, rustfsStorageService, documentVisitService);
+                resourcePermissionApi, rustfsStorageService);
 
         // Setup security context mock
         securityContextHolderMock = mockStatic(SecurityContextHolder.class);
