@@ -17,7 +17,7 @@ public class QuestionCreateRequest {
     String title;
 
     @NotNull(message = "Question type is required")
-    @Pattern(regexp = "MULTIPLE_CHOICE|MATCHING|FILL_IN_THE_BLANK|OPEN_ENDED", flags = Pattern.Flag.CASE_INSENSITIVE, message = "Invalid question type")
+    @Pattern(regexp = "MULTIPLE_CHOICE|MATCHING|FILL_IN_BLANK|OPEN_ENDED", flags = Pattern.Flag.CASE_INSENSITIVE, message = "Invalid question type")
     String type;
 
     @NotBlank(message = "Difficulty is required")
