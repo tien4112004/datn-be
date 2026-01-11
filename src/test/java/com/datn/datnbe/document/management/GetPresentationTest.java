@@ -41,7 +41,7 @@ class GetPresentationTest {
     private ResourcePermissionApi resourcePermissionApi;
 
     @MockitoBean
-    private com.datn.datnbe.sharedkernel.service.R2StorageService r2StorageService;
+    private com.datn.datnbe.sharedkernel.service.RustfsStorageService rustfsStorageService;
 
     @Autowired
     private PresentationEntityMapper presentationEntityMapper;
@@ -56,7 +56,7 @@ class GetPresentationTest {
     @BeforeEach
     void setUp() {
         presentationService = new PresentationManagement(presentationRepository, presentationEntityMapper,
-                presentationValidation, resourcePermissionApi, r2StorageService);
+                presentationValidation, resourcePermissionApi, rustfsStorageService);
 
         Map<String, Object> background = new HashMap<>();
         background.put("type", "color");

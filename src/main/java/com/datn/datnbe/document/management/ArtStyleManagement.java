@@ -12,7 +12,7 @@ import com.datn.datnbe.document.repository.ArtStyleRepository;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
-import com.datn.datnbe.sharedkernel.service.R2StorageService;
+import com.datn.datnbe.sharedkernel.service.RustfsStorageService;
 import com.datn.datnbe.sharedkernel.utils.MediaStorageUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -39,9 +39,9 @@ public class ArtStyleManagement implements ArtStyleApi {
 
     final ArtStyleRepository artStyleRepository;
     final ArtStyleMapper artStyleMapper;
-    final R2StorageService r2StorageService;
+    final RustfsStorageService rustfsStorageService;
 
-    @Value("${cloudflare.r2.public-url}")
+    @Value("${rustfs.public-url}")
     String cdnDomain;
 
     @Override
@@ -139,7 +139,7 @@ public class ArtStyleManagement implements ArtStyleApi {
 
         MultipartFile multipartFile = ArtStyleValidation.convertToMultipartFile(base64Image, filename);
 
-        r2StorageService.uploadFile(multipartFile, storageKey, contentType);
+        rustfsStorageService.uploadFile(multipartFile, storageKey, contentType);
 
         String cdnUrl = MediaStorageUtils.buildCdnUrl(storageKey, cdnDomain);
         log.info("Uploaded art style visual to: {}", cdnUrl);
@@ -159,7 +159,7 @@ public class ArtStyleManagement implements ArtStyleApi {
 
         try {
             String storageKey = MediaStorageUtils.extractStorageKeyFromUrl(cdnUrl, cdnDomain);
-            r2StorageService.deleteFile(storageKey);
+            rustfsStorageService.deleteFile(storageKey);
             log.info("Deleted old art style visual: {}", storageKey);
         } catch (Exception e) {
             log.warn("Failed to delete old art style visual: {}", e.getMessage());

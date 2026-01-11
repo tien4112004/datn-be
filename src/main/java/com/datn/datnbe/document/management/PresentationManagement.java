@@ -18,7 +18,7 @@ import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
-import com.datn.datnbe.sharedkernel.service.R2StorageService;
+import com.datn.datnbe.sharedkernel.service.RustfsStorageService;
 import com.datn.datnbe.sharedkernel.utils.MediaStorageUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -51,10 +51,10 @@ public class PresentationManagement implements PresentationApi {
     PresentationEntityMapper mapper;
     PresentationValidation validation;
     ResourcePermissionApi resourcePermissionApi;
-    R2StorageService r2StorageService;
+    RustfsStorageService rustfsStorageService;
 
     @NonFinal
-    @Value("${cloudflare.r2.public-url}")
+    @Value("${rustfs.public-url}")
     String cdnDomain;
 
     private String generateUniqueTitle(String originalTitle) {
@@ -190,8 +190,8 @@ public class PresentationManagement implements PresentationApi {
             // Build storage key with appropriate extension
             String storageKey = String.format("thumbnails/presentation/%s.%s", id, extension);
 
-            // Upload to R2 directly
-            String uploadedKey = r2StorageService.uploadFile(thumbnailFile, storageKey, contentType);
+            // Upload to rustfs directly
+            String uploadedKey = rustfsStorageService.uploadFile(thumbnailFile, storageKey, contentType);
 
             // Build CDN URL
             String cdnUrl = MediaStorageUtils.buildCdnUrl(uploadedKey, cdnDomain);

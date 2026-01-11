@@ -9,7 +9,7 @@ import com.datn.datnbe.document.management.validation.MediaValidation;
 import com.datn.datnbe.document.repository.MediaRepository;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
-import com.datn.datnbe.sharedkernel.service.R2StorageService;
+import com.datn.datnbe.sharedkernel.service.RustfsStorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
@@ -26,11 +26,11 @@ import static com.datn.datnbe.sharedkernel.utils.MediaStorageUtils.*;
 @Slf4j
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class MediaStorageManagement implements MediaStorageApi {
-    R2StorageService r2StorageService;
+    RustfsStorageService rustfsStorageService;
     MediaRepository mediaRepository;
 
     @NonFinal
-    @Value("${cloudflare.r2.public-url}")
+    @Value("${rustfs.public-url}")
     String cdnDomain;
 
     @Override
@@ -44,7 +44,7 @@ public class MediaStorageManagement implements MediaStorageApi {
         String sanitizedFilename = sanitizeFilename(originalFilename);
 
         String storageKey = buildObjectKey(mediaType.getFolder(), sanitizedFilename);
-        String uploadedKey = r2StorageService.uploadFile(file, storageKey, contentType);
+        String uploadedKey = rustfsStorageService.uploadFile(file, storageKey, contentType);
 
         Media media = Media.builder()
                 .originalFilename(originalFilename)
@@ -81,7 +81,7 @@ public class MediaStorageManagement implements MediaStorageApi {
         String sanitizedFilename = sanitizeFilename(originalFilename);
 
         String storageKey = buildObjectKey(mediaType.getFolder(), sanitizedFilename);
-        String uploadedKey = r2StorageService.uploadFile(file, storageKey, contentType);
+        String uploadedKey = rustfsStorageService.uploadFile(file, storageKey, contentType);
 
         Media.MediaBuilder mediaBuilder = Media.builder()
                 .originalFilename(originalFilename)
@@ -146,7 +146,7 @@ public class MediaStorageManagement implements MediaStorageApi {
                 .orElseThrow(() -> new AppException(ErrorCode.MEDIA_NOT_FOUND, "Media not found with ID: " + mediaId));
 
         // Delete from R2 storage
-        r2StorageService.deleteFile(media.getStorageKey());
+        rustfsStorageService.deleteFile(media.getStorageKey());
 
         // Delete from database
         mediaRepository.delete(media);
