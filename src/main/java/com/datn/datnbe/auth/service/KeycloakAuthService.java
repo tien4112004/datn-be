@@ -191,6 +191,25 @@ public class KeycloakAuthService {
     }
 
     /**
+     * Update Keycloak user password
+     */
+    public void setUserPassword(String keycloakUserId, String newPassword) {
+        try {
+            CredentialRepresentation credential = new CredentialRepresentation();
+            credential.setType(CredentialRepresentation.PASSWORD);
+            credential.setValue(newPassword);
+            credential.setTemporary(false);
+
+            usersResource.get(keycloakUserId).resetPassword(credential);
+            log.info("Successfully reset password for Keycloak user: {}", keycloakUserId);
+
+        } catch (Exception e) {
+            log.error("Error resetting password for Keycloak user: {}", e.getMessage(), e);
+            throw new AppException(ErrorCode.USER_UPDATE_FAILED, "Failed to update password in authentication system");
+        }
+    }
+
+    /**
      * Update Keycloak user
      */
     public void updateKeycloakUser(String keycloakUserId, String firstName, String lastName, String email) {

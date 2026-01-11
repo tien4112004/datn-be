@@ -61,7 +61,7 @@ public class StudentManagement implements StudentApi {
         log.info("Creating new student with full name: {}", request.getFullName());
 
         // Phase 1: Create user via UserProfileAPI
-        String username = StudentCredentialGenerator.generateUsername(request.getFullName(), request.getDateOfBirth());
+        String username = StudentCredentialGenerator.generateUsername(request.getFullName(), request.getDateOfBirth(), studentRepository);
         String password = StudentCredentialGenerator.generatePassword();
 
         // Parse fullName into firstName and lastName
@@ -174,7 +174,7 @@ public class StudentManagement implements StudentApi {
         List<ClassEnrollment> allEnrollments = classEnrollmentRepository.findByClassId(classId);
         List<String> studentIds = allEnrollments.stream()
                 .map(ClassEnrollment::getStudentId)
-                .collect(Collectors.toList());
+                .toList();
 
         if (studentIds.isEmpty()) {
             return PaginatedResponseDto.<StudentResponseDto>builder()
@@ -264,5 +264,40 @@ public class StudentManagement implements StudentApi {
 
         classEnrollmentRepository.deleteByClassIdAndStudentId(classId, studentId);
         log.info("Successfully removed student {} from class {}", studentId, classId);
+    }
+
+    @Override
+    @Transactional
+    public List<StudentResponseDto> regeneratePasswords(List<String> studentIds) {
+        log.info("Regenerating passwords for {} students", studentIds.size());
+
+        List<StudentResponseDto> responses = new java.util.ArrayList<>();
+
+        for (String studentId : studentIds) {
+            try {
+                Student student = studentRepository.findById(studentId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + studentId));
+
+                // Generate new password
+                String newPassword = StudentCredentialGenerator.generatePassword();
+
+                // Update password via UserProfileAPI
+                userProfileApi.updatePassword(student.getUserId(), newPassword);
+
+                log.info("Password regenerated for student {} (user {})", studentId, student.getUserId());
+
+                // Build response with new password
+                StudentResponseDto response = studentEntityMapper.toResponseDto(student);
+                response.setPassword(newPassword);
+                enrichWithUserProfile(response, student.getUserId());
+                responses.add(response);
+
+            } catch (Exception e) {
+                log.error("Failed to regenerate password for student {}: {}", studentId, e.getMessage());
+                throw new RuntimeException("Failed to regenerate password for student " + studentId, e);
+            }
+        }
+
+        return responses;
     }
 }

@@ -127,18 +127,7 @@ public class UserProfileManagement implements UserProfileApi {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_PROFILE_NOT_FOUND,
                         "User profile not found for user ID: " + userId));
 
-        UserProfileResponse response = userProfileMapper.toResponseDto(userProfile);
-
-        // Fetch email from Keycloak
-        try {
-            String email = keycloakAuthService.getUserEmail(userProfile.getKeycloakUserId());
-            response.setEmail(email);
-        } catch (Exception e) {
-            log.error("Failed to fetch email from Keycloak for user ID: {}", userId, e);
-            // Continue without email
-        }
-
-        return response;
+        return userProfileMapper.toResponseDto(userProfile);
     }
 
     @Override
@@ -363,5 +352,23 @@ public class UserProfileManagement implements UserProfileApi {
                         .avatarUrl(userProfile.getAvatarUrl())
                         .build())
                 .orElse(null);
+    }
+
+    @Override
+    @Transactional
+    public void updatePassword(String userId, String newPassword) {
+        log.info("Updating password for user: {}", userId);
+
+        UserProfile userProfile = userProfileRepo.findByIdOrKeycloakUserId(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "User not found with ID: " + userId));
+
+        try {
+            // Update password via Keycloak
+            keycloakAuthService.setUserPassword(userProfile.getKeycloakUserId(), newPassword);
+            log.info("Password updated successfully for user: {}", userId);
+        } catch (Exception e) {
+            log.error("Failed to update password for user {}: {}", userId, e.getMessage(), e);
+            throw new AppException(ErrorCode.USER_UPDATE_FAILED, "Failed to update password");
+        }
     }
 }
