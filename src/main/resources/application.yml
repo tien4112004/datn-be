@@ -33,7 +33,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
@@ -142,6 +142,13 @@ ai:
     presentation-batch-endpoint: ${AI_API_PRESENTATION_BATCH_ENDPOINT:/api/presentations/generate/mock}
     image-endpoint: ${AI_API_IMAGE_ENDPOINT:/api/image/generate/mock}
     mindmap-endpoint: ${AI_API_MINDMAP_ENDPOINT:/api/mindmap/generate}
+
+rustfs:
+  endpoint: ${RUSTFS_ENDPOINT:http://localhost:9000}
+  bucket: ${RUSTFS_BUCKET:default}
+  accessKey: ${RUSTFS_ACCESS_KEY:minioadmin}
+  secretKey: ${RUSTFS_SECRET_KEY:minioadmin}
+  public-url: ${RUSTFS_PUBLIC_URL:http://localhost:9000}
 
 cloudflare:
   r2:
