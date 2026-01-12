@@ -2,8 +2,8 @@ package com.datn.datnbe.sharedkernel.service;
 
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,13 +15,16 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import java.io.IOException;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class RustfsStorageService {
     private final S3Client s3Client;
-
+    
     @Value("${rustfs.bucket:default}")
     private String bucket;
+    
+    public RustfsStorageService(@Qualifier("rustfsS3Client") S3Client s3Client) {
+        this.s3Client = s3Client;
+    }
 
     public String uploadFile(MultipartFile file, String key, String contentType) {
         try {
