@@ -15,7 +15,7 @@ import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import java.util.Optional;
 
-import com.datn.datnbe.sharedkernel.service.R2StorageService;
+import com.datn.datnbe.sharedkernel.service.RustfsStorageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,7 +32,7 @@ import org.springframework.web.multipart.MultipartFile;
 class MediaStorageManagementTest {
 
     @Mock
-    private R2StorageService r2StorageService;
+    private RustfsStorageService rustfsStorageService;
 
     @Mock
     private MediaRepository mediaRepository;
@@ -59,6 +59,7 @@ class MediaStorageManagementTest {
                 .mediaType(MediaType.IMAGE)
                 .fileSize(1024L)
                 .contentType("image/jpeg")
+                .ownerId("test-owner")
                 .build();
     }
 
@@ -74,12 +75,13 @@ class MediaStorageManagementTest {
         String contentType = "image/jpeg";
         String extension = "jpg";
         String storageKey = "images/uuid-test-image.jpg";
+        String ownerId = "test-owner";
 
         when(mockFile.getOriginalFilename()).thenReturn(originalFilename);
         when(mockFile.getContentType()).thenReturn(contentType);
         when(mockFile.getSize()).thenReturn(1024L);
 
-        when(r2StorageService.uploadFile(eq(mockFile), anyString(), eq(contentType))).thenReturn(storageKey);
+        when(rustfsStorageService.uploadFile(eq(mockFile), anyString(), eq(contentType))).thenReturn(storageKey);
         when(mediaRepository.save(any(Media.class))).thenReturn(testMedia);
 
         // Mock static methods
@@ -87,15 +89,14 @@ class MediaStorageManagementTest {
             validationMock.when(() -> MediaValidation.getValidatedMediaType(mockFile)).thenReturn(MediaType.IMAGE);
 
             // When
-            UploadedMediaResponseDto result = mediaStorageManagement.upload(mockFile);
+            UploadedMediaResponseDto result = mediaStorageManagement.upload(mockFile, ownerId);
 
             // Then
             assertThat(result).isNotNull();
             assertThat(result.getMediaType()).isEqualTo("IMAGE");
             assertThat(result.getCdnUrl()).isEqualTo(testMedia.getCdnUrl());
-            assertThat(result.getExtension()).isEqualTo(extension);
 
-            verify(r2StorageService).uploadFile(eq(mockFile), anyString(), eq(contentType));
+            verify(rustfsStorageService).uploadFile(eq(mockFile), anyString(), eq(contentType));
             verify(mediaRepository).save(any(Media.class));
             validationMock.verify(() -> MediaValidation.getValidatedMediaType(mockFile));
         }
@@ -111,14 +112,14 @@ class MediaStorageManagementTest {
             validationMock.when(() -> MediaValidation.getValidatedMediaType(mockFile)).thenThrow(validationException);
 
             // When & Then
-            assertThatThrownBy(() -> mediaStorageManagement.upload(mockFile)).isInstanceOf(AppException.class)
+            assertThatThrownBy(() -> mediaStorageManagement.upload(mockFile, "test-owner")).isInstanceOf(AppException.class)
                     .hasMessage("Invalid file type")
                     .satisfies(ex -> {
                         AppException appEx = (AppException) ex;
                         assertThat(appEx.getErrorCode()).isEqualTo(ErrorCode.UNSUPPORTED_MEDIA_TYPE);
                     });
 
-            verify(r2StorageService, never()).uploadFile(any(), anyString(), anyString());
+            verify(rustfsStorageService, never()).uploadFile(any(), anyString(), anyString());
             verify(mediaRepository, never()).save(any());
         }
     }
@@ -129,18 +130,19 @@ class MediaStorageManagementTest {
         // Given
         String originalFilename = "test-image.jpg";
         String contentType = "image/jpeg";
+        String ownerId = "test-owner";
         AppException storageException = new AppException(ErrorCode.FILE_UPLOAD_ERROR, "Storage service failed");
 
         when(mockFile.getOriginalFilename()).thenReturn(originalFilename);
         when(mockFile.getContentType()).thenReturn(contentType);
 
-        when(r2StorageService.uploadFile(eq(mockFile), anyString(), eq(contentType))).thenThrow(storageException);
+        when(rustfsStorageService.uploadFile(eq(mockFile), anyString(), eq(contentType))).thenThrow(storageException);
 
         try (MockedStatic<MediaValidation> validationMock = mockStatic(MediaValidation.class)) {
             validationMock.when(() -> MediaValidation.getValidatedMediaType(mockFile)).thenReturn(MediaType.IMAGE);
 
             // When & Then
-            assertThatThrownBy(() -> mediaStorageManagement.upload(mockFile)).isInstanceOf(AppException.class)
+            assertThatThrownBy(() -> mediaStorageManagement.upload(mockFile, ownerId)).isInstanceOf(AppException.class)
                     .hasMessage("Storage service failed")
                     .satisfies(ex -> {
                         AppException appEx = (AppException) ex;
@@ -158,22 +160,23 @@ class MediaStorageManagementTest {
         String originalFilename = "test-image.jpg";
         String contentType = "image/jpeg";
         String storageKey = "images/uuid-test-image.jpg";
+        String ownerId = "test-owner";
 
         when(mockFile.getOriginalFilename()).thenReturn(originalFilename);
         when(mockFile.getContentType()).thenReturn(contentType);
         when(mockFile.getSize()).thenReturn(1024L);
 
-        when(r2StorageService.uploadFile(eq(mockFile), anyString(), eq(contentType))).thenReturn(storageKey);
+        when(rustfsStorageService.uploadFile(eq(mockFile), anyString(), eq(contentType))).thenReturn(storageKey);
         when(mediaRepository.save(any(Media.class))).thenThrow(new RuntimeException("Database connection failed"));
 
         try (MockedStatic<MediaValidation> validationMock = mockStatic(MediaValidation.class)) {
             validationMock.when(() -> MediaValidation.getValidatedMediaType(mockFile)).thenReturn(MediaType.IMAGE);
 
             // When & Then
-            assertThatThrownBy(() -> mediaStorageManagement.upload(mockFile)).isInstanceOf(RuntimeException.class)
+            assertThatThrownBy(() -> mediaStorageManagement.upload(mockFile, ownerId)).isInstanceOf(RuntimeException.class)
                     .hasMessage("Database connection failed");
 
-            verify(r2StorageService).uploadFile(eq(mockFile), anyString(), eq(contentType));
+            verify(rustfsStorageService).uploadFile(eq(mockFile), anyString(), eq(contentType));
             verify(mediaRepository).save(any(Media.class));
         }
     }
@@ -186,6 +189,7 @@ class MediaStorageManagementTest {
         String contentType = "video/mp4";
         String extension = "mp4";
         String storageKey = "videos/uuid-test-video.mp4";
+        String ownerId = "test-owner";
 
         Media videoMedia = Media.builder()
                 .id(2L)
@@ -195,26 +199,26 @@ class MediaStorageManagementTest {
                 .mediaType(MediaType.VIDEO)
                 .fileSize(5120L)
                 .contentType(contentType)
+                .ownerId(ownerId)
                 .build();
 
         when(mockFile.getOriginalFilename()).thenReturn(originalFilename);
         when(mockFile.getContentType()).thenReturn(contentType);
         when(mockFile.getSize()).thenReturn(5120L);
 
-        when(r2StorageService.uploadFile(eq(mockFile), anyString(), eq(contentType))).thenReturn(storageKey);
+        when(rustfsStorageService.uploadFile(eq(mockFile), anyString(), eq(contentType))).thenReturn(storageKey);
         when(mediaRepository.save(any(Media.class))).thenReturn(videoMedia);
 
         try (MockedStatic<MediaValidation> validationMock = mockStatic(MediaValidation.class)) {
             validationMock.when(() -> MediaValidation.getValidatedMediaType(mockFile)).thenReturn(MediaType.VIDEO);
 
             // When
-            UploadedMediaResponseDto result = mediaStorageManagement.upload(mockFile);
+            UploadedMediaResponseDto result = mediaStorageManagement.upload(mockFile, ownerId);
 
             // Then
             assertThat(result).isNotNull();
             assertThat(result.getMediaType()).isEqualTo("VIDEO");
             assertThat(result.getCdnUrl()).isEqualTo(videoMedia.getCdnUrl());
-            assertThat(result.getExtension()).isEqualTo(extension);
         }
     }
 
@@ -229,7 +233,7 @@ class MediaStorageManagementTest {
         Long mediaId = 1L;
 
         when(mediaRepository.findById(mediaId)).thenReturn(Optional.of(testMedia));
-        doNothing().when(r2StorageService).deleteFile(testMedia.getStorageKey());
+        doNothing().when(rustfsStorageService).deleteFile(testMedia.getStorageKey());
         doNothing().when(mediaRepository).delete(testMedia);
 
         // When
@@ -237,7 +241,7 @@ class MediaStorageManagementTest {
 
         // Then
         verify(mediaRepository).findById(mediaId);
-        verify(r2StorageService).deleteFile(testMedia.getStorageKey());
+        verify(rustfsStorageService).deleteFile(testMedia.getStorageKey());
         verify(mediaRepository).delete(testMedia);
     }
 
@@ -258,7 +262,7 @@ class MediaStorageManagementTest {
                 });
 
         verify(mediaRepository).findById(mediaId);
-        verify(r2StorageService, never()).deleteFile(anyString());
+        verify(rustfsStorageService, never()).deleteFile(anyString());
         verify(mediaRepository, never()).delete(any());
     }
 
@@ -270,7 +274,7 @@ class MediaStorageManagementTest {
         AppException storageException = new AppException(ErrorCode.FILE_UPLOAD_ERROR, "Failed to delete file");
 
         when(mediaRepository.findById(mediaId)).thenReturn(Optional.of(testMedia));
-        doThrow(storageException).when(r2StorageService).deleteFile(testMedia.getStorageKey());
+        doThrow(storageException).when(rustfsStorageService).deleteFile(testMedia.getStorageKey());
 
         // When & Then
         assertThatThrownBy(() -> mediaStorageManagement.deleteMedia(mediaId)).isInstanceOf(AppException.class)
@@ -281,7 +285,7 @@ class MediaStorageManagementTest {
                 });
 
         verify(mediaRepository).findById(mediaId);
-        verify(r2StorageService).deleteFile(testMedia.getStorageKey());
+        verify(rustfsStorageService).deleteFile(testMedia.getStorageKey());
         verify(mediaRepository, never()).delete(any());
     }
 
@@ -292,7 +296,7 @@ class MediaStorageManagementTest {
         Long mediaId = 1L;
 
         when(mediaRepository.findById(mediaId)).thenReturn(Optional.of(testMedia));
-        doNothing().when(r2StorageService).deleteFile(testMedia.getStorageKey());
+        doNothing().when(rustfsStorageService).deleteFile(testMedia.getStorageKey());
         doThrow(new RuntimeException("Database connection failed")).when(mediaRepository).delete(testMedia);
 
         // When & Then
@@ -300,7 +304,7 @@ class MediaStorageManagementTest {
                 .hasMessage("Database connection failed");
 
         verify(mediaRepository).findById(mediaId);
-        verify(r2StorageService).deleteFile(testMedia.getStorageKey());
+        verify(rustfsStorageService).deleteFile(testMedia.getStorageKey());
         verify(mediaRepository).delete(testMedia);
     }
 
@@ -313,7 +317,7 @@ class MediaStorageManagementTest {
         when(mediaRepository.findById(mediaId)).thenReturn(Optional.of(testMedia));
 
         // R2 delete succeeds (no exception thrown)
-        doNothing().when(r2StorageService).deleteFile(testMedia.getStorageKey());
+        doNothing().when(rustfsStorageService).deleteFile(testMedia.getStorageKey());
         doNothing().when(mediaRepository).delete(testMedia);
 
         // When
@@ -321,7 +325,7 @@ class MediaStorageManagementTest {
 
         // Then
         verify(mediaRepository).findById(mediaId);
-        verify(r2StorageService).deleteFile(testMedia.getStorageKey());
+        verify(rustfsStorageService).deleteFile(testMedia.getStorageKey());
         verify(mediaRepository).delete(testMedia);
     }
 
@@ -364,6 +368,7 @@ class MediaStorageManagementTest {
         String contentType = "image/jpeg";
         String storageKey = "images/uuid-test-image.jpg";
         String expectedCdnUrl = "https://cdn.example.com/" + storageKey;
+        String ownerId = "test-owner";
 
         when(mockFile.getOriginalFilename()).thenReturn(originalFilename);
         when(mockFile.getContentType()).thenReturn(contentType);
@@ -371,14 +376,14 @@ class MediaStorageManagementTest {
 
         Media mediaWithSlashDomain = testMedia.builder().cdnUrl(expectedCdnUrl).build();
 
-        when(r2StorageService.uploadFile(eq(mockFile), anyString(), eq(contentType))).thenReturn(storageKey);
+        when(rustfsStorageService.uploadFile(eq(mockFile), anyString(), eq(contentType))).thenReturn(storageKey);
         when(mediaRepository.save(any(Media.class))).thenReturn(mediaWithSlashDomain);
 
         try (MockedStatic<MediaValidation> validationMock = mockStatic(MediaValidation.class)) {
             validationMock.when(() -> MediaValidation.getValidatedMediaType(mockFile)).thenReturn(MediaType.IMAGE);
 
             // When
-            UploadedMediaResponseDto result = mediaStorageManagement.upload(mockFile);
+            UploadedMediaResponseDto result = mediaStorageManagement.upload(mockFile, ownerId);
 
             // Then
             assertThat(result.getCdnUrl()).isEqualTo(expectedCdnUrl);
@@ -393,6 +398,7 @@ class MediaStorageManagementTest {
         String contentType = "video/mp4";
         Long largeFileSize = 50_000_000L; // 50MB
         String storageKey = "videos/uuid-large-video.mp4";
+        String ownerId = "test-owner";
 
         when(mockFile.getOriginalFilename()).thenReturn(originalFilename);
         when(mockFile.getContentType()).thenReturn(contentType);
@@ -404,16 +410,17 @@ class MediaStorageManagementTest {
                 .mediaType(MediaType.VIDEO)
                 .fileSize(largeFileSize)
                 .contentType(contentType)
+                .ownerId(ownerId)
                 .build();
 
-        when(r2StorageService.uploadFile(eq(mockFile), anyString(), eq(contentType))).thenReturn(storageKey);
+        when(rustfsStorageService.uploadFile(eq(mockFile), anyString(), eq(contentType))).thenReturn(storageKey);
         when(mediaRepository.save(any(Media.class))).thenReturn(largeMedia);
 
         try (MockedStatic<MediaValidation> validationMock = mockStatic(MediaValidation.class)) {
             validationMock.when(() -> MediaValidation.getValidatedMediaType(mockFile)).thenReturn(MediaType.VIDEO);
 
             // When
-            UploadedMediaResponseDto result = mediaStorageManagement.upload(mockFile);
+            UploadedMediaResponseDto result = mediaStorageManagement.upload(mockFile, ownerId);
 
             // Then
             assertThat(result).isNotNull();

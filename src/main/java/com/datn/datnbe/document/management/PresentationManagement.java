@@ -188,7 +188,7 @@ public class PresentationManagement implements PresentationApi {
             String extension = contentType.equals("image/png") ? "png" : "jpg";
 
             // Build storage key with appropriate extension
-            String storageKey = String.format("thumbnails/presentation/%s.%s", id, extension);
+            String storageKey = String.format("user/thumbnails/presentation/%s.%s", id, extension);
 
             // Upload to rustfs directly
             String uploadedKey = rustfsStorageService.uploadFile(thumbnailFile, storageKey, contentType);

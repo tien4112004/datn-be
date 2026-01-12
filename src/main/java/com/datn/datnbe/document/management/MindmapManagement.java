@@ -158,7 +158,7 @@ public class MindmapManagement implements MindmapApi {
                 String extension = contentType.equals("image/png") ? "png" : "jpg";
 
                 // Build storage key with appropriate extension
-                String storageKey = String.format("thumbnails/mindmap/%s.%s", id, extension);
+                String storageKey = String.format("user/thumbnails/mindmap/%s.%s", id, extension);
 
                 // Upload to R2 directly
                 String uploadedKey = rustfsStorageService.uploadFile(thumbnailFile, storageKey, contentType);
