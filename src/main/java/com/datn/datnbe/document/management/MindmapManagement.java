@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.datn.datnbe.auth.api.ResourcePermissionApi;
 import com.datn.datnbe.auth.dto.request.ResourceRegistrationRequest;
 import com.datn.datnbe.document.api.MindmapApi;
+import com.datn.datnbe.document.dto.DocumentMetadataDto;
 import com.datn.datnbe.document.dto.request.MindmapCollectionRequest;
 import com.datn.datnbe.document.dto.request.MindmapCreateRequest;
 import com.datn.datnbe.document.dto.request.MindmapUpdateRequest;
@@ -227,7 +228,14 @@ public class MindmapManagement implements MindmapApi {
             // Track document visit asynchronously
             String userId = getCurrentUserId();
             if (userId != null) {
-                documentVisitService.trackDocumentVisit(userId, id, "mindmap");
+                var metadata = DocumentMetadataDto.builder()
+                    .userId(userId)
+                    .documentId(id)
+                    .type("mindmap")
+                    .title(mindmap.getTitle())
+                    .thumbnail(mindmap.getThumbnail())
+                    .build();
+                documentVisitService.trackDocumentVisit(metadata);
             }
 
             log.info("Successfully retrieved mindmap with id: '{}'", id);

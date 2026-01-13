@@ -1,6 +1,7 @@
 package com.datn.datnbe.document.management;
 
 import com.datn.datnbe.document.api.MediaStorageApi;
+import com.datn.datnbe.document.dto.DocumentMetadataDto;
 import com.datn.datnbe.document.dto.MediaMetadataDto;
 import com.datn.datnbe.document.dto.response.UploadedMediaResponseDto;
 import com.datn.datnbe.document.entity.Media;
@@ -172,7 +173,14 @@ public class MediaStorageManagement implements MediaStorageApi {
         if (media.getMediaType() != MediaType.IMAGE) {
             String userId = getCurrentUserId();
             if (userId != null) {
-                documentVisitService.trackDocumentVisit(userId, String.valueOf(mediaId), media.getMediaType().name().toLowerCase());
+                var metadata = DocumentMetadataDto.builder()
+                    .userId(userId)
+                    .documentId(String.valueOf(mediaId))
+                    .type(media.getMediaType().name().toLowerCase())
+                    .title(media.getOriginalFilename())
+                    .thumbnail(media.getCdnUrl())
+                    .build();
+                documentVisitService.trackDocumentVisit(metadata);
             }
         }
 

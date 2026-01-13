@@ -3,6 +3,7 @@ package com.datn.datnbe.document.management;
 import com.datn.datnbe.auth.api.ResourcePermissionApi;
 import com.datn.datnbe.auth.dto.request.ResourceRegistrationRequest;
 import com.datn.datnbe.document.api.PresentationApi;
+import com.datn.datnbe.document.dto.DocumentMetadataDto;
 import com.datn.datnbe.document.dto.request.PresentationCollectionRequest;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
 import com.datn.datnbe.document.dto.request.PresentationUpdateRequest;
@@ -240,7 +241,14 @@ public class PresentationManagement implements PresentationApi {
         // Track document visit
         String userId = getCurrentUserId();
         if (userId != null) {
-            documentVisitService.trackDocumentVisit(userId, id, "presentation");
+            var metadata = DocumentMetadataDto.builder()
+                .userId(userId)
+                .documentId(id)
+                .type("presentation")
+                .title(presentation.getTitle())
+                .thumbnail(presentation.getThumbnail())
+                .build();
+            documentVisitService.trackDocumentVisit(metadata);
         }
 
         return mapper.toDetailedDto(presentation);
