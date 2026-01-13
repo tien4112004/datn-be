@@ -1,12 +1,13 @@
 package com.datn.datnbe.document.service;
 
+import com.datn.datnbe.document.dto.DocumentMetadataDto;
 import com.datn.datnbe.document.entity.DocumentVisit;
 import com.datn.datnbe.document.repository.DocumentVisitRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-    import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,25 +24,29 @@ public class DocumentVisitService {
 
     /**
      * Track document visit asynchronously (background job)
-     * Updates last visited time
+     * Updates last visited time with title and thumbnail from metadata
      */
     @Async
     @Transactional
-    public void trackDocumentVisit(String userId, String documentId, String documentType) {
-        log.info("Tracking visit (async) - userId: {}, documentId: {}, type: {}", userId, documentId, documentType);
+    public void trackDocumentVisit(DocumentMetadataDto metadata) {
+        log.info("Tracking visit - userId: {}, documentId: {}, type: {}", 
+                 metadata.getUserId(), metadata.getDocumentId(), metadata.getType());
         
         DocumentVisit visit = visitRepository
-            .findByUserIdAndDocumentId(userId, documentId)
+            .findByUserIdAndDocumentId(metadata.getUserId(), metadata.getDocumentId())
             .orElse(DocumentVisit.builder()
-                .userId(userId)
-                .documentId(documentId)
-                .documentType(documentType)
+                .userId(metadata.getUserId())
+                .documentId(metadata.getDocumentId())
+                .documentType(metadata.getType())
                 .build());
         
         visit.setLastVisited(LocalDateTime.now());
+        visit.setTitle(metadata.getTitle());
+        visit.setThumbnail(metadata.getThumbnail());
         visitRepository.save(visit);
         
-        log.debug("Visit tracked successfully for userId: {}, documentId: {}", userId, documentId);
+        log.debug("Visit tracked successfully for userId: {}, documentId: {}, title: {}", 
+                  metadata.getUserId(), metadata.getDocumentId(), metadata.getTitle());
     }
 
     /**
@@ -52,6 +57,7 @@ public class DocumentVisitService {
         log.info("Fetching recent documents for user: {}, limit: {}", userId, limit);
         
         Pageable pageable = PageRequest.of(0, limit > 0 ? limit : DEFAULT_LIMIT);
+        List<DocumentVisit> a = visitRepository.findRecentDocumentsByUser(userId, pageable);
         return visitRepository.findRecentDocumentsByUser(userId, pageable);
     }
 

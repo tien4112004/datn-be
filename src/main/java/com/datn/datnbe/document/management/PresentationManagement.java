@@ -241,7 +241,14 @@ public class PresentationManagement implements PresentationApi {
         // Track document visit
         String userId = getCurrentUserId();
         if (userId != null) {
-            documentVisitService.trackDocumentVisit(userId, id, "presentation");
+            var metadata = DocumentMetadataDto.builder()
+                .userId(userId)
+                .documentId(id)
+                .type("presentation")
+                .title(presentation.getTitle())
+                .thumbnail(presentation.getThumbnail())
+                .build();
+            documentVisitService.trackDocumentVisit(metadata);
         }
 
         return mapper.toDetailedDto(presentation);

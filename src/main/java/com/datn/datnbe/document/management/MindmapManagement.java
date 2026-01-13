@@ -228,7 +228,14 @@ public class MindmapManagement implements MindmapApi {
             // Track document visit asynchronously
             String userId = getCurrentUserId();
             if (userId != null) {
-                documentVisitService.trackDocumentVisit(userId, id, "mindmap");
+                var metadata = DocumentMetadataDto.builder()
+                    .userId(userId)
+                    .documentId(id)
+                    .type("mindmap")
+                    .title(mindmap.getTitle())
+                    .thumbnail(mindmap.getThumbnail())
+                    .build();
+                documentVisitService.trackDocumentVisit(metadata);
             }
 
             log.info("Successfully retrieved mindmap with id: '{}'", id);

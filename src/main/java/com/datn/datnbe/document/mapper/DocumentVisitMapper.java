@@ -8,7 +8,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface DocumentVisitMapper {
 
-    @Mapping(target = "documentTitle", ignore = true)
-    @Mapping(target = "thumbnail", ignore = true)
+    @Mapping(target = "title")
+    @Mapping(target = "thumbnail")
     RecentDocumentDto toRecentDocumentDto(DocumentVisit documentVisit);
 }

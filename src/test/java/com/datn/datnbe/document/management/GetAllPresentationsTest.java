@@ -73,7 +73,7 @@ class GetAllPresentationsTest {
     void setUp() {
         mapper = Mappers.getMapper(PresentationEntityMapper.class);
         presentationService = new PresentationManagement(presentationRepository, mapper, validation,
-                resourcePermissionApi, rustfsStorageService);
+                resourcePermissionApi, rustfsStorageService, documentVisitService);
 
         // Setup security context mock
         securityContextHolderMock = mockStatic(SecurityContextHolder.class);
