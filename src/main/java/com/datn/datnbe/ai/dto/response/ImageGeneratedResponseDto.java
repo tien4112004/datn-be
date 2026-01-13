@@ -16,4 +16,5 @@ public class ImageGeneratedResponseDto {
     List<String> images;
     String error;
     String count;
+    Long tokenUsage;
 }

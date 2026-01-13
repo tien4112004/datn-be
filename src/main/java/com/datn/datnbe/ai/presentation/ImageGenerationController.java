@@ -1,8 +1,10 @@
 package com.datn.datnbe.ai.presentation;
 
 import com.datn.datnbe.ai.api.ImageGenerationApi;
+import com.datn.datnbe.ai.api.TokenUsageApi;
 import com.datn.datnbe.ai.dto.request.ImagePromptRequest;
 import com.datn.datnbe.ai.dto.response.ImageResponseDto;
+import com.datn.datnbe.ai.entity.TokenUsage;
 import com.datn.datnbe.ai.management.ImageGenerationIdempotencyService;
 import com.datn.datnbe.ai.mapper.ImageGenerateMapper;
 import com.datn.datnbe.ai.utils.MappingParamsUtils;
@@ -31,6 +33,7 @@ public class ImageGenerationController {
     private final MediaStorageApi mediaStorageApi;
     private final ImageGenerateMapper imageGenerateMapper;
     private final SecurityContextUtils securityContextUtils;
+    private final TokenUsageApi tokenUsageApi;
 
     @PostMapping("/images/generate")
     public ResponseEntity<AppResponseDto<ImageResponseDto>> generateImage(@RequestBody ImagePromptRequest request) {
@@ -43,6 +46,7 @@ public class ImageGenerationController {
         ImageResponseDto uploadedMedia = imageGenerateMapper
                 .toImageResponseDto(imageResponse, mediaStorageApi, ownerId);
         log.info("Images uploaded successfully: {}", uploadedMedia);
+        recordImageTokenUsage(ownerId, "image", request);
 
         return ResponseEntity.ok(AppResponseDto.<ImageResponseDto>builder().data(uploadedMedia).build());
     }
@@ -95,6 +99,9 @@ public class ImageGenerationController {
                 .toImageResponseDtoWithMetadata(imageResponse, mediaStorageApi, ownerId, metadata);
         log.info("Images uploaded successfully: {}", uploadedMedia);
 
+        // Record token usage
+        recordImageTokenUsage(ownerId, "image", request);
+
         return ResponseEntity.ok(AppResponseDto.<ImageResponseDto>builder().data(uploadedMedia).build());
     }
 
@@ -123,5 +130,20 @@ public class ImageGenerationController {
         log.info("Images uploaded successfully: {}", uploadedMedia);
 
         return ResponseEntity.ok(AppResponseDto.<ImageResponseDto>builder().data(uploadedMedia).build());
+    }
+
+    private void recordImageTokenUsage(String userId, String requestType, ImagePromptRequest request) {
+        try {
+            TokenUsage tokenUsage = TokenUsage.builder()
+                    .userId(userId)
+                    .request(requestType)
+                    .tokenCount(null)
+                    .model(request.getModel())
+                    .provider(request.getProvider())
+                    .build();
+            tokenUsageApi.recordTokenUsage(tokenUsage);
+        } catch (Exception e) {
+            log.warn("Failed to record token usage for user: {} with type: {}", userId, requestType, e);
+        }
     }
 }
