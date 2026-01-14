@@ -24,6 +24,7 @@ import com.datn.datnbe.auth.dto.keycloak.KeycloakGroupPolicyDto;
 import com.datn.datnbe.auth.dto.keycloak.KeycloakPermissionDto;
 import com.datn.datnbe.auth.dto.keycloak.KeycloakResourceDto;
 import com.datn.datnbe.auth.dto.keycloak.KeycloakTokenResponse;
+import com.datn.datnbe.auth.dto.keycloak.KeycloakUserDto;
 import com.datn.datnbe.auth.dto.keycloak.KeycloakUserPolicyDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
@@ -465,6 +466,33 @@ public class KeycloakApiClient {
         } catch (HttpClientErrorException e) {
             log.error("Failed to search group policies: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
             return null;
+        }
+    }
+
+    public List<KeycloakUserDto> getGroupMembers(String groupId) {
+        String url = String.format("%s/admin/realms/%s/groups/%s/members",
+                authzProperties.getServerUrl(),
+                authzProperties.getRealm(),
+                groupId);
+
+        HttpHeaders headers = createAuthHeaders();
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        try {
+            log.debug("Fetching members for group: {}", groupId);
+
+            ResponseEntity<List<KeycloakUserDto>> response = restTemplate
+                    .exchange(url, HttpMethod.GET, request, new ParameterizedTypeReference<>() {
+                    });
+
+            List<KeycloakUserDto> members = response.getBody();
+            log.info("Found {} members in group {}", members != null ? members.size() : 0, groupId);
+
+            return members != null ? members : List.of();
+
+        } catch (HttpClientErrorException e) {
+            log.error("Failed to fetch group members: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
+            return List.of();
         }
     }
 }

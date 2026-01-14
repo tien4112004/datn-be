@@ -56,6 +56,13 @@ public class DocumentResourceMapping {
     @Column
     String editorsGroupId; // Group for users with edit access (owner only)
 
+    @Column
+    @Builder.Default
+    Boolean isPublic = false; // Whether the resource is publicly accessible
+
+    @Column
+    String publicPermission; // Permission level for public access ("read" or "comment")
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     LocalDateTime createdAt;
