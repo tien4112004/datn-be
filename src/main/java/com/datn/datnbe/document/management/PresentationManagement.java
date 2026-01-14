@@ -277,23 +277,4 @@ public class PresentationManagement implements PresentationApi {
         documentVisitService.deleteDocumentVisits(id);
         log.info("Deleted all visit records for presentation: {}", id);
     }
-
-    /**
-     * Get current user ID from security context
-     */
-    private String getCurrentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Object principal = authentication.getPrincipal();
-
-        if (principal instanceof Jwt jwt) {
-            return jwt.getSubject();
-        }
-
-        // Fallback for tests
-        if (principal instanceof String username) {
-            return username;
-        }
-
-        throw new AppException(ErrorCode.UNAUTHORIZED, "Invalid authentication");
-    }
 }

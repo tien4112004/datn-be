@@ -1,9 +1,12 @@
 package com.datn.datnbe.document.api;
 
 import com.datn.datnbe.document.dto.MediaMetadataDto;
+import com.datn.datnbe.document.dto.response.MultiUploadedMediaResponseDto;
 import com.datn.datnbe.document.dto.response.UploadedMediaResponseDto;
 import com.datn.datnbe.document.entity.Media;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 public interface MediaStorageApi {
     /**
@@ -43,10 +46,21 @@ public interface MediaStorageApi {
     void deleteMedia(Long mediaId);
 
     /**
-     * Get media by ID (tracks visit for non-image types)
+     * Upload multiple media files
      *
-     * @param mediaId the ID of the media to retrieve
-     * @return the media entity
+     * @param files the files to upload
+     * @param ownerId the ID of the user who owns these media files
+     * @return the uploaded media responses
      */
-    Media getMedia(Long mediaId);
+    MultiUploadedMediaResponseDto uploadMultiple(List<MultipartFile> files, String ownerId);
+
+    /**
+     * Upload multiple media files with generation metadata
+     *
+     * @param files the files to upload
+     * @param ownerId the ID of the user who owns these media files
+     * @param metadata generation metadata (isGenerated, presentationId, prompt)
+     * @return the uploaded media responses
+     */
+    MultiUploadedMediaResponseDto uploadMultiple(List<MultipartFile> files, String ownerId, MediaMetadataDto metadata);
 }
