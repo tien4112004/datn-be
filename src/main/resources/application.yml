@@ -151,12 +151,11 @@ rustfs:
   public-url: ${S3_PUBLIC_URL:http://localhost:9000}
 cloudflare:
   r2:
-    endpoint: ${S3_ENDPOINT}
-    accessKey: ${S3_ACCESS_KEY}
-    secretKey: ${S3_SECRET_KEY}
-    bucket: ${S3_BUCKET}
-    public-url: ${S3_PUBLIC_URL}
-
+    endpoint: ${S3_ENDPOINT:http://localhost:9000}
+    accessKey: ${S3_ACCESS_KEY:minioadmin}
+    secretKey: ${S3_SECRET_KEY:minioadmin}
+    bucket: ${S3_BUCKET:default}
+    public-url: ${S3_PUBLIC_URL:http://localhost:9000}
 pexels:
   api:
     key: ${PEXELS_API_KEY:your-api-key-here}
