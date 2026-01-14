@@ -16,6 +16,7 @@ import software.amazon.awssdk.services.s3.S3Configuration;
 
 @Configuration
 @ConfigurationProperties(prefix = "cloudflare.r2")
+@ConditionalOnProperty(name = "cloudflare.r2.enabled", havingValue = "true", matchIfMissing = true)
 @Getter
 @Setter
 public class CloudflareConfig {
