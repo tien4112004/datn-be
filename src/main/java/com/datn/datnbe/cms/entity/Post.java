@@ -39,7 +39,7 @@ public class Post {
     String[] attachments;
 
     @Column(name = "linked_resource_ids")
-    UUID[] linkedResourceIds;
+    String[] linkedResourceIds;
 
     @Column(name = "linked_lesson_id", length = 36)
     String linkedLessonId;
