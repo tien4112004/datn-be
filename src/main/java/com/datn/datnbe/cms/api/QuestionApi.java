@@ -5,7 +5,9 @@ import com.datn.datnbe.cms.dto.request.QuestionUpdateRequest;
 import com.datn.datnbe.cms.dto.request.QuestionCollectionRequest;
 import com.datn.datnbe.cms.dto.response.QuestionResponseDto;
 import com.datn.datnbe.cms.dto.response.BatchCreateQuestionResponseDto;
+import com.datn.datnbe.cms.dto.response.PublishRequestResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -25,4 +27,12 @@ public interface QuestionApi {
     QuestionResponseDto updateQuestion(String id, QuestionUpdateRequest request, String userId);
 
     void deleteQuestion(String id, String userId);
+
+    PaginatedResponseDto<QuestionResponseDto> getPublishedQuestions(Pageable pageable);
+
+    PublishRequestResponseDto publishQuestion(String questionId, String currentUserId);
+
+    PaginatedResponseDto<PublishRequestResponseDto> getPublishRequests(Pageable pageable);
+
+    PublishRequestResponseDto approvePublishRequest(String questionId);
 }
