@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.datn.datnbe.auth.api.ResourcePermissionApi;
 import com.datn.datnbe.auth.dto.request.ResourceRegistrationRequest;
 import com.datn.datnbe.document.api.MindmapApi;
+import com.datn.datnbe.document.dto.DocumentMetadataDto;
 import com.datn.datnbe.document.dto.request.MindmapCollectionRequest;
 import com.datn.datnbe.document.dto.request.MindmapCreateRequest;
 import com.datn.datnbe.document.dto.request.MindmapUpdateRequest;
@@ -31,6 +32,7 @@ import com.datn.datnbe.document.entity.Mindmap;
 import com.datn.datnbe.document.management.validation.MindmapValidation;
 import com.datn.datnbe.document.mapper.MindmapEntityMapper;
 import com.datn.datnbe.document.repository.MindmapRepository;
+import com.datn.datnbe.document.service.DocumentVisitService;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
@@ -56,6 +58,7 @@ public class MindmapManagement implements MindmapApi {
     MindmapValidation validation;
     ResourcePermissionApi resourcePermissionApi;
     RustfsStorageService rustfsStorageService;
+    DocumentVisitService documentVisitService;
 
     @NonFinal
     @Value("${rustfs.public-url}")
@@ -221,6 +224,19 @@ public class MindmapManagement implements MindmapApi {
 
             Mindmap mindmap = findMindmapById(id);
             MindmapDto response = mapper.entityToDto(mindmap);
+
+            // Track document visit asynchronously
+            String userId = getCurrentUserId();
+            if (userId != null) {
+                var metadata = DocumentMetadataDto.builder()
+                    .userId(userId)
+                    .documentId(id)
+                    .type("mindmap")
+                    .title(mindmap.getTitle())
+                    .thumbnail(mindmap.getThumbnail())
+                    .build();
+                documentVisitService.trackDocumentVisit(metadata);
+            }
 
             log.info("Successfully retrieved mindmap with id: '{}'", id);
             return response;

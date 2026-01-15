@@ -3,6 +3,7 @@ package com.datn.datnbe.document.management;
 import com.datn.datnbe.auth.api.ResourcePermissionApi;
 import com.datn.datnbe.auth.dto.request.ResourceRegistrationRequest;
 import com.datn.datnbe.document.api.PresentationApi;
+import com.datn.datnbe.document.dto.DocumentMetadataDto;
 import com.datn.datnbe.document.dto.request.PresentationCollectionRequest;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
 import com.datn.datnbe.document.dto.request.PresentationUpdateRequest;
@@ -14,6 +15,7 @@ import com.datn.datnbe.document.entity.Presentation;
 import com.datn.datnbe.document.management.validation.PresentationValidation;
 import com.datn.datnbe.document.mapper.PresentationEntityMapper;
 import com.datn.datnbe.document.repository.PresentationRepository;
+import com.datn.datnbe.document.service.DocumentVisitService;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
@@ -52,6 +54,7 @@ public class PresentationManagement implements PresentationApi {
     PresentationValidation validation;
     ResourcePermissionApi resourcePermissionApi;
     RustfsStorageService rustfsStorageService;
+    DocumentVisitService documentVisitService;
 
     @NonFinal
     @Value("${rustfs.public-url}")
@@ -235,6 +238,19 @@ public class PresentationManagement implements PresentationApi {
                 presentation.getTitle(),
                 presentation.getSlides() != null ? presentation.getSlides().size() : 0);
 
+        // Track document visit
+        String userId = getCurrentUserId();
+        if (userId != null) {
+            var metadata = DocumentMetadataDto.builder()
+                .userId(userId)
+                .documentId(id)
+                .type("presentation")
+                .title(presentation.getTitle())
+                .thumbnail(presentation.getThumbnail())
+                .build();
+            documentVisitService.trackDocumentVisit(metadata);
+        }
+
         return mapper.toDetailedDto(presentation);
     }
 
@@ -256,6 +272,10 @@ public class PresentationManagement implements PresentationApi {
         Presentation presentation = presentationOpt.get();
         presentation.setDeletedAt(java.time.LocalDate.now());
         presentationRepository.save(presentation);
+        
+        // Clean up document visit records
+        documentVisitService.deleteDocumentVisits(id);
+        log.info("Deleted all visit records for presentation: {}", id);
     }
 
     /**

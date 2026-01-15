@@ -2,6 +2,7 @@ package com.datn.datnbe.document.api;
 
 import com.datn.datnbe.document.dto.MediaMetadataDto;
 import com.datn.datnbe.document.dto.response.UploadedMediaResponseDto;
+import com.datn.datnbe.document.entity.Media;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface MediaStorageApi {
@@ -40,4 +41,12 @@ public interface MediaStorageApi {
      * @param mediaId the ID of the media to delete
      */
     void deleteMedia(Long mediaId);
+
+    /**
+     * Get media by ID (tracks visit for non-image types)
+     *
+     * @param mediaId the ID of the media to retrieve
+     * @return the media entity
+     */
+    Media getMedia(Long mediaId);
 }
