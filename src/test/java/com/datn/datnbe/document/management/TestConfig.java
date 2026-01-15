@@ -14,7 +14,7 @@ import static org.mockito.Mockito.mock;
 @ComponentScan(basePackageClasses = {PresentationEntityMapper.class, SlideEntityMapper.class, SlideElementMapper.class})
 public class TestConfig {
     // This configuration will ensure the mappers are loaded
-    
+
     @Bean
     public SecurityContextUtils securityContextUtils() {
         return mock(SecurityContextUtils.class);

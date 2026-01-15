@@ -217,20 +217,29 @@ public class KeycloakResponseParser {
 
             if (resultsNode != null && resultsNode.isArray()) {
                 for (JsonNode result : resultsNode) {
-                    JsonNode statusNode = result.get("status");
-                    JsonNode scopesNode = result.get("scopes");
+                    // Look inside the policies array to find PERMIT status
+                    // TODO: This is a workaround, consider using DecisionStrategy=UNANIMOUS to simplify
+                    JsonNode policiesNode = result.get("policies");
 
-                    // Check if this result has PERMIT status
-                    if (statusNode != null && "PERMIT".equals(statusNode.asText())) {
-                        // Extract scope names from the scopes array
-                        if (scopesNode != null && scopesNode.isArray()) {
-                            for (JsonNode scopeObj : scopesNode) {
-                                String scopeName = scopeObj.asText();
-                                // If it's an object, get the "name" field
-                                if (scopeObj.isObject() && scopeObj.has("name")) {
-                                    scopeName = scopeObj.get("name").asText();
+                    if (policiesNode != null && policiesNode.isArray()) {
+                        for (JsonNode policyResult : policiesNode) {
+                            JsonNode statusNode = policyResult.get("status");
+
+                            // Check if this policy has PERMIT status
+                            if (statusNode != null && "PERMIT".equals(statusNode.asText())) {
+                                // Extract scopes from the policy
+                                JsonNode policyNode = policyResult.get("policy");
+                                if (policyNode != null) {
+                                    JsonNode policyScopesNode = policyNode.get("scopes");
+                                    if (policyScopesNode != null && policyScopesNode.isArray()) {
+                                        for (JsonNode scopeItem : policyScopesNode) {
+                                            String scopeName = scopeItem.asText();
+                                            if (!scopes.contains(scopeName)) {
+                                                scopes.add(scopeName);
+                                            }
+                                        }
+                                    }
                                 }
-                                scopes.add(scopeName);
                             }
                         }
                     }

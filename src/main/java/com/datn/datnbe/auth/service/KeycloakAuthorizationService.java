@@ -12,6 +12,7 @@ import com.datn.datnbe.auth.dto.keycloak.KeycloakGroupDto;
 import com.datn.datnbe.auth.dto.keycloak.KeycloakGroupPolicyDto;
 import com.datn.datnbe.auth.dto.keycloak.KeycloakPermissionDto;
 import com.datn.datnbe.auth.dto.keycloak.KeycloakResourceDto;
+import com.datn.datnbe.auth.dto.keycloak.KeycloakUserDto;
 import com.datn.datnbe.auth.dto.keycloak.KeycloakUserPolicyDto;
 import com.datn.datnbe.auth.mapper.KeycloakDtoMapper;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
@@ -297,5 +298,10 @@ public class KeycloakAuthorizationService {
 
     public void removeUserFromGroup(String userId, String groupId) {
         apiClient.removeUserFromGroup(userId, groupId);
+    }
+
+    public List<KeycloakUserDto> getGroupMembers(String groupId) {
+        log.info("Fetching members for group: {}", groupId);
+        return apiClient.getGroupMembers(groupId);
     }
 }

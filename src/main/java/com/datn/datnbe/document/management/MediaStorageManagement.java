@@ -205,7 +205,9 @@ public class MediaStorageManagement implements MediaStorageApi {
      */
     @Override
     @Transactional
-    public MultiUploadedMediaResponseDto uploadMultiple(List<MultipartFile> files, String ownerId, MediaMetadataDto metadata) {
+    public MultiUploadedMediaResponseDto uploadMultiple(List<MultipartFile> files,
+            String ownerId,
+            MediaMetadataDto metadata) {
         List<UploadedMediaResponseDto> uploadedMedia = new ArrayList<>();
 
         for (MultipartFile file : files) {
@@ -215,14 +217,12 @@ public class MediaStorageManagement implements MediaStorageApi {
                 log.info("Successfully uploaded file: {}", file.getOriginalFilename());
             } catch (Exception e) {
                 log.error("Error uploading file: {}", file.getOriginalFilename(), e);
-                throw new AppException(ErrorCode.FILE_UPLOAD_ERROR, "Failed to upload file: " + file.getOriginalFilename(), e);
+                throw new AppException(ErrorCode.FILE_UPLOAD_ERROR,
+                        "Failed to upload file: " + file.getOriginalFilename(), e);
             }
         }
 
         log.info("Successfully uploaded {} media files (owner: {})", uploadedMedia.size(), ownerId);
-        return MultiUploadedMediaResponseDto.builder()
-                .media(uploadedMedia)
-                .totalCount(uploadedMedia.size())
-                .build();
+        return MultiUploadedMediaResponseDto.builder().media(uploadedMedia).totalCount(uploadedMedia.size()).build();
     }
 }

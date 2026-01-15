@@ -4,13 +4,18 @@ import com.datn.datnbe.auth.api.ResourcePermissionApi;
 import com.datn.datnbe.auth.dto.keycloak.KeycloakGroupPolicyDto;
 import com.datn.datnbe.auth.dto.keycloak.KeycloakPermissionDto;
 import com.datn.datnbe.auth.dto.keycloak.KeycloakResourceDto;
+import com.datn.datnbe.auth.dto.keycloak.KeycloakUserDto;
 import com.datn.datnbe.auth.dto.keycloak.KeycloakUserPolicyDto;
+import com.datn.datnbe.auth.dto.request.PublicAccessRequest;
 import com.datn.datnbe.auth.dto.request.ResourceRegistrationRequest;
 import com.datn.datnbe.auth.dto.request.ResourceShareRequest;
 import com.datn.datnbe.auth.dto.response.DocumentRegistrationResponse;
+import com.datn.datnbe.auth.dto.response.PublicAccessResponse;
 import com.datn.datnbe.auth.dto.response.ResourcePermissionResponse;
 import com.datn.datnbe.auth.dto.response.ResourceResponse;
 import com.datn.datnbe.auth.dto.response.ResourceShareResponse;
+import com.datn.datnbe.auth.dto.response.ShareStateResponse;
+import com.datn.datnbe.auth.dto.response.SharedUserResponse;
 import com.datn.datnbe.auth.entity.DocumentResourceMapping;
 import com.datn.datnbe.auth.entity.UserProfile;
 import com.datn.datnbe.auth.mapper.KeycloakDtoMapper;
@@ -27,6 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -177,24 +184,44 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND,
                         String.format(RESOURCE_NOT_FOUND_MSG, documentId)));
 
-        log.info("Found mapping for document {}: ownerId='{}', keycloakResourceId='{}'",
+        log.info("Found mapping for document {}: ownerId='{}', keycloakResourceId='{}', isPublic='{}'",
                 documentId,
                 mapping.getOwnerId(),
-                mapping.getKeycloakResourceId());
+                mapping.getKeycloakResourceId(),
+                mapping.getIsPublic());
 
-        // Check if the user is the owner - if so, grant all permissions
+        // Check if the user is the owner FIRST - owner ALWAYS gets all permissions regardless of public status
         if (mapping.getOwnerId() != null && mapping.getOwnerId().equals(userId)) {
             log.info("User {} is the owner of document {}, granting all permissions", userId, documentId);
             return mapper
                     .toResourcePermissionResponse(documentId, userId, List.of(READ_SCOPE, COMMENT_SCOPE, EDIT_SCOPE));
         }
 
+        // Check if resource is public - grant public permissions to non-owners
+        if (Boolean.TRUE.equals(mapping.getIsPublic())) {
+            log.info("Resource {} is public (user {} is not owner), granting public permission: {}",
+                    documentId,
+                    userId,
+                    mapping.getPublicPermission());
+
+            // Grant public permission level
+            List<String> publicPermissions;
+            if ("comment".equals(mapping.getPublicPermission())) {
+                publicPermissions = List.of(READ_SCOPE, COMMENT_SCOPE);  // Commenter gets both read and comment
+            } else {
+                publicPermissions = List.of(READ_SCOPE);  // Default to read-only
+            }
+
+            return mapper.toResourcePermissionResponse(documentId, userId, publicPermissions);
+        }
+
+        // For non-owners of non-public resources, check Keycloak permissions
         log.info("User {} is NOT the owner of document {} (owner is '{}'), checking Keycloak permissions",
                 userId,
                 documentId,
                 mapping.getOwnerId());
 
-        List<String> permissions = keycloakAuthzService.checkUserPermissions(userId, documentId);
+        List<String> permissions = keycloakAuthzService.checkUserPermissions(userId, mapping.getKeycloakResourceId());
 
         log.debug("User has permissions {} on document {}", permissions, documentId);
 
@@ -456,4 +483,180 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
         log.info("Getting all resources for owner {}", ownerId);
         return mappingRepository.findAllResourcesByOwner(ownerId);
     }
+
+    @Override
+    public List<SharedUserResponse> getSharedUsers(String documentId, String currentUserId) {
+        log.info("Getting shared users for document {} requested by user {}", documentId, currentUserId);
+
+        // 1. Look up the resource mapping
+        DocumentResourceMapping mapping = mappingRepository.findByDocumentId(documentId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND,
+                        String.format(DOCUMENT_NOT_FOUND_MSG, documentId)));
+
+        // 2. Verify user has edit permission (only owner can view shared users)
+        KeycloakResourceDto resource = keycloakAuthzService.getResource(mapping.getKeycloakResourceId());
+        if (!resource.getOwner().equals(currentUserId)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED, "Only users with edit permission can view shared users");
+        }
+
+        List<SharedUserResponse> sharedUsers = new ArrayList<>();
+
+        // 3. Fetch readers group members if group exists
+        if (mapping.getReadersGroupId() != null) {
+            List<KeycloakUserDto> readers = keycloakAuthzService.getGroupMembers(mapping.getReadersGroupId());
+            log.info("Found {} readers for document {}", readers.size(), documentId);
+
+            for (KeycloakUserDto keycloakUser : readers) {
+                Optional<UserProfile> userProfile = userProfileRepo.findByKeycloakUserId(keycloakUser.getId());
+                if (userProfile.isPresent()) {
+                    UserProfile user = userProfile.get();
+                    sharedUsers.add(SharedUserResponse.builder()
+                            .userId(user.getId())
+                            .email(user.getEmail())
+                            .firstName(user.getFirstName())
+                            .lastName(user.getLastName())
+                            .avatarUrl(user.getAvatarUrl())
+                            .permission("read")
+                            .build());
+                } else {
+                    log.warn("UserProfile not found for Keycloak user ID: {}", keycloakUser.getId());
+                }
+            }
+        }
+
+        // 4. Fetch commenters group members if group exists
+        if (mapping.getCommentersGroupId() != null) {
+            List<KeycloakUserDto> commenters = keycloakAuthzService.getGroupMembers(mapping.getCommentersGroupId());
+            log.info("Found {} commenters for document {}", commenters.size(), documentId);
+
+            for (KeycloakUserDto keycloakUser : commenters) {
+                Optional<UserProfile> userProfile = userProfileRepo.findByKeycloakUserId(keycloakUser.getId());
+                if (userProfile.isPresent()) {
+                    UserProfile user = userProfile.get();
+                    sharedUsers.add(SharedUserResponse.builder()
+                            .userId(user.getId())
+                            .email(user.getEmail())
+                            .firstName(user.getFirstName())
+                            .lastName(user.getLastName())
+                            .avatarUrl(user.getAvatarUrl())
+                            .permission("comment")
+                            .build());
+                } else {
+                    log.warn("UserProfile not found for Keycloak user ID: {}", keycloakUser.getId());
+                }
+            }
+        }
+
+        log.info("Returning {} shared users for document {}", sharedUsers.size(), documentId);
+        return sharedUsers;
+    }
+
+    @Transactional
+    @Override
+    public PublicAccessResponse setPublicAccess(String documentId, PublicAccessRequest request, String currentUserId) {
+        log.info("Setting public access for document {} - isPublic: {}, permission: {}",
+                documentId,
+                request.getIsPublic(),
+                request.getPublicPermission());
+
+        // 1. Find resource mapping
+        DocumentResourceMapping mapping = mappingRepository.findByDocumentId(documentId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND,
+                        String.format(RESOURCE_NOT_FOUND_MSG, documentId)));
+
+        // 2. Verify requester is owner
+        if (!mapping.getOwnerId().equals(currentUserId)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED, "Only resource owner can change public access");
+        }
+
+        // 3. Validate permission level if setting to public
+        if (Boolean.TRUE.equals(request.getIsPublic()) && request.getPublicPermission() != null) {
+            if (!Set.of("read", "comment").contains(request.getPublicPermission().toLowerCase())) {
+                throw new AppException(ErrorCode.VALIDATION_ERROR,
+                        String.format(INVALID_PERMISSION_MSG, request.getPublicPermission()));
+            }
+        }
+
+        // 4. Update database
+        mapping.setIsPublic(request.getIsPublic());
+        mapping.setPublicPermission(Boolean.TRUE.equals(request.getIsPublic()) ? request.getPublicPermission() : null);
+        mappingRepository.save(mapping);
+
+        log.info("Updated public access for document {}: isPublic={}, publicPermission={}",
+                documentId,
+                mapping.getIsPublic(),
+                mapping.getPublicPermission());
+
+        // 5. Return response (frontend will construct share link)
+        return PublicAccessResponse.builder()
+                .documentId(documentId)
+                .isPublic(mapping.getIsPublic())
+                .publicPermission(mapping.getPublicPermission())
+                .build();
+    }
+
+    @Override
+    public PublicAccessResponse getPublicAccessStatus(String documentId, String currentUserId) {
+        log.info("Getting public access status for document {} requested by user {}", documentId, currentUserId);
+
+        DocumentResourceMapping mapping = mappingRepository.findByDocumentId(documentId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND,
+                        String.format(RESOURCE_NOT_FOUND_MSG, documentId)));
+
+        // Note: We allow any authenticated user to check public access status
+        // This is needed for users accessing a public resource via link
+
+        return PublicAccessResponse.builder()
+                .documentId(documentId)
+                .isPublic(mapping.getIsPublic() != null ? mapping.getIsPublic() : false)
+                .publicPermission(mapping.getPublicPermission())
+                .build();
+    }
+
+    @Override
+    public ShareStateResponse getShareState(String documentId, String currentUserId) {
+        log.info("Getting complete share state for document {} requested by user {}", documentId, currentUserId);
+
+        // 1. Get shared users (reuse existing method)
+        List<SharedUserResponse> sharedUsers = getSharedUsers(documentId, currentUserId);
+
+        // 2. Get public access status (reuse existing method)
+        PublicAccessResponse publicAccess = getPublicAccessStatus(documentId, currentUserId);
+
+        // 3. Get current user's permission
+        ResourcePermissionResponse permissionResponse = checkUserPermissions(documentId, currentUserId);
+        String currentUserPermission = determineHighestPermission(permissionResponse.getPermissions());
+
+        log.info("Share state for document {}: {} shared users, public={}, current user permission={}",
+                documentId,
+                sharedUsers.size(),
+                publicAccess.getIsPublic(),
+                currentUserPermission);
+
+        // 4. Build and return combined response
+        return ShareStateResponse.builder()
+                .sharedUsers(sharedUsers)
+                .publicAccess(publicAccess)
+                .currentUserPermission(currentUserPermission)
+                .build();
+    }
+
+    /**
+     * Helper: Determine highest permission level from permissions array
+     * @param permissions Collection of permission strings (e.g., ["read", "comment", "edit"])
+     * @return The highest permission level ("edit" > "comment" > "read")
+     */
+    private String determineHighestPermission(Collection<String> permissions) {
+        if (permissions.contains("edit")) {
+            return "edit";
+        }
+        if (permissions.contains("comment")) {
+            return "comment";
+        }
+        if (permissions.contains("read")) {
+            return "read";
+        }
+        return "read"; // Default fallback
+    }
+
 }

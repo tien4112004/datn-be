@@ -31,7 +31,8 @@ public class MediaController {
     }
 
     @PostMapping("/upload-multiple")
-    public ResponseEntity<AppResponseDto<MultiUploadedMediaResponseDto>> uploadMultiple(@RequestParam("files") List<MultipartFile> files) {
+    public ResponseEntity<AppResponseDto<MultiUploadedMediaResponseDto>> uploadMultiple(
+            @RequestParam("files") List<MultipartFile> files) {
         String currentUserId = securityContextUtils.getCurrentUserId();
         MultiUploadedMediaResponseDto response = mediaStorageApi.uploadMultiple(files, currentUserId);
         return ResponseEntity.ok(AppResponseDto.success(response));
