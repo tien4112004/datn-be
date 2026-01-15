@@ -39,6 +39,14 @@ public interface MediaStorageApi {
     UploadedMediaResponseDto upload(MultipartFile file);
 
     /**
+     * Get media by ID
+     *
+     * @param mediaId the ID of the media to retrieve
+     * @return the media object
+     */
+    Media getMedia(Long mediaId);
+
+    /**
      * Delete media file and database record
      *
      * @param mediaId the ID of the media to delete

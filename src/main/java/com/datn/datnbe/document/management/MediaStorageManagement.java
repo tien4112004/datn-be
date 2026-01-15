@@ -147,6 +147,13 @@ public class MediaStorageManagement implements MediaStorageApi {
      * Delete media file and database record
      */
     @Override
+    @Transactional(readOnly = true)
+    public Media getMedia(Long mediaId) {
+        return mediaRepository.findById(mediaId)
+                .orElseThrow(() -> new AppException(ErrorCode.MEDIA_NOT_FOUND, "Media not found with ID: " + mediaId));
+    }
+
+    @Override
     @Transactional
     public void deleteMedia(Long mediaId) {
         Media media = mediaRepository.findById(mediaId)

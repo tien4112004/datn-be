@@ -38,6 +38,7 @@ import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
+import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import com.datn.datnbe.sharedkernel.service.RustfsStorageService;
 import com.datn.datnbe.sharedkernel.utils.MediaStorageUtils;
 
@@ -59,6 +60,7 @@ public class MindmapManagement implements MindmapApi {
     ResourcePermissionApi resourcePermissionApi;
     RustfsStorageService rustfsStorageService;
     DocumentVisitService documentVisitService;
+    SecurityContextUtils securityContextUtils;
 
     @NonFinal
     @Value("${rustfs.public-url}")
@@ -226,7 +228,7 @@ public class MindmapManagement implements MindmapApi {
             MindmapDto response = mapper.entityToDto(mindmap);
 
             // Track document visit asynchronously
-            String userId = getCurrentUserId();
+            String userId = securityContextUtils.getCurrentUserId();
             if (userId != null) {
                 var metadata = DocumentMetadataDto.builder()
                     .userId(userId)
