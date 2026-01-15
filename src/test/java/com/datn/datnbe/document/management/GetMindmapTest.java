@@ -231,7 +231,7 @@ class GetMindmapTest {
             return dto;
         });
 
-        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).pageSize(10).build();
+        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).pageSize(10).sort("desc").build();
 
         // Act
         management.getAllMindmaps(request);
