@@ -2,8 +2,9 @@ package com.datn.datnbe.sharedkernel.service;
 
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,14 +14,18 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
 
+@Deprecated
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class R2StorageService {
     private final S3Client s3Client;
 
     @Value("${cloudflare.r2.bucket}")
     private String bucket;
+    
+    public R2StorageService(@Autowired(required = false) @Qualifier("cloudflareS3Client") S3Client s3Client) {
+        this.s3Client = s3Client;
+    }
 
     /**
      * Upload file to Cloudflare R2 storage

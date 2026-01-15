@@ -23,7 +23,7 @@ public class MediaStorageUtils {
     }
 
     public static String buildObjectKey(String folder, String filename) {
-        return String.format("%s/%s-%s", folder, UUID.randomUUID(), filename);
+        return String.format("user/%s/%s-%s", folder, UUID.randomUUID(), filename);
     }
 
     public static String sanitizeFilename(String filename) {

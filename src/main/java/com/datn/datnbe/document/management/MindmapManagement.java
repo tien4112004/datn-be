@@ -36,7 +36,7 @@ import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
-import com.datn.datnbe.sharedkernel.service.R2StorageService;
+import com.datn.datnbe.sharedkernel.service.RustfsStorageService;
 import com.datn.datnbe.sharedkernel.utils.MediaStorageUtils;
 
 import lombok.RequiredArgsConstructor;
@@ -55,10 +55,10 @@ public class MindmapManagement implements MindmapApi {
     MindmapEntityMapper mapper;
     MindmapValidation validation;
     ResourcePermissionApi resourcePermissionApi;
-    R2StorageService r2StorageService;
+    RustfsStorageService rustfsStorageService;
 
     @NonFinal
-    @Value("${cloudflare.r2.public-url}")
+    @Value("${rustfs.public-url}")
     String cdnDomain;
 
     @Override
@@ -158,10 +158,10 @@ public class MindmapManagement implements MindmapApi {
                 String extension = contentType.equals("image/png") ? "png" : "jpg";
 
                 // Build storage key with appropriate extension
-                String storageKey = String.format("thumbnails/mindmap/%s.%s", id, extension);
+                String storageKey = String.format("user/thumbnails/mindmap/%s.%s", id, extension);
 
                 // Upload to R2 directly
-                String uploadedKey = r2StorageService.uploadFile(thumbnailFile, storageKey, contentType);
+                String uploadedKey = rustfsStorageService.uploadFile(thumbnailFile, storageKey, contentType);
 
                 // Build CDN URL
                 String cdnUrl = MediaStorageUtils.buildCdnUrl(uploadedKey, cdnDomain);

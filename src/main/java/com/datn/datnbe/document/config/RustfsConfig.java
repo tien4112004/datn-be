@@ -1,6 +1,5 @@
 package com.datn.datnbe.document.config;
 
-import java.net.URI;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -14,20 +13,22 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
 
+import java.net.URI;
+
 @Configuration
-@ConfigurationProperties(prefix = "cloudflare.r2")
-@ConditionalOnProperty(name = "cloudflare.r2.enabled", havingValue = "true", matchIfMissing = true)
+@ConfigurationProperties(prefix = "rustfs")
 @Getter
 @Setter
-public class CloudflareConfig {
+public class RustfsConfig {
     private String endpoint;
+    private String bucket;
     private String accessKey;
     private String secretKey;
-    private String bucket;
+    private String publicUrl;
 
-    @Bean
-    @ConditionalOnProperty(name = "cloudflare.r2.access-key", matchIfMissing = false)
-    public S3Client s3Client() {
+    @Bean(name = "rustfsS3Client")
+    @ConditionalOnProperty(name = "rustfs.endpoint", matchIfMissing = false)
+    public S3Client rustfsS3Client() {
         S3Configuration serviceConfig = S3Configuration.builder()
                 .pathStyleAccessEnabled(true)
                 .chunkedEncodingEnabled(false)
@@ -35,9 +36,11 @@ public class CloudflareConfig {
 
         return S3Client.builder()
                 .httpClientBuilder(ApacheHttpClient.builder())
-                .region(Region.of("auto"))
+                .region(Region.US_EAST_1)
                 .endpointOverride(URI.create(endpoint))
-                .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey)))
+                .credentialsProvider(StaticCredentialsProvider.create(
+                        AwsBasicCredentials.create(accessKey, secretKey)
+                ))
                 .serviceConfiguration(serviceConfig)
                 .build();
     }

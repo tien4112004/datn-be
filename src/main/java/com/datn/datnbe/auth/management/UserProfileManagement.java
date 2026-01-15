@@ -48,7 +48,7 @@ public class UserProfileManagement implements UserProfileApi {
     AvatarValidation avatarValidation;
 
     @NonFinal
-    @Value("${cloudflare.r2.public-url}")
+    @Value("${rustfs.public-url}")
     String cdnDomain;
 
     @Override
