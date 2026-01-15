@@ -11,8 +11,7 @@ import org.springframework.context.annotation.ComponentScan;
 import static org.mockito.Mockito.mock;
 
 @TestConfiguration
-@ComponentScan(basePackageClasses = { PresentationEntityMapper.class, SlideEntityMapper.class,
-        SlideElementMapper.class })
+@ComponentScan(basePackageClasses = {PresentationEntityMapper.class, SlideEntityMapper.class, SlideElementMapper.class})
 public class TestConfig {
     // This configuration will ensure the mappers are loaded
 
