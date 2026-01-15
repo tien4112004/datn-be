@@ -1,6 +1,6 @@
 package com.datn.datnbe.document.management;
 
-import com.datn.datnbe.auth.management.UserProfileManagement;
+import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.document.dto.request.PresentationCommentCreateRequest;
 import com.datn.datnbe.document.dto.request.PresentationCommentUpdateRequest;
@@ -28,7 +28,7 @@ public class PresentationCommentManagement {
 
     PresentationCommentRepository commentRepository;
     PresentationCommentMapper commentMapper;
-    UserProfileManagement userProfileManagement;
+    UserProfileApi userProfileManagement;
 
     /**
      * Creates a new comment on a presentation

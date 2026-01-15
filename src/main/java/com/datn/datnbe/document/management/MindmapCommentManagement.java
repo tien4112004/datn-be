@@ -1,6 +1,6 @@
 package com.datn.datnbe.document.management;
 
-import com.datn.datnbe.auth.management.UserProfileManagement;
+import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.document.dto.request.MindmapCommentCreateRequest;
 import com.datn.datnbe.document.dto.request.MindmapCommentUpdateRequest;
@@ -28,7 +28,7 @@ public class MindmapCommentManagement {
 
     MindmapCommentRepository commentRepository;
     MindmapCommentMapper commentMapper;
-    UserProfileManagement userProfileManagement;
+    UserProfileApi userProfileManagement;
 
     /**
      * Creates a new comment on a mindmap

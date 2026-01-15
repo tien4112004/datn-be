@@ -477,12 +477,12 @@ public class MindmapIntegrationTest extends BaseIntegrationTest {
         SecurityContext securityContext = mock(SecurityContext.class);
         Authentication authentication = mock(Authentication.class);
         Jwt jwt = mock(Jwt.class);
-        
+
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(jwt);
         when(jwt.getSubject()).thenReturn("test-user-id");
-        
+
         SecurityContextHolder.setContext(securityContext);
 
         // Act
