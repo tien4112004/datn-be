@@ -26,11 +26,16 @@ public class TokenUsageController {
     public ResponseEntity<AppResponseDto<TokenUsageStatsDto>> getTokenUsageStats(
             @Valid @ModelAttribute TokenUsageFilterRequest filterRequest) {
         String userId = securityContextUtils.getCurrentUserId();
-        log.info("Fetching token usage stats for user: {} with filters - model: {}, provider: {}, requestType: {}", 
-                userId, filterRequest.getModel(), filterRequest.getProvider(), filterRequest.getRequestType());
+        log.info("Fetching token usage stats for user: {} with filters - model: {}, provider: {}, requestType: {}",
+                userId,
+                filterRequest.getModel(),
+                filterRequest.getProvider(),
+                filterRequest.getRequestType());
 
         TokenUsageStatsDto result = tokenUsageApi.getTokenUsageWithFilters(userId,
-                filterRequest.getModel(), filterRequest.getProvider(), filterRequest.getRequestType());
+                filterRequest.getModel(),
+                filterRequest.getProvider(),
+                filterRequest.getRequestType());
 
         TokenUsageStatsDto stats = TokenUsageStatsDto.builder()
                 .totalTokens(result.getTotalTokens())
@@ -41,8 +46,7 @@ public class TokenUsageController {
     }
 
     @GetMapping("/{userId}/stats")
-    public ResponseEntity<AppResponseDto<TokenUsageStatsDto>> getTokenUsageStatsForUser(
-            @PathVariable String userId) {
+    public ResponseEntity<AppResponseDto<TokenUsageStatsDto>> getTokenUsageStatsForUser(@PathVariable String userId) {
         log.info("Fetching token usage stats for user: {}", userId);
 
         Long totalTokens = tokenUsageApi.getTotalTokensUsedByUser(userId);

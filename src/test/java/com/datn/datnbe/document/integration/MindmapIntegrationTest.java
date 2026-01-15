@@ -519,7 +519,7 @@ public class MindmapIntegrationTest extends BaseIntegrationTest {
         }
 
         // Act - Get first page
-        MindmapCollectionRequest pageRequest = MindmapCollectionRequest.builder().page(1).size(10).build();
+        MindmapCollectionRequest pageRequest = MindmapCollectionRequest.builder().page(1).pageSize(10).build();
         PaginatedResponseDto<MindmapListResponseDto> page1 = management.getAllMindmaps(pageRequest);
 
         // Assert

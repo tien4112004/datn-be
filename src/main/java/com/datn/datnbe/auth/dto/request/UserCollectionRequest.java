@@ -1,4 +1,4 @@
-package com.datn.datnbe.document.dto.request;
+package com.datn.datnbe.auth.dto.request;
 
 import com.datn.datnbe.sharedkernel.dto.BaseCollectionRequest;
 import jakarta.validation.constraints.Size;
@@ -10,14 +10,14 @@ import lombok.NoArgsConstructor;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class MindmapCollectionRequest extends BaseCollectionRequest {
+public class UserCollectionRequest extends BaseCollectionRequest {
 
     @Size(max = 100, message = "Search query cannot exceed 100 characters")
-    private String searchQuery;
+    private String search;
 
     @Builder
-    public MindmapCollectionRequest(int page, int pageSize, String sort, String searchQuery) {
+    public UserCollectionRequest(int page, int pageSize, String sort, String search) {
         super(page, pageSize, sort);
-        this.searchQuery = searchQuery;
+        this.search = search;
     }
 }

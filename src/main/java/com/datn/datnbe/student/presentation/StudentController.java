@@ -99,7 +99,8 @@ public class StudentController {
     }
 
     @PostMapping("/students/regenerate-passwords")
-    public ResponseEntity<AppResponseDto<List<StudentResponseDto>>> regeneratePasswords(@RequestBody RegeneratePasswordRequest request) {
+    public ResponseEntity<AppResponseDto<List<StudentResponseDto>>> regeneratePasswords(
+            @RequestBody RegeneratePasswordRequest request) {
         log.info("Received request to regenerate passwords for {} students", request.getStudents().size());
         List<StudentResponseDto> students = studentApi.regeneratePasswords(request.getStudents());
         return ResponseEntity.ok(AppResponseDto.success(students));

@@ -1,11 +1,11 @@
 package com.datn.datnbe.auth.api;
 
 import com.datn.datnbe.auth.dto.request.SignupRequest;
+import com.datn.datnbe.auth.dto.request.UserCollectionRequest;
 import com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest;
 import com.datn.datnbe.auth.dto.response.UpdateAvatarResponse;
 import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
-import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface UserProfileApi {
@@ -13,19 +13,10 @@ public interface UserProfileApi {
     /**
      * Retrieves a list of user profiles based on the provided request criteria.
      *
-     * @param pageable the Pageable object for pagination
-     * @return List of UserProfileResponseDto containing the profile data
+     * @param request the UserCollectionRequest containing pagination and filter parameters
+     * @return PaginatedResponseDto containing the list of UserProfileResponse
      */
-    PaginatedResponseDto<UserProfileResponse> getUserProfiles(Pageable pageable);
-
-    /**
-     * Retrieves a list of user profiles filtered by search term (name or email).
-     *
-     * @param pageable the Pageable object for pagination
-     * @param searchTerm the search term to filter by name or email (optional)
-     * @return List of UserProfileResponseDto containing the profile data
-     */
-    PaginatedResponseDto<UserProfileResponse> getUserProfiles(Pageable pageable, String searchTerm);
+    PaginatedResponseDto<UserProfileResponse> getUserProfiles(UserCollectionRequest request);
 
     /**
      * Creates a new user profile.

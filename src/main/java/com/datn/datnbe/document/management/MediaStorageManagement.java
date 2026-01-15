@@ -12,6 +12,7 @@ import com.datn.datnbe.document.repository.MediaRepository;
 import com.datn.datnbe.document.service.DocumentVisitService;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import com.datn.datnbe.sharedkernel.service.RustfsStorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -35,6 +36,7 @@ public class MediaStorageManagement implements MediaStorageApi {
     RustfsStorageService rustfsStorageService;
     MediaRepository mediaRepository;
     DocumentVisitService documentVisitService;
+    SecurityContextUtils securityContextUtils;
 
     @NonFinal
     @Value("${rustfs.public-url}")
@@ -149,8 +151,26 @@ public class MediaStorageManagement implements MediaStorageApi {
     @Override
     @Transactional(readOnly = true)
     public Media getMedia(Long mediaId) {
-        return mediaRepository.findById(mediaId)
+        Media media = mediaRepository.findById(mediaId)
                 .orElseThrow(() -> new AppException(ErrorCode.MEDIA_NOT_FOUND, "Media not found with ID: " + mediaId));
+
+        // Only track visits for non-image types (audio, video, document, etc)
+        if (media.getMediaType() != MediaType.IMAGE) {
+            String userId = securityContextUtils.getCurrentUserId();
+            if (userId != null) {
+                var metadata = DocumentMetadataDto.builder()
+                        .userId(userId)
+                        .documentId(String.valueOf(mediaId))
+                        .type(media.getMediaType().name().toLowerCase())
+                        .title(media.getOriginalFilename())
+                        .thumbnail(media.getCdnUrl())
+                        .build();
+                documentVisitService.trackDocumentVisit(metadata);
+            }
+        }
+
+        log.info("Retrieved media with ID: {}", mediaId);
+        return media;
     }
 
     @Override
@@ -164,10 +184,10 @@ public class MediaStorageManagement implements MediaStorageApi {
 
         // Delete from database
         mediaRepository.delete(media);
-        
+
         // Clean up visit records
         documentVisitService.deleteDocumentVisits(String.valueOf(mediaId));
-        
+
         log.info("Successfully deleted media with ID: {}", mediaId);
     }
 

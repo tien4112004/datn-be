@@ -82,10 +82,10 @@ public class ContentGenerationController {
                 String tokenUsageJson = content.substring(tokenUsageStart);
                 ObjectMapper mapper = new ObjectMapper();
                 JsonNode tokenUsageNode = mapper.readTree(tokenUsageJson);
-                
+
                 if (tokenUsageNode.has("token_usage")) {
-                    TokenUsageInfoDto tokenUsageInfo = mapper.treeToValue(
-                            tokenUsageNode.get("token_usage"), TokenUsageInfoDto.class);
+                    TokenUsageInfoDto tokenUsageInfo = mapper.treeToValue(tokenUsageNode.get("token_usage"),
+                            TokenUsageInfoDto.class);
                     recordTokenUsage(userId, tokenUsageInfo, requestType);
                 }
             }
@@ -173,7 +173,7 @@ public class ContentGenerationController {
                     extractAndSaveTokenUsage(cleanedResult, userId, "presentation");
                     // Remove token usage from result before saving
                     cleanedResult = removeTokenUsageFromString(cleanedResult);
-                    
+
                     aiResultApi.saveAIResult(cleanedResult, presentationId, optionsJson);
                     log.info("Slide generation completed with signal {}, saved {} bytes for ID: {}",
                             signalType,
@@ -183,8 +183,8 @@ public class ContentGenerationController {
                     log.error("Failed to save AI result for presentation ID: {}", presentationId, e);
                 }
             }
-        }).subscribe(item -> {},
-                err -> log.error("Internal subscriber error for ID: {}", presentationId, err));
+        }).subscribe(item -> {
+        }, err -> log.error("Internal subscriber error for ID: {}", presentationId, err));
 
         return ResponseEntity.ok().header("X-Presentation", presentationId).body(slideSse);
     }
@@ -256,7 +256,7 @@ public class ContentGenerationController {
             ObjectMapper mapper = new ObjectMapper();
 
             JsonNode rootNode = mapper.readTree(result);
-            
+
             // Extract mindmap content and children
             JsonNode dataNode = rootNode;
             if (rootNode.has("data")) {
@@ -266,16 +266,16 @@ public class ContentGenerationController {
                     dataNode = mapper.readTree(dataNode.asText());
                 }
             }
-            
+
             // Convert to MindmapGenerateResponseDto
             MindmapGenerateResponseDto mindmapDto = mapper.treeToValue(dataNode, MindmapGenerateResponseDto.class);
-            
+
             // Add token_usage to extraFields if present and save to database
             if (rootNode.has("token_usage")) {
                 JsonNode tokenUsageNode = rootNode.get("token_usage");
                 TokenUsageInfoDto tokenUsageInfo = mapper.treeToValue(tokenUsageNode, TokenUsageInfoDto.class);
                 mindmapDto.setExtraField("token_usage", tokenUsageInfo);
-                
+
                 // Record token usage
                 recordTokenUsage(securityContextUtils.getCurrentUserId(), tokenUsageInfo, "mindmap");
             }
@@ -290,7 +290,7 @@ public class ContentGenerationController {
     private void recordTokenUsage(String userId, TokenUsageInfoDto tokenUsageInfo, String requestType) {
         try {
             Long totalTokens = tokenUsageInfo.getTotalTokens();
-            
+
             if (totalTokens != null) {
                 TokenUsage tokenUsage = TokenUsage.builder()
                         .userId(userId)

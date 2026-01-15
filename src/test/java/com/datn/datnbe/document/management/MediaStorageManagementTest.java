@@ -115,7 +115,8 @@ class MediaStorageManagementTest {
             validationMock.when(() -> MediaValidation.getValidatedMediaType(mockFile)).thenThrow(validationException);
 
             // When & Then
-            assertThatThrownBy(() -> mediaStorageManagement.upload(mockFile, "test-owner")).isInstanceOf(AppException.class)
+            assertThatThrownBy(() -> mediaStorageManagement.upload(mockFile, "test-owner"))
+                    .isInstanceOf(AppException.class)
                     .hasMessage("Invalid file type")
                     .satisfies(ex -> {
                         AppException appEx = (AppException) ex;
@@ -176,7 +177,8 @@ class MediaStorageManagementTest {
             validationMock.when(() -> MediaValidation.getValidatedMediaType(mockFile)).thenReturn(MediaType.IMAGE);
 
             // When & Then
-            assertThatThrownBy(() -> mediaStorageManagement.upload(mockFile, ownerId)).isInstanceOf(RuntimeException.class)
+            assertThatThrownBy(() -> mediaStorageManagement.upload(mockFile, ownerId))
+                    .isInstanceOf(RuntimeException.class)
                     .hasMessage("Database connection failed");
 
             verify(rustfsStorageService).uploadFile(eq(mockFile), anyString(), eq(contentType));

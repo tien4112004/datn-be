@@ -22,7 +22,7 @@ public class R2StorageService {
 
     @Value("${cloudflare.r2.bucket}")
     private String bucket;
-    
+
     public R2StorageService(@Autowired(required = false) @Qualifier("cloudflareS3Client") S3Client s3Client) {
         this.s3Client = s3Client;
     }

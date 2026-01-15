@@ -11,15 +11,15 @@ import java.util.Optional;
 
 @Repository
 public interface DocumentVisitRepository extends JpaRepository<DocumentVisit, Integer> {
-    
+
     /**
      * Get recent documents visited by user, sorted by last visit time
      */
     @Query(value = """
-        SELECT dv FROM DocumentVisit dv
-        WHERE dv.userId = :userId
-        ORDER BY dv.lastVisited DESC
-        """)
+            SELECT dv FROM DocumentVisit dv
+            WHERE dv.userId = :userId
+            ORDER BY dv.lastVisited DESC
+            """)
     List<DocumentVisit> findRecentDocumentsByUser(String userId, Pageable pageable);
 
     /**
