@@ -190,10 +190,18 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
                 mapping.getKeycloakResourceId(),
                 mapping.getIsPublic());
 
-        // Check if resource is public (NEW LOGIC - check this first)
+        // Check if the user is the owner FIRST - owner ALWAYS gets all permissions regardless of public status
+        if (mapping.getOwnerId() != null && mapping.getOwnerId().equals(userId)) {
+            log.info("User {} is the owner of document {}, granting all permissions", userId, documentId);
+            return mapper
+                    .toResourcePermissionResponse(documentId, userId, List.of(READ_SCOPE, COMMENT_SCOPE, EDIT_SCOPE));
+        }
+
+        // Check if resource is public - grant public permissions to non-owners
         if (Boolean.TRUE.equals(mapping.getIsPublic())) {
-            log.info("Resource {} is public, granting public permission: {}",
+            log.info("Resource {} is public (user {} is not owner), granting public permission: {}",
                     documentId,
+                    userId,
                     mapping.getPublicPermission());
 
             // Grant public permission level
@@ -207,19 +215,13 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
             return mapper.toResourcePermissionResponse(documentId, userId, publicPermissions);
         }
 
-        // Check if the user is the owner - if so, grant all permissions
-        if (mapping.getOwnerId() != null && mapping.getOwnerId().equals(userId)) {
-            log.info("User {} is the owner of document {}, granting all permissions", userId, documentId);
-            return mapper
-                    .toResourcePermissionResponse(documentId, userId, List.of(READ_SCOPE, COMMENT_SCOPE, EDIT_SCOPE));
-        }
-
+        // For non-owners of non-public resources, check Keycloak permissions
         log.info("User {} is NOT the owner of document {} (owner is '{}'), checking Keycloak permissions",
                 userId,
                 documentId,
                 mapping.getOwnerId());
 
-        List<String> permissions = keycloakAuthzService.checkUserPermissions(userId, documentId);
+        List<String> permissions = keycloakAuthzService.checkUserPermissions(userId, mapping.getKeycloakResourceId());
 
         log.debug("User has permissions {} on document {}", permissions, documentId);
 

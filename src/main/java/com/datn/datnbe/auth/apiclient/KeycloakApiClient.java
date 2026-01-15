@@ -303,6 +303,9 @@ public class KeycloakApiClient {
                 throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR, "Empty response from policy evaluation");
             }
 
+            // Log the raw response for debugging
+            log.info("Keycloak policy evaluation raw response: {}", responseBody);
+
             AuthTokenResponse tokenResponse = new AuthTokenResponse();
             tokenResponse.setAccessToken(responseBody);
             log.info("Policy evaluation completed for resource: {} and user: {}", resourceId, userId);
