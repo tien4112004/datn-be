@@ -29,24 +29,27 @@ public class DocumentVisitService {
     @Async
     @Transactional
     public void trackDocumentVisit(DocumentMetadataDto metadata) {
-        log.info("Tracking visit - userId: {}, documentId: {}, type: {}", 
-                 metadata.getUserId(), metadata.getDocumentId(), metadata.getType());
-        
-        DocumentVisit visit = visitRepository
-            .findByUserIdAndDocumentId(metadata.getUserId(), metadata.getDocumentId())
-            .orElse(DocumentVisit.builder()
-                .userId(metadata.getUserId())
-                .documentId(metadata.getDocumentId())
-                .documentType(metadata.getType())
-                .build());
-        
+        log.info("Tracking visit - userId: {}, documentId: {}, type: {}",
+                metadata.getUserId(),
+                metadata.getDocumentId(),
+                metadata.getType());
+
+        DocumentVisit visit = visitRepository.findByUserIdAndDocumentId(metadata.getUserId(), metadata.getDocumentId())
+                .orElse(DocumentVisit.builder()
+                        .userId(metadata.getUserId())
+                        .documentId(metadata.getDocumentId())
+                        .documentType(metadata.getType())
+                        .build());
+
         visit.setLastVisited(LocalDateTime.now());
         visit.setTitle(metadata.getTitle());
         visit.setThumbnail(metadata.getThumbnail());
         visitRepository.save(visit);
-        
-        log.debug("Visit tracked successfully for userId: {}, documentId: {}, title: {}", 
-                  metadata.getUserId(), metadata.getDocumentId(), metadata.getTitle());
+
+        log.debug("Visit tracked successfully for userId: {}, documentId: {}, title: {}",
+                metadata.getUserId(),
+                metadata.getDocumentId(),
+                metadata.getTitle());
     }
 
     /**
@@ -55,7 +58,7 @@ public class DocumentVisitService {
     @Transactional(readOnly = true)
     public List<DocumentVisit> getRecentDocuments(String userId, int limit) {
         log.info("Fetching recent documents for user: {}, limit: {}", userId, limit);
-        
+
         Pageable pageable = PageRequest.of(0, limit > 0 ? limit : DEFAULT_LIMIT);
         List<DocumentVisit> a = visitRepository.findRecentDocumentsByUser(userId, pageable);
         return visitRepository.findRecentDocumentsByUser(userId, pageable);

@@ -1,5 +1,6 @@
 package com.datn.datnbe.document.presentation;
 
+import com.datn.datnbe.document.dto.request.ImageCollectionRequest;
 import com.datn.datnbe.document.dto.request.PexelsImageSearchRequest;
 import com.datn.datnbe.document.management.ImageManagement;
 import com.datn.datnbe.document.management.ImageSearchManagement;
@@ -8,9 +9,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,11 +22,8 @@ public class ImageController {
     ImageSearchManagement imageSearchManagement;
 
     @GetMapping
-    public ResponseEntity<AppResponseDto> getImages(@RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "10") Integer size,
-            @RequestParam(required = false) String search) {
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        var response = imageManagement.getImages(pageable);
+    public ResponseEntity<AppResponseDto> getImages(@Valid @ModelAttribute ImageCollectionRequest request) {
+        var response = imageManagement.getImages(request);
 
         return ResponseEntity.ok(AppResponseDto.successWithPagination(response.getData(), response.getPagination()));
     }

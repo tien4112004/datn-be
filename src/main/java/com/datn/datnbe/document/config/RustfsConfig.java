@@ -38,9 +38,7 @@ public class RustfsConfig {
                 .httpClientBuilder(ApacheHttpClient.builder())
                 .region(Region.US_EAST_1)
                 .endpointOverride(URI.create(endpoint))
-                .credentialsProvider(StaticCredentialsProvider.create(
-                        AwsBasicCredentials.create(accessKey, secretKey)
-                ))
+                .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey)))
                 .serviceConfiguration(serviceConfig)
                 .build();
     }

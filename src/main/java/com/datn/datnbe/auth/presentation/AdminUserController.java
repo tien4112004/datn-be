@@ -2,6 +2,7 @@ package com.datn.datnbe.auth.presentation;
 
 import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.dto.request.SignupRequest;
+import com.datn.datnbe.auth.dto.request.UserCollectionRequest;
 import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import jakarta.validation.Valid;
@@ -9,7 +10,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -52,11 +52,17 @@ public class AdminUserController {
     /**
      * Endpoint to get all users.
      *
+     * @param request UserCollectionRequest containing pagination and filter parameters
      * @return ResponseEntity containing the list of user profiles
      */
     @GetMapping("")
-    public ResponseEntity<AppResponseDto> getAllUsers(Pageable pageable) {
-        var response = userProfileApi.getUserProfiles(pageable);
+    public ResponseEntity<AppResponseDto> getAllUsers(@Valid @ModelAttribute UserCollectionRequest request) {
+        log.info("Fetching users - page: {}, size: {}, search: {}",
+                request.getPage(),
+                request.getPageSize(),
+                request.getSearch());
+
+        var response = userProfileApi.getUserProfiles(request);
         return ResponseEntity.ok(AppResponseDto.successWithPagination(response.getData(), response.getPagination()));
     }
 

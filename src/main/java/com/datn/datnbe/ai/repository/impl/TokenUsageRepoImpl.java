@@ -21,8 +21,10 @@ public class TokenUsageRepoImpl implements TokenUsageRepo {
     @Override
     public void saveTokenUsage(TokenUsage tokenUsage) {
         tokenUsageJPARepo.save(tokenUsage);
-        log.info("Token usage saved for user: {} - request: {} - tokens: {}", 
-                tokenUsage.getUserId(), tokenUsage.getRequest(), tokenUsage.getTokenCount());
+        log.info("Token usage saved for user: {} - request: {} - tokens: {}",
+                tokenUsage.getUserId(),
+                tokenUsage.getRequest(),
+                tokenUsage.getTokenCount());
     }
 
     @Override
@@ -44,7 +46,10 @@ public class TokenUsageRepoImpl implements TokenUsageRepo {
     }
 
     @Override
-    public com.datn.datnbe.ai.dto.response.TokenUsageStatsDto getTokenUsageWithFilters(String userId, String model, String provider, String requestType) {
+    public com.datn.datnbe.ai.dto.response.TokenUsageStatsDto getTokenUsageWithFilters(String userId,
+            String model,
+            String provider,
+            String requestType) {
         Long totalTokens = tokenUsageJPARepo.getTotalTokensWithFilters(userId, model, provider, requestType);
         Long totalRequests = tokenUsageJPARepo.getRequestCountWithFilters(userId, model, provider, requestType);
         return com.datn.datnbe.ai.dto.response.TokenUsageStatsDto.builder()

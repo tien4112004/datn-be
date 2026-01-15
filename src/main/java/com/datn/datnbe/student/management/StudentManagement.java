@@ -61,7 +61,8 @@ public class StudentManagement implements StudentApi {
         log.info("Creating new student with full name: {}", request.getFullName());
 
         // Phase 1: Create user via UserProfileAPI
-        String username = StudentCredentialGenerator.generateUsername(request.getFullName(), request.getDateOfBirth(), studentRepository);
+        String username = StudentCredentialGenerator
+                .generateUsername(request.getFullName(), request.getDateOfBirth(), studentRepository);
         String password = StudentCredentialGenerator.generatePassword();
 
         // Parse fullName into firstName and lastName
@@ -172,9 +173,7 @@ public class StudentManagement implements StudentApi {
         // Get all enrollments for the class (we'll need to handle pagination
         // differently)
         List<ClassEnrollment> allEnrollments = classEnrollmentRepository.findByClassId(classId);
-        List<String> studentIds = allEnrollments.stream()
-                .map(ClassEnrollment::getStudentId)
-                .toList();
+        List<String> studentIds = allEnrollments.stream().map(ClassEnrollment::getStudentId).toList();
 
         if (studentIds.isEmpty()) {
             return PaginatedResponseDto.<StudentResponseDto>builder()

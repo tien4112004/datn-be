@@ -17,7 +17,7 @@ public final class StudentCredentialGenerator {
         }
 
         String nameBase = extractMiddleAndLastName(fullName);
-        
+
         String normalized = Normalizer.normalize(nameBase, Normalizer.Form.NFD)
                 .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
 
@@ -29,9 +29,9 @@ public final class StudentCredentialGenerator {
         }
 
         String baseUsername = String.format("%s%s", base, dobPart);
-        
+
         int count = studentRepository.countExistingUsernames(baseUsername + "%");
-        
+
         if (count == 0) {
             // Base username doesn't exist, use it
             return baseUsername;
@@ -43,11 +43,12 @@ public final class StudentCredentialGenerator {
 
     private static String extractMiddleAndLastName(String fullName) {
         String[] parts = fullName.trim().split("\\s+");
-        
+
         if (parts.length >= 3) {
             StringBuilder result = new StringBuilder();
             for (int i = 1; i < parts.length; i++) {
-                if (i > 1) result.append(" ");
+                if (i > 1)
+                    result.append(" ");
                 result.append(parts[i]);
             }
             return result.toString();

@@ -12,13 +12,13 @@ import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2Clien
 import org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.datn.datnbe.document.dto.request.ImageCollectionRequest;
 import com.datn.datnbe.document.dto.response.MediaResponseDto;
 import com.datn.datnbe.sharedkernel.enums.MediaType;
 import com.datn.datnbe.document.management.ImageManagement;
@@ -85,7 +85,7 @@ class ImageControllerTest {
                 .data(List.of(testMediaDto1, testMediaDto2))
                 .build();
 
-        when(imageManagement.getImages(any(Pageable.class))).thenReturn(paginatedResponse);
+        when(imageManagement.getImages(any(ImageCollectionRequest.class))).thenReturn(paginatedResponse);
 
         // When & Then
         mockMvc.perform(get("/api/images").param("page", "1").param("size", "10"))
@@ -113,7 +113,7 @@ class ImageControllerTest {
                 .data(List.of(testMediaDto1))
                 .build();
 
-        when(imageManagement.getImages(any(Pageable.class))).thenReturn(paginatedResponse);
+        when(imageManagement.getImages(any(ImageCollectionRequest.class))).thenReturn(paginatedResponse);
 
         // When & Then
         mockMvc.perform(get("/api/images")).andExpect(status().isOk()).andExpect(jsonPath("$.data[0].id").value(1));
@@ -134,7 +134,7 @@ class ImageControllerTest {
                 .data(List.of())
                 .build();
 
-        when(imageManagement.getImages(any(Pageable.class))).thenReturn(paginatedResponse);
+        when(imageManagement.getImages(any(ImageCollectionRequest.class))).thenReturn(paginatedResponse);
 
         // When & Then
         mockMvc.perform(get("/api/images"))
@@ -185,7 +185,7 @@ class ImageControllerTest {
                 .data(List.of(testMediaDto1))
                 .build();
 
-        when(imageManagement.getImages(any(Pageable.class))).thenReturn(paginatedResponse);
+        when(imageManagement.getImages(any(ImageCollectionRequest.class))).thenReturn(paginatedResponse);
 
         // When & Then
         mockMvc.perform(get("/api/images").param("page", "1").param("size", "1"))
@@ -210,7 +210,7 @@ class ImageControllerTest {
                 .data(List.of(testMediaDto2))
                 .build();
 
-        when(imageManagement.getImages(any(Pageable.class))).thenReturn(paginatedResponse);
+        when(imageManagement.getImages(any(ImageCollectionRequest.class))).thenReturn(paginatedResponse);
 
         // When & Then
         mockMvc.perform(get("/api/images").param("page", "1").param("size", "1"))

@@ -19,10 +19,10 @@ import java.io.IOException;
 @Slf4j
 public class RustfsStorageService {
     private final S3Client s3Client;
-    
+
     @Value("${rustfs.bucket:default}")
     private String bucket;
-    
+
     public RustfsStorageService(@Qualifier("rustfsS3Client") S3Client s3Client) {
         this.s3Client = s3Client;
     }
@@ -59,9 +59,6 @@ public class RustfsStorageService {
     }
 
     public GetObjectRequest getObject(String key) {
-        return GetObjectRequest.builder()
-                .bucket(bucket)
-                .key(key)
-                .build();
+        return GetObjectRequest.builder().bucket(bucket).key(key).build();
     }
 }

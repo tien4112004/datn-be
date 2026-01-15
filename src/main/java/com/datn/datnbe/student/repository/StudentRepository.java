@@ -25,7 +25,6 @@ public interface StudentRepository extends JpaRepository<Student, String> {
 
     boolean existsByUserId(String userId);
 
-    @Query("SELECT COUNT(up) FROM Student s JOIN UserProfile up ON s.userId = up.id " +
-           "WHERE up.email LIKE :pattern")
+    @Query("SELECT COUNT(up) FROM Student s JOIN UserProfile up ON s.userId = up.id " + "WHERE up.email LIKE :pattern")
     int countExistingUsernames(@Param("pattern") String pattern);
 }

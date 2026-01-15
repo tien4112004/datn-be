@@ -245,12 +245,12 @@ public class PresentationManagement implements PresentationApi {
         String userId = securityContextUtils.getCurrentUserId();
         if (userId != null) {
             var metadata = DocumentMetadataDto.builder()
-                .userId(userId)
-                .documentId(id)
-                .type("presentation")
-                .title(presentation.getTitle())
-                .thumbnail(presentation.getThumbnail())
-                .build();
+                    .userId(userId)
+                    .documentId(id)
+                    .type("presentation")
+                    .title(presentation.getTitle())
+                    .thumbnail(presentation.getThumbnail())
+                    .build();
             documentVisitService.trackDocumentVisit(metadata);
         }
 
@@ -275,7 +275,7 @@ public class PresentationManagement implements PresentationApi {
         Presentation presentation = presentationOpt.get();
         presentation.setDeletedAt(java.time.LocalDate.now());
         presentationRepository.save(presentation);
-        
+
         // Clean up document visit records
         documentVisitService.deleteDocumentVisits(id);
         log.info("Deleted all visit records for presentation: {}", id);

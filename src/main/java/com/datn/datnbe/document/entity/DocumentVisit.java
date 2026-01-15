@@ -9,11 +9,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "document_visits", 
-       indexes = {
-           @Index(name = "idx_user_visited", columnList = "user_id,last_visited DESC"),
-           @Index(name = "idx_document_user", columnList = "document_id,user_id", unique = true)
-       })
+@Table(name = "document_visits", indexes = {@Index(name = "idx_user_visited", columnList = "user_id,last_visited DESC"),
+        @Index(name = "idx_document_user", columnList = "document_id,user_id", unique = true)})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -21,7 +18,7 @@ import java.time.LocalDateTime;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class DocumentVisit {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Integer id;

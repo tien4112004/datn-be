@@ -47,7 +47,10 @@ public interface TokenUsageRepo {
      * @param requestType optional request type filter
      * @return TokenUsageStatsDto containing both totalTokens and totalRequests
      */
-    com.datn.datnbe.ai.dto.response.TokenUsageStatsDto getTokenUsageWithFilters(String userId, String model, String provider, String requestType);
+    com.datn.datnbe.ai.dto.response.TokenUsageStatsDto getTokenUsageWithFilters(String userId,
+            String model,
+            String provider,
+            String requestType);
 
     /**
      * Get token usage grouped by model

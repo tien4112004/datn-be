@@ -2,12 +2,15 @@ package com.datn.datnbe.auth.management;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.dto.request.SignupRequest;
+import com.datn.datnbe.auth.dto.request.UserCollectionRequest;
 import com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest;
 import com.datn.datnbe.auth.dto.response.UpdateAvatarResponse;
 import com.datn.datnbe.auth.dto.response.UserProfileResponse;
@@ -52,27 +55,30 @@ public class UserProfileManagement implements UserProfileApi {
     String cdnDomain;
 
     @Override
-    public PaginatedResponseDto<UserProfileResponse> getUserProfiles(Pageable pageable) {
-        Page<UserProfile> userProfilesPage = userProfileRepo.findAll(pageable);
+    public PaginatedResponseDto<UserProfileResponse> getUserProfiles(UserCollectionRequest request) {
+        log.debug("Retrieving user profiles - page: {}, size: {}, search: {}",
+                request.getPage(),
+                request.getPageSize(),
+                request.getSearch());
+
+        Sort.Direction sortDirection = "desc".equalsIgnoreCase(request.getValidatedSort())
+                ? Sort.Direction.DESC
+                : Sort.Direction.ASC;
+        Pageable pageable = PageRequest
+                .of(request.getPage() - 1, request.getPageSize(), Sort.by(sortDirection, "createdAt"));
+
+        Page<UserProfile> userProfilesPage;
+
+        if (request.getSearch() != null && !request.getSearch().trim().isEmpty()) {
+            userProfilesPage = userProfileRepo.findBySearchTerm(request.getSearch().trim(), pageable);
+        } else {
+            userProfilesPage = userProfileRepo.findAll(pageable);
+        }
 
         var userProfiles = userProfilesPage.getContent().stream().map(userProfileMapper::toResponseDto).toList();
 
-        PaginationDto pagination = new PaginationDto(userProfilesPage.getNumber() + 1,      // Spring uses 0-based, API uses 1-based
-                userProfilesPage.getSize(), userProfilesPage.getTotalElements(), userProfilesPage.getTotalPages());
-
-        return PaginatedResponseDto.<UserProfileResponse>builder().data(userProfiles).pagination(pagination).build();
-    }
-
-    @Override
-    public PaginatedResponseDto<UserProfileResponse> getUserProfiles(Pageable pageable, String searchTerm) {
-        log.debug("Retrieving user profiles with search term: {}", searchTerm);
-
-        Page<UserProfile> userProfilesPage = userProfileRepo.findBySearchTerm(searchTerm, pageable);
-
-        var userProfiles = userProfilesPage.getContent().stream().map(userProfileMapper::toResponseDto).toList();
-
-        PaginationDto pagination = new PaginationDto(userProfilesPage.getNumber() + 1,      // Spring uses 0-based, API uses 1-based
-                userProfilesPage.getSize(), userProfilesPage.getTotalElements(), userProfilesPage.getTotalPages());
+        PaginationDto pagination = new PaginationDto(request.getPage(), userProfilesPage.getSize(),
+                userProfilesPage.getTotalElements(), userProfilesPage.getTotalPages());
 
         return PaginatedResponseDto.<UserProfileResponse>builder().data(userProfiles).pagination(pagination).build();
     }

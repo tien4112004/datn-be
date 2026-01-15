@@ -1,6 +1,7 @@
 package com.datn.datnbe.document.management;
 
 import com.datn.datnbe.auth.api.ResourcePermissionApi;
+import com.datn.datnbe.document.dto.request.ImageCollectionRequest;
 import com.datn.datnbe.document.dto.response.MediaResponseDto;
 import com.datn.datnbe.document.entity.Media;
 import com.datn.datnbe.sharedkernel.enums.MediaType;
@@ -139,6 +140,7 @@ class ImageManagementTest {
     @Test
     void getImages_WithValidPageable_ShouldReturnPaginatedImages() {
         // Given
+        ImageCollectionRequest request = ImageCollectionRequest.builder().page(1).pageSize(10).build();
         Pageable pageable = PageRequest.of(0, 10);
         Page<Media> mediaPage = new PageImpl<>(List.of(testMedia1, testMedia2), pageable, 2);
 
@@ -148,7 +150,7 @@ class ImageManagementTest {
         when(mediaEntityMapper.toResponseDto(testMedia2)).thenReturn(testMediaDto2);
 
         // When
-        PaginatedResponseDto<MediaResponseDto> result = imageManagement.getImages(pageable);
+        PaginatedResponseDto<MediaResponseDto> result = imageManagement.getImages(request);
 
         // Then
         assertThat(result).isNotNull();
@@ -161,6 +163,7 @@ class ImageManagementTest {
     @Test
     void getImages_WithEmptyResult_ShouldReturnEmptyPaginatedResponse() {
         // Given
+        ImageCollectionRequest request = ImageCollectionRequest.builder().page(1).pageSize(10).build();
         Pageable pageable = PageRequest.of(0, 10);
         Page<Media> mediaPage = new PageImpl<>(List.of(), pageable, 0);
 
@@ -168,7 +171,7 @@ class ImageManagementTest {
                 .thenReturn(mediaPage);
 
         // When
-        PaginatedResponseDto<MediaResponseDto> result = imageManagement.getImages(pageable);
+        PaginatedResponseDto<MediaResponseDto> result = imageManagement.getImages(request);
 
         // Then
         assertThat(result).isNotNull();
@@ -178,6 +181,7 @@ class ImageManagementTest {
     @Test
     void getImages_WithSecondPage_ShouldReturnCorrectPage() {
         // Given
+        ImageCollectionRequest request = ImageCollectionRequest.builder().page(2).pageSize(1).build();
         Pageable pageable = PageRequest.of(1, 1);
         Page<Media> mediaPage = new PageImpl<>(List.of(testMedia2), pageable, 2);
 
@@ -186,7 +190,7 @@ class ImageManagementTest {
         when(mediaEntityMapper.toResponseDto(testMedia2)).thenReturn(testMediaDto2);
 
         // When
-        PaginatedResponseDto<MediaResponseDto> result = imageManagement.getImages(pageable);
+        PaginatedResponseDto<MediaResponseDto> result = imageManagement.getImages(request);
 
         // Then
         assertThat(result).isNotNull();
@@ -241,6 +245,7 @@ class ImageManagementTest {
     @Test
     void getImages_WithLargePageSize_ShouldReturnAllImages() {
         // Given
+        ImageCollectionRequest request = ImageCollectionRequest.builder().page(1).pageSize(100).build();
         Pageable pageable = PageRequest.of(0, 100);
         Page<Media> mediaPage = new PageImpl<>(List.of(testMedia1, testMedia2), pageable, 2);
 
@@ -250,7 +255,7 @@ class ImageManagementTest {
         when(mediaEntityMapper.toResponseDto(testMedia2)).thenReturn(testMediaDto2);
 
         // When
-        PaginatedResponseDto<MediaResponseDto> result = imageManagement.getImages(pageable);
+        PaginatedResponseDto<MediaResponseDto> result = imageManagement.getImages(request);
 
         // Then
         assertThat(result).isNotNull();
@@ -260,6 +265,7 @@ class ImageManagementTest {
     @Test
     void getImages_ShouldFilterByMediaTypeImage() {
         // Given
+        ImageCollectionRequest request = ImageCollectionRequest.builder().page(1).pageSize(10).build();
         Pageable pageable = PageRequest.of(0, 10);
         Page<Media> mediaPage = new PageImpl<>(List.of(testMedia1), pageable, 1);
 
@@ -268,7 +274,7 @@ class ImageManagementTest {
         when(mediaEntityMapper.toResponseDto(testMedia1)).thenReturn(testMediaDto1);
 
         // When
-        PaginatedResponseDto<MediaResponseDto> result = imageManagement.getImages(pageable);
+        PaginatedResponseDto<MediaResponseDto> result = imageManagement.getImages(request);
 
         // Then
         assertThat(result).isNotNull();

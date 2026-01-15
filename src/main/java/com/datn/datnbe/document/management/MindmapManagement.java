@@ -105,11 +105,14 @@ public class MindmapManagement implements MindmapApi {
     @Override
     @Transactional(readOnly = true)
     public PaginatedResponseDto<MindmapListResponseDto> getAllMindmaps(MindmapCollectionRequest request) {
-        log.info("Retrieving mindmaps with pagination - page: {}, size: {}", request.getPage(), request.getSize());
+        log.info("Retrieving mindmaps with pagination - page: {}, size: {}", request.getPage(), request.getPageSize());
 
         try {
+            Sort.Direction sortDirection = "desc".equalsIgnoreCase(request.getValidatedSort())
+                    ? Sort.Direction.DESC
+                    : Sort.Direction.ASC;
             Pageable pageable = PageRequest
-                    .of(request.getPage() - 1, request.getSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
+                    .of(request.getPage() - 1, request.getPageSize(), Sort.by(sortDirection, "createdAt"));
 
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             Object principal = authentication.getPrincipal();
@@ -231,12 +234,12 @@ public class MindmapManagement implements MindmapApi {
             String userId = securityContextUtils.getCurrentUserId();
             if (userId != null) {
                 var metadata = DocumentMetadataDto.builder()
-                    .userId(userId)
-                    .documentId(id)
-                    .type("mindmap")
-                    .title(mindmap.getTitle())
-                    .thumbnail(mindmap.getThumbnail())
-                    .build();
+                        .userId(userId)
+                        .documentId(id)
+                        .type("mindmap")
+                        .title(mindmap.getTitle())
+                        .thumbnail(mindmap.getThumbnail())
+                        .build();
                 documentVisitService.trackDocumentVisit(metadata);
             }
 

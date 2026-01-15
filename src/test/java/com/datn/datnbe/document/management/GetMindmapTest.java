@@ -107,7 +107,7 @@ class GetMindmapTest {
         dto.setId("1");
         when(mapper.entityToListResponse(entity)).thenReturn(dto);
 
-        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).size(10).build();
+        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).pageSize(10).build();
 
         // Act
         var response = management.getAllMindmaps(request);
@@ -133,7 +133,7 @@ class GetMindmapTest {
             return dto;
         });
 
-        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).size(10).build();
+        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).pageSize(10).build();
 
         // Act
         PaginatedResponseDto<MindmapListResponseDto> response = management.getAllMindmaps(request);
@@ -160,7 +160,7 @@ class GetMindmapTest {
             return dto;
         });
 
-        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).size(10).build();
+        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).pageSize(10).build();
 
         // Act
         PaginatedResponseDto<MindmapListResponseDto> response = management.getAllMindmaps(request);
@@ -187,7 +187,7 @@ class GetMindmapTest {
             return dto;
         });
 
-        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(2).size(10).build();
+        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(2).pageSize(10).build();
 
         // Act
         PaginatedResponseDto<MindmapListResponseDto> response = management.getAllMindmaps(request);
@@ -205,7 +205,7 @@ class GetMindmapTest {
 
         when(mindmapRepository.findByIdIn(any(), any(Pageable.class))).thenReturn(page);
 
-        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).size(10).build();
+        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).pageSize(10).build();
 
         // Act
         PaginatedResponseDto<MindmapListResponseDto> response = management.getAllMindmaps(request);
@@ -231,7 +231,7 @@ class GetMindmapTest {
             return dto;
         });
 
-        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).size(10).build();
+        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).pageSize(10).sort("desc").build();
 
         // Act
         management.getAllMindmaps(request);
@@ -256,7 +256,7 @@ class GetMindmapTest {
             return dto;
         });
 
-        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).size(100).build();
+        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).pageSize(100).build();
 
         // Act
         PaginatedResponseDto<MindmapListResponseDto> response = management.getAllMindmaps(request);
@@ -286,7 +286,7 @@ class GetMindmapTest {
         dto.setId("single");
         when(mapper.entityToListResponse(entity)).thenReturn(dto);
 
-        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).size(10).build();
+        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).pageSize(10).build();
 
         // Act
         PaginatedResponseDto<MindmapListResponseDto> response = management.getAllMindmaps(request);
@@ -303,7 +303,7 @@ class GetMindmapTest {
         PageImpl<Mindmap> page = new PageImpl<>(Collections.emptyList(), PageRequest.of(3, 20), 0);
         when(mindmapRepository.findByIdIn(any(), any(Pageable.class))).thenReturn(page);
 
-        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(3).size(20).build();
+        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(3).pageSize(20).build();
 
         // Act
         management.getAllMindmaps(request);
@@ -330,7 +330,7 @@ class GetMindmapTest {
             return dto;
         });
 
-        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).size(10).build();
+        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).pageSize(10).build();
 
         // Act
         PaginatedResponseDto<MindmapListResponseDto> response = management.getAllMindmaps(request);
@@ -355,7 +355,7 @@ class GetMindmapTest {
             return dto;
         });
 
-        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).size(10).build();
+        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).pageSize(10).build();
 
         // Act
         PaginatedResponseDto<MindmapListResponseDto> response = management.getAllMindmaps(request);
@@ -379,7 +379,7 @@ class GetMindmapTest {
             return dto;
         });
 
-        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(2).size(10).build();
+        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(2).pageSize(10).build();
 
         // Act
         PaginatedResponseDto<MindmapListResponseDto> response = management.getAllMindmaps(request);
@@ -409,7 +409,7 @@ class GetMindmapTest {
         dto.setId("single");
         when(mapper.entityToListResponse(entity)).thenReturn(dto);
 
-        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).size(10).build();
+        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).pageSize(10).build();
 
         // Act
         PaginatedResponseDto<MindmapListResponseDto> response = management.getAllMindmaps(request);
@@ -427,7 +427,7 @@ class GetMindmapTest {
 
         when(mindmapRepository.findByIdIn(any(), any(Pageable.class))).thenReturn(page);
 
-        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(100).size(10).build();
+        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(100).pageSize(10).build();
 
         // Act
         PaginatedResponseDto<MindmapListResponseDto> response = management.getAllMindmaps(request);
@@ -451,7 +451,7 @@ class GetMindmapTest {
             return dto;
         });
 
-        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).size(5).build();
+        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).pageSize(5).build();
 
         // Act
         management.getAllMindmaps(request);
@@ -470,7 +470,7 @@ class GetMindmapTest {
         when(mindmapRepository.findByIdIn(any(), any(Pageable.class))).thenReturn(page);
         when(mapper.entityToListResponse(any(Mindmap.class))).thenAnswer(inv -> new MindmapListResponseDto());
 
-        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(5).size(10).build();
+        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(5).pageSize(10).build();
 
         // Act
         PaginatedResponseDto<MindmapListResponseDto> response = management.getAllMindmaps(request);
@@ -481,14 +481,14 @@ class GetMindmapTest {
 
     @Test
     void getAllMindmaps_paginated_negativePageNumber_shouldThroError() {
-        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(-1).size(10).build();
+        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(-1).pageSize(10).build();
 
         assertThatThrownBy(() -> management.getAllMindmaps(request)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void getAllMindmaps_paginated_zeroPageSize_returnsEmptyData() {
-        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).size(0).build();
+        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).pageSize(0).build();
 
         assertThatThrownBy(() -> management.getAllMindmaps(request)).isInstanceOf(IllegalArgumentException.class);
     }
@@ -496,7 +496,7 @@ class GetMindmapTest {
     @Test
     void getAllMindmaps_paginated_negativePageSize_throwsError() {
         // Arrange
-        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).size(-10).build();
+        MindmapCollectionRequest request = MindmapCollectionRequest.builder().page(1).pageSize(-10).build();
 
         // Act & Assert
         assertThatThrownBy(() -> management.getAllMindmaps(request)).isInstanceOf(IllegalArgumentException.class);

@@ -6,13 +6,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -51,20 +51,10 @@ public class MindmapController {
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<AppResponseDto<List<MindmapListResponseDto>>> getAllMindmapsPaginated(
-            @RequestParam(defaultValue = "0") Integer page,
-            @RequestParam(defaultValue = "10") Integer size,
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "desc") String sortDirection,
-            @RequestParam(required = false) String searchQuery) {
-        log.info("Received request to get paginated mindmaps - page: {}, size: {}", page, size);
-
-        MindmapCollectionRequest request = MindmapCollectionRequest.builder()
-                .page(page)
-                .size(size)
-                .sortBy(sortBy)
-                .sortDirection(sortDirection)
-                .searchQuery(searchQuery)
-                .build();
+            @Valid @ModelAttribute MindmapCollectionRequest request) {
+        log.info("Received request to get paginated mindmaps - page: {}, size: {}",
+                request.getPage(),
+                request.getPageSize());
 
         PaginatedResponseDto<MindmapListResponseDto> paginatedResponse = mindmapApi.getAllMindmaps(request);
         return ResponseEntity.ok(

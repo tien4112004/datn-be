@@ -21,8 +21,10 @@ public class TokenUsageManagement implements TokenUsageApi {
     @Override
     public void recordTokenUsage(TokenUsage tokenUsage) {
         tokenUsageRepo.saveTokenUsage(tokenUsage);
-        log.debug("Recorded token usage - userId: {}, request: {}, tokens: {}", 
-                tokenUsage.getUserId(), tokenUsage.getRequest(), tokenUsage.getTokenCount());
+        log.debug("Recorded token usage - userId: {}, request: {}, tokens: {}",
+                tokenUsage.getUserId(),
+                tokenUsage.getRequest(),
+                tokenUsage.getTokenCount());
     }
 
     @Override
@@ -47,10 +49,19 @@ public class TokenUsageManagement implements TokenUsageApi {
     }
 
     @Override
-    public TokenUsageStatsDto getTokenUsageWithFilters(String userId, String model, String provider, String requestType) {
+    public TokenUsageStatsDto getTokenUsageWithFilters(String userId,
+            String model,
+            String provider,
+            String requestType) {
         TokenUsageStatsDto result = tokenUsageRepo.getTokenUsageWithFilters(userId, model, provider, requestType);
-        log.debug("Token usage for user {} with filters - model: {}, provider: {}, requestType: {} - tokens: {}, requests: {}", 
-                userId, model, provider, requestType, result.getTotalTokens(), result.getTotalRequests());
+        log.debug(
+                "Token usage for user {} with filters - model: {}, provider: {}, requestType: {} - tokens: {}, requests: {}",
+                userId,
+                model,
+                provider,
+                requestType,
+                result.getTotalTokens(),
+                result.getTotalRequests());
         return result;
     }
 

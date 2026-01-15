@@ -192,7 +192,8 @@ public class StudentImportManagement implements StudentImportApi {
             String lastName = names.length > 1 ? names[1] : firstName;
 
             // Generate email from fullName (replace spaces with dots)
-            String email = StudentCredentialGenerator.generateUsername(csvRow.getFullName(), csvRow.getDateOfBirth(), studentRepository);
+            String email = StudentCredentialGenerator
+                    .generateUsername(csvRow.getFullName(), csvRow.getDateOfBirth(), studentRepository);
 
             // Generate a temporary password
             String temporaryPassword = StudentCredentialGenerator.generatePassword();
