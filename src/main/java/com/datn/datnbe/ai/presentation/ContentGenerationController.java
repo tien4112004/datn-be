@@ -13,15 +13,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.datn.datnbe.ai.api.AIResultApi;
 import com.datn.datnbe.ai.api.ContentGenerationApi;
+import com.datn.datnbe.ai.api.TokenUsageApi;
 import com.datn.datnbe.ai.dto.request.MindmapPromptRequest;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
 import com.datn.datnbe.ai.dto.response.MindmapGenerateResponseDto;
+import com.datn.datnbe.ai.dto.response.TokenUsageInfoDto;
+import com.datn.datnbe.ai.entity.TokenUsage;
 import com.datn.datnbe.document.api.PresentationApi;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -40,6 +44,8 @@ public class ContentGenerationController {
     ContentGenerationApi contentGenerationExternalApi;
     PresentationApi presentationApi;
     AIResultApi aiResultApi;
+    TokenUsageApi tokenUsageApi;
+    SecurityContextUtils securityContextUtils;
     static Integer OUTLINE_DELAY = 25; // milliseconds
     static Integer SLIDE_DELAY = 500; // milliseconds
 
@@ -47,6 +53,8 @@ public class ContentGenerationController {
     public Flux<String> generateOutline(@RequestBody OutlinePromptRequest request) {
         log.info("Received outline generation request: {}", request);
 
+        // Capture userId BEFORE entering reactive pipeline (on the request thread)
+        String userId = securityContextUtils.getCurrentUserId();
         StringBuilder result = new StringBuilder();
 
         // Create and return the flux with background processing
@@ -57,8 +65,49 @@ public class ContentGenerationController {
                     log.info("Received outline chunk: {}", chunk);
                 })
                 .doOnError(err -> log.error("Error generating outline", err))
-                .doFinally(signalType -> log.info("Outline generation completed with signal: {}", signalType))
+                .doFinally(signalType -> {
+                    log.info("Outline generation completed with signal: {}", signalType);
+                    if (result.length() > 0) {
+                        extractAndSaveTokenUsage(result.toString(), userId, "outline");
+                    }
+                })
+                .map(chunk -> removeTokenUsageFromChunk(chunk))
                 .cache();
+    }
+
+    private void extractAndSaveTokenUsage(String content, String userId, String requestType) {
+        try {
+            int tokenUsageStart = content.lastIndexOf("{\"token_usage\":");
+            if (tokenUsageStart != -1) {
+                String tokenUsageJson = content.substring(tokenUsageStart);
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode tokenUsageNode = mapper.readTree(tokenUsageJson);
+                
+                if (tokenUsageNode.has("token_usage")) {
+                    TokenUsageInfoDto tokenUsageInfo = mapper.treeToValue(
+                            tokenUsageNode.get("token_usage"), TokenUsageInfoDto.class);
+                    recordTokenUsage(userId, tokenUsageInfo, requestType);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to extract and save token usage from outline", e);
+        }
+    }
+
+    private String removeTokenUsageFromChunk(String chunk) {
+        int tokenUsageStart = chunk.lastIndexOf("{\"token_usage\":");
+        if (tokenUsageStart != -1) {
+            return chunk.substring(0, tokenUsageStart).trim();
+        }
+        return chunk;
+    }
+
+    private String removeTokenUsageFromString(String content) {
+        int tokenUsageStart = content.lastIndexOf("{\"token_usage\":");
+        if (tokenUsageStart != -1) {
+            return content.substring(0, tokenUsageStart).trim();
+        }
+        return content;
     }
 
     @PostMapping(value = "presentations/outline-generate/batch", produces = "application/json")
@@ -82,6 +131,7 @@ public class ContentGenerationController {
     public ResponseEntity<Flux<String>> generateSlides(@RequestBody PresentationPromptRequest request) {
 
         String presentationId = request.getPresentationId();
+        String userId = securityContextUtils.getCurrentUserId();
 
         // Serialize generation options to JSON
         String generationOptionsJson = null;
@@ -110,6 +160,7 @@ public class ContentGenerationController {
                 .onErrorResume(err -> Flux.error(
                         new AppException(ErrorCode.GENERATION_ERROR, "Failed to generate slides: " + err.getMessage())))
                 .doOnSubscribe(s -> log.info("Client subscribed to slide generation stream for ID: {}", presentationId))
+                .map(slide -> removeTokenUsageFromChunk(slide))
                 .publish()
                 .autoConnect(0); // Start immediately, never cancel due to subscriber count
 
@@ -117,17 +168,22 @@ public class ContentGenerationController {
         slideSse.doFinally(signalType -> {
             if (result.length() > 0) {
                 try {
-                    aiResultApi.saveAIResult(result.toString(), presentationId, optionsJson);
+                    String cleanedResult = result.toString();
+                    // Extract and save token usage
+                    extractAndSaveTokenUsage(cleanedResult, userId, "presentation");
+                    // Remove token usage from result before saving
+                    cleanedResult = removeTokenUsageFromString(cleanedResult);
+                    
+                    aiResultApi.saveAIResult(cleanedResult, presentationId, optionsJson);
                     log.info("Slide generation completed with signal {}, saved {} bytes for ID: {}",
                             signalType,
-                            result.length(),
+                            cleanedResult.length(),
                             presentationId);
                 } catch (Exception e) {
                     log.error("Failed to save AI result for presentation ID: {}", presentationId, e);
                 }
             }
-        }).subscribe(item -> {
-        }, // Already handled in doOnNext
+        }).subscribe(item -> {},
                 err -> log.error("Internal subscriber error for ID: {}", presentationId, err));
 
         return ResponseEntity.ok().header("X-Presentation", presentationId).body(slideSse);
@@ -200,18 +256,53 @@ public class ContentGenerationController {
             ObjectMapper mapper = new ObjectMapper();
 
             JsonNode rootNode = mapper.readTree(result);
-            String jsonToParse = result;
-
-            if (rootNode.isTextual()) {
-                jsonToParse = rootNode.asText();
+            
+            // Extract mindmap content and children
+            JsonNode dataNode = rootNode;
+            if (rootNode.has("data")) {
+                dataNode = rootNode.get("data");
+                // If data is a string (JSON string), parse it
+                if (dataNode.isTextual()) {
+                    dataNode = mapper.readTree(dataNode.asText());
+                }
             }
-
-            MindmapGenerateResponseDto mindmapDto = mapper.readValue(jsonToParse, MindmapGenerateResponseDto.class);
+            
+            // Convert to MindmapGenerateResponseDto
+            MindmapGenerateResponseDto mindmapDto = mapper.treeToValue(dataNode, MindmapGenerateResponseDto.class);
+            
+            // Add token_usage to extraFields if present and save to database
+            if (rootNode.has("token_usage")) {
+                JsonNode tokenUsageNode = rootNode.get("token_usage");
+                TokenUsageInfoDto tokenUsageInfo = mapper.treeToValue(tokenUsageNode, TokenUsageInfoDto.class);
+                mindmapDto.setExtraField("token_usage", tokenUsageInfo);
+                
+                // Record token usage
+                recordTokenUsage(securityContextUtils.getCurrentUserId(), tokenUsageInfo, "mindmap");
+            }
 
             return ResponseEntity.ok().body(AppResponseDto.success(mindmapDto));
         } catch (Exception error) {
             log.error("Error generating mindmap", error);
             throw new AppException(ErrorCode.GENERATION_ERROR, "Failed to generate mindmap: " + error.getMessage());
+        }
+    }
+
+    private void recordTokenUsage(String userId, TokenUsageInfoDto tokenUsageInfo, String requestType) {
+        try {
+            Long totalTokens = tokenUsageInfo.getTotalTokens();
+            
+            if (totalTokens != null) {
+                TokenUsage tokenUsage = TokenUsage.builder()
+                        .userId(userId)
+                        .request(requestType)
+                        .tokenCount(totalTokens)
+                        .model(tokenUsageInfo.getModel())
+                        .provider(tokenUsageInfo.getProvider())
+                        .build();
+                tokenUsageApi.recordTokenUsage(tokenUsage);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to record token usage for {}", requestType, e);
         }
     }
 
