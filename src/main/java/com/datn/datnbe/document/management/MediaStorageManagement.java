@@ -3,6 +3,7 @@ package com.datn.datnbe.document.management;
 import com.datn.datnbe.document.api.MediaStorageApi;
 import com.datn.datnbe.document.dto.DocumentMetadataDto;
 import com.datn.datnbe.document.dto.MediaMetadataDto;
+import com.datn.datnbe.document.dto.response.MultiUploadedMediaResponseDto;
 import com.datn.datnbe.document.dto.response.UploadedMediaResponseDto;
 import com.datn.datnbe.document.entity.Media;
 import com.datn.datnbe.sharedkernel.enums.MediaType;
@@ -20,6 +21,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.datn.datnbe.sharedkernel.utils.MediaStorageUtils.*;
 
@@ -143,6 +147,13 @@ public class MediaStorageManagement implements MediaStorageApi {
      * Delete media file and database record
      */
     @Override
+    @Transactional(readOnly = true)
+    public Media getMedia(Long mediaId) {
+        return mediaRepository.findById(mediaId)
+                .orElseThrow(() -> new AppException(ErrorCode.MEDIA_NOT_FOUND, "Media not found with ID: " + mediaId));
+    }
+
+    @Override
     @Transactional
     public void deleteMedia(Long mediaId) {
         Media media = mediaRepository.findById(mediaId)
@@ -161,54 +172,37 @@ public class MediaStorageManagement implements MediaStorageApi {
     }
 
     /**
-     * Get media by ID (track visit only for non-image types)
+     * Upload multiple media files
      */
     @Override
-    @Transactional(readOnly = true)
-    public Media getMedia(Long mediaId) {
-        Media media = mediaRepository.findById(mediaId)
-                .orElseThrow(() -> new AppException(ErrorCode.MEDIA_NOT_FOUND, "Media not found with ID: " + mediaId));
-
-        // Only track visits for non-image types (audio, video, document, etc)
-        if (media.getMediaType() != MediaType.IMAGE) {
-            String userId = getCurrentUserId();
-            if (userId != null) {
-                var metadata = DocumentMetadataDto.builder()
-                    .userId(userId)
-                    .documentId(String.valueOf(mediaId))
-                    .type(media.getMediaType().name().toLowerCase())
-                    .title(media.getOriginalFilename())
-                    .thumbnail(media.getCdnUrl())
-                    .build();
-                documentVisitService.trackDocumentVisit(metadata);
-            }
-        }
-
-        log.info("Retrieved media with ID: {}", mediaId);
-        return media;
+    @Transactional
+    public MultiUploadedMediaResponseDto uploadMultiple(List<MultipartFile> files, String ownerId) {
+        return uploadMultiple(files, ownerId, null);
     }
 
     /**
-     * Get current user ID from security context
+     * Upload multiple media files with generation metadata
      */
-    private String getCurrentUserId() {
-        try {
-            org.springframework.security.core.Authentication authentication = 
-                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-            Object principal = authentication.getPrincipal();
+    @Override
+    @Transactional
+    public MultiUploadedMediaResponseDto uploadMultiple(List<MultipartFile> files, String ownerId, MediaMetadataDto metadata) {
+        List<UploadedMediaResponseDto> uploadedMedia = new ArrayList<>();
 
-            if (principal instanceof org.springframework.security.oauth2.jwt.Jwt jwt) {
-                return jwt.getSubject();
+        for (MultipartFile file : files) {
+            try {
+                UploadedMediaResponseDto uploadedDto = upload(file, ownerId, metadata);
+                uploadedMedia.add(uploadedDto);
+                log.info("Successfully uploaded file: {}", file.getOriginalFilename());
+            } catch (Exception e) {
+                log.error("Error uploading file: {}", file.getOriginalFilename(), e);
+                throw new AppException(ErrorCode.FILE_UPLOAD_ERROR, "Failed to upload file: " + file.getOriginalFilename(), e);
             }
-
-            if (principal instanceof String username) {
-                return username;
-            }
-
-            return null;
-        } catch (Exception e) {
-            log.debug("Could not retrieve current user ID: {}", e.getMessage());
-            return null;
         }
+
+        log.info("Successfully uploaded {} media files (owner: {})", uploadedMedia.size(), ownerId);
+        return MultiUploadedMediaResponseDto.builder()
+                .media(uploadedMedia)
+                .totalCount(uploadedMedia.size())
+                .build();
     }
 }

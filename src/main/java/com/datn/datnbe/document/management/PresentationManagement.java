@@ -20,6 +20,7 @@ import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import com.datn.datnbe.sharedkernel.service.RustfsStorageService;
 import com.datn.datnbe.sharedkernel.utils.MediaStorageUtils;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.security.Security;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -55,6 +57,7 @@ public class PresentationManagement implements PresentationApi {
     ResourcePermissionApi resourcePermissionApi;
     RustfsStorageService rustfsStorageService;
     DocumentVisitService documentVisitService;
+    SecurityContextUtils securityContextUtils;
 
     @NonFinal
     @Value("${rustfs.public-url}")
@@ -239,7 +242,7 @@ public class PresentationManagement implements PresentationApi {
                 presentation.getSlides() != null ? presentation.getSlides().size() : 0);
 
         // Track document visit
-        String userId = getCurrentUserId();
+        String userId = securityContextUtils.getCurrentUserId();
         if (userId != null) {
             var metadata = DocumentMetadataDto.builder()
                 .userId(userId)
@@ -276,24 +279,5 @@ public class PresentationManagement implements PresentationApi {
         // Clean up document visit records
         documentVisitService.deleteDocumentVisits(id);
         log.info("Deleted all visit records for presentation: {}", id);
-    }
-
-    /**
-     * Get current user ID from security context
-     */
-    private String getCurrentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Object principal = authentication.getPrincipal();
-
-        if (principal instanceof Jwt jwt) {
-            return jwt.getSubject();
-        }
-
-        // Fallback for tests
-        if (principal instanceof String username) {
-            return username;
-        }
-
-        throw new AppException(ErrorCode.UNAUTHORIZED, "Invalid authentication");
     }
 }

@@ -30,6 +30,8 @@ public class QuestionCollectionRequest {
 
     String difficulty;
 
+    String subject;
+
     String type;
 
     String sortBy;

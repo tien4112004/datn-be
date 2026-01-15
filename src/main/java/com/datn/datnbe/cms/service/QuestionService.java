@@ -6,9 +6,12 @@ import com.datn.datnbe.cms.dto.request.QuestionCreateRequest;
 import com.datn.datnbe.cms.dto.request.QuestionUpdateRequest;
 import com.datn.datnbe.cms.dto.response.QuestionResponseDto;
 import com.datn.datnbe.cms.dto.response.BatchCreateQuestionResponseDto;
+import com.datn.datnbe.cms.dto.response.PublishRequestResponseDto;
 import com.datn.datnbe.cms.entity.QuestionBankItem;
+import com.datn.datnbe.cms.entity.PublishRequest;
 import com.datn.datnbe.cms.mapper.QuestionEntityMapper;
 import com.datn.datnbe.cms.repository.QuestionRepository;
+import com.datn.datnbe.cms.repository.PublishRequestRepository;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
@@ -37,6 +40,7 @@ import java.util.stream.Collectors;
 public class QuestionService implements QuestionApi {
 
     private final QuestionRepository questionRepository;
+    private final PublishRequestRepository publishRequestRepository;
     private final QuestionEntityMapper questionMapper;
     private final SmartValidator validator;
 
@@ -187,7 +191,9 @@ public class QuestionService implements QuestionApi {
         if (successful.isEmpty() && !failed.isEmpty()) {
             BatchCreateQuestionResponseDto.BatchItemErrorDto firstError = failed.get(0);
             log.error("Batch creation failed completely. First error - index: {}, title: {}, message: {}",
-                    firstError.getIndex(), firstError.getTitle(), firstError.getErrorMessage());
+                    firstError.getIndex(),
+                    firstError.getTitle(),
+                    firstError.getErrorMessage());
             throw new AppException(ErrorCode.VALIDATION_ERROR, firstError.getErrorMessage());
         }
 
@@ -300,5 +306,129 @@ public class QuestionService implements QuestionApi {
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };
+    }
+
+    @Transactional(readOnly = true)
+    public PaginatedResponseDto<QuestionResponseDto> getPublishedQuestions(Pageable pageable) {
+        log.info("Fetching published questions");
+
+        Page<QuestionBankItem> publishedQuestions = questionRepository.findByOwnerIdIsNull(pageable);
+
+        List<QuestionResponseDto> dtos = publishedQuestions.getContent()
+                .stream()
+                .map(questionMapper::toResponseDto)
+                .collect(Collectors.toList());
+
+        PaginationDto paginationInfo = PaginationDto.builder()
+                .currentPage(pageable.getPageNumber() + 1)
+                .pageSize(publishedQuestions.getSize())
+                .totalPages(publishedQuestions.getTotalPages())
+                .totalItems(publishedQuestions.getTotalElements())
+                .build();
+
+        return PaginatedResponseDto.<QuestionResponseDto>builder().data(dtos).pagination(paginationInfo).build();
+    }
+
+    @Transactional
+    public PublishRequestResponseDto publishQuestion(String questionId, String currentUserId) {
+        log.info("Publishing question - questionId: {}, userId: {}", questionId, currentUserId);
+
+        QuestionBankItem question = questionRepository.findById(questionId).orElseThrow(() -> {
+            log.warn("Question not found for publishing - id: {}", questionId);
+            return new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Question not found with id: " + questionId);
+        });
+
+        // Check if user already owns this question
+        if (question.getOwnerId() != null && question.getOwnerId().equals(currentUserId)) {
+            throw new AppException(ErrorCode.VALIDATION_ERROR, "You cannot publish your own question");
+        }
+
+        // Check if a pending/approved request already exists
+        if (publishRequestRepository.existsByQuestionIdAndRequesterIdAndIsDeletedFalse(questionId, currentUserId)) {
+            throw new AppException(ErrorCode.VALIDATION_ERROR,
+                    "You already have an active publish request for this question");
+        }
+
+        // Create publish request
+        PublishRequest publishRequest = PublishRequest.builder()
+                .questionId(questionId)
+                .requesterId(currentUserId)
+                .status(PublishRequest.PublishRequestStatus.PENDING)
+                .isDeleted(false)
+                .build();
+
+        PublishRequest savedRequest = publishRequestRepository.save(publishRequest);
+
+        log.info("Publish request created - requestId: {}, questionId: {}", savedRequest.getId(), questionId);
+
+        return mapPublishRequestToDto(savedRequest, question);
+    }
+
+    @Transactional(readOnly = true)
+    public PaginatedResponseDto<PublishRequestResponseDto> getPublishRequests(Pageable pageable) {
+        log.info("Fetching all publish requests");
+
+        Page<PublishRequest> requestsPage = publishRequestRepository
+                .findByStatusAndIsDeletedFalse(PublishRequest.PublishRequestStatus.PENDING, pageable);
+
+        List<PublishRequestResponseDto> dtos = requestsPage.getContent().stream().map(request -> {
+            QuestionBankItem question = questionRepository.findById(request.getQuestionId()).orElse(null);
+            return mapPublishRequestToDto(request, question);
+        }).collect(Collectors.toList());
+
+        PaginationDto paginationInfo = PaginationDto.builder()
+                .currentPage(pageable.getPageNumber() + 1)
+                .pageSize(requestsPage.getSize())
+                .totalPages(requestsPage.getTotalPages())
+                .totalItems(requestsPage.getTotalElements())
+                .build();
+
+        return PaginatedResponseDto.<PublishRequestResponseDto>builder().data(dtos).pagination(paginationInfo).build();
+    }
+
+    @Transactional
+    public PublishRequestResponseDto approvePublishRequest(String questionId) {
+        log.info("Approving publish request - questionId: {}", questionId);
+
+        QuestionBankItem question = questionRepository.findById(questionId).orElseThrow(() -> {
+            log.warn("Question not found for approval - id: {}", questionId);
+            return new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Question not found with id: " + questionId);
+        });
+
+        // Find the pending publish request for this question
+        PublishRequest publishRequest = publishRequestRepository
+                .findByQuestionIdAndIsDeletedFalse(questionId, PageRequest.of(0, 1))
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> {
+                    log.warn("No pending publish request found - questionId: {}", questionId);
+                    return new AppException(ErrorCode.RESOURCE_NOT_FOUND, "No publish request found for this question");
+                });
+
+        // Update the request status to APPROVED
+        publishRequest.setStatus(PublishRequest.PublishRequestStatus.APPROVED);
+        publishRequestRepository.save(publishRequest);
+
+        // Set the question's ownerId to null to make it public
+        question.setOwnerId(null);
+        questionRepository.save(question);
+
+        log.info("Publish request approved - questionId: {}, requestId: {}", questionId, publishRequest.getId());
+
+        return mapPublishRequestToDto(publishRequest, question);
+    }
+
+    private PublishRequestResponseDto mapPublishRequestToDto(PublishRequest request, QuestionBankItem question) {
+        QuestionResponseDto questionDto = question != null ? questionMapper.toResponseDto(question) : null;
+
+        return PublishRequestResponseDto.builder()
+                .id(request.getId())
+                .questionId(request.getQuestionId())
+                .requesterId(request.getRequesterId())
+                .status(request.getStatus().toString())
+                .createdAt(request.getCreatedAt())
+                .updatedAt(request.getUpdatedAt())
+                .question(questionDto)
+                .build();
     }
 }

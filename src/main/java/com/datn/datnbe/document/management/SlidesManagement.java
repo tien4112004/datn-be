@@ -34,7 +34,7 @@ public class SlidesManagement implements SlidesApi {
         var slides = mapper.updateRequestToEntityList(request.getSlides());
 
         for (var upsertSlide : slides) {
-            boolean removed = existingPresentation.getSlides()
+            existingPresentation.getSlides()
                     .removeIf(slide -> slide.getId() != null && slide.getId().equals(upsertSlide.getId()));
             existingPresentation.getSlides().add(upsertSlide);
         }
