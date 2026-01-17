@@ -3,26 +3,25 @@ package com.datn.datnbe.document.management;
 import com.datn.datnbe.auth.api.ResourcePermissionApi;
 import com.datn.datnbe.auth.dto.request.ResourceRegistrationRequest;
 import com.datn.datnbe.document.api.AssignmentApi;
-import com.datn.datnbe.document.dto.request.AddQuestionRequest;
 import com.datn.datnbe.document.dto.request.AssignmentCreateRequest;
 import com.datn.datnbe.document.dto.request.AssignmentUpdateRequest;
-import com.datn.datnbe.document.dto.response.AssignmentQuestionInfo;
 import com.datn.datnbe.document.dto.response.AssignmentResponse;
+
 import com.datn.datnbe.document.entity.Assignment;
-import com.datn.datnbe.document.entity.AssignmentQuestion;
-import com.datn.datnbe.document.entity.QuestionBankItem;
+import com.datn.datnbe.document.dto.request.QuestionItemRequest;
+import com.datn.datnbe.document.entity.Question;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import com.datn.datnbe.document.mapper.AssignmentMapper;
-import com.datn.datnbe.document.mapper.QuestionEntityMapper;
-import com.datn.datnbe.document.repository.AssignmentQuestionRepository;
 import com.datn.datnbe.document.repository.AssignmentRepository;
-import com.datn.datnbe.document.repository.QuestionRepository;
+
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -39,10 +38,7 @@ import java.util.stream.Collectors;
 public class AssignmentManagement implements AssignmentApi {
 
     private final AssignmentRepository assignmentRepository;
-    private final AssignmentQuestionRepository assignmentQuestionRepository;
-    private final QuestionRepository questionRepository;
     private final AssignmentMapper assignmentMapper;
-    private final QuestionEntityMapper questionMapper;
     private final SecurityContextUtils securityContextUtils;
     private final ResourcePermissionApi resourcePermissionApi;
 
@@ -52,6 +48,10 @@ public class AssignmentManagement implements AssignmentApi {
         String userId = securityContextUtils.getCurrentUserId();
         Assignment assignment = assignmentMapper.toEntity(request);
         assignment.setOwnerId(userId);
+
+        if (request.getQuestions() != null && !request.getQuestions().isEmpty()) {
+            assignment.setQuestions(mapQuestionItems(request.getQuestions()));
+        }
 
         Assignment saved = assignmentRepository.save(assignment);
 
@@ -99,9 +99,12 @@ public class AssignmentManagement implements AssignmentApi {
         Assignment assignment = assignmentRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Assignment not found"));
 
-        // Permission check handled by Aspect
-
         assignmentMapper.updateEntity(assignment, request);
+
+        if (request.getQuestions() != null) {
+            assignment.setQuestions(mapQuestionItems(request.getQuestions()));
+        }
+
         Assignment saved = assignmentRepository.save(assignment);
         return assignmentMapper.toDto(saved);
     }
@@ -111,75 +114,28 @@ public class AssignmentManagement implements AssignmentApi {
     public void deleteAssignment(String id) {
         Assignment assignment = assignmentRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Assignment not found"));
-
-        // Permission check handled by Aspect
-
         assignmentRepository.delete(assignment);
     }
 
-    @Override
-    @Transactional
-    public AssignmentQuestionInfo addQuestionToAssignment(String assignmentId, AddQuestionRequest request) {
-        assignmentRepository.findById(assignmentId)
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Assignment not found"));
-
-        QuestionBankItem question = questionRepository.findById(request.getQuestionId())
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Question not found"));
-
-        // Check if already exists
-        if (assignmentQuestionRepository.findByAssignmentIdAndQuestionId(assignmentId, request.getQuestionId())
-                .isPresent()) {
-            throw new AppException(ErrorCode.RESOURCE_ALREADY_EXISTS, "Question already exists in this assignment");
+    private List<Question> mapQuestionItems(List<QuestionItemRequest> items) {
+        if (items == null || items.isEmpty()) {
+            return List.of();
         }
 
-        AssignmentQuestion link = AssignmentQuestion.builder()
-                .assignmentId(assignmentId)
-                .questionId(request.getQuestionId())
-                .point(request.getPoint())
-                .order(request.getOrder())
-                .build();
-
-        AssignmentQuestion savedLink = assignmentQuestionRepository.save(link);
-
-        return AssignmentQuestionInfo.builder()
-                .id(savedLink.getId())
-                .assignmentId(assignmentId)
-                .question(questionMapper.toResponseDto(question))
-                .point(savedLink.getPoint())
-                .order(savedLink.getOrder())
-                .build();
-    }
-
-    @Override
-    @Transactional
-    public void removeQuestionFromAssignment(String assignmentId, String questionId) {
-        AssignmentQuestion link = assignmentQuestionRepository.findByAssignmentIdAndQuestionId(assignmentId, questionId)
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Question not found in assignment"));
-
-        assignmentQuestionRepository.delete(link);
-    }
-
-    @Override
-    public List<AssignmentQuestionInfo> getAssignmentQuestions(String assignmentId) {
-        if (!assignmentRepository.existsById(assignmentId)) {
-            throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Assignment not found");
-        }
-
-        List<AssignmentQuestion> links = assignmentQuestionRepository.findByAssignmentIdOrderByOrderAsc(assignmentId);
-
-        return links.stream().map(link -> {
-            QuestionBankItem question = questionRepository.findById(link.getQuestionId()).orElse(null);
-            // If question deleted, might handle gracefully or skip
-            if (question == null)
-                return null;
-
-            return AssignmentQuestionInfo.builder()
-                    .id(link.getId())
-                    .assignmentId(assignmentId)
-                    .question(questionMapper.toResponseDto(question))
-                    .point(link.getPoint())
-                    .order(link.getOrder())
-                    .build();
-        }).filter(item -> item != null).collect(Collectors.toList());
+        return items.stream()
+                .map(item -> Question.builder()
+                        .id(item.getId())
+                        .type(item.getType())
+                        .difficulty(item.getDifficulty())
+                        .title(item.getTitle())
+                        .titleImageUrl(item.getTitleImageUrl())
+                        .explanation(item.getExplanation())
+                        .grade(item.getGrade())
+                        .chapter(item.getChapter())
+                        .subject(item.getSubject())
+                        .data(item.getData())
+                        .point(item.getPoint())
+                        .build())
+                .collect(Collectors.toList());
     }
 }

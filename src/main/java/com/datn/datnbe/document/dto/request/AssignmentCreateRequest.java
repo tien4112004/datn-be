@@ -1,6 +1,7 @@
 package com.datn.datnbe.document.dto.request;
 
 import lombok.Data;
+import java.util.List;
 
 @Data
 public class AssignmentCreateRequest {
@@ -9,4 +10,6 @@ public class AssignmentCreateRequest {
     private Integer duration;
     private String subject;
     private String grade;
+    private List<QuestionItemRequest> questions;
+
 }

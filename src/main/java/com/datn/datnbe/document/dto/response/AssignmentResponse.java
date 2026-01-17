@@ -1,9 +1,13 @@
 package com.datn.datnbe.document.dto.response;
 
 import lombok.*;
+import com.datn.datnbe.document.entity.Question;
+import lombok.Builder;
+import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -17,7 +21,9 @@ public class AssignmentResponse {
     Integer duration;
     String ownerId;
     String subject;
-    String grade;
-    LocalDateTime createdAt;
+    private String grade;
+    private List<Question> questions;
+    private LocalDateTime createdAt;
+
     LocalDateTime updatedAt;
 }

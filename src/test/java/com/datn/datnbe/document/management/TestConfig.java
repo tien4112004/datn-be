@@ -11,12 +11,18 @@ import org.springframework.context.annotation.ComponentScan;
 import static org.mockito.Mockito.mock;
 
 @TestConfiguration
-@ComponentScan(basePackageClasses = {PresentationEntityMapper.class, SlideEntityMapper.class, SlideElementMapper.class})
+@ComponentScan(basePackageClasses = { PresentationEntityMapper.class, SlideEntityMapper.class,
+        SlideElementMapper.class })
 public class TestConfig {
     // This configuration will ensure the mappers are loaded
 
     @Bean
     public SecurityContextUtils securityContextUtils() {
         return mock(SecurityContextUtils.class);
+    }
+
+    @Bean
+    public com.fasterxml.jackson.databind.ObjectMapper objectMapper() {
+        return new com.fasterxml.jackson.databind.ObjectMapper();
     }
 }

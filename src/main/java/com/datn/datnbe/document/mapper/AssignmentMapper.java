@@ -16,6 +16,7 @@ public interface AssignmentMapper {
     @Mapping(target = "ownerId", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "questions", ignore = true)
     Assignment toEntity(AssignmentCreateRequest request);
 
     AssignmentResponse toDto(Assignment entity);
@@ -24,5 +25,7 @@ public interface AssignmentMapper {
     @Mapping(target = "ownerId", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "questions", ignore = true)
     void updateEntity(@MappingTarget Assignment entity, AssignmentUpdateRequest request);
+
 }
