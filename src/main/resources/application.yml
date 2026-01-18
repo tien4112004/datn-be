@@ -74,6 +74,9 @@ server:
   address: 0.0.0.0
 
 app:
+  firebase:
+    config-path: ${FIREBASE_CONFIG_PATH:classpath:firebase-service-account.json}
+
   cors:
     allowed-origins:
       - "http://localhost:5173"
