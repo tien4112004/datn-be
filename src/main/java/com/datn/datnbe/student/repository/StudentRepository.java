@@ -27,4 +27,11 @@ public interface StudentRepository extends JpaRepository<Student, String> {
 
     @Query("SELECT COUNT(up) FROM Student s JOIN UserProfile up ON s.userId = up.id " + "WHERE up.email LIKE :pattern")
     int countExistingUsernames(@Param("pattern") String pattern);
+
+    @Query(value = """
+            SELECT s.* FROM students s
+            JOIN class_enrollments ce ON s.id = ce.student_id
+            WHERE ce.class_id = :classId
+            """, nativeQuery = true)
+    List<Student> findByClassId(@Param("classId") String classId);
 }

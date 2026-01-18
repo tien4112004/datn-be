@@ -3,6 +3,7 @@ package com.datn.datnbe.student.api;
 import com.datn.datnbe.student.dto.request.StudentCreateRequest;
 import com.datn.datnbe.student.dto.request.StudentUpdateRequest;
 import com.datn.datnbe.student.dto.response.StudentResponseDto;
+import com.datn.datnbe.student.entity.Student;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import org.springframework.data.domain.Pageable;
 
@@ -60,4 +61,6 @@ public interface StudentApi {
      * @return list of updated student responses with new passwords
      */
     List<StudentResponseDto> regeneratePasswords(List<String> studentIds);
+
+    List<StudentResponseDto> getStudentsByClassId(String classId);
 }
