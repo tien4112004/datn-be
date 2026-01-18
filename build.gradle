@@ -57,6 +57,7 @@ dependencies {
     implementation 'org.keycloak:keycloak-admin-client:26.0.0'
     implementation 'io.hypersistence:hypersistence-utils-hibernate-63:3.9.0'
     implementation 'org.apache.commons:commons-csv:1.10.0'
+    implementation 'com.google.firebase:firebase-admin:9.2.0'
 
     testImplementation 'io.projectreactor:reactor-test'
     testImplementation 'org.springframework.security:spring-security-test'
