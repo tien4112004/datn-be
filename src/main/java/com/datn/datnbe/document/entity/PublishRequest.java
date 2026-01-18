@@ -1,4 +1,4 @@
-package com.datn.datnbe.cms.entity;
+package com.datn.datnbe.document.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

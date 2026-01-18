@@ -1,7 +1,8 @@
-package com.datn.datnbe.cms.entity.questiondata;
+package com.datn.datnbe.document.entity.questiondata;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -9,11 +10,15 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class MultipleChoiceOption {
+public class BlankSegment {
 
     @Builder.Default
     String id = UUID.randomUUID().toString();
-    String text;
-    String imageUrl;
-    Boolean isCorrect;
+    SegmentType type;
+    String content;
+    List<String> acceptableAnswers;
+
+    public enum SegmentType {
+        TEXT, BLANK
+    }
 }

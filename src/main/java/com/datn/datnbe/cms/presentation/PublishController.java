@@ -1,8 +1,8 @@
 package com.datn.datnbe.cms.presentation;
 
-import com.datn.datnbe.cms.api.QuestionApi;
-import com.datn.datnbe.cms.dto.response.PublishRequestResponseDto;
-import com.datn.datnbe.cms.dto.response.QuestionResponseDto;
+import com.datn.datnbe.document.api.QuestionApi;
+import com.datn.datnbe.document.dto.response.PublishRequestResponseDto;
+import com.datn.datnbe.document.dto.response.QuestionResponseDto;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;

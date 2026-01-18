@@ -1,11 +1,11 @@
-package com.datn.datnbe.cms.entity;
+package com.datn.datnbe.document.entity;
 
-import com.datn.datnbe.cms.entity.questiondata.Difficulty;
-import com.datn.datnbe.cms.entity.questiondata.FillInBlankData;
-import com.datn.datnbe.cms.entity.questiondata.MatchingData;
-import com.datn.datnbe.cms.entity.questiondata.MultipleChoiceData;
-import com.datn.datnbe.cms.entity.questiondata.OpenEndedData;
-import com.datn.datnbe.cms.entity.questiondata.QuestionType;
+import com.datn.datnbe.document.entity.questiondata.Difficulty;
+import com.datn.datnbe.document.entity.questiondata.FillInBlankData;
+import com.datn.datnbe.document.entity.questiondata.MatchingData;
+import com.datn.datnbe.document.entity.questiondata.MultipleChoiceData;
+import com.datn.datnbe.document.entity.questiondata.OpenEndedData;
+import com.datn.datnbe.document.entity.questiondata.QuestionType;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
@@ -57,7 +57,7 @@ public class QuestionBankItem {
     @Column(name = "chapter")
     String chapter;
 
-    @Column(name = "subject", nullable = false, length = 10)
+    @Column(name = "subject", nullable = false)
     String subject;
 
     @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")

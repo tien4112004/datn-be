@@ -1,17 +1,17 @@
-package com.datn.datnbe.cms.service;
+package com.datn.datnbe.document.management;
 
-import com.datn.datnbe.cms.api.QuestionApi;
-import com.datn.datnbe.cms.dto.request.QuestionCollectionRequest;
-import com.datn.datnbe.cms.dto.request.QuestionCreateRequest;
-import com.datn.datnbe.cms.dto.request.QuestionUpdateRequest;
-import com.datn.datnbe.cms.dto.response.QuestionResponseDto;
-import com.datn.datnbe.cms.dto.response.BatchCreateQuestionResponseDto;
-import com.datn.datnbe.cms.dto.response.PublishRequestResponseDto;
-import com.datn.datnbe.cms.entity.QuestionBankItem;
-import com.datn.datnbe.cms.entity.PublishRequest;
-import com.datn.datnbe.cms.mapper.QuestionEntityMapper;
-import com.datn.datnbe.cms.repository.QuestionRepository;
-import com.datn.datnbe.cms.repository.PublishRequestRepository;
+import com.datn.datnbe.document.api.QuestionApi;
+import com.datn.datnbe.document.dto.request.QuestionCollectionRequest;
+import com.datn.datnbe.document.dto.request.QuestionCreateRequest;
+import com.datn.datnbe.document.dto.request.QuestionUpdateRequest;
+import com.datn.datnbe.document.dto.response.QuestionResponseDto;
+import com.datn.datnbe.document.dto.response.BatchCreateQuestionResponseDto;
+import com.datn.datnbe.document.dto.response.PublishRequestResponseDto;
+import com.datn.datnbe.document.entity.QuestionBankItem;
+import com.datn.datnbe.document.entity.PublishRequest;
+import com.datn.datnbe.document.mapper.QuestionEntityMapper;
+import com.datn.datnbe.document.repository.QuestionRepository;
+import com.datn.datnbe.document.repository.PublishRequestRepository;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class QuestionService implements QuestionApi {
+public class QuestionManagement implements QuestionApi {
 
     private final QuestionRepository questionRepository;
     private final PublishRequestRepository publishRequestRepository;

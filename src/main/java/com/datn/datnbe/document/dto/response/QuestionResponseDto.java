@@ -1,4 +1,4 @@
-package com.datn.datnbe.cms.dto.response;
+package com.datn.datnbe.document.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;

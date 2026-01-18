@@ -1,10 +1,10 @@
-package com.datn.datnbe.cms.mapper;
+package com.datn.datnbe.document.mapper;
 
-import com.datn.datnbe.cms.dto.request.QuestionCreateRequest;
-import com.datn.datnbe.cms.dto.request.QuestionUpdateRequest;
-import com.datn.datnbe.cms.dto.response.QuestionResponseDto;
-import com.datn.datnbe.cms.entity.QuestionBankItem;
-import com.datn.datnbe.cms.entity.questiondata.*;
+import com.datn.datnbe.document.dto.request.QuestionCreateRequest;
+import com.datn.datnbe.document.dto.request.QuestionUpdateRequest;
+import com.datn.datnbe.document.dto.response.QuestionResponseDto;
+import com.datn.datnbe.document.entity.QuestionBankItem;
+import com.datn.datnbe.document.entity.questiondata.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.mapstruct.Mapper;

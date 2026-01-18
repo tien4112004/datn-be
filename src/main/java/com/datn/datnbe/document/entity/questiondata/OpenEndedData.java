@@ -1,4 +1,4 @@
-package com.datn.datnbe.cms.entity.questiondata;
+package com.datn.datnbe.document.entity.questiondata;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;

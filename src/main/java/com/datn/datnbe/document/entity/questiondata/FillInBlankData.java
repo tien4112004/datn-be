@@ -1,4 +1,4 @@
-package com.datn.datnbe.cms.entity.questiondata;
+package com.datn.datnbe.document.entity.questiondata;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -9,10 +9,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class MultipleChoiceData {
+public class FillInBlankData {
 
-    List<MultipleChoiceOption> options;
+    List<BlankSegment> segments;
 
     @Builder.Default
-    Boolean shuffleOptions = false;
+    Boolean caseSensitive = false;
 }

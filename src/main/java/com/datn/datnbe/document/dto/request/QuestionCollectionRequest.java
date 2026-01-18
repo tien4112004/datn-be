@@ -1,4 +1,4 @@
-package com.datn.datnbe.cms.dto.request;
+package com.datn.datnbe.document.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;

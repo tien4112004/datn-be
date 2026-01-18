@@ -1,11 +1,11 @@
-package com.datn.datnbe.cms.presentation;
+package com.datn.datnbe.document.presentation;
 
-import com.datn.datnbe.cms.api.QuestionApi;
-import com.datn.datnbe.cms.dto.request.QuestionCreateRequest;
-import com.datn.datnbe.cms.dto.request.QuestionUpdateRequest;
-import com.datn.datnbe.cms.dto.request.QuestionCollectionRequest;
-import com.datn.datnbe.cms.dto.response.QuestionResponseDto;
-import com.datn.datnbe.cms.dto.response.BatchCreateQuestionResponseDto;
+import com.datn.datnbe.document.api.QuestionApi;
+import com.datn.datnbe.document.dto.request.QuestionCreateRequest;
+import com.datn.datnbe.document.dto.request.QuestionUpdateRequest;
+import com.datn.datnbe.document.dto.request.QuestionCollectionRequest;
+import com.datn.datnbe.document.dto.response.QuestionResponseDto;
+import com.datn.datnbe.document.dto.response.BatchCreateQuestionResponseDto;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
