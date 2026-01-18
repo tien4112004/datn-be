@@ -5,6 +5,8 @@ import jakarta.validation.constraints.Pattern;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -24,15 +26,16 @@ public class QuestionCollectionRequest {
 
     String search;
 
-    String grade;
+    // Multi-select filter fields - accept arrays from frontend
+    List<String> grade;
 
-    String chapter;
+    List<String> chapter;
 
-    String difficulty;
+    List<String> difficulty;
 
-    String subject;
+    List<String> subject;
 
-    String type;
+    List<String> type;
 
     String sortBy;
 
