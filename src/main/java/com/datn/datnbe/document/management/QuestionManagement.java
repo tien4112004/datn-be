@@ -50,13 +50,14 @@ public class QuestionManagement implements QuestionApi {
             String ownerIdFilter) {
 
         log.info(
-                "Fetching questions - bankType: {}, page: {}, pageSize: {}, search: {}, difficulty: {}, type: {}, grade: {}, chapter: {}, ownerIdFilter: {}",
+                "Fetching questions - bankType: {}, page: {}, pageSize: {}, search: {}, difficulty: {}, type: {}, subject: {}, grade: {}, chapter: {}, ownerIdFilter: {}",
                 request.getBankType(),
                 request.getPage(),
                 request.getPageSize(),
                 request.getSearch(),
                 request.getDifficulty(),
                 request.getType(),
+                request.getSubject(),
                 request.getGrade(),
                 request.getChapter(),
                 ownerIdFilter);
@@ -273,6 +274,8 @@ public class QuestionManagement implements QuestionApi {
             // Owner filter
             if (ownerIdFilter != null) {
                 predicates.add(cb.equal(root.get("ownerId"), ownerIdFilter));
+            } else {
+                predicates.add(cb.isNull(root.get("ownerId")));
             }
 
             // Search by title
@@ -280,24 +283,29 @@ public class QuestionManagement implements QuestionApi {
                 predicates.add(cb.like(cb.lower(root.get("title")), "%" + request.getSearch().toLowerCase() + "%"));
             }
 
-            // Filter by difficulty
-            if (request.getDifficulty() != null && !request.getDifficulty().isBlank()) {
-                predicates.add(cb.equal(root.get("difficulty"), request.getDifficulty()));
+            // Filter by difficulty (supports multi-select)
+            if (request.getDifficulty() != null && !request.getDifficulty().isEmpty()) {
+                predicates.add(root.get("difficulty").in(request.getDifficulty()));
             }
 
-            // Filter by type
-            if (request.getType() != null && !request.getType().isBlank()) {
-                predicates.add(cb.equal(root.get("type"), request.getType()));
+            // Filter by type (supports multi-select)
+            if (request.getType() != null && !request.getType().isEmpty()) {
+                predicates.add(root.get("type").in(request.getType()));
             }
 
-            // Filter by grade
-            if (request.getGrade() != null && !request.getGrade().isBlank()) {
-                predicates.add(cb.equal(root.get("grade"), request.getGrade()));
+            // Filter by subject (supports multi-select)
+            if (request.getSubject() != null && !request.getSubject().isEmpty()) {
+                predicates.add(root.get("subject").in(request.getSubject()));
             }
 
-            // Filter by chapter
-            if (request.getChapter() != null && !request.getChapter().isBlank()) {
-                predicates.add(cb.equal(root.get("chapter"), request.getChapter()));
+            // Filter by grade (supports multi-select)
+            if (request.getGrade() != null && !request.getGrade().isEmpty()) {
+                predicates.add(root.get("grade").in(request.getGrade()));
+            }
+
+            // Filter by chapter (supports multi-select)
+            if (request.getChapter() != null && !request.getChapter().isEmpty()) {
+                predicates.add(root.get("chapter").in(request.getChapter()));
             }
 
             if (predicates.isEmpty()) {
