@@ -274,6 +274,8 @@ public class QuestionManagement implements QuestionApi {
             // Owner filter
             if (ownerIdFilter != null) {
                 predicates.add(cb.equal(root.get("ownerId"), ownerIdFilter));
+            } else {
+                predicates.add(cb.isNull(root.get("ownerId")));
             }
 
             // Search by title
