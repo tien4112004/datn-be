@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.dto.request.SignupRequest;
 import com.datn.datnbe.auth.dto.response.UserProfileResponse;
+import com.datn.datnbe.cms.service.ClassGroupManagementService;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
@@ -44,6 +45,7 @@ public class StudentManagement implements StudentApi {
     ClassEnrollmentRepository classEnrollmentRepository;
     StudentEntityMapper studentEntityMapper;
     UserProfileApi userProfileApi;
+    ClassGroupManagementService classGroupManagementService;
 
     @Override
     public StudentResponseDto getStudentById(String id) {
@@ -229,6 +231,9 @@ public class StudentManagement implements StudentApi {
         classEnrollmentRepository.save(enrollment);
         log.info("Successfully enrolled student {} to class {}", studentId, classId);
 
+        // Add student to class's Keycloak group for resource access
+        classGroupManagementService.addStudentToClassGroup(classId, studentId);
+
         StudentResponseDto dto = studentEntityMapper.toResponseDto(student);
         enrichWithUserProfile(dto, student.getUserId());
         return dto;
@@ -262,6 +267,10 @@ public class StudentManagement implements StudentApi {
         }
 
         classEnrollmentRepository.deleteByClassIdAndStudentId(classId, studentId);
+
+        // Remove student from class's Keycloak group
+        classGroupManagementService.removeStudentFromClassGroup(classId, studentId);
+
         log.info("Successfully removed student {} from class {}", studentId, classId);
     }
 

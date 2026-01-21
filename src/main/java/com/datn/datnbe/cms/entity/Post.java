@@ -1,5 +1,7 @@
 package com.datn.datnbe.cms.entity;
 
+import com.datn.datnbe.cms.converter.LinkedResourcesConverter;
+import com.datn.datnbe.cms.dto.LinkedResourceDto;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -7,6 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -37,8 +40,9 @@ public class Post {
     @Column(name = "attachments")
     String[] attachments;
 
-    @Column(name = "linked_resource_ids")
-    String[] linkedResourceIds;
+    @Convert(converter = LinkedResourcesConverter.class)
+    @Column(name = "linked_resources", columnDefinition = "TEXT")
+    List<LinkedResourceDto> linkedResources;
 
     @Column(name = "linked_lesson_id", length = 36)
     String linkedLessonId;

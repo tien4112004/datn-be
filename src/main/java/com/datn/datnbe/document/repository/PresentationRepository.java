@@ -29,4 +29,7 @@ public interface PresentationRepository extends JpaRepository<Presentation, Stri
     Page<Presentation> findByIdInWithOptionalTitle(@Param("ids") Iterable<String> ids,
             @Param("title") String title,
             Pageable pageable);
+
+    @Query("SELECT COUNT(p) FROM Presentation p WHERE p.id IN :ids AND p.deletedAt IS NULL")
+    long countByIdInAndDeletedAtIsNull(@Param("ids") java.util.Collection<String> ids);
 }

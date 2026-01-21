@@ -3,6 +3,7 @@ package com.datn.datnbe.cms.service;
 import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.dto.response.UserMinimalInfoDto;
 import com.datn.datnbe.cms.api.PostApi;
+import com.datn.datnbe.cms.dto.LinkedResourceDto;
 import com.datn.datnbe.cms.dto.request.PinPostRequest;
 import com.datn.datnbe.cms.dto.request.PostCreateRequest;
 import com.datn.datnbe.cms.dto.request.PostUpdateRequest;
@@ -37,10 +38,19 @@ public class PostService implements PostApi {
     private final PostMapper postMapper;
     private final SecurityContextUtils securityContextUtils;
     private final UserProfileApi userProfileApi;
+    private final LinkedResourceValidationService linkedResourceValidationService;
+    private final LinkedResourcePermissionService linkedResourcePermissionService;
 
     @Override
     @Transactional
     public PostResponseDto createPost(String classId, PostCreateRequest request) {
+        // Validate linked resources exist
+        List<LinkedResourceDto> linkedResources = request.getLinkedResources();
+        if (linkedResources != null && !linkedResources.isEmpty()) {
+            linkedResourceValidationService.validateLinkedResources(linkedResources);
+            linkedResourceValidationService.validateAllPermissionLevels(linkedResources);
+        }
+
         Post post = postMapper.toEntity(request);
         post.setClassId(classId);
         post.setAuthorId(securityContextUtils.getCurrentUserId());
@@ -50,6 +60,12 @@ public class PostService implements PostApi {
         if (post.getCommentCount() == null)
             post.setCommentCount(0);
         Post saved = postRepository.save(post);
+
+        // Grant class permissions for linked resources
+        if (linkedResources != null && !linkedResources.isEmpty()) {
+            linkedResourcePermissionService.grantClassPermissions(classId, linkedResources);
+        }
+
         PostResponseDto dto = postMapper.toResponseDto(saved);
         populateAuthorInfo(dto, saved.getAuthorId());
         return dto;
@@ -111,8 +127,30 @@ public class PostService implements PostApi {
     public PostResponseDto updatePost(String postId, PostUpdateRequest request) {
         Post exist = postRepository.findById(postId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Post not found"));
+
+        // Validate new linked resources
+        List<LinkedResourceDto> newLinkedResources = request.getLinkedResources();
+        if (newLinkedResources != null && !newLinkedResources.isEmpty()) {
+            linkedResourceValidationService.validateLinkedResources(newLinkedResources);
+            linkedResourceValidationService.validateAllPermissionLevels(newLinkedResources);
+        }
+
+        // Keep track of old linked resources for permission revocation
+        List<LinkedResourceDto> oldLinkedResources = exist.getLinkedResources();
+        String classId = exist.getClassId();
+
         postMapper.updateEntity(request, exist);
         Post saved = postRepository.save(exist);
+
+        // Handle permission changes
+        if (newLinkedResources != null && !newLinkedResources.isEmpty()) {
+            // Grant permissions for new resources
+            linkedResourcePermissionService.grantClassPermissions(classId, newLinkedResources);
+        }
+
+        // Revoke permissions for removed resources (if no longer referenced)
+        linkedResourcePermissionService.revokeUnlinkedPermissions(classId, oldLinkedResources, newLinkedResources);
+
         PostResponseDto dto = postMapper.toResponseDto(saved);
         populateAuthorInfo(dto, saved.getAuthorId());
         return dto;
@@ -121,7 +159,21 @@ public class PostService implements PostApi {
     @Override
     @Transactional
     public void deletePost(String postId) {
-        postRepository.deleteById(postId);
+        Post exist = postRepository.findById(postId).orElse(null);
+        if (exist != null) {
+            List<LinkedResourceDto> linkedResources = exist.getLinkedResources();
+            String classId = exist.getClassId();
+
+            // Delete the post first
+            postRepository.deleteById(postId);
+
+            // Revoke permissions for resources that are no longer referenced
+            if (linkedResources != null && !linkedResources.isEmpty()) {
+                linkedResourcePermissionService.revokeUnlinkedPermissions(classId, linkedResources, null);
+            }
+        } else {
+            postRepository.deleteById(postId);
+        }
     }
 
     @Override

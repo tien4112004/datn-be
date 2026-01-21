@@ -23,4 +23,11 @@ public interface PostRepository extends JpaRepository<Post, String> {
     @Transactional
     @Query("UPDATE Post p SET p.commentCount = p.commentCount + :delta WHERE p.id = :postId")
     void updateCommentCount(@Param("postId") String postId, @Param("delta") int delta);
+
+    @Query(value = "SELECT COUNT(*) > 0 FROM posts p WHERE p.class_id = :classId "
+            + "AND p.linked_resources LIKE CONCAT('%\"type\":\"', :resourceType, '\"%') "
+            + "AND p.linked_resources LIKE CONCAT('%\"id\":\"', :resourceId, '\"%')", nativeQuery = true)
+    boolean isResourceLinkedInClass(@Param("classId") String classId,
+            @Param("resourceType") String resourceType,
+            @Param("resourceId") String resourceId);
 }
