@@ -3,9 +3,11 @@ package com.datn.datnbe.document.management;
 import com.datn.datnbe.auth.api.ResourcePermissionApi;
 import com.datn.datnbe.auth.dto.request.ResourceRegistrationRequest;
 import com.datn.datnbe.document.api.AssignmentApi;
+import com.datn.datnbe.document.dto.DocumentMetadataDto;
 import com.datn.datnbe.document.dto.request.AssignmentCreateRequest;
 import com.datn.datnbe.document.dto.request.AssignmentUpdateRequest;
 import com.datn.datnbe.document.dto.response.AssignmentResponse;
+import com.datn.datnbe.document.service.DocumentVisitService;
 
 import com.datn.datnbe.document.entity.Assignment;
 import com.datn.datnbe.document.dto.request.QuestionItemRequest;
@@ -41,6 +43,7 @@ public class AssignmentManagement implements AssignmentApi {
     private final AssignmentMapper assignmentMapper;
     private final SecurityContextUtils securityContextUtils;
     private final ResourcePermissionApi resourcePermissionApi;
+    private final DocumentVisitService documentVisitService;
 
     @Override
     @Transactional
@@ -90,6 +93,19 @@ public class AssignmentManagement implements AssignmentApi {
     public AssignmentResponse getAssignmentById(String id) {
         Assignment assignment = assignmentRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Assignment not found"));
+
+        String userId = securityContextUtils.getCurrentUserId();
+        if (userId != null) {
+            DocumentMetadataDto metadata = DocumentMetadataDto.builder()
+                    .userId(userId)
+                    .documentId(id)
+                    .type("assignment")
+                    .title(assignment.getTitle())
+                    .thumbnail(null)
+                    .build();
+            documentVisitService.trackDocumentVisit(metadata);
+        }
+
         return assignmentMapper.toDto(assignment);
     }
 
