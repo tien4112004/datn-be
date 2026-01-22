@@ -9,8 +9,9 @@ import com.datn.datnbe.auth.repository.DocumentResourceMappingRepository;
 import com.datn.datnbe.auth.service.KeycloakAuthorizationService;
 import com.datn.datnbe.cms.dto.LinkedResourceDto;
 import com.datn.datnbe.cms.entity.ClassResourcePermission;
+import com.datn.datnbe.cms.enums.LinkedResourceType;
 import com.datn.datnbe.cms.repository.ClassResourcePermissionRepository;
-import com.datn.datnbe.cms.repository.PostRepository;
+import com.datn.datnbe.cms.repository.PostLinkedResourceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,7 @@ public class LinkedResourcePermissionService {
     private final KeycloakDtoMapper keycloakMapper;
     private final DocumentResourceMappingRepository documentMappingRepository;
     private final ClassResourcePermissionRepository classResourcePermissionRepository;
-    private final PostRepository postRepository;
+    private final PostLinkedResourceRepository postLinkedResourceRepository;
 
     private static final String CLASS_GROUP_PREFIX = "class-";
     private static final String POLICY_SUFFIX = "-policy";
@@ -180,7 +181,8 @@ public class LinkedResourcePermissionService {
      * Checks if a resource is linked in any other post within the class.
      */
     private boolean isResourceLinkedInOtherPosts(String classId, String resourceType, String resourceId) {
-        return postRepository.isResourceLinkedInClass(classId, resourceType, resourceId);
+        LinkedResourceType type = LinkedResourceType.fromValue(resourceType);
+        return postLinkedResourceRepository.isResourceLinkedInClass(classId, type, resourceId);
     }
 
     /**

@@ -9,7 +9,10 @@ import com.datn.datnbe.cms.dto.request.PostCreateRequest;
 import com.datn.datnbe.cms.dto.request.PostUpdateRequest;
 import com.datn.datnbe.cms.dto.response.PostResponseDto;
 import com.datn.datnbe.cms.entity.Post;
+import com.datn.datnbe.cms.entity.PostLinkedResource;
+import com.datn.datnbe.cms.mapper.PostLinkedResourceMapper;
 import com.datn.datnbe.cms.mapper.PostMapper;
+import com.datn.datnbe.cms.repository.PostLinkedResourceRepository;
 import com.datn.datnbe.cms.repository.PostRepository;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
@@ -35,7 +38,9 @@ import java.util.stream.Collectors;
 public class PostService implements PostApi {
 
     private final PostRepository postRepository;
+    private final PostLinkedResourceRepository postLinkedResourceRepository;
     private final PostMapper postMapper;
+    private final PostLinkedResourceMapper postLinkedResourceMapper;
     private final SecurityContextUtils securityContextUtils;
     private final UserProfileApi userProfileApi;
     private final LinkedResourceValidationService linkedResourceValidationService;
@@ -61,8 +66,16 @@ public class PostService implements PostApi {
             post.setCommentCount(0);
         Post saved = postRepository.save(post);
 
-        // Grant class permissions for linked resources
+        // Save linked resources to join table
         if (linkedResources != null && !linkedResources.isEmpty()) {
+            List<PostLinkedResource> postLinkedResources = postLinkedResourceMapper.toEntityList(linkedResources);
+            for (PostLinkedResource plr : postLinkedResources) {
+                plr.setPostId(saved.getId());
+            }
+            postLinkedResourceRepository.saveAll(postLinkedResources);
+            saved.setPostLinkedResources(postLinkedResources);
+
+            // Grant class permissions for linked resources
             linkedResourcePermissionService.grantClassPermissions(classId, linkedResources);
         }
 
@@ -136,16 +149,31 @@ public class PostService implements PostApi {
         }
 
         // Keep track of old linked resources for permission revocation
-        List<LinkedResourceDto> oldLinkedResources = exist.getLinkedResources();
+        List<PostLinkedResource> oldPostLinkedResources = postLinkedResourceRepository.findByPostId(postId);
+        List<LinkedResourceDto> oldLinkedResources = postLinkedResourceMapper.toDtoList(oldPostLinkedResources);
         String classId = exist.getClassId();
 
         postMapper.updateEntity(request, exist);
         Post saved = postRepository.save(exist);
 
-        // Handle permission changes
-        if (newLinkedResources != null && !newLinkedResources.isEmpty()) {
-            // Grant permissions for new resources
-            linkedResourcePermissionService.grantClassPermissions(classId, newLinkedResources);
+        // Update linked resources in join table
+        if (newLinkedResources != null) {
+            // Delete old linked resources
+            postLinkedResourceRepository.deleteByPostId(postId);
+
+            // Save new linked resources
+            if (!newLinkedResources.isEmpty()) {
+                List<PostLinkedResource> postLinkedResources = postLinkedResourceMapper
+                        .toEntityList(newLinkedResources);
+                for (PostLinkedResource plr : postLinkedResources) {
+                    plr.setPostId(saved.getId());
+                }
+                postLinkedResourceRepository.saveAll(postLinkedResources);
+                saved.setPostLinkedResources(postLinkedResources);
+
+                // Grant permissions for new resources
+                linkedResourcePermissionService.grantClassPermissions(classId, newLinkedResources);
+            }
         }
 
         // Revoke permissions for removed resources (if no longer referenced)
@@ -161,10 +189,14 @@ public class PostService implements PostApi {
     public void deletePost(String postId) {
         Post exist = postRepository.findById(postId).orElse(null);
         if (exist != null) {
-            List<LinkedResourceDto> linkedResources = exist.getLinkedResources();
+            List<PostLinkedResource> postLinkedResources = postLinkedResourceRepository.findByPostId(postId);
+            List<LinkedResourceDto> linkedResources = postLinkedResourceMapper.toDtoList(postLinkedResources);
             String classId = exist.getClassId();
 
-            // Delete the post first
+            // Delete linked resources from join table first
+            postLinkedResourceRepository.deleteByPostId(postId);
+
+            // Delete the post
             postRepository.deleteById(postId);
 
             // Revoke permissions for resources that are no longer referenced
