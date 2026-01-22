@@ -94,6 +94,8 @@ management:
       show-details: always
 
 app:
+  firebase:
+    config-path: classpath:mock-service-account.json
   cors:
     allowed-origins: "*"
     allowed-origin-patterns: "*"

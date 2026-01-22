@@ -63,4 +63,4 @@ node_modules
 keycloak-data/import/*.json
 keycloak-data/h2
 
-src/main/resources/firebase-service-account.json
+firebase-service-account.json

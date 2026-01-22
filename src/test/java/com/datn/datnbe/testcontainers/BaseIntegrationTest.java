@@ -1,8 +1,8 @@
 package com.datn.datnbe.testcontainers;
 
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.condition.DisabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -20,20 +20,24 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Transactional
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-@DisabledIf("isDockerNotAvailable")
 public abstract class BaseIntegrationTest {
 
-    static boolean isDockerNotAvailable() {
+    static boolean isDockerAvailable() {
         try {
             DockerClientFactory.instance().client();
-            return false;
-        } catch (Exception e) {
             return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 
     @Autowired
     JdbcTemplate jdbc;
+
+    @BeforeEach
+    void checkDockerAvailable() {
+        Assumptions.assumeTrue(isDockerAvailable(), "Docker is not available. Skipping integration tests.");
+    }
 
     @BeforeEach
     void cleanDatabases() {
