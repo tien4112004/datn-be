@@ -1,10 +1,13 @@
 package com.datn.datnbe.document.service;
 
 import com.datn.datnbe.document.dto.DocumentMetadataDto;
+import com.datn.datnbe.document.dto.request.RecentDocumentCollectionRequest;
 import com.datn.datnbe.document.entity.DocumentVisit;
 import com.datn.datnbe.document.repository.DocumentVisitRepository;
+import com.datn.datnbe.sharedkernel.dto.BaseCollectionRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
@@ -12,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -20,7 +22,6 @@ import java.util.List;
 public class DocumentVisitService {
 
     private final DocumentVisitRepository visitRepository;
-    private static final int DEFAULT_LIMIT = 7;
 
     /**
      * Track document visit asynchronously (background job)
@@ -53,23 +54,26 @@ public class DocumentVisitService {
     }
 
     /**
-     * Get recent documents (custom limit) visited by user
+     * Get recent documents visited by user with pagination
      */
     @Transactional(readOnly = true)
-    public List<DocumentVisit> getRecentDocuments(String userId, int limit) {
-        log.info("Fetching recent documents for user: {}, limit: {}", userId, limit);
+    public Page<DocumentVisit> getRecentDocuments(String userId, RecentDocumentCollectionRequest request) {
+        log.info("Fetching recent documents for user: {}, page: {}, pageSize: {}",
+                userId,
+                request.getPage(),
+                request.getPageSize());
 
-        Pageable pageable = PageRequest.of(0, limit > 0 ? limit : DEFAULT_LIMIT);
-        List<DocumentVisit> a = visitRepository.findRecentDocumentsByUser(userId, pageable);
+        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize());
         return visitRepository.findRecentDocumentsByUser(userId, pageable);
     }
 
     /**
-     * Get recent documents with default limit of 7
+     * Get recent documents with default pagination
      */
     @Transactional(readOnly = true)
-    public List<DocumentVisit> getRecentDocuments(String userId) {
-        return getRecentDocuments(userId, DEFAULT_LIMIT);
+    public Page<DocumentVisit> getRecentDocuments(String userId) {
+        Pageable pageable = PageRequest.of(0, BaseCollectionRequest.DEFAULT_PAGE_SIZE);
+        return visitRepository.findRecentDocumentsByUser(userId, pageable);
     }
 
     /**

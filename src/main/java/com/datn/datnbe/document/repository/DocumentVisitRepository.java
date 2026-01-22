@@ -1,12 +1,12 @@
 package com.datn.datnbe.document.repository;
 
 import com.datn.datnbe.document.entity.DocumentVisit;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -20,7 +20,7 @@ public interface DocumentVisitRepository extends JpaRepository<DocumentVisit, In
             WHERE dv.userId = :userId
             ORDER BY dv.lastVisited DESC
             """)
-    List<DocumentVisit> findRecentDocumentsByUser(String userId, Pageable pageable);
+    Page<DocumentVisit> findRecentDocumentsByUser(String userId, Pageable pageable);
 
     /**
      * Find document visit record for a specific user and document
