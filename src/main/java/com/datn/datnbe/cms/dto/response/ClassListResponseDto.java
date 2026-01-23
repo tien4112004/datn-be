@@ -21,6 +21,7 @@ public class ClassListResponseDto {
     String joinCode;
     Boolean isActive;
     UserMinimalInfoDto teacher;
+    Long studentCount;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 }

@@ -11,6 +11,7 @@ import com.datn.datnbe.cms.dto.response.ClassResponseDto;
 import com.datn.datnbe.cms.entity.ClassEntity;
 import com.datn.datnbe.cms.mapper.ClassEntityMapper;
 import com.datn.datnbe.cms.repository.ClassRepository;
+import com.datn.datnbe.student.repository.ClassEnrollmentRepository;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
@@ -26,6 +27,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +39,7 @@ public class ClassService implements ClassApi {
     private final ClassEntityMapper classEntityMapper;
     private final SecurityContextUtils securityContextUtils;
     private final UserProfileApi userProfileApi;
+    private final ClassEnrollmentRepository classEnrollmentRepository;
 
     @Override
     @Transactional
@@ -74,9 +78,18 @@ public class ClassService implements ClassApi {
             }
         }
 
+        // Fetch student counts for all classes
+        List<String> classIds = page.getContent().stream().map(ClassEntity::getId).toList();
+        Map<String, Long> studentCountMap = classIds.isEmpty()
+                ? Map.of()
+                : classEnrollmentRepository.countByClassIds(classIds)
+                        .stream()
+                        .collect(Collectors.toMap(row -> (String) row[0], row -> (Long) row[1]));
+
         List<ClassListResponseDto> data = page.getContent().stream().map(entity -> {
             ClassListResponseDto dto = classEntityMapper.toListResponseDto(entity);
             dto.setTeacher(teacherMap.get(entity.getOwnerId()));
+            dto.setStudentCount(studentCountMap.getOrDefault(entity.getId(), 0L));
             return dto;
         }).toList();
 
