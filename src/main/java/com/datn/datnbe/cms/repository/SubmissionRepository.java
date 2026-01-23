@@ -11,14 +11,6 @@ import java.util.List;
 
 @Repository
 public interface SubmissionRepository extends JpaRepository<Submission, String> {
-
-    @Query("SELECT s FROM Submission s WHERE (:lessonId IS NULL OR s.lessonId = :lessonId)")
-    List<Submission> findByLessonId(String lessonId);
-
-    @Query("SELECT s FROM Submission s WHERE (:lessonId IS NULL OR s.lessonId = :lessonId)")
-    Page<Submission> findByLessonIdPageable(String lessonId, Pageable pageable);
-
-    
     @Query("SELECT s FROM Submission s WHERE (:postId IS NULL OR s.postId = :postId)")
     List<Submission> findByPostId(String postId);
 

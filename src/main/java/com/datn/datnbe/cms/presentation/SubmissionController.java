@@ -9,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -21,23 +20,6 @@ public class SubmissionController {
 
     private final SubmissionApi submissionApi;
 
-    @PostMapping("/lessons/{lessonId}/submissions")
-    public ResponseEntity<AppResponseDto<SubmissionResponseDto>> createSubmission(@PathVariable String lessonId,
-            @RequestParam(required = false) String content,
-            @RequestParam(required = false) MultipartFile file) {
-        log.debug("POST /api/lessons/{}/submissions", lessonId);
-        SubmissionResponseDto response = submissionApi.createSubmission(lessonId, content, file);
-        return ResponseEntity.status(HttpStatus.CREATED).body(AppResponseDto.success(response));
-    }
-
-    @GetMapping("/lessons/{lessonId}/submissions")
-    @RequireTeacherPermission
-    public ResponseEntity<AppResponseDto<List<SubmissionResponseDto>>> getSubmissions(@PathVariable String lessonId) {
-        log.debug("GET /api/lessons/{}/submissions", lessonId);
-        return ResponseEntity.ok(AppResponseDto.success(submissionApi.getSubmissions(lessonId)));
-    }
-
-
     @PostMapping("/posts/{postId}/submissions")
     public ResponseEntity<AppResponseDto<SubmissionResponseDto>> createSubmission(@PathVariable String postId,
             @RequestParam String studentId) {
@@ -47,8 +29,8 @@ public class SubmissionController {
 
     @GetMapping("/posts/{postId}/submissions")
     @RequireTeacherPermission
-    public ResponseEntity<AppResponseDto<List<SubmissionResponseDto>>> getSubmissionsV2(@PathVariable String postId) {
-        return ResponseEntity.ok(AppResponseDto.success(submissionApi.getSubmissionsV2(postId)));
+    public ResponseEntity<AppResponseDto<List<SubmissionResponseDto>>> getSubmissions(@PathVariable String postId) {
+        return ResponseEntity.ok(AppResponseDto.success(submissionApi.getSubmissions(postId)));
     }
 
     @GetMapping("/submissions/{id}")
