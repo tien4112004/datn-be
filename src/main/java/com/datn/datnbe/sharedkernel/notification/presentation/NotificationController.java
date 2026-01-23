@@ -1,7 +1,8 @@
-package com.datn.datnbe.cms.presentation;
+package com.datn.datnbe.sharedkernel.notification.presentation;
 
-import com.datn.datnbe.cms.dto.NotificationRequest;
-import com.datn.datnbe.cms.service.NotificationService;
+import com.datn.datnbe.sharedkernel.notification.dto.DeviceTokenRequest;
+import com.datn.datnbe.sharedkernel.notification.dto.NotificationRequest;
+import com.datn.datnbe.sharedkernel.notification.service.NotificationService;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,7 +21,7 @@ public class NotificationController {
     }
 
     @PostMapping("/device")
-    public ResponseEntity<String> registerDevice(@RequestBody com.datn.datnbe.cms.dto.DeviceTokenRequest request,
+    public ResponseEntity<String> registerDevice(@RequestBody DeviceTokenRequest request,
             org.springframework.security.core.Authentication authentication) {
         String userId = authentication.getName();
         notificationService.registerDevice(userId, request.getToken());

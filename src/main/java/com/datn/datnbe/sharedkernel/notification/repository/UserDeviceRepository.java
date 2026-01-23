@@ -1,6 +1,6 @@
-package com.datn.datnbe.cms.repository;
+package com.datn.datnbe.sharedkernel.notification.repository;
 
-import com.datn.datnbe.cms.entity.UserDevice;
+import com.datn.datnbe.sharedkernel.notification.entity.UserDevice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

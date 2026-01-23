@@ -3,7 +3,6 @@ package com.datn.datnbe.student.api;
 import com.datn.datnbe.student.dto.request.StudentCreateRequest;
 import com.datn.datnbe.student.dto.request.StudentUpdateRequest;
 import com.datn.datnbe.student.dto.response.StudentResponseDto;
-import com.datn.datnbe.student.entity.Student;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import org.springframework.data.domain.Pageable;
 

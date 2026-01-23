@@ -4,7 +4,6 @@ import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.dto.response.UserMinimalInfoDto;
 import com.datn.datnbe.cms.api.PostApi;
 import com.datn.datnbe.cms.dto.LinkedResourceDto;
-import com.datn.datnbe.cms.dto.NotificationRequest;
 import com.datn.datnbe.cms.dto.request.PinPostRequest;
 import com.datn.datnbe.cms.dto.request.PostCreateRequest;
 import com.datn.datnbe.cms.dto.request.PostUpdateRequest;
@@ -12,12 +11,13 @@ import com.datn.datnbe.cms.dto.response.PostResponseDto;
 import com.datn.datnbe.cms.entity.Post;
 import com.datn.datnbe.cms.entity.PostLinkedResource;
 import com.datn.datnbe.cms.mapper.PostLinkedResourceMapper;
-import com.datn.datnbe.cms.entity.UserDevice;
 import com.datn.datnbe.cms.mapper.PostMapper;
 import com.datn.datnbe.cms.repository.PostLinkedResourceRepository;
-import com.datn.datnbe.cms.repository.ClassRepository;
 import com.datn.datnbe.cms.repository.PostRepository;
-import com.datn.datnbe.cms.repository.UserDeviceRepository;
+import com.datn.datnbe.sharedkernel.notification.dto.NotificationRequest;
+import com.datn.datnbe.sharedkernel.notification.entity.UserDevice;
+import com.datn.datnbe.sharedkernel.notification.repository.UserDeviceRepository;
+import com.datn.datnbe.sharedkernel.notification.service.NotificationService;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
@@ -230,7 +230,9 @@ public class PostService implements PostApi {
         Post saved = postRepository.save(exist);
         PostResponseDto dto = postMapper.toResponseDto(saved);
         populateAuthorInfo(dto, saved.getAuthorId());
-        notifyStudents(saved.getClassId(), saved, exist.getIsPinned() ? "A post has been pinned" : "A post has been unpinned");
+        notifyStudents(saved.getClassId(),
+                saved,
+                exist.getIsPinned() ? "A post has been pinned" : "A post has been unpinned");
         return dto;
     }
 
@@ -258,8 +260,7 @@ public class PostService implements PostApi {
                     .collect(Collectors.toList());
 
             if (!tokens.isEmpty()) {
-                NotificationRequest notiRequest = NotificationRequest
-                        .builder()
+                NotificationRequest notiRequest = NotificationRequest.builder()
                         .title(title)
                         .body(post.getContent() != null && post.getContent().length() > 50
                                 ? post.getContent().substring(0, 50) + "..."

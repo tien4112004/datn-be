@@ -23,9 +23,9 @@ import com.datn.datnbe.auth.mapper.ResourcePermissionMapper;
 import com.datn.datnbe.auth.repository.DocumentResourceMappingRepository;
 import com.datn.datnbe.auth.repository.UserProfileRepo;
 import com.datn.datnbe.auth.service.KeycloakAuthorizationService;
-import com.datn.datnbe.cms.dto.NotificationRequest;
-import com.datn.datnbe.cms.repository.UserDeviceRepository;
-import com.datn.datnbe.cms.service.NotificationService;
+import com.datn.datnbe.sharedkernel.notification.dto.NotificationRequest;
+import com.datn.datnbe.sharedkernel.notification.repository.UserDeviceRepository;
+import com.datn.datnbe.sharedkernel.notification.service.NotificationService;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 
@@ -672,7 +672,9 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
         return "read"; // Default fallback
     }
 
-    private void notifyUserResourceShared(String targetUserId, String documentId, String permissionLevel,
+    private void notifyUserResourceShared(String targetUserId,
+            String documentId,
+            String permissionLevel,
             String senderId) {
         try {
             // Find user profile to get Keycloak ID
@@ -681,19 +683,18 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
                 return;
 
             // Get user devices
-            List<String> tokens = userDeviceRepository.findAllByUserId(userProfileOnly.get().getId()).stream()
-                    .map(com.datn.datnbe.cms.entity.UserDevice::getFcmToken)
+            List<String> tokens = userDeviceRepository.findAllByUserId(userProfileOnly.get().getId())
+                    .stream()
+                    .map(com.datn.datnbe.sharedkernel.notification.entity.UserDevice::getFcmToken)
                     .filter(token -> token != null && !token.isEmpty())
                     .distinct()
                     .toList();
 
             if (!tokens.isEmpty()) {
-                NotificationRequest notiRequest = NotificationRequest
-                        .builder()
+                NotificationRequest notiRequest = NotificationRequest.builder()
                         .title("Resource Shared With You")
                         .body("A resource has been shared with you with permission: " + permissionLevel)
-                        .data(Map.of("documentId", documentId, "permission", permissionLevel, "type",
-                                "RESOURCE_SHARE"))
+                        .data(Map.of("documentId", documentId, "permission", permissionLevel, "type", "RESOURCE_SHARE"))
                         .build();
                 notificationService.sendMulticast(tokens, notiRequest);
             }

@@ -37,6 +37,7 @@ services:
       - AI_API_PRESENTATION_ENDPOINT
       - AI_API_PRESENTATION_BATCH_ENDPOINT
       - AI_API_IMAGE_ENDPOINT
+      - FIREBASE_CONFIG_PATH=file:/app/firebase-service-account.json
 
       - SPRING_PROFILES_ACTIVE=docker
 
@@ -61,6 +62,7 @@ services:
       - /opt/datn-be/ai-primary-backend-selfsigned.crt:/app/ssl/backend.crt:ro
       - /opt/datn-be/ai-primary-backend-selfsigned.key:/app/ssl/backend.key:ro
       - /opt/datn-be/ai-primary-backend.p12:/app/ssl/backend.p12:ro
+      - ./firebase-service-account.json:/app/firebase-service-account.json:ro
 
 networks:
   network-aiprimary:

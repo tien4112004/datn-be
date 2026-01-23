@@ -1,4 +1,4 @@
-package com.datn.datnbe.cms.entity;
+package com.datn.datnbe.sharedkernel.notification.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
