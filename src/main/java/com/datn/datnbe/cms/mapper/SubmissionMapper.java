@@ -18,6 +18,8 @@ public class SubmissionMapper {
                 .mediaUrl(s.getMediaUrl())
                 .grade(s.getGrade())
                 .status(s.getStatus())
+                .postId(s.getPostId())
+                .questions(s.getQuestions())
                 .createdAt(s.getCreatedAt())
                 .updatedAt(s.getUpdatedAt())
                 .build();

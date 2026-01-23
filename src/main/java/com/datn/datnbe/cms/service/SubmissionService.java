@@ -1,6 +1,9 @@
 package com.datn.datnbe.cms.service;
 
+import com.datn.datnbe.cms.api.PostApi;
 import com.datn.datnbe.cms.api.SubmissionApi;
+import com.datn.datnbe.cms.dto.response.PostResponseDto;
+import com.datn.datnbe.cms.dto.response.SubmissionResponseDto;
 import com.datn.datnbe.cms.entity.Lesson;
 import com.datn.datnbe.cms.entity.Submission;
 import com.datn.datnbe.cms.mapper.SubmissionMapper;
@@ -24,11 +27,9 @@ public class SubmissionService implements SubmissionApi {
 
     private final SubmissionRepository submissionRepository;
     private final LessonRepository lessonRepository;
-    // Media uploads for submissions are not handled directly by the CMS module to avoid
-    // module dependency on the document module. File uploads are currently unsupported;
-    // this keeps the cms module independent and respects modular boundaries.
     private final SubmissionMapper submissionMapper;
     private final SecurityContextUtils securityContextUtils;
+    private final PostApi postApi;
 
     @Override
     public synchronized com.datn.datnbe.cms.dto.response.SubmissionResponseDto createSubmission(String lessonId,
@@ -81,6 +82,37 @@ public class SubmissionService implements SubmissionApi {
         }
 
         throw new AppException(ErrorCode.FORBIDDEN, "You do not have permission to view this submission");
+    }
+
+    @Override
+    public synchronized SubmissionResponseDto createSubmission(String postId,
+            String studentId) {
+        Submission submission = Submission.builder().postId(postId).studentId(studentId).build();
+
+        Submission saved = submissionRepository.save(submission);
+        return submissionMapper.toDto(saved);
+    }
+
+    @Override
+    public List<SubmissionResponseDto> getSubmissionsV2(String postId) {
+        List<Submission> list = submissionRepository.findByPostId(postId);
+        return list.stream().map(submissionMapper::toDto).collect(Collectors.toList());
+    }
+
+    @Override
+    public SubmissionResponseDto getSubmissionByIdV2(String id) {
+        Submission s = submissionRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Submission not found"));
+
+        String currentUser = securityContextUtils.getCurrentUserId();
+
+        PostResponseDto post = postApi.getPostById(s.getPostId());
+    
+        if (currentUser.equals(post.getAuthorId()) || currentUser.equals(s.getStudentId())) {
+            return submissionMapper.toDto(s);
+        }
+
+        throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Submission not found");
     }
 
     @Override

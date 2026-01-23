@@ -37,6 +37,20 @@ public class SubmissionController {
         return ResponseEntity.ok(AppResponseDto.success(submissionApi.getSubmissions(lessonId)));
     }
 
+
+    @PostMapping("/posts/{postId}/submissions")
+    public ResponseEntity<AppResponseDto<SubmissionResponseDto>> createSubmission(@PathVariable String postId,
+            @RequestParam String studentId) {
+        SubmissionResponseDto response = submissionApi.createSubmission(postId, studentId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(AppResponseDto.success(response));
+    }
+
+    @GetMapping("/posts/{postId}/submissions")
+    @RequireTeacherPermission
+    public ResponseEntity<AppResponseDto<List<SubmissionResponseDto>>> getSubmissionsV2(@PathVariable String postId) {
+        return ResponseEntity.ok(AppResponseDto.success(submissionApi.getSubmissionsV2(postId)));
+    }
+
     @GetMapping("/submissions/{id}")
     public ResponseEntity<AppResponseDto<SubmissionResponseDto>> getSubmissionById(@PathVariable String id) {
         log.debug("GET /api/submissions/{}", id);
