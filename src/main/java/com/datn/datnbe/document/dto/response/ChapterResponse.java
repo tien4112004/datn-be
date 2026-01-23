@@ -20,7 +20,7 @@ public class ChapterResponse {
     private String name;
     private String grade;
     private String subject;
-    private String sortOrder;
+    private Number sortOrder;
 
     public static ChapterResponse fromChapter(Chapter chapter) {
         return ChapterResponse.builder()
