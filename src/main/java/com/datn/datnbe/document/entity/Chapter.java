@@ -33,5 +33,5 @@ public class Chapter {
     private String subject;
 
     @Column(name = "sort_order")
-    private Number sortOrder;
+    private Integer sortOrder;
 }

@@ -130,7 +130,7 @@ app:
       read-timeout: 30000
   security:
     document-permission:
-      enabled: ${DOCUMENT_PERMISSION_ENABLED:false}
+      enabled: true
 
 ai:
   api:
