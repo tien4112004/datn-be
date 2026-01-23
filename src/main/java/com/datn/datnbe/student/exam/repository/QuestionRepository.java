@@ -44,4 +44,42 @@ public interface QuestionRepository extends JpaRepository<Question, UUID> {
 
     @Query("SELECT COUNT(q) FROM Question q WHERE q.contextId = :contextId")
     Long countByContextId(@Param("contextId") UUID contextId);
+
+    /**
+     * Find questions matching specific criteria for matrix-based selection.
+     * Includes both personal questions (owned by the user) and public questions (ownerId is null).
+     */
+    @Query("SELECT q FROM Question q WHERE " + "(q.ownerId = :ownerId OR q.ownerId IS NULL) "
+            + "AND (:topic IS NULL OR LOWER(q.topic) LIKE LOWER(CONCAT('%', :topic, '%'))) "
+            + "AND (:difficulty IS NULL OR q.difficulty = :difficulty) "
+            + "AND (:questionType IS NULL OR q.questionType = :questionType) " + "ORDER BY FUNCTION('RANDOM')")
+    List<Question> findMatchingQuestionsForMatrix(@Param("ownerId") UUID ownerId,
+            @Param("topic") String topic,
+            @Param("difficulty") ExamDifficulty difficulty,
+            @Param("questionType") QuestionType questionType,
+            Pageable pageable);
+
+    /**
+     * Find only public questions (no owner) matching specific criteria.
+     */
+    @Query("SELECT q FROM Question q WHERE " + "q.ownerId IS NULL "
+            + "AND (:topic IS NULL OR LOWER(q.topic) LIKE LOWER(CONCAT('%', :topic, '%'))) "
+            + "AND (:difficulty IS NULL OR q.difficulty = :difficulty) "
+            + "AND (:questionType IS NULL OR q.questionType = :questionType) " + "ORDER BY FUNCTION('RANDOM')")
+    List<Question> findPublicMatchingQuestions(@Param("topic") String topic,
+            @Param("difficulty") ExamDifficulty difficulty,
+            @Param("questionType") QuestionType questionType,
+            Pageable pageable);
+
+    /**
+     * Count questions matching specific criteria for availability check.
+     */
+    @Query("SELECT COUNT(q) FROM Question q WHERE " + "(q.ownerId = :ownerId OR q.ownerId IS NULL) "
+            + "AND (:topic IS NULL OR LOWER(q.topic) LIKE LOWER(CONCAT('%', :topic, '%'))) "
+            + "AND (:difficulty IS NULL OR q.difficulty = :difficulty) "
+            + "AND (:questionType IS NULL OR q.questionType = :questionType)")
+    Long countMatchingQuestions(@Param("ownerId") UUID ownerId,
+            @Param("topic") String topic,
+            @Param("difficulty") ExamDifficulty difficulty,
+            @Param("questionType") QuestionType questionType);
 }
