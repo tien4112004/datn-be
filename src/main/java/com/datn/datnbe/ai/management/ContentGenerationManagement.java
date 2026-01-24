@@ -13,6 +13,8 @@ import com.datn.datnbe.ai.utils.MappingParamsUtils;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
+import com.datn.datnbe.document.exam.dto.ExamMatrixDto;
+import com.datn.datnbe.document.exam.dto.request.GenerateMatrixRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -54,6 +56,10 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     @Value("${ai.api.mindmap-endpoint}")
     @NonFinal
     String MINDMAP_API_ENDPOINT;
+
+    @Value("${ai.api.exam-matrix-endpoint}")
+    @NonFinal
+    String EXAM_MATRIX_API_ENDPOINT;
 
     @Override
     public Flux<String> generateOutline(OutlinePromptRequest request) {
@@ -148,6 +154,26 @@ public class ContentGenerationManagement implements ContentGenerationApi {
             return response.getData();
         } catch (Exception e) {
             log.error("Error during mindmap generation", e);
+            throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    @Override
+    public ExamMatrixDto generateExamMatrix(GenerateMatrixRequest request) {
+        // TODO: select list topics from db
+        log.info("Starting exam matrix generation for topics: {}", request.getTopics());
+
+        if (!modelSelectionApi.isModelEnabled(request.getModel())) {
+            throw new AppException(ErrorCode.MODEL_NOT_ENABLED);
+        }
+
+        log.info("Calling AI to generate exam matrix via: {}", EXAM_MATRIX_API_ENDPOINT);
+        try {
+            ExamMatrixDto result = aiApiClient.post(EXAM_MATRIX_API_ENDPOINT, request, ExamMatrixDto.class);
+            log.info("Exam matrix generation completed successfully");
+            return result;
+        } catch (Exception e) {
+            log.error("Error during exam matrix generation", e);
             throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
         }
     }

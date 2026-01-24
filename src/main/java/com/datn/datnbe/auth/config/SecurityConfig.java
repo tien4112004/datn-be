@@ -79,6 +79,7 @@ public class SecurityConfig {
                                 "/api/students/import",
                                 "/api/exams/generate-matrix",
                                 "/api/exams/generate-matrix/**",
+                                "/api/exams/generate-matrix",
                                 "/api/exams/generate-from-matrix")
                         .permitAll()
                         .requestMatchers(HttpMethod.PUT,
