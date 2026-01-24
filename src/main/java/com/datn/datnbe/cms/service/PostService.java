@@ -73,7 +73,6 @@ public class PostService implements PostApi {
                 plr.setPostId(saved.getId());
             }
             postLinkedResourceRepository.saveAll(postLinkedResources);
-            saved.setPostLinkedResources(postLinkedResources);
 
             // Grant class permissions for linked resources
             linkedResourcePermissionService.grantClassPermissions(classId, linkedResources);
@@ -169,7 +168,6 @@ public class PostService implements PostApi {
                     plr.setPostId(saved.getId());
                 }
                 postLinkedResourceRepository.saveAll(postLinkedResources);
-                saved.setPostLinkedResources(postLinkedResources);
 
                 // Grant permissions for new resources
                 linkedResourcePermissionService.grantClassPermissions(classId, newLinkedResources);
