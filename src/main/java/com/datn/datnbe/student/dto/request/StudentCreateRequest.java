@@ -3,6 +3,7 @@ package com.datn.datnbe.student.dto.request;
 import java.time.LocalDate;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -29,7 +30,7 @@ public class StudentCreateRequest {
 
     LocalDate dateOfBirth;
 
-    @Size(max = 50, message = "Gender must not exceed 50 characters")
+    @Pattern(regexp = "(?i)Male|Female", message = "Gender must be either 'Male' or 'Female'")
     String gender;
 
     @Size(max = 255, message = "Address must not exceed 255 characters")
