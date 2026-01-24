@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -20,6 +21,10 @@ public class PostCreateRequest {
     private List<LinkedResourceDto> linkedResources;
 
     private String linkedLessonId;
+
+    private String assignmentId;
+
+    private LocalDateTime dueDate;
 
     private Boolean allowComments;
 }

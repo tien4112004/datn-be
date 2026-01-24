@@ -48,6 +48,12 @@ public class Post {
     @Column(name = "linked_lesson_id", length = 36)
     String linkedLessonId;
 
+    @Column(name = "assignment_id", length = 36)
+    String assignmentId;
+
+    @Column(name = "due_date")
+    LocalDateTime dueDate;
+
     @Column(name = "is_pinned")
     Boolean isPinned;
 

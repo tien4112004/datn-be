@@ -4,6 +4,7 @@ import com.datn.datnbe.cms.dto.LinkedResourceDto;
 import jakarta.validation.Valid;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -14,6 +15,8 @@ public class PostUpdateRequest {
     @Valid
     private List<LinkedResourceDto> linkedResources;
     private String linkedLessonId;
+    private String assignmentId;
+    private LocalDateTime dueDate;
     private Boolean isPinned;
     private Boolean allowComments;
 }
