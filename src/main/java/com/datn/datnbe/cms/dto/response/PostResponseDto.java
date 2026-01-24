@@ -1,6 +1,7 @@
 package com.datn.datnbe.cms.dto.response;
 
 import com.datn.datnbe.auth.dto.response.UserMinimalInfoDto;
+import com.datn.datnbe.cms.dto.LinkedResourceDto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,7 +24,7 @@ public class PostResponseDto {
     private String content;
     private String type; // Post, Assignment
     private List<String> attachments;
-    private List<String> linkedResourceIds;
+    private List<LinkedResourceDto> linkedResources;
     private String linkedLessonId;
     private Boolean isPinned;
     private Boolean allowComments;

@@ -7,6 +7,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @Builder
@@ -37,8 +39,11 @@ public class Post {
     @Column(name = "attachments")
     String[] attachments;
 
-    @Column(name = "linked_resource_ids")
-    String[] linkedResourceIds;
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    List<PostLinkedResource> postLinkedResources = new ArrayList<>();
 
     @Column(name = "linked_lesson_id", length = 36)
     String linkedLessonId;

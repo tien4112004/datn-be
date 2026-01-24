@@ -8,7 +8,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+@Mapper(componentModel = "spring", uses = {
+        PostLinkedResourceMapper.class}, nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface PostMapper {
 
     @Mapping(target = "id", ignore = true)
@@ -18,8 +19,11 @@ public interface PostMapper {
     @Mapping(target = "commentCount", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "postLinkedResources", ignore = true)
     Post toEntity(PostCreateRequest request);
 
+    @Mapping(target = "linkedResources", source = "postLinkedResources")
+    @Mapping(target = "author", ignore = true)
     PostResponseDto toResponseDto(Post post);
 
     @Mapping(target = "id", ignore = true)
@@ -28,5 +32,6 @@ public interface PostMapper {
     @Mapping(target = "commentCount", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "postLinkedResources", ignore = true)
     void updateEntity(PostUpdateRequest request, @org.mapstruct.MappingTarget Post entity);
 }

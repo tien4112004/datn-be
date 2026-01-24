@@ -1,5 +1,7 @@
 package com.datn.datnbe.cms.dto.request;
 
+import com.datn.datnbe.cms.dto.LinkedResourceDto;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
@@ -14,7 +16,8 @@ public class PostCreateRequest {
 
     private List<String> attachments;
 
-    private List<String> linkedResourceIds;
+    @Valid
+    private List<LinkedResourceDto> linkedResources;
 
     private String linkedLessonId;
 

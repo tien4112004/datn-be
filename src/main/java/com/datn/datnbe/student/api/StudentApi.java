@@ -7,6 +7,7 @@ import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * API interface for student CRUD operations.
@@ -60,4 +61,20 @@ public interface StudentApi {
      * @return list of updated student responses with new passwords
      */
     List<StudentResponseDto> regeneratePasswords(List<String> studentIds);
+
+    /**
+     * Gets the Keycloak user ID for a student.
+     *
+     * @param studentId the student ID
+     * @return Optional containing the Keycloak user ID, or empty if not found
+     */
+    Optional<String> getKeycloakUserIdForStudent(String studentId);
+
+    /**
+     * Gets all Keycloak user IDs for students enrolled in a class.
+     *
+     * @param classId the class ID
+     * @return list of Keycloak user IDs for enrolled students
+     */
+    List<String> getEnrolledStudentKeycloakUserIds(String classId);
 }

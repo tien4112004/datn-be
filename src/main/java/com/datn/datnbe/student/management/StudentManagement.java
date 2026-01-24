@@ -1,6 +1,8 @@
 package com.datn.datnbe.student.management;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -9,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.datn.datnbe.auth.api.ClassGroupApi;
 import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.dto.request.SignupRequest;
 import com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest;
@@ -46,6 +49,7 @@ public class StudentManagement implements StudentApi {
     ClassEnrollmentRepository classEnrollmentRepository;
     StudentEntityMapper studentEntityMapper;
     UserProfileApi userProfileApi;
+    ClassGroupApi classGroupApi;
 
     @Override
     public StudentResponseDto getStudentById(String id) {
@@ -243,6 +247,14 @@ public class StudentManagement implements StudentApi {
         classEnrollmentRepository.save(enrollment);
         log.info("Successfully enrolled student {} to class {}", studentId, classId);
 
+        // Add student to class's Keycloak group for resource access
+        String keycloakUserId = userProfileApi.getKeycloakUserIdByUserId(student.getUserId());
+        if (keycloakUserId != null) {
+            classGroupApi.addUserToClassGroup(classId, keycloakUserId);
+        } else {
+            log.warn("Could not find Keycloak user ID for student {}, skipping group assignment", studentId);
+        }
+
         StudentResponseDto dto = studentEntityMapper.toResponseDto(student);
         enrichWithUserProfile(dto, student.getUserId());
         return dto;
@@ -275,7 +287,21 @@ public class StudentManagement implements StudentApi {
             throw new ResourceNotFoundException("Student " + studentId + " is not enrolled in class " + classId);
         }
 
+        // Get student info before deletion for Keycloak group removal
+        Student student = studentRepository.findById(studentId).orElse(null);
+
         classEnrollmentRepository.deleteByClassIdAndStudentId(classId, studentId);
+
+        // Remove student from class's Keycloak group
+        if (student != null && student.getUserId() != null) {
+            String keycloakUserId = userProfileApi.getKeycloakUserIdByUserId(student.getUserId());
+            if (keycloakUserId != null) {
+                classGroupApi.removeUserFromClassGroup(classId, keycloakUserId);
+            } else {
+                log.warn("Could not find Keycloak user ID for student {}, skipping group removal", studentId);
+            }
+        }
+
         log.info("Successfully removed student {} from class {}", studentId, classId);
     }
 
@@ -312,5 +338,25 @@ public class StudentManagement implements StudentApi {
         }
 
         return responses;
+    }
+
+    @Override
+    public Optional<String> getKeycloakUserIdForStudent(String studentId) {
+        return studentRepository.findById(studentId)
+                .map(Student::getUserId)
+                .map(userProfileApi::getKeycloakUserIdByUserId);
+    }
+
+    @Override
+    public List<String> getEnrolledStudentKeycloakUserIds(String classId) {
+        List<ClassEnrollment> enrollments = classEnrollmentRepository.findByClassId(classId);
+        List<String> keycloakUserIds = new ArrayList<>();
+
+        for (ClassEnrollment enrollment : enrollments) {
+            Optional<String> keycloakUserId = getKeycloakUserIdForStudent(enrollment.getStudentId());
+            keycloakUserId.ifPresent(keycloakUserIds::add);
+        }
+
+        return keycloakUserIds;
     }
 }
