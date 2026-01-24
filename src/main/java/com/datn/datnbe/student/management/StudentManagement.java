@@ -139,18 +139,18 @@ public class StudentManagement implements StudentApi {
 
         // Update UserProfile fields if provided
         if (request.getDateOfBirth() != null || request.getPhoneNumber() != null || request.getFullName() != null) {
-            
+
             var builder = UserProfileUpdateRequest.builder()
                     .dateOfBirth(request.getDateOfBirth())
                     .phoneNumber(request.getPhoneNumber());
-            
+
             if (request.getFullName() != null) {
                 String[] names = request.getFullName().trim().split("\\s+", 2);
                 String firstName = names[0];
                 String lastName = names.length > 1 ? names[1] : firstName;
                 builder.firstName(firstName).lastName(lastName);
             }
-            
+
             UserProfileUpdateRequest profileUpdateRequest = builder.build();
             try {
                 userProfileApi.updateUserProfile(savedStudent.getUserId(), profileUpdateRequest);
@@ -206,8 +206,7 @@ public class StudentManagement implements StudentApi {
         }
 
         // Get students with pagination
-        Page<Student> studentsPage = studentRepository
-                .findByIdIn(Set.copyOf(studentIds), pageable);
+        Page<Student> studentsPage = studentRepository.findByIdIn(Set.copyOf(studentIds), pageable);
 
         List<StudentResponseDto> studentDtos = studentsPage.getContent().stream().map(s -> {
             StudentResponseDto dto = studentEntityMapper.toResponseDto(s);

@@ -26,6 +26,8 @@ public class PostResponseDto {
     private List<String> attachments;
     private List<LinkedResourceDto> linkedResources;
     private String linkedLessonId;
+    private String assignmentId;
+    private LocalDateTime dueDate;
     private Boolean isPinned;
     private Boolean allowComments;
     private Integer commentCount;
