@@ -30,6 +30,7 @@ public class StudentResponseDto {
     String userId;
     LocalDate enrollmentDate;
     String address;
+    String gender;
     String parentName;
     String parentPhone;
     String parentContactEmail;

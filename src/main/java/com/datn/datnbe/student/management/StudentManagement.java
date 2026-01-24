@@ -4,12 +4,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.dto.request.SignupRequest;
+import com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest;
 import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
@@ -76,6 +78,7 @@ public class StudentManagement implements StudentApi {
                 .firstName(firstName)
                 .lastName(lastName)
                 .role("student")
+                .dateOfBirth(request.getDateOfBirth())
                 .build();
 
         UserProfileResponse createdUser = userProfileApi.createUserProfileByUsername(signupRequest);
@@ -89,6 +92,9 @@ public class StudentManagement implements StudentApi {
                 .enrollmentDate(java.time.LocalDate.now())
                 .address(request.getAddress())
                 .parentContactEmail(request.getParentContactEmail())
+                .gender(request.getGender())
+                .parentName(request.getParentName())
+                .parentPhone(request.getParentPhone())
                 .build();
 
         Student savedStudent = studentRepository.save(student);
@@ -128,12 +134,20 @@ public class StudentManagement implements StudentApi {
         Student savedStudent = studentRepository.save(student);
 
         // Update UserProfile fields if provided
-        if (request.getDateOfBirth() != null || request.getPhoneNumber() != null) {
-            com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest profileUpdateRequest = com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest
-                    .builder()
+        if (request.getDateOfBirth() != null || request.getPhoneNumber() != null || request.getFullName() != null) {
+            
+            var builder = UserProfileUpdateRequest.builder()
                     .dateOfBirth(request.getDateOfBirth())
-                    .phoneNumber(request.getPhoneNumber())
-                    .build();
+                    .phoneNumber(request.getPhoneNumber());
+            
+            if (request.getFullName() != null) {
+                String[] names = request.getFullName().trim().split("\\s+", 2);
+                String firstName = names[0];
+                String lastName = names.length > 1 ? names[1] : firstName;
+                builder.firstName(firstName).lastName(lastName);
+            }
+            
+            UserProfileUpdateRequest profileUpdateRequest = builder.build();
             try {
                 userProfileApi.updateUserProfile(savedStudent.getUserId(), profileUpdateRequest);
             } catch (Exception e) {
@@ -188,7 +202,7 @@ public class StudentManagement implements StudentApi {
         }
 
         // Get students with pagination
-        org.springframework.data.domain.Page<Student> studentsPage = studentRepository
+        Page<Student> studentsPage = studentRepository
                 .findByIdIn(Set.copyOf(studentIds), pageable);
 
         List<StudentResponseDto> studentDtos = studentsPage.getContent().stream().map(s -> {

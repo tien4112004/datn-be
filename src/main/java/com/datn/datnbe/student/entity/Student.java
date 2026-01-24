@@ -56,4 +56,13 @@ public class Student {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     LocalDateTime updatedAt;
+
+    @Column(name = "gender", length = 10)
+    String gender;
+
+    @Column(name = "parent_name")
+    String parentName;
+
+    @Column(name = "parent_contact_phone", length = 15)
+    String parentPhone;
 }

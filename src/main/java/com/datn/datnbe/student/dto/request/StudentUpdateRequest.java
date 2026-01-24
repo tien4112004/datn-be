@@ -34,4 +34,12 @@ public class StudentUpdateRequest {
 
     @Size(max = 100, message = "Parent contact email must not exceed 100 characters")
     String parentContactEmail;
+
+    String gender;
+
+    String parentName;
+
+    String parentPhone;
+
+    String fullName;
 }

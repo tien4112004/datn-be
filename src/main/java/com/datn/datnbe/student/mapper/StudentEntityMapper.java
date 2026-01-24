@@ -13,9 +13,6 @@ import com.datn.datnbe.student.entity.Student;
 @Component
 public class StudentEntityMapper {
 
-    /**
-     * Convert Student entity to response DTO.
-     */
     public StudentResponseDto toResponseDto(Student entity) {
         if (entity == null) {
             return null;
@@ -25,18 +22,16 @@ public class StudentEntityMapper {
                 .id(entity.getId())
                 .userId(entity.getUserId())
                 .enrollmentDate(entity.getEnrollmentDate())
+                .gender(entity.getGender())
                 .address(entity.getAddress())
                 .parentContactEmail(entity.getParentContactEmail())
+                .parentName(entity.getParentName())
+                .parentPhone(entity.getParentPhone())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
     }
 
-    /**
-     * Convert StudentCreateRequest to Student entity.
-     * Note: userId should be set separately after user creation.
-     * This method is kept for reference but not used in the create flow.
-     */
     public Student toEntity(StudentCreateRequest request) {
         if (request == null) {
             return null;
@@ -44,13 +39,13 @@ public class StudentEntityMapper {
 
         return Student.builder()
                 .address(request.getAddress())
+                .gender(request.getGender())
+                .parentName(request.getParentName())
+                .parentPhone(request.getParentPhone())
                 .parentContactEmail(request.getParentContactEmail())
                 .build();
     }
 
-    /**
-     * Update entity fields from request DTO.
-     */
     public void updateEntityFromRequest(Student entity, StudentUpdateRequest request) {
         if (request == null || entity == null) {
             return;
@@ -61,6 +56,18 @@ public class StudentEntityMapper {
         }
         if (request.getParentContactEmail() != null) {
             entity.setParentContactEmail(request.getParentContactEmail());
+        }
+
+        if (request.getGender() != null) {
+            entity.setGender(request.getGender());
+        }
+
+        if (request.getParentName() != null) {
+            entity.setParentName(request.getParentName());
+        }
+
+        if (request.getParentPhone() != null) {
+            entity.setParentPhone(request.getParentPhone());
         }
     }
 }
