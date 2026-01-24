@@ -1,12 +1,6 @@
 package com.datn.datnbe.cms.service;
 
-import com.datn.datnbe.auth.dto.keycloak.KeycloakGroupDto;
-import com.datn.datnbe.auth.dto.keycloak.KeycloakGroupPolicyDto;
-import com.datn.datnbe.auth.dto.keycloak.KeycloakPermissionDto;
-import com.datn.datnbe.auth.entity.DocumentResourceMapping;
-import com.datn.datnbe.auth.mapper.KeycloakDtoMapper;
-import com.datn.datnbe.auth.repository.DocumentResourceMappingRepository;
-import com.datn.datnbe.auth.service.KeycloakAuthorizationService;
+import com.datn.datnbe.auth.api.AuthorizationApi;
 import com.datn.datnbe.cms.dto.LinkedResourceDto;
 import com.datn.datnbe.cms.entity.ClassResourcePermission;
 import com.datn.datnbe.cms.enums.LinkedResourceType;
@@ -26,9 +20,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class LinkedResourcePermissionService {
 
-    private final KeycloakAuthorizationService keycloakAuthzService;
-    private final KeycloakDtoMapper keycloakMapper;
-    private final DocumentResourceMappingRepository documentMappingRepository;
+    private final AuthorizationApi authorizationApi;
     private final ClassResourcePermissionRepository classResourcePermissionRepository;
     private final PostLinkedResourceRepository postLinkedResourceRepository;
 
@@ -42,12 +34,12 @@ public class LinkedResourcePermissionService {
      * Gets or creates a Keycloak group for a class.
      *
      * @param classId the class ID
-     * @return the Keycloak group DTO
+     * @return the Keycloak group ID
      */
-    public KeycloakGroupDto getOrCreateClassGroup(String classId) {
+    public String getOrCreateClassGroupId(String classId) {
         String groupName = CLASS_GROUP_PREFIX + classId;
         log.info("Getting or creating class group: {}", groupName);
-        return keycloakAuthzService.createGroup(groupName);
+        return authorizationApi.getOrCreateGroupId(groupName);
     }
 
     /**
@@ -66,8 +58,7 @@ public class LinkedResourcePermissionService {
         log.info("Granting class {} permissions for {} resources", classId, linkedResources.size());
 
         // Get or create class group
-        KeycloakGroupDto classGroup = getOrCreateClassGroup(classId);
-        String classGroupId = classGroup.getId();
+        String classGroupId = getOrCreateClassGroupId(classId);
 
         for (LinkedResourceDto resource : linkedResources) {
             grantPermissionForResource(classId, classGroupId, resource);
@@ -101,34 +92,32 @@ public class LinkedResourcePermissionService {
         }
 
         // Find the document resource mapping in Keycloak
-        Optional<DocumentResourceMapping> docMapping = documentMappingRepository.findByDocumentId(resourceId);
-        if (docMapping.isEmpty()) {
+        Optional<String> keycloakResourceIdOpt = authorizationApi.getKeycloakResourceIdForDocument(resourceId);
+        if (keycloakResourceIdOpt.isEmpty()) {
             log.warn("Resource {}/{} is not registered in Keycloak, skipping permission grant",
                     resourceType,
                     resourceId);
             return;
         }
 
-        String keycloakResourceId = docMapping.get().getKeycloakResourceId();
+        String keycloakResourceId = keycloakResourceIdOpt.get();
 
         // Create group policy for this class-resource combination
         String policyName = buildPolicyName(classId, resourceType, resourceId);
-        KeycloakGroupPolicyDto policy = keycloakMapper.toKeycloakGroupPolicyDto(policyName,
-                String.format("Class %s access to %s %s", classId, resourceType, resourceId),
-                List.of(keycloakMapper.toGroupDefinition(classGroupId)));
-        KeycloakGroupPolicyDto createdPolicy = keycloakAuthzService.createGroupPolicy(policy);
+        String policyDescription = String.format("Class %s access to %s %s", classId, resourceType, resourceId);
+        String createdPolicyId = authorizationApi
+                .createGroupPolicy(policyName, policyDescription, List.of(classGroupId));
 
         // Create permission with appropriate scopes
         String permissionName = buildPermissionName(classId, resourceType, resourceId);
         Set<String> scopes = "comment".equals(permissionLevel) ? Set.of(READ_SCOPE, COMMENT_SCOPE) : Set.of(READ_SCOPE);
 
-        KeycloakPermissionDto permission = keycloakMapper.toKeycloakPermissionDto(permissionName,
+        authorizationApi.createPermission(permissionName,
                 String.format("Class %s %s access to %s %s", classId, permissionLevel, resourceType, resourceId),
                 "AFFIRMATIVE",
                 Set.of(keycloakResourceId),
                 scopes,
-                Set.of(createdPolicy.getId()));
-        keycloakAuthzService.createPermission(permission);
+                Set.of(createdPolicyId));
 
         // Save class resource permission record
         ClassResourcePermission classPermission = ClassResourcePermission.builder()
@@ -137,7 +126,7 @@ public class LinkedResourcePermissionService {
                 .resourceId(resourceId)
                 .permissionLevel(permissionLevel)
                 .keycloakGroupId(classGroupId)
-                .keycloakPolicyId(createdPolicy.getId())
+                .keycloakPolicyId(createdPolicyId)
                 .build();
         classResourcePermissionRepository.save(classPermission);
 

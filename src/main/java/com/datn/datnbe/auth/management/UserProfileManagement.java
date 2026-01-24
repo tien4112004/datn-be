@@ -377,4 +377,9 @@ public class UserProfileManagement implements UserProfileApi {
             throw new AppException(ErrorCode.USER_UPDATE_FAILED, "Failed to update password");
         }
     }
+
+    @Override
+    public String getKeycloakUserIdByUserId(String userId) {
+        return userProfileRepo.findByIdOrKeycloakUserId(userId).map(UserProfile::getKeycloakUserId).orElse(null);
+    }
 }

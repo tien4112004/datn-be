@@ -1,9 +1,7 @@
 package com.datn.datnbe.cms.service;
 
 import com.datn.datnbe.cms.dto.LinkedResourceDto;
-import com.datn.datnbe.document.repository.AssignmentRepository;
-import com.datn.datnbe.document.repository.MindmapRepository;
-import com.datn.datnbe.document.repository.PresentationRepository;
+import com.datn.datnbe.document.api.DocumentValidationApi;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -19,9 +17,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class LinkedResourceValidationService {
 
-    private final MindmapRepository mindmapRepository;
-    private final PresentationRepository presentationRepository;
-    private final AssignmentRepository assignmentRepository;
+    private final DocumentValidationApi documentValidationApi;
 
     /**
      * Validates that all linked resources exist.
@@ -54,7 +50,7 @@ public class LinkedResourceValidationService {
 
         // Validate mindmaps
         if (!mindmapIds.isEmpty()) {
-            long foundCount = mindmapRepository.countByIdIn(mindmapIds);
+            long foundCount = documentValidationApi.countExistingMindmaps(mindmapIds);
             if (foundCount < mindmapIds.size()) {
                 log.warn("Some mindmaps not found. Expected: {}, Found: {}", mindmapIds.size(), foundCount);
                 notFoundResources.add("mindmap(s)");
@@ -63,7 +59,7 @@ public class LinkedResourceValidationService {
 
         // Validate presentations
         if (!presentationIds.isEmpty()) {
-            long foundCount = presentationRepository.countByIdInAndDeletedAtIsNull(presentationIds);
+            long foundCount = documentValidationApi.countExistingPresentations(presentationIds);
             if (foundCount < presentationIds.size()) {
                 log.warn("Some presentations not found. Expected: {}, Found: {}", presentationIds.size(), foundCount);
                 notFoundResources.add("presentation(s)");
@@ -72,7 +68,7 @@ public class LinkedResourceValidationService {
 
         // Validate assignments
         if (!assignmentIds.isEmpty()) {
-            long foundCount = assignmentRepository.countByIdIn(assignmentIds);
+            long foundCount = documentValidationApi.countExistingAssignments(assignmentIds);
             if (foundCount < assignmentIds.size()) {
                 log.warn("Some assignments not found. Expected: {}, Found: {}", assignmentIds.size(), foundCount);
                 notFoundResources.add("assignment(s)");

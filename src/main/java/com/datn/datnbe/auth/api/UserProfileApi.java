@@ -93,4 +93,12 @@ public interface UserProfileApi {
      * @param newPassword the new password
      */
     void updatePassword(String userId, String newPassword);
+
+    /**
+     * Gets the Keycloak user ID for a given user ID.
+     *
+     * @param userId the user ID
+     * @return the Keycloak user ID, or null if not found
+     */
+    String getKeycloakUserIdByUserId(String userId);
 }
