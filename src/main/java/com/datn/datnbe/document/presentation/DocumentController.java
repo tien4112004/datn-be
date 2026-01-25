@@ -1,10 +1,11 @@
 package com.datn.datnbe.document.presentation;
 
 import com.datn.datnbe.document.dto.request.RecentDocumentCollectionRequest;
+import com.datn.datnbe.document.dto.response.DocumentMinimalResponseDto;
 import com.datn.datnbe.document.dto.response.RecentDocumentDto;
 import com.datn.datnbe.document.entity.DocumentVisit;
 import com.datn.datnbe.document.mapper.DocumentVisitMapper;
-import com.datn.datnbe.document.service.DocumentVisitService;
+import com.datn.datnbe.document.service.DocumentService;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
@@ -21,16 +22,16 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/recent-documents")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class DocumentVisitController {
+public class DocumentController {
 
-    DocumentVisitService documentVisitService;
+    DocumentService documentVisitService;
     DocumentVisitMapper documentVisitMapper;
     SecurityContextUtils securityContextUtils;
 
-    @GetMapping
+    @GetMapping("/recent-documents")
     public ResponseEntity<AppResponseDto<List<RecentDocumentDto>>> getRecentDocuments(
             @Valid @ModelAttribute RecentDocumentCollectionRequest request) {
         String userId = securityContextUtils.getCurrentUserId();
@@ -54,5 +55,12 @@ public class DocumentVisitController {
                 .build();
 
         return ResponseEntity.ok(AppResponseDto.successWithPagination(response, pagination));
+    }
+
+    @GetMapping("/documents/{documentId}/minimal")
+    public ResponseEntity<AppResponseDto<DocumentMinimalResponseDto>> getMinimalDocumentInfo(@PathVariable String documentId) {
+        log.info("Fetching minimal info for document: {}", documentId);
+        var documentInfo = documentVisitService.getMinimalDocumentInfo(documentId);
+        return ResponseEntity.ok(AppResponseDto.success(documentInfo));
     }
 }

@@ -32,7 +32,7 @@ import com.datn.datnbe.document.entity.Mindmap;
 import com.datn.datnbe.document.management.validation.MindmapValidation;
 import com.datn.datnbe.document.mapper.MindmapEntityMapper;
 import com.datn.datnbe.document.repository.MindmapRepository;
-import com.datn.datnbe.document.service.DocumentVisitService;
+import com.datn.datnbe.document.service.DocumentService;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
@@ -59,7 +59,7 @@ public class MindmapManagement implements MindmapApi {
     MindmapValidation validation;
     ResourcePermissionApi resourcePermissionApi;
     RustfsStorageService rustfsStorageService;
-    DocumentVisitService documentVisitService;
+    DocumentService documentVisitService;
     SecurityContextUtils securityContextUtils;
 
     @NonFinal

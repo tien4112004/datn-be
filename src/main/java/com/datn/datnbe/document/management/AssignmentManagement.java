@@ -7,7 +7,7 @@ import com.datn.datnbe.document.dto.DocumentMetadataDto;
 import com.datn.datnbe.document.dto.request.AssignmentCreateRequest;
 import com.datn.datnbe.document.dto.request.AssignmentUpdateRequest;
 import com.datn.datnbe.document.dto.response.AssignmentResponse;
-import com.datn.datnbe.document.service.DocumentVisitService;
+import com.datn.datnbe.document.service.DocumentService;
 
 import com.datn.datnbe.document.entity.Assignment;
 import com.datn.datnbe.document.dto.request.QuestionItemRequest;
@@ -43,7 +43,7 @@ public class AssignmentManagement implements AssignmentApi {
     private final AssignmentMapper assignmentMapper;
     private final SecurityContextUtils securityContextUtils;
     private final ResourcePermissionApi resourcePermissionApi;
-    private final DocumentVisitService documentVisitService;
+    private final DocumentService documentVisitService;
 
     @Override
     @Transactional

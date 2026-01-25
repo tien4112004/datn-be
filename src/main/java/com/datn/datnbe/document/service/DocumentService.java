@@ -2,6 +2,7 @@ package com.datn.datnbe.document.service;
 
 import com.datn.datnbe.document.dto.DocumentMetadataDto;
 import com.datn.datnbe.document.dto.request.RecentDocumentCollectionRequest;
+import com.datn.datnbe.document.dto.response.DocumentMinimalResponseDto;
 import com.datn.datnbe.document.entity.DocumentVisit;
 import com.datn.datnbe.document.repository.DocumentVisitRepository;
 import com.datn.datnbe.sharedkernel.dto.BaseCollectionRequest;
@@ -19,7 +20,7 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class DocumentVisitService {
+public class DocumentService {
 
     private final DocumentVisitRepository visitRepository;
 
@@ -83,5 +84,11 @@ public class DocumentVisitService {
     public void deleteDocumentVisits(String documentId) {
         log.info("Deleting all visits for document: {}", documentId);
         visitRepository.deleteByDocumentId(documentId);
+    }
+
+    public DocumentMinimalResponseDto getMinimalDocumentInfo(String documentId) {
+        log.info("Fetching minimal info for document: {}", documentId);
+        return visitRepository.findMinimalDocumentInfoByDocumentId(documentId)
+                .orElseThrow(() -> new IllegalArgumentException("Document not found: " + documentId));
     }
 }
