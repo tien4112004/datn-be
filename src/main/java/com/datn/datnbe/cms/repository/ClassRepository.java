@@ -1,6 +1,9 @@
 package com.datn.datnbe.cms.repository;
 
 import com.datn.datnbe.cms.entity.ClassEntity;
+
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,4 +27,10 @@ public interface ClassRepository extends JpaRepository<ClassEntity, String>, Jpa
     @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END "
             + " FROM ClassEntity c WHERE c.id = :classId AND c.ownerId = :ownerId")
     boolean isTheOwnerOfClass(String classId, String ownerId);
+
+    @Query(value = "SELECT DISTINCT up.keycloak_user_id FROM class_enrollments ce "
+            + "JOIN students s ON s.id = ce.student_id " + "JOIN user_profile up ON up.id = s.user_id "
+            + "WHERE ce.class_id = :classId AND ce.status = 'ACTIVE'", nativeQuery = true)
+    List<String> findStudentKeycloakIdsByClassId(@Param("classId") String classId);
+
 }

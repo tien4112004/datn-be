@@ -43,8 +43,10 @@ cloudflare:
 server:
   port: 0
 
-# Test model configurations
+# Firebase test config
 app:
+  firebase:
+    config-path: classpath:mock-service-account.json
   init:
     enabled: false
   cors:

@@ -14,11 +14,18 @@ import com.datn.datnbe.cms.mapper.PostLinkedResourceMapper;
 import com.datn.datnbe.cms.mapper.PostMapper;
 import com.datn.datnbe.cms.repository.PostLinkedResourceRepository;
 import com.datn.datnbe.cms.repository.PostRepository;
+import com.datn.datnbe.sharedkernel.notification.dto.NotificationRequest;
+import com.datn.datnbe.sharedkernel.notification.entity.UserDevice;
+import com.datn.datnbe.sharedkernel.notification.repository.UserDeviceRepository;
+import com.datn.datnbe.sharedkernel.notification.service.NotificationService;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
+import com.datn.datnbe.student.api.StudentApi;
+import com.datn.datnbe.student.dto.response.StudentResponseDto;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -45,6 +52,9 @@ public class PostService implements PostApi {
     private final UserProfileApi userProfileApi;
     private final LinkedResourceValidationService linkedResourceValidationService;
     private final LinkedResourcePermissionService linkedResourcePermissionService;
+    private final NotificationService notificationService;
+    private final UserDeviceRepository userDeviceRepository;
+    private final StudentApi studentApi;
 
     @Override
     @Transactional
@@ -80,6 +90,10 @@ public class PostService implements PostApi {
 
         PostResponseDto dto = postMapper.toResponseDto(saved);
         populateAuthorInfo(dto, saved.getAuthorId());
+
+        // Send notification to all students in the class
+        notifyStudents(classId, saved, "New Post in Class");
+
         return dto;
     }
 
@@ -179,6 +193,7 @@ public class PostService implements PostApi {
 
         PostResponseDto dto = postMapper.toResponseDto(saved);
         populateAuthorInfo(dto, saved.getAuthorId());
+        notifyStudents(saved.getClassId(), saved, "A post has been updated");
         return dto;
     }
 
@@ -215,6 +230,9 @@ public class PostService implements PostApi {
         Post saved = postRepository.save(exist);
         PostResponseDto dto = postMapper.toResponseDto(saved);
         populateAuthorInfo(dto, saved.getAuthorId());
+        notifyStudents(saved.getClassId(),
+                saved,
+                exist.getIsPinned() ? "A post has been pinned" : "A post has been unpinned");
         return dto;
     }
 
@@ -222,6 +240,38 @@ public class PostService implements PostApi {
         UserMinimalInfoDto author = userProfileApi.getUserMinimalInfo(authorId);
         if (author != null) {
             dto.setAuthor(author);
+        }
+    }
+
+    private void notifyStudents(String classId, Post post, String title) {
+        try {
+            var students = studentApi.getStudentsByClassId(classId);
+
+            List<String> userIds = students.stream().map(StudentResponseDto::getUserId).toList();
+            if (userIds.isEmpty())
+                return;
+
+            List<String> tokens = userIds.stream()
+                    .map(userDeviceRepository::findAllByUserId)
+                    .flatMap(List::stream)
+                    .map(UserDevice::getFcmToken)
+                    .filter(token -> token != null && !token.isEmpty())
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            if (!tokens.isEmpty()) {
+                NotificationRequest notiRequest = NotificationRequest.builder()
+                        .title(title)
+                        .body(post.getContent() != null && post.getContent().length() > 50
+                                ? post.getContent().substring(0, 50) + "..."
+                                : post.getContent())
+                        .data(Map.of("postId", post.getId(), "classId", classId, "type", "POST"))
+                        .build();
+                notificationService.sendMulticast(tokens, notiRequest);
+            }
+
+        } catch (Exception e) {
+            log.error("Failed to send notification for new post", e);
         }
     }
 }

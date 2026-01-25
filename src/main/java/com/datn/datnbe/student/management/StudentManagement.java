@@ -358,4 +358,9 @@ public class StudentManagement implements StudentApi {
 
         return keycloakUserIds;
     }
+
+    @Override
+    public List<StudentResponseDto> getStudentsByClassId(String classId) {
+        return studentRepository.findByClassId(classId).stream().map(studentEntityMapper::toResponseDto).toList();
+    }
 }

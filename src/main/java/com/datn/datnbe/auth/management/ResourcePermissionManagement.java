@@ -23,6 +23,9 @@ import com.datn.datnbe.auth.mapper.ResourcePermissionMapper;
 import com.datn.datnbe.auth.repository.DocumentResourceMappingRepository;
 import com.datn.datnbe.auth.repository.UserProfileRepo;
 import com.datn.datnbe.auth.service.KeycloakAuthorizationService;
+import com.datn.datnbe.sharedkernel.notification.dto.NotificationRequest;
+import com.datn.datnbe.sharedkernel.notification.repository.UserDeviceRepository;
+import com.datn.datnbe.sharedkernel.notification.service.NotificationService;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 
@@ -35,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -47,6 +51,8 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
     private final ResourcePermissionMapper mapper;
     private final KeycloakDtoMapper keycloakMapper;
     private final UserProfileRepo userProfileRepo;
+    private final NotificationService notificationService;
+    private final UserDeviceRepository userDeviceRepository;
 
     // Constants for naming conventions
     private static final String OWNER_POLICY_SUFFIX = "-owner-policy";
@@ -141,7 +147,8 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
 
         String ownerPolicyId = keycloakAuthzService.createUserPolicy(ownerPolicy).getId();
 
-        // Create permission for owner with all scopes (read, comment, edit) - use document ID
+        // Create permission for owner with all scopes (read, comment, edit) - use
+        // document ID
         String ownerPermissionName = buildOwnerPermissionName(id, ownerId);
         KeycloakPermissionDto ownerPermission = keycloakMapper.toKeycloakPermissionDto(ownerPermissionName,
                 String.format(OWNER_PERMISSION_DESC_TEMPLATE, name),
@@ -190,7 +197,8 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
                 mapping.getKeycloakResourceId(),
                 mapping.getIsPublic());
 
-        // Check if the user is the owner FIRST - owner ALWAYS gets all permissions regardless of public status
+        // Check if the user is the owner FIRST - owner ALWAYS gets all permissions
+        // regardless of public status
         if (mapping.getOwnerId() != null && mapping.getOwnerId().equals(userId)) {
             log.info("User {} is the owner of document {}, granting all permissions", userId, documentId);
             return mapper
@@ -207,9 +215,9 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
             // Grant public permission level
             List<String> publicPermissions;
             if ("comment".equals(mapping.getPublicPermission())) {
-                publicPermissions = List.of(READ_SCOPE, COMMENT_SCOPE);  // Commenter gets both read and comment
+                publicPermissions = List.of(READ_SCOPE, COMMENT_SCOPE); // Commenter gets both read and comment
             } else {
-                publicPermissions = List.of(READ_SCOPE);  // Default to read-only
+                publicPermissions = List.of(READ_SCOPE); // Default to read-only
             }
 
             return mapper.toResourcePermissionResponse(documentId, userId, publicPermissions);
@@ -278,6 +286,10 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
                 keycloakAuthzService.addUserToGroup(keycloakUserId, groupId);
 
                 log.info("Successfully shared resource {} with user {} at {} level", documentId, targetUserId, level);
+
+                // Notify the user
+                notifyUserResourceShared(targetUserId, documentId, level.toString(), currentUserId);
+
                 successCount++;
 
             } catch (Exception e) {
@@ -383,7 +395,8 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
     }
 
     /**
-     * Permission levels: read, comment (shareable), edit (owner only, not shareable)
+     * Permission levels: read, comment (shareable), edit (owner only, not
+     * shareable)
      * Edit permission only belongs to owner and allows sharing other permissions
      */
     @Getter
@@ -659,4 +672,34 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
         return "read"; // Default fallback
     }
 
+    private void notifyUserResourceShared(String targetUserId,
+            String documentId,
+            String permissionLevel,
+            String senderId) {
+        try {
+            // Find user profile to get Keycloak ID
+            Optional<UserProfile> userProfileOnly = userProfileRepo.findByIdOrKeycloakUserId(targetUserId);
+            if (userProfileOnly.isEmpty())
+                return;
+
+            // Get user devices
+            List<String> tokens = userDeviceRepository.findAllByUserId(userProfileOnly.get().getId())
+                    .stream()
+                    .map(com.datn.datnbe.sharedkernel.notification.entity.UserDevice::getFcmToken)
+                    .filter(token -> token != null && !token.isEmpty())
+                    .distinct()
+                    .toList();
+
+            if (!tokens.isEmpty()) {
+                NotificationRequest notiRequest = NotificationRequest.builder()
+                        .title("Resource Shared With You")
+                        .body("A resource has been shared with you with permission: " + permissionLevel)
+                        .data(Map.of("documentId", documentId, "permission", permissionLevel, "type", "RESOURCE_SHARE"))
+                        .build();
+                notificationService.sendMulticast(tokens, notiRequest);
+            }
+        } catch (Exception e) {
+            log.error("Failed to send notification for resource share to user {}", targetUserId, e);
+        }
+    }
 }

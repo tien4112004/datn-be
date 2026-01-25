@@ -77,4 +77,6 @@ public interface StudentApi {
      * @return list of Keycloak user IDs for enrolled students
      */
     List<String> getEnrolledStudentKeycloakUserIds(String classId);
+
+    List<StudentResponseDto> getStudentsByClassId(String classId);
 }

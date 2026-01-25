@@ -10,7 +10,9 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -50,6 +52,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
         org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration.class,
         org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration.class,
         org.springframework.boot.autoconfigure.http.client.HttpClientAutoConfiguration.class})
+@Disabled("Disabled - Docker required for integration tests")
 public class SlidesIntegrationTest extends BaseIntegrationTest {
 
     @Autowired

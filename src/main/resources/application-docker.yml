@@ -76,6 +76,8 @@ server:
       force: true
 
 app:
+  firebase:
+      config-path: ${FIREBASE_CONFIG_PATH:classpath:firebase-service-account.json}
   cors:
     allowed-origins:
       - "http://localhost:5173"
@@ -119,7 +121,6 @@ app:
         - http://localhost:5175
         - http://admin.localhost:5175
         - https://admin.huy-devops.site
-
     authorization:
       server-url: ${KEYCLOAK_SERVER_URL:http://keycloak:8080}
       realm: ${KEYCLOAK_REALM:ai-primary-dev}
@@ -130,7 +131,7 @@ app:
       read-timeout: 30000
   security:
     document-permission:
-      enabled: ${DOCUMENT_PERMISSION_ENABLED:false}
+      enabled: true
 
 ai:
   api:
