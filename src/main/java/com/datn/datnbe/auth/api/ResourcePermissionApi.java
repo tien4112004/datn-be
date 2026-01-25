@@ -11,6 +11,7 @@ import com.datn.datnbe.auth.dto.response.ResourcePermissionResponse;
 import com.datn.datnbe.auth.dto.response.ResourceResponse;
 import com.datn.datnbe.auth.dto.response.ResourceShareResponse;
 import com.datn.datnbe.auth.dto.response.ShareStateResponse;
+import com.datn.datnbe.auth.dto.response.SharedResourceResponse;
 import com.datn.datnbe.auth.dto.response.SharedUserResponse;
 
 public interface ResourcePermissionApi {
@@ -25,4 +26,5 @@ public interface ResourcePermissionApi {
     public PublicAccessResponse setPublicAccess(String documentId, PublicAccessRequest request, String currentUserId);
     public PublicAccessResponse getPublicAccessStatus(String documentId, String currentUserId);
     public ShareStateResponse getShareState(String documentId, String currentUserId);
+    public List<SharedResourceResponse> getSharedWithMe(String userId);
 }

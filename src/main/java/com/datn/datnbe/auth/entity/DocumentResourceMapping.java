@@ -69,4 +69,7 @@ public class DocumentResourceMapping {
 
     @Column(nullable = true)
     String thumbnail;
+
+    @Column
+    String title;
 }

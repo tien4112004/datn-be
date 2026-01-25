@@ -25,6 +25,7 @@ import com.datn.datnbe.auth.dto.response.ResourceShareResponse;
 import com.datn.datnbe.auth.dto.response.ResourcePermissionResponse;
 import com.datn.datnbe.auth.dto.response.ResourceResponse;
 import com.datn.datnbe.auth.dto.response.ShareStateResponse;
+import com.datn.datnbe.auth.dto.response.SharedResourceResponse;
 import com.datn.datnbe.auth.dto.response.SharedUserResponse;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 
@@ -200,6 +201,23 @@ public class ResourcePermissionController {
         return ResponseEntity.ok(AppResponseDto.<ShareStateResponse>builder()
                 .data(response)
                 .message("Share state retrieved successfully")
+                .build());
+    }
+
+    @GetMapping("/shared-with-me")
+    public ResponseEntity<AppResponseDto<List<SharedResourceResponse>>> getSharedWithMe(Authentication authentication) {
+
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String userId = jwt.getSubject();
+
+        log.info("Getting resources shared with user {}", userId);
+
+        var response = resourcePermissionApi.getSharedWithMe(userId);
+        log.info("Found {} resources shared with user {}", response.size(), userId);
+
+        return ResponseEntity.ok(AppResponseDto.<List<SharedResourceResponse>>builder()
+                .data(response)
+                .message("Shared resources retrieved successfully")
                 .build());
     }
 }

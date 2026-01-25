@@ -1,5 +1,6 @@
 package com.datn.datnbe.document.repository;
 
+import com.datn.datnbe.document.dto.ResourceSummaryProjection;
 import com.datn.datnbe.document.entity.Mindmap;
 
 import org.springframework.data.domain.Page;
@@ -8,6 +9,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.util.Collection;
+import java.util.List;
 
 @Repository
 public interface MindmapRepository extends JpaRepository<Mindmap, String> {
@@ -23,4 +27,11 @@ public interface MindmapRepository extends JpaRepository<Mindmap, String> {
 
     @Query("SELECT COUNT(m) FROM Mindmap m WHERE m.id IN :ids")
     long countByIdIn(@Param("ids") java.util.Collection<String> ids);
+
+    /**
+     * Fetch only id, title, and thumbnail for given IDs.
+     * Avoids loading heavy JSON columns like nodes and edges.
+     */
+    @Query("SELECT m.id AS id, m.title AS title, m.thumbnail AS thumbnail FROM Mindmap m WHERE m.id IN :ids")
+    List<ResourceSummaryProjection> findSummariesByIds(@Param("ids") Collection<String> ids);
 }
