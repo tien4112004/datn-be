@@ -81,6 +81,16 @@ public class ClassController {
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 
+    @DeleteMapping("/{classId}")
+    @RequireTeacherPermission
+    public ResponseEntity<Void> deleteClass(@PathVariable String classId) {
+        log.debug("DELETE /api/classes/{}", classId);
+
+        classApi.deleteClass(classId);
+
+        return ResponseEntity.noContent().build();
+    }
+
     // ============== Seating Chart Endpoints ==============
 
     @GetMapping("/{classId}/seating-chart")
