@@ -66,10 +66,4 @@ public class DocumentResourceMapping {
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     LocalDateTime createdAt;
-
-    @Column(nullable = true)
-    String thumbnail;
-
-    @Column
-    String title;
 }

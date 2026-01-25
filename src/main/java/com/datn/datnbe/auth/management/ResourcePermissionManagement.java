@@ -28,9 +28,8 @@ import com.datn.datnbe.auth.service.KeycloakAuthorizationService;
 import com.datn.datnbe.sharedkernel.notification.dto.NotificationRequest;
 import com.datn.datnbe.sharedkernel.notification.repository.UserDeviceRepository;
 import com.datn.datnbe.sharedkernel.notification.service.NotificationService;
-import com.datn.datnbe.document.dto.ResourceSummaryProjection;
-import com.datn.datnbe.document.repository.MindmapRepository;
-import com.datn.datnbe.document.repository.PresentationRepository;
+import com.datn.datnbe.sharedkernel.api.ResourceSummaryApi;
+import com.datn.datnbe.sharedkernel.dto.ResourceSummaryDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 
@@ -59,8 +58,7 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
     private final UserProfileRepo userProfileRepo;
     private final NotificationService notificationService;
     private final UserDeviceRepository userDeviceRepository;
-    private final PresentationRepository presentationRepository;
-    private final MindmapRepository mindmapRepository;
+    private final ResourceSummaryApi resourceSummaryApi;
 
     // Constants for naming conventions
     private static final String OWNER_POLICY_SUFFIX = "-owner-policy";
@@ -758,18 +756,10 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
                 .map(SharedResourceProjection::getId)
                 .toList();
 
-        // Batch fetch title/thumbnail from source tables
-        Map<String, ResourceSummaryProjection> presentationSummaries = new HashMap<>();
-        Map<String, ResourceSummaryProjection> mindmapSummaries = new HashMap<>();
-
-        if (!presentationIds.isEmpty()) {
-            presentationRepository.findSummariesByIds(presentationIds)
-                    .forEach(s -> presentationSummaries.put(s.getId(), s));
-        }
-
-        if (!mindmapIds.isEmpty()) {
-            mindmapRepository.findSummariesByIds(mindmapIds).forEach(s -> mindmapSummaries.put(s.getId(), s));
-        }
+        // Batch fetch title/thumbnail from source tables via API
+        Map<String, ResourceSummaryDto> presentationSummaries = resourceSummaryApi
+                .getPresentationSummaries(presentationIds);
+        Map<String, ResourceSummaryDto> mindmapSummaries = resourceSummaryApi.getMindmapSummaries(mindmapIds);
 
         // Build responses with fresh title/thumbnail from source
         List<SharedResourceResponse> sharedResponses = new ArrayList<>();
@@ -783,13 +773,13 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
             String thumbnail = null;
 
             if ("presentation".equals(resource.getType())) {
-                ResourceSummaryProjection summary = presentationSummaries.get(resource.getId());
+                ResourceSummaryDto summary = presentationSummaries.get(resource.getId());
                 if (summary != null) {
                     title = summary.getTitle();
                     thumbnail = summary.getThumbnail();
                 }
             } else if ("mindmap".equals(resource.getType())) {
-                ResourceSummaryProjection summary = mindmapSummaries.get(resource.getId());
+                ResourceSummaryDto summary = mindmapSummaries.get(resource.getId());
                 if (summary != null) {
                     title = summary.getTitle();
                     thumbnail = summary.getThumbnail();
