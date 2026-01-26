@@ -1,8 +1,13 @@
 package com.datn.datnbe.cms.mapper;
 
+import com.datn.datnbe.cms.dto.AnswerDataDto;
+import com.datn.datnbe.cms.dto.request.SubmissionCreateRequest;
 import com.datn.datnbe.cms.dto.response.SubmissionResponseDto;
 import com.datn.datnbe.cms.entity.Submission;
+import com.datn.datnbe.cms.entity.answerData.AnswerData;
 import org.springframework.stereotype.Component;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class SubmissionMapper {
@@ -23,5 +28,29 @@ public class SubmissionMapper {
                 .createdAt(s.getCreatedAt())
                 .updatedAt(s.getUpdatedAt())
                 .build();
+    }
+
+    public Submission toEntity(SubmissionCreateRequest request, String postId) {
+        if (request == null)
+            return null;
+        return Submission.builder()
+                .postId(postId)
+                .studentId(request.getStudentId())
+                .questions(convertAnswers(request.getQuestions()))
+                .build();
+    }
+
+    private List<AnswerData> convertAnswers(List<AnswerDataDto> dtoList) {
+        if (dtoList == null)
+            return null;
+        return dtoList.stream()
+                .map(dto -> {
+                    AnswerData data = new AnswerData();
+                    data.setId(dto.getId());
+                    data.setType(dto.getType());
+                    data.setAnswer(dto.getAnswer());
+                    return data;
+                })
+                .collect(Collectors.toList());
     }
 }

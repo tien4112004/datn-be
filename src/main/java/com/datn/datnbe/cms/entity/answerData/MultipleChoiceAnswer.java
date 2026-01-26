@@ -13,4 +13,8 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class MultipleChoiceAnswer {
     String id;
+
+    public boolean verifyAnswer(String selectedOptionId) {
+        return this.id.equals(selectedOptionId);
+    }
 }

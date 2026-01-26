@@ -1,6 +1,8 @@
 package com.datn.datnbe.cms.repository;
 
 import com.datn.datnbe.cms.entity.Post;
+import com.datn.datnbe.document.dto.response.AssignmentResponse;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -23,4 +25,11 @@ public interface PostRepository extends JpaRepository<Post, String> {
     @Transactional
     @Query("UPDATE Post p SET p.commentCount = p.commentCount + :delta WHERE p.id = :postId")
     void updateCommentCount(@Param("postId") String postId, @Param("delta") int delta);
+
+    @Query(value = """
+            SELECT a.*
+            FROM assignments a JOINS POSTS p ON a.id = p.assignment_id
+            WHERE p.id = :postId
+            """, nativeQuery = true)
+    AssignmentResponse getAssignmentByPostId(String postId);
 }

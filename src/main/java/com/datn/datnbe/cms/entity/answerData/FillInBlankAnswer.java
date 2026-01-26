@@ -11,4 +11,8 @@ import java.util.Map;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FillInBlankAnswer {
     Map<String, String> blankAnswers;
+
+    public boolean verifyAnswer(Map<String, String> correctAnswers) {
+        return this.blankAnswers.equals(correctAnswers);
+    }
 }

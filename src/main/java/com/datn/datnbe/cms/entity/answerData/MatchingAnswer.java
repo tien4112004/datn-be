@@ -11,4 +11,8 @@ import java.util.Map;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class MatchingAnswer {
     Map<String, String> matchedPairs;
+
+    public boolean verifyAnswer(Map<String, String> correctPairs) {
+        return this.matchedPairs.equals(correctPairs);
+    }
 }

@@ -1,6 +1,8 @@
 package com.datn.datnbe.cms.presentation;
 
 import com.datn.datnbe.cms.api.SubmissionApi;
+import com.datn.datnbe.cms.dto.request.SubmissionCreateRequest;
+import com.datn.datnbe.cms.dto.request.SubmissionGradeRequest;
 import com.datn.datnbe.cms.dto.response.SubmissionResponseDto;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.security.annotation.RequireTeacherPermission;
@@ -22,20 +24,18 @@ public class SubmissionController {
 
     @PostMapping("/posts/{postId}/submissions")
     public ResponseEntity<AppResponseDto<SubmissionResponseDto>> createSubmission(@PathVariable String postId,
-            @RequestParam String studentId) {
-        SubmissionResponseDto response = submissionApi.createSubmission(postId, studentId);
+            @RequestBody SubmissionCreateRequest request) {
+        SubmissionResponseDto response = submissionApi.createSubmission(postId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(AppResponseDto.success(response));
     }
 
     @GetMapping("/posts/{postId}/submissions")
-    @RequireTeacherPermission
     public ResponseEntity<AppResponseDto<List<SubmissionResponseDto>>> getSubmissions(@PathVariable String postId) {
         return ResponseEntity.ok(AppResponseDto.success(submissionApi.getSubmissions(postId)));
     }
 
     @GetMapping("/submissions/{id}")
     public ResponseEntity<AppResponseDto<SubmissionResponseDto>> getSubmissionById(@PathVariable String id) {
-        log.debug("GET /api/submissions/{}", id);
         return ResponseEntity.ok(AppResponseDto.success(submissionApi.getSubmissionById(id)));
     }
 
@@ -46,4 +46,13 @@ public class SubmissionController {
         submissionApi.deleteSubmission(id);
         return ResponseEntity.ok(AppResponseDto.success());
     }
+
+    @PutMapping("/submissions/{id}/grade")
+    @RequireTeacherPermission
+    public ResponseEntity<AppResponseDto<SubmissionResponseDto>> gradeSubmissionManually(@PathVariable String id,
+            @RequestBody SubmissionGradeRequest request) {
+        SubmissionResponseDto response = submissionApi.gradeSubmissionManually(id, request);
+        return ResponseEntity.ok(AppResponseDto.success(response));
+    }
 }
+

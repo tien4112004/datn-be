@@ -14,6 +14,7 @@ import com.datn.datnbe.cms.mapper.PostLinkedResourceMapper;
 import com.datn.datnbe.cms.mapper.PostMapper;
 import com.datn.datnbe.cms.repository.PostLinkedResourceRepository;
 import com.datn.datnbe.cms.repository.PostRepository;
+import com.datn.datnbe.document.dto.response.AssignmentResponse;
 import com.datn.datnbe.sharedkernel.notification.dto.NotificationRequest;
 import com.datn.datnbe.sharedkernel.notification.entity.UserDevice;
 import com.datn.datnbe.sharedkernel.notification.repository.UserDeviceRepository;
@@ -273,5 +274,11 @@ public class PostService implements PostApi {
         } catch (Exception e) {
             log.error("Failed to send notification for new post", e);
         }
+    }
+
+    @Override
+    public AssignmentResponse getAssignmentByPostId(String postId) {
+        log.info("get assignment of post: {}", postId);
+        return postRepository.getAssignmentByPostId(postId);
     }
 }
