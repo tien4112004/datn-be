@@ -1,5 +1,6 @@
 package com.datn.datnbe.document.repository;
 
+import com.datn.datnbe.document.dto.ResourceSummaryProjection;
 import com.datn.datnbe.document.entity.Presentation;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -8,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -32,4 +35,11 @@ public interface PresentationRepository extends JpaRepository<Presentation, Stri
 
     @Query("SELECT COUNT(p) FROM Presentation p WHERE p.id IN :ids AND p.deletedAt IS NULL")
     long countByIdInAndDeletedAtIsNull(@Param("ids") java.util.Collection<String> ids);
+
+    /**
+     * Fetch only id, title, and thumbnail for given IDs.
+     * Avoids loading heavy JSON columns like slides.
+     */
+    @Query("SELECT p.id AS id, p.title AS title, p.thumbnail AS thumbnail FROM Presentation p WHERE p.id IN :ids AND p.deletedAt IS NULL")
+    List<ResourceSummaryProjection> findSummariesByIds(@Param("ids") Collection<String> ids);
 }

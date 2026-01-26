@@ -6,6 +6,7 @@ import com.datn.datnbe.auth.dto.keycloak.KeycloakPermissionDto;
 import com.datn.datnbe.auth.dto.keycloak.KeycloakResourceDto;
 import com.datn.datnbe.auth.dto.keycloak.KeycloakUserDto;
 import com.datn.datnbe.auth.dto.keycloak.KeycloakUserPolicyDto;
+import com.datn.datnbe.auth.dto.SharedResourceProjection;
 import com.datn.datnbe.auth.dto.request.PublicAccessRequest;
 import com.datn.datnbe.auth.dto.request.ResourceRegistrationRequest;
 import com.datn.datnbe.auth.dto.request.ResourceShareRequest;
@@ -15,6 +16,7 @@ import com.datn.datnbe.auth.dto.response.ResourcePermissionResponse;
 import com.datn.datnbe.auth.dto.response.ResourceResponse;
 import com.datn.datnbe.auth.dto.response.ResourceShareResponse;
 import com.datn.datnbe.auth.dto.response.ShareStateResponse;
+import com.datn.datnbe.auth.dto.response.SharedResourceResponse;
 import com.datn.datnbe.auth.dto.response.SharedUserResponse;
 import com.datn.datnbe.auth.entity.DocumentResourceMapping;
 import com.datn.datnbe.auth.entity.UserProfile;
@@ -26,6 +28,8 @@ import com.datn.datnbe.auth.service.KeycloakAuthorizationService;
 import com.datn.datnbe.sharedkernel.notification.dto.NotificationRequest;
 import com.datn.datnbe.sharedkernel.notification.repository.UserDeviceRepository;
 import com.datn.datnbe.sharedkernel.notification.service.NotificationService;
+import com.datn.datnbe.sharedkernel.api.ResourceSummaryApi;
+import com.datn.datnbe.sharedkernel.dto.ResourceSummaryDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 
@@ -37,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -53,6 +58,7 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
     private final UserProfileRepo userProfileRepo;
     private final NotificationService notificationService;
     private final UserDeviceRepository userDeviceRepository;
+    private final ResourceSummaryApi resourceSummaryApi;
 
     // Constants for naming conventions
     private static final String OWNER_POLICY_SUFFIX = "-owner-policy";
@@ -163,13 +169,14 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
                 ownerId);
 
         // Save mapping with the resource URI and owner ID
+        // Note: title and thumbnail are NOT stored here to avoid stale data.
+        // They are fetched from source (presentation/mindmap tables) when needed.
         DocumentResourceMapping mapping = DocumentResourceMapping.builder()
                 .documentId(id)
                 .keycloakResourceId(keycloakResourceId)
                 .resourceType(resourceType)
                 .resourceUri(resourcePath)
                 .ownerId(ownerId)
-                .thumbnail(request.getThumbnail())
                 .build();
 
         DocumentResourceMapping saved = mappingRepository.save(mapping);
@@ -702,4 +709,158 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
             log.error("Failed to send notification for resource share to user {}", targetUserId, e);
         }
     }
+    @Override
+    public List<SharedResourceResponse> getSharedWithMe(String userId) {
+        log.info("Getting shared resources for user {}", userId);
+
+        // Get the Keycloak user ID from UserProfile
+        Optional<UserProfile> userProfileOpt = userProfileRepo.findByIdOrKeycloakUserId(userId);
+        if (userProfileOpt.isEmpty()) {
+            log.warn("User {} not found", userId);
+            return List.of();
+        }
+
+        String keycloakUserId = userProfileOpt.get().getKeycloakUserId();
+        log.info("Found keycloak user ID {} for user {}", keycloakUserId, userId);
+
+        // Get all potentially shared resources (those with reader/commenter groups, not owned by user)
+        List<SharedResourceProjection> potentialResources = mappingRepository
+                .findPotentiallySharedResources(keycloakUserId);
+        log.info("Found {} potentially shared resources for user {}", potentialResources.size(), userId);
+
+        // Filter to only resources where user is actually in a group
+        List<SharedResourceProjection> actualSharedResources = new ArrayList<>();
+        Map<String, String> resourcePermissions = new HashMap<>();
+
+        for (SharedResourceProjection resource : potentialResources) {
+            String permission = determinePermissionFromGroups(keycloakUserId, resource);
+            if (permission != null) {
+                actualSharedResources.add(resource);
+                resourcePermissions.put(resource.getId(), permission);
+            }
+        }
+
+        if (actualSharedResources.isEmpty()) {
+            log.info("No actual shared resources for user {}", userId);
+            return List.of();
+        }
+
+        // Separate IDs by type for batch fetching
+        List<String> presentationIds = actualSharedResources.stream()
+                .filter(r -> "presentation".equals(r.getType()))
+                .map(SharedResourceProjection::getId)
+                .toList();
+
+        List<String> mindmapIds = actualSharedResources.stream()
+                .filter(r -> "mindmap".equals(r.getType()))
+                .map(SharedResourceProjection::getId)
+                .toList();
+
+        // Batch fetch title/thumbnail from source tables via API
+        Map<String, ResourceSummaryDto> presentationSummaries = resourceSummaryApi
+                .getPresentationSummaries(presentationIds);
+        Map<String, ResourceSummaryDto> mindmapSummaries = resourceSummaryApi.getMindmapSummaries(mindmapIds);
+
+        // Build responses with fresh title/thumbnail from source
+        List<SharedResourceResponse> sharedResponses = new ArrayList<>();
+
+        for (SharedResourceProjection resource : actualSharedResources) {
+            String permission = resourcePermissions.get(resource.getId());
+            String ownerName = getOwnerDisplayName(resource.getOwnerId());
+
+            // Get title/thumbnail from the appropriate source
+            String title = null;
+            String thumbnail = null;
+
+            if ("presentation".equals(resource.getType())) {
+                ResourceSummaryDto summary = presentationSummaries.get(resource.getId());
+                if (summary != null) {
+                    title = summary.getTitle();
+                    thumbnail = summary.getThumbnail();
+                }
+            } else if ("mindmap".equals(resource.getType())) {
+                ResourceSummaryDto summary = mindmapSummaries.get(resource.getId());
+                if (summary != null) {
+                    title = summary.getTitle();
+                    thumbnail = summary.getThumbnail();
+                }
+            }
+
+            sharedResponses.add(SharedResourceResponse.builder()
+                    .id(resource.getId())
+                    .type(resource.getType())
+                    .title(title)
+                    .thumbnailUrl(thumbnail)
+                    .permission(permission)
+                    .ownerId(resource.getOwnerId())
+                    .ownerName(ownerName)
+                    .build());
+        }
+
+        log.info("Found {} actual shared resources for user {}", sharedResponses.size(), userId);
+        return sharedResponses;
+    }
+
+    /**
+     * Determine user's permission level based on which group they belong to.
+     * Commenter takes precedence over reader.
+     * Returns null if user is not in any group.
+     */
+    private String determinePermissionFromGroups(String userId, SharedResourceProjection resource) {
+        boolean isInReadersGroup = false;
+        boolean isInCommentersGroup = false;
+
+        // Check if user is in commenters group (higher permission)
+        if (resource.getCommentersGroupId() != null) {
+            try {
+                List<KeycloakUserDto> commenters = keycloakAuthzService
+                        .getGroupMembers(resource.getCommentersGroupId());
+                isInCommentersGroup = commenters.stream().anyMatch(u -> u.getId().equals(userId));
+            } catch (Exception e) {
+                log.debug("Error checking commenters group: {}", e.getMessage());
+            }
+        }
+
+        // Check if user is in readers group
+        if (resource.getReadersGroupId() != null) {
+            try {
+                List<KeycloakUserDto> readers = keycloakAuthzService.getGroupMembers(resource.getReadersGroupId());
+                isInReadersGroup = readers.stream().anyMatch(u -> u.getId().equals(userId));
+            } catch (Exception e) {
+                log.debug("Error checking readers group: {}", e.getMessage());
+            }
+        }
+
+        // Return highest permission level, or null if not in any group
+        if (isInCommentersGroup) {
+            return "comment";
+        } else if (isInReadersGroup) {
+            return "read";
+        }
+
+        return null; // User is not in any group for this resource
+    }
+
+    /**
+     * Get display name for the owner from their user profile.
+     */
+    private String getOwnerDisplayName(String ownerId) {
+        if (ownerId == null) {
+            return "Unknown";
+        }
+
+        return userProfileRepo.findByIdOrKeycloakUserId(ownerId).map(profile -> {
+            String firstName = profile.getFirstName();
+            String lastName = profile.getLastName();
+            if (firstName != null && lastName != null) {
+                return firstName + " " + lastName;
+            } else if (firstName != null) {
+                return firstName;
+            } else if (profile.getEmail() != null) {
+                return profile.getEmail();
+            }
+            return "Unknown";
+        }).orElse("Unknown");
+    }
+
 }

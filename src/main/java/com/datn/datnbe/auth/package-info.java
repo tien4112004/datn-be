@@ -8,7 +8,8 @@
  * - File sharing with Keycloak Authorization Services
  * - Resource-based access control
  */
-@ApplicationModule(allowedDependencies = {"sharedkernel", "sharedkernel::dto", "sharedkernel::exceptions"})
+@ApplicationModule(allowedDependencies = {"sharedkernel", "sharedkernel::dto", "sharedkernel::exceptions",
+        "sharedkernel::sharedApi"})
 package com.datn.datnbe.auth;
 
 import org.springframework.modulith.ApplicationModule;
