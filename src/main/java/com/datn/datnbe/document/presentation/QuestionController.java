@@ -76,4 +76,16 @@ public class QuestionController {
 
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/{contextId}/questions")
+    public ResponseEntity<AppResponseDto<List<QuestionResponseDto>>> getQuestionsByContextId(
+            @PathVariable String contextId,
+            @Valid @ModelAttribute QuestionCollectionRequest request) {
+        log.info("Fetching all questions for contextId: {}", contextId);
+
+        PaginatedResponseDto<QuestionResponseDto> paginatedResponse = questionApi.getQuestionsByContextId(contextId, request);
+
+        return ResponseEntity.ok(
+                AppResponseDto.successWithPagination(paginatedResponse.getData(), paginatedResponse.getPagination()));
+    }
 }

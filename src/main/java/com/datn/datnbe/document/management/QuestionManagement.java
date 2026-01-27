@@ -102,6 +102,90 @@ public class QuestionManagement implements QuestionApi {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public PaginatedResponseDto<QuestionResponseDto> getQuestionsByContextId(String contextId,
+            QuestionCollectionRequest request) {
+
+        log.info("Fetching questions by contextId: {} - page: {}, pageSize: {}", contextId, request.getPage(),
+                request.getPageSize());
+
+        if (request.getPage() < 1) {
+            throw new AppException(ErrorCode.VALIDATION_ERROR, "Page number must be >= 1");
+        }
+        if (request.getPageSize() < 1 || request.getPageSize() > 100) {
+            throw new AppException(ErrorCode.VALIDATION_ERROR, "Page size must be between 1 and 100");
+        }
+
+        int pageIndex = request.getPage() - 1;
+
+        Sort.Direction direction = Sort.Direction.DESC;
+        if (request.getSortDirection() != null) {
+            direction = request.getSortDirection().equalsIgnoreCase("ASC") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        }
+
+        String sortBy = request.getSortBy() != null ? request.getSortBy() : "createdAt";
+        Pageable pageable = PageRequest.of(pageIndex, request.getPageSize(), direction, sortBy);
+
+        // Build specifications for filtering by contextId and other filters
+        Specification<QuestionBankItem> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // Filter by contextId
+            predicates.add(cb.equal(root.get("contextId"), contextId));
+
+            // Apply search filter if provided
+            if (request.getSearch() != null && !request.getSearch().isEmpty()) {
+                predicates.add(cb.like(cb.lower(root.get("title")), "%" + request.getSearch().toLowerCase() + "%"));
+            }
+
+            // Filter by difficulty (supports multi-select)
+            if (request.getDifficulty() != null && !request.getDifficulty().isEmpty()) {
+                predicates.add(root.get("difficulty").in(request.getDifficulty()));
+            }
+
+            // Filter by type (supports multi-select)
+            if (request.getType() != null && !request.getType().isEmpty()) {
+                predicates.add(root.get("type").in(request.getType()));
+            }
+
+            // Filter by subject (supports multi-select)
+            if (request.getSubject() != null && !request.getSubject().isEmpty()) {
+                predicates.add(root.get("subject").in(request.getSubject()));
+            }
+
+            // Filter by grade (supports multi-select)
+            if (request.getGrade() != null && !request.getGrade().isEmpty()) {
+                predicates.add(root.get("grade").in(request.getGrade()));
+            }
+
+            // Filter by chapter (supports multi-select)
+            if (request.getChapter() != null && !request.getChapter().isEmpty()) {
+                predicates.add(root.get("chapter").in(request.getChapter()));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<QuestionBankItem> questionPage = questionRepository.findAll(spec, pageable);
+
+        log.debug("Fetched {} questions for contextId: {}", questionPage.getSize(), contextId);
+
+        List<QuestionResponseDto> dtos = questionPage.getContent()
+                .stream()
+                .map(questionMapper::toResponseDto)
+                .collect(Collectors.toList());
+
+        PaginationDto paginationInfo = PaginationDto.builder()
+                .currentPage(request.getPage())
+                .pageSize(questionPage.getSize())
+                .totalPages(questionPage.getTotalPages())
+                .totalItems(questionPage.getTotalElements())
+                .build();
+
+        return PaginatedResponseDto.<QuestionResponseDto>builder().data(dtos).pagination(paginationInfo).build();
+    }
+
+    @Override
     public QuestionResponseDto createQuestion(QuestionCreateRequest request, String ownerId) {
 
         log.info("Creating new question - type: {}, title: {}, ownerId: {}",
