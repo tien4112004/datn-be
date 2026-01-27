@@ -22,14 +22,20 @@ public class Context {
     @Column(name = "id", length = 36)
     String id;
 
-    @Column(name = "title", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "title", columnDefinition = "TEXT")
     String title;
 
-    @Column(name = "grade", length = 50)
-    String grade;
+    @Column(name = "content", columnDefinition = "TEXT", nullable = false)
+    String content;
 
-    @Column(name = "author", length = 50)
+    @Column(name = "grade")
+    Integer grade;
+
+    @Column(name = "author", columnDefinition = "TEXT")
     String author;
+
+    @Column(name = "subject", length = 50)
+    String subject;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
