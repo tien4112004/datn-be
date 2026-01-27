@@ -32,6 +32,8 @@ public class QuestionCreateRequest {
 
     String chapter;
 
+    String contextId;
+
     @NotBlank(message = "Subject is required")
     @Pattern(regexp = "T|TA|TV", flags = Pattern.Flag.CASE_INSENSITIVE, message = "Invalid subject")
     String subject;

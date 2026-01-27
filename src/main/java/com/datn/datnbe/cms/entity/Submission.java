@@ -4,9 +4,14 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
+
+import com.datn.datnbe.cms.entity.answerData.AnswerData;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -27,6 +32,16 @@ public class Submission {
 
     @Column(name = "student_id", nullable = false, length = 36)
     String studentId;
+    
+    @Column(name = "point")
+    Integer point;
+
+    @Column(name = "post_id", nullable = false, length = 36)
+    String postId;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "questions", nullable = false, columnDefinition = "jsonb")
+    List<AnswerData> questions;
 
     @Column(name = "content", columnDefinition = "TEXT")
     String content;

@@ -4,6 +4,7 @@ import com.datn.datnbe.cms.dto.request.PinPostRequest;
 import com.datn.datnbe.cms.dto.request.PostCreateRequest;
 import com.datn.datnbe.cms.dto.request.PostUpdateRequest;
 import com.datn.datnbe.cms.dto.response.PostResponseDto;
+import com.datn.datnbe.document.dto.response.AssignmentResponse;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 
 public interface PostApi {
@@ -18,4 +19,6 @@ public interface PostApi {
     void deletePost(String postId);
 
     PostResponseDto pinPost(String postId, PinPostRequest request);
+
+    AssignmentResponse getAssignmentByPostId(String postId);
 }

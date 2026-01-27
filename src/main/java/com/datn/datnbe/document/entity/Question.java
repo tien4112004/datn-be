@@ -27,6 +27,7 @@ public class Question {
     String grade;
     String chapter;
     String subject;
+    String contextId;
 
     @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
     @JsonSubTypes({@JsonSubTypes.Type(value = OpenEndedData.class, name = "OPEN_ENDED"),

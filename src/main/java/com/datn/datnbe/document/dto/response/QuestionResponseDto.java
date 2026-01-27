@@ -36,6 +36,8 @@ public class QuestionResponseDto {
 
     String ownerId;
 
+    String contextId;
+
     LocalDateTime createdAt;
 
     LocalDateTime updatedAt;
