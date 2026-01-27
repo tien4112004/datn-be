@@ -4,60 +4,75 @@ import com.datn.datnbe.ai.dto.request.ImagePromptRequest;
 import com.datn.datnbe.ai.dto.request.MindmapPromptRequest;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
+import java.util.HashMap;
 import java.util.Map;
 
 public class MappingParamsUtils {
     public static Map<String, Object> constructParams(OutlinePromptRequest request) {
-        return Map.of("language",
-                request.getLanguage(),
-                "topic",
-                request.getTopic(),
-                "slide_count",
-                request.getSlideCount(),
-                "model",
-                request.getModel(),
-                "provider",
-                request.getProvider().toLowerCase());
+        Map<String, Object> params = new HashMap<>();
+        params.put("language", request.getLanguage());
+        params.put("topic", request.getTopic());
+        params.put("slide_count", request.getSlideCount());
+        params.put("model", request.getModel());
+        params.put("provider", request.getProvider().toLowerCase());
+
+        String sanitizedGrade = PromptSanitizer.sanitizeGrade(request.getGrade());
+        String sanitizedSubject = PromptSanitizer.sanitizeSubject(request.getSubject());
+        if (sanitizedGrade != null && !sanitizedGrade.isEmpty()) {
+            params.put("grade", sanitizedGrade);
+        }
+        if (sanitizedSubject != null && !sanitizedSubject.isEmpty()) {
+            params.put("subject", sanitizedSubject);
+        }
+        return params;
     }
 
     public static Map<String, Object> constructParams(PresentationPromptRequest request) {
-        return Map.of("outline",
-                request.getOutline(),
-                "model",
-                request.getModel(),
-                "provider",
-                request.getProvider().toLowerCase(),
-                "language",
-                request.getLanguage(),
-                "slide_count",
-                request.getSlideCount());
+        Map<String, Object> params = new HashMap<>();
+        params.put("outline", request.getOutline());
+        params.put("model", request.getModel());
+        params.put("provider", request.getProvider().toLowerCase());
+        params.put("language", request.getLanguage());
+        params.put("slide_count", request.getSlideCount());
+
+        String sanitizedGrade = PromptSanitizer.sanitizeGrade(request.getGrade());
+        String sanitizedSubject = PromptSanitizer.sanitizeSubject(request.getSubject());
+        if (sanitizedGrade != null && !sanitizedGrade.isEmpty()) {
+            params.put("grade", sanitizedGrade);
+        }
+        if (sanitizedSubject != null && !sanitizedSubject.isEmpty()) {
+            params.put("subject", sanitizedSubject);
+        }
+        return params;
     }
 
     public static Map<String, Object> constructParams(ImagePromptRequest request) {
-        return Map.of("prompt",
-                createPrompt(request),
-                "model",
-                request.getModel().toLowerCase(),
-                "provider",
-                request.getProvider().toLowerCase(),
-                "aspect_ratio",
-                request.getAspectRatio());
-
+        Map<String, Object> params = new HashMap<>();
+        params.put("prompt", createPrompt(request));
+        params.put("model", request.getModel().toLowerCase());
+        params.put("provider", request.getProvider().toLowerCase());
+        params.put("aspect_ratio", request.getAspectRatio());
+        return params;
     }
 
     public static Map<String, Object> constructParams(MindmapPromptRequest request) {
-        return Map.of("topic",
-                request.getTopic(),
-                "language",
-                request.getLanguage(),
-                "maxDepth",
-                request.getMaxDepth(),
-                "maxBranchesPerNode",
-                request.getMaxBranchesPerNode(),
-                "model",
-                request.getModel(),
-                "provider",
-                request.getProvider().toLowerCase());
+        Map<String, Object> params = new HashMap<>();
+        params.put("topic", request.getTopic());
+        params.put("language", request.getLanguage());
+        params.put("maxDepth", request.getMaxDepth());
+        params.put("maxBranchesPerNode", request.getMaxBranchesPerNode());
+        params.put("model", request.getModel());
+        params.put("provider", request.getProvider().toLowerCase());
+
+        String sanitizedGrade = PromptSanitizer.sanitizeGrade(request.getGrade());
+        String sanitizedSubject = PromptSanitizer.sanitizeSubject(request.getSubject());
+        if (sanitizedGrade != null && !sanitizedGrade.isEmpty()) {
+            params.put("grade", sanitizedGrade);
+        }
+        if (sanitizedSubject != null && !sanitizedSubject.isEmpty()) {
+            params.put("subject", sanitizedSubject);
+        }
+        return params;
     }
 
     public static String createPrompt(ImagePromptRequest request) {
