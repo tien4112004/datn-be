@@ -15,6 +15,8 @@ public interface ContextMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "title", ignore = true)
+    @Mapping(target = "subject", ignore = true)
     Context toEntity(ContextCreateRequest request);
 
     ContextResponse toDto(Context entity);
@@ -22,5 +24,7 @@ public interface ContextMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "title", ignore = true)
+    @Mapping(target = "subject", ignore = true)
     void updateEntity(@MappingTarget Context entity, ContextUpdateRequest request);
 }

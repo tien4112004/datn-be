@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class ContextUpdateRequest {
-    private String title;
+    private String content;
     private String grade;
     private String author;
 }

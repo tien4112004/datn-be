@@ -5,6 +5,7 @@ import com.datn.datnbe.document.dto.request.ContextUpdateRequest;
 import com.datn.datnbe.document.dto.response.ContextResponse;
 import com.datn.datnbe.document.service.ContextService;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
+import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,10 +31,19 @@ public class ContextController {
         
         log.info("GET /api/contexts - Fetching contexts with page: {}, size: {}", page, size);
         
+
+
         Page<ContextResponse> contextPage = contextService.getAllContexts(page, size);
-        
+
+        PaginationDto paginationDto = PaginationDto.builder()
+                .currentPage(contextPage.getNumber())
+                .pageSize(contextPage.getSize())
+                .totalItems(contextPage.getTotalElements())
+                .totalPages(contextPage.getTotalPages())
+                .build();
+
         return ResponseEntity.ok(
-                AppResponseDto.successWithPagination(contextPage.getContent(), contextPage));
+                AppResponseDto.successWithPagination(contextPage.getContent(), paginationDto));
     }
 
     @GetMapping("/{id}")
@@ -49,7 +59,7 @@ public class ContextController {
     public ResponseEntity<AppResponseDto<ContextResponse>> createContext(
             @Valid @RequestBody ContextCreateRequest request) {
         
-        log.info("POST /api/contexts - Creating context with title: {}", request.getTitle());
+        log.info("POST /api/contexts - Creating context with content: {}", request.getContent());
         
         ContextResponse response = contextService.createContext(request);
         
