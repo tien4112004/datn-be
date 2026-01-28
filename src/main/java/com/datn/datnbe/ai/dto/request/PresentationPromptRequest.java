@@ -28,4 +28,10 @@ public class PresentationPromptRequest {
     String presentationId;
     String topic;
     GenerationOptionsDto generationOptions;
+
+    @Size(max = 50, message = "Grade must not exceed 50 characters")
+    String grade;
+
+    @Size(max = 100, message = "Subject must not exceed 100 characters")
+    String subject;
 }
