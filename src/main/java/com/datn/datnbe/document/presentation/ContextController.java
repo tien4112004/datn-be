@@ -59,7 +59,7 @@ public class ContextController {
     public ResponseEntity<AppResponseDto<ContextResponse>> createContext(
             @Valid @RequestBody ContextCreateRequest request) {
         
-        log.info("POST /api/contexts - Creating context with content: {}", request.getContent());
+        log.info("POST /api/contexts - Creating context with title: {}", request.getTitle());
         
         ContextResponse response = contextService.createContext(request);
         
