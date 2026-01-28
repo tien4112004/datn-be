@@ -12,8 +12,9 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ContextResponse {
     String id;
-    String content;
+    String title;
     String grade;
+    String author;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 }
