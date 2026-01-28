@@ -106,7 +106,9 @@ public class QuestionManagement implements QuestionApi {
     public PaginatedResponseDto<QuestionResponseDto> getQuestionsByContextId(String contextId,
             QuestionCollectionRequest request) {
 
-        log.info("Fetching questions by contextId: {} - page: {}, pageSize: {}", contextId, request.getPage(),
+        log.info("Fetching questions by contextId: {} - page: {}, pageSize: {}",
+                contextId,
+                request.getPage(),
                 request.getPageSize());
 
         if (request.getPage() < 1) {

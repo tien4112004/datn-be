@@ -1,5 +1,6 @@
 package com.datn.datnbe.document.management;
 
+import com.datn.datnbe.document.repository.AssignmentRepository;
 import com.datn.datnbe.document.repository.MindmapRepository;
 import com.datn.datnbe.document.repository.PresentationRepository;
 import com.datn.datnbe.sharedkernel.api.ResourceSummaryApi;
@@ -18,6 +19,7 @@ import java.util.Map;
 public class ResourceSummaryManagement implements ResourceSummaryApi {
     private final PresentationRepository presentationRepository;
     private final MindmapRepository mindmapRepository;
+    private final AssignmentRepository assignmentRepository;
 
     @Override
     public Map<String, ResourceSummaryDto> getPresentationSummaries(Collection<String> ids) {
@@ -54,6 +56,25 @@ public class ResourceSummaryManagement implements ResourceSummaryApi {
                                 .build()));
 
         log.debug("Fetched {} mindmap summaries for {} IDs", result.size(), ids.size());
+        return result;
+    }
+
+    @Override
+    public Map<String, ResourceSummaryDto> getAssignmentSummaries(Collection<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<String, ResourceSummaryDto> result = new HashMap<>();
+        assignmentRepository.findSummariesByIds(ids)
+                .forEach(s -> result.put(s.getId(),
+                        ResourceSummaryDto.builder()
+                                .id(s.getId())
+                                .title(s.getTitle())
+                                .thumbnail(null) // Assignments don't have thumbnails
+                                .build()));
+
+        log.debug("Fetched {} assignment summaries for {} IDs", result.size(), ids.size());
         return result;
     }
 }

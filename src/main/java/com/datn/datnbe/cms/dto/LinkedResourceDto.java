@@ -21,4 +21,8 @@ public class LinkedResourceDto {
 
     @Builder.Default
     private String permissionLevel = "view"; // "view" or "comment"
+
+    // Enriched fields - populated by LinkedResourceEnricher
+    private String title;      // Resource title (nullable for backward compatibility)
+    private String thumbnail;  // Resource thumbnail URL (nullable, always null for assignments)
 }
