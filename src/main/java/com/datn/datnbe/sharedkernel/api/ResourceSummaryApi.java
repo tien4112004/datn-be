@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.Map;
 
 /**
- * API for fetching resource summary information (title, thumbnail) from presentations and mindmaps.
+ * API for fetching resource summary information (title, thumbnail) from presentations, mindmaps, and assignments.
  * This API is in sharedkernel so it can be accessed by both auth and document modules without
  * creating circular dependencies.
  */
@@ -26,4 +26,13 @@ public interface ResourceSummaryApi {
      * @return Map of mindmap ID to ResourceSummaryDto
      */
     Map<String, ResourceSummaryDto> getMindmapSummaries(Collection<String> ids);
+
+    /**
+     * Get summaries (id, title) for assignments by their IDs.
+     * Note: Assignments don't have thumbnails, so thumbnail will be null.
+     *
+     * @param ids Collection of assignment IDs
+     * @return Map of assignment ID to ResourceSummaryDto
+     */
+    Map<String, ResourceSummaryDto> getAssignmentSummaries(Collection<String> ids);
 }

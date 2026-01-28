@@ -32,7 +32,7 @@ public class Submission {
 
     @Column(name = "student_id", nullable = false, length = 36)
     String studentId;
-    
+
     @Column(name = "point")
     Integer point;
 

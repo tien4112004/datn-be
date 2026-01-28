@@ -55,4 +55,3 @@ public class SubmissionController {
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 }
-

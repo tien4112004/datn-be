@@ -44,13 +44,12 @@ public class SubmissionService implements SubmissionApi {
     private final PostApi postApi;
 
     @Override
-    public synchronized SubmissionResponseDto createSubmission(String postId,
-            SubmissionCreateRequest request) {
+    public synchronized SubmissionResponseDto createSubmission(String postId, SubmissionCreateRequest request) {
         Submission submission = submissionMapper.toEntity(request, postId);
         Submission saved = submissionRepository.save(submission);
-        
+
         gradeSubmission(saved);
-        
+
         return submissionMapper.toDto(saved);
     }
 
@@ -68,7 +67,7 @@ public class SubmissionService implements SubmissionApi {
         String currentUser = securityContextUtils.getCurrentUserId();
 
         PostResponseDto post = postApi.getPostById(s.getPostId());
-    
+
         if (currentUser.equals(post.getAuthorId()) || currentUser.equals(s.getStudentId())) {
             return submissionMapper.toDto(s);
         }
@@ -91,7 +90,7 @@ public class SubmissionService implements SubmissionApi {
         // Verify teacher is the author of the assignment
         PostResponseDto post = postApi.getPostById(submission.getPostId());
         String currentUser = securityContextUtils.getCurrentUserId();
-        
+
         if (!currentUser.equals(post.getAuthorId())) {
             throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, "You don't have permission to grade this submission");
         }
@@ -99,9 +98,7 @@ public class SubmissionService implements SubmissionApi {
         // Update scores based on request
         Map<String, Integer> questionScores = request.getQuestionScores();
         if (questionScores != null && !questionScores.isEmpty()) {
-            int totalScore = questionScores.values().stream()
-                    .mapToInt(Integer::intValue)
-                    .sum();
+            int totalScore = questionScores.values().stream().mapToInt(Integer::intValue).sum();
             submission.setPoint(totalScore);
             submissionRepository.save(submission);
         }
@@ -117,12 +114,9 @@ public class SubmissionService implements SubmissionApi {
             List<Question> questions = assignment.getQuestions();
             List<AnswerData> answers = submission.getQuestions();
 
-            Map<String, AnswerData> answerMap = answers.stream()
-                    .collect(Collectors.toMap(AnswerData::getId, a -> a));
+            Map<String, AnswerData> answerMap = answers.stream().collect(Collectors.toMap(AnswerData::getId, a -> a));
 
-            int totalScore = questions.stream()
-                    .mapToInt(question -> gradeQuestion(question, answerMap))
-                    .sum();
+            int totalScore = questions.stream().mapToInt(question -> gradeQuestion(question, answerMap)).sum();
 
             submission.setPoint(totalScore);
             submissionRepository.save(submission);
@@ -150,72 +144,70 @@ public class SubmissionService implements SubmissionApi {
 
     private int gradeMultipleChoice(Question question, AnswerData answer) {
         MultipleChoiceData mcData = (MultipleChoiceData) question.getData();
-        MultipleChoiceOption correctOption = mcData.getOptions().stream()
+        MultipleChoiceOption correctOption = mcData.getOptions()
+                .stream()
                 .filter(MultipleChoiceOption::getIsCorrect)
                 .findFirst()
                 .orElse(null);
 
-        if (correctOption == null) return 0;
+        if (correctOption == null)
+            return 0;
 
         MultipleChoiceAnswer mcAnswer = (MultipleChoiceAnswer) answer.getAnswer();
-        return mcAnswer != null && mcAnswer.verifyAnswer(correctOption.getId()) 
-                ? question.getPoint().intValue() 
-                : 0;
+        return mcAnswer != null && mcAnswer.verifyAnswer(correctOption.getId()) ? question.getPoint().intValue() : 0;
     }
 
     private int gradeFillInBlank(Question question, AnswerData answer) {
         FillInBlankData fillInBlankData = (FillInBlankData) question.getData();
-        List<BlankSegment> blankSegments = fillInBlankData.getSegments().stream()
+        List<BlankSegment> blankSegments = fillInBlankData.getSegments()
+                .stream()
                 .filter(s -> s.getType() == BlankSegment.SegmentType.BLANK)
                 .toList();
 
-        if (blankSegments.isEmpty()) return 0;
+        if (blankSegments.isEmpty())
+            return 0;
 
         FillInBlankAnswer fillAnswer = (FillInBlankAnswer) answer.getAnswer();
-        if (fillAnswer == null || fillAnswer.getBlankAnswers() == null) return 0;
+        if (fillAnswer == null || fillAnswer.getBlankAnswers() == null)
+            return 0;
 
         int totalPoint = question.getPoint().intValue();
         int pointPerBlank = totalPoint / blankSegments.size();
-        
-        return blankSegments.stream()
-                .mapToInt(segment -> {
-                    String studentAnswer = fillAnswer.getBlankAnswers().get(segment.getId());
-                    return studentAnswer != null && segment.getAcceptableAnswers().contains(studentAnswer) 
-                            ? pointPerBlank 
-                            : 0;
-                })
-                .sum();
+
+        return blankSegments.stream().mapToInt(segment -> {
+            String studentAnswer = fillAnswer.getBlankAnswers().get(segment.getId());
+            return studentAnswer != null && segment.getAcceptableAnswers().contains(studentAnswer) ? pointPerBlank : 0;
+        }).sum();
     }
 
     private int gradeMatching(Question question, AnswerData answer) {
         MatchingData matchingData = (MatchingData) question.getData();
         List<MatchingPair> pairs = matchingData.getPairs();
-        
-        if (pairs == null || pairs.isEmpty()) return 0;
+
+        if (pairs == null || pairs.isEmpty())
+            return 0;
 
         MatchingAnswer matchAnswer = (MatchingAnswer) answer.getAnswer();
-        if (matchAnswer == null) return 0;
+        if (matchAnswer == null)
+            return 0;
 
         Map<String, String> studentPairs = matchAnswer.getMatchedPairs();
-        if (studentPairs == null || studentPairs.isEmpty()) return 0;
+        if (studentPairs == null || studentPairs.isEmpty())
+            return 0;
 
         int totalPoint = question.getPoint().intValue();
         int pointPerPair = totalPoint / pairs.size();
-        
-        return pairs.stream()
-                .mapToInt(pair -> {
-                    String leftKey = pair.getLeft() != null && !pair.getLeft().isBlank() 
-                            ? pair.getLeft() 
-                            : pair.getLeftImageUrl();
-                    String rightValue = pair.getRight() != null && !pair.getRight().isBlank() 
-                            ? pair.getRight() 
-                            : pair.getRightImageUrl();
-                    
-                    String studentValue = studentPairs.get(leftKey);
-                    return studentValue != null && studentValue.equals(rightValue) 
-                            ? pointPerPair 
-                            : 0;
-                })
-                .sum();
+
+        return pairs.stream().mapToInt(pair -> {
+            String leftKey = pair.getLeft() != null && !pair.getLeft().isBlank()
+                    ? pair.getLeft()
+                    : pair.getLeftImageUrl();
+            String rightValue = pair.getRight() != null && !pair.getRight().isBlank()
+                    ? pair.getRight()
+                    : pair.getRightImageUrl();
+
+            String studentValue = studentPairs.get(leftKey);
+            return studentValue != null && studentValue.equals(rightValue) ? pointPerPair : 0;
+        }).sum();
     }
 }

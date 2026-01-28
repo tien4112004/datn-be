@@ -43,14 +43,12 @@ public class SubmissionMapper {
     private List<AnswerData> convertAnswers(List<AnswerDataDto> dtoList) {
         if (dtoList == null)
             return null;
-        return dtoList.stream()
-                .map(dto -> {
-                    AnswerData data = new AnswerData();
-                    data.setId(dto.getId());
-                    data.setType(dto.getType());
-                    data.setAnswer(dto.getAnswer());
-                    return data;
-                })
-                .collect(Collectors.toList());
+        return dtoList.stream().map(dto -> {
+            AnswerData data = new AnswerData();
+            data.setId(dto.getId());
+            data.setType(dto.getType());
+            data.setAnswer(dto.getAnswer());
+            return data;
+        }).collect(Collectors.toList());
     }
 }

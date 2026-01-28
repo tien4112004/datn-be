@@ -45,11 +45,10 @@ public class ContextService {
     public ContextResponse getContextById(String contextId) {
         log.info("Fetching context with id: {}", contextId);
 
-        Context context = contextRepository.findById(contextId)
-                .orElseThrow(() -> {
-                    log.warn("Context not found with id: {}", contextId);
-                    return new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Context not found");
-                });
+        Context context = contextRepository.findById(contextId).orElseThrow(() -> {
+            log.warn("Context not found with id: {}", contextId);
+            return new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Context not found");
+        });
 
         return contextMapper.toDto(context);
     }
@@ -74,11 +73,10 @@ public class ContextService {
     public ContextResponse updateContext(String contextId, ContextUpdateRequest request) {
         log.info("Updating context with id: {}", contextId);
 
-        Context context = contextRepository.findById(contextId)
-                .orElseThrow(() -> {
-                    log.warn("Context not found with id: {}", contextId);
-                    return new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Context not found");
-                });
+        Context context = contextRepository.findById(contextId).orElseThrow(() -> {
+            log.warn("Context not found with id: {}", contextId);
+            return new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Context not found");
+        });
 
         contextMapper.updateEntity(context, request);
         Context updated = contextRepository.save(context);
@@ -94,11 +92,10 @@ public class ContextService {
     public void deleteContext(String contextId) {
         log.info("Deleting context with id: {}", contextId);
 
-        Context context = contextRepository.findById(contextId)
-                .orElseThrow(() -> {
-                    log.warn("Context not found with id: {}", contextId);
-                    return new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Context not found");
-                });
+        Context context = contextRepository.findById(contextId).orElseThrow(() -> {
+            log.warn("Context not found with id: {}", contextId);
+            return new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Context not found");
+        });
 
         contextRepository.delete(context);
         log.info("Context deleted successfully with id: {}", contextId);

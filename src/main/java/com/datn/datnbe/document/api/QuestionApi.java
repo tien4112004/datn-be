@@ -15,7 +15,8 @@ public interface QuestionApi {
 
     PaginatedResponseDto<QuestionResponseDto> getAllQuestions(QuestionCollectionRequest request, String ownerIdFilter);
 
-    PaginatedResponseDto<QuestionResponseDto> getQuestionsByContextId(String contextId, QuestionCollectionRequest request);
+    PaginatedResponseDto<QuestionResponseDto> getQuestionsByContextId(String contextId,
+            QuestionCollectionRequest request);
 
     QuestionResponseDto createQuestion(QuestionCreateRequest request, String ownerId);
 

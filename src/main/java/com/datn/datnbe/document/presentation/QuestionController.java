@@ -83,7 +83,8 @@ public class QuestionController {
             @Valid @ModelAttribute QuestionCollectionRequest request) {
         log.info("Fetching all questions for contextId: {}", contextId);
 
-        PaginatedResponseDto<QuestionResponseDto> paginatedResponse = questionApi.getQuestionsByContextId(contextId, request);
+        PaginatedResponseDto<QuestionResponseDto> paginatedResponse = questionApi.getQuestionsByContextId(contextId,
+                request);
 
         return ResponseEntity.ok(
                 AppResponseDto.successWithPagination(paginatedResponse.getData(), paginatedResponse.getPagination()));

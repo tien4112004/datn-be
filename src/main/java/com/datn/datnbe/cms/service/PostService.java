@@ -53,6 +53,7 @@ public class PostService implements PostApi {
     private final UserProfileApi userProfileApi;
     private final LinkedResourceValidationService linkedResourceValidationService;
     private final LinkedResourcePermissionService linkedResourcePermissionService;
+    private final LinkedResourceEnricher linkedResourceEnricher;
     private final NotificationService notificationService;
     private final UserDeviceRepository userDeviceRepository;
     private final StudentApi studentApi;
@@ -128,6 +129,13 @@ public class PostService implements PostApi {
             return dto;
         }).collect(Collectors.toList());
 
+        // Batch enrich linked resources with title and thumbnail
+        List<LinkedResourceDto> allLinkedResources = posts.stream()
+                .filter(post -> post.getLinkedResources() != null)
+                .flatMap(post -> post.getLinkedResources().stream())
+                .toList();
+        linkedResourceEnricher.enrichLinkedResources(allLinkedResources);
+
         PaginatedResponseDto<PostResponseDto> resp = new PaginatedResponseDto<>();
         resp.setData(posts);
         resp.setPagination(PaginationDto.builder()
@@ -146,6 +154,12 @@ public class PostService implements PostApi {
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Post not found"));
         PostResponseDto dto = postMapper.toResponseDto(p);
         populateAuthorInfo(dto, p.getAuthorId());
+
+        // Enrich linked resources with title and thumbnail
+        if (dto.getLinkedResources() != null && !dto.getLinkedResources().isEmpty()) {
+            linkedResourceEnricher.enrichLinkedResources(dto.getLinkedResources());
+        }
+
         return dto;
     }
 
