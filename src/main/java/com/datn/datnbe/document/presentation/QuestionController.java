@@ -6,9 +6,14 @@ import com.datn.datnbe.document.dto.request.QuestionUpdateRequest;
 import com.datn.datnbe.document.dto.request.QuestionCollectionRequest;
 import com.datn.datnbe.document.dto.response.QuestionResponseDto;
 import com.datn.datnbe.document.dto.response.BatchCreateQuestionResponseDto;
+import com.datn.datnbe.document.exam.dto.request.GenerateQuestionsFromTopicRequest;
+import com.datn.datnbe.document.exam.dto.response.GeneratedQuestionsResponse;
+import com.datn.datnbe.document.exam.service.QuestionGenerationService;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -19,16 +24,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/question-bank")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
+@Tag(name = "Question Bank", description = "APIs for question bank management and AI-powered generation")
 public class QuestionController {
 
     QuestionApi questionApi;
     SecurityContextUtils securityContextUtils;
+    QuestionGenerationService questionGenerationService;
 
     @GetMapping({"", "/"})
     public ResponseEntity<AppResponseDto<List<QuestionResponseDto>>> getAllQuestions(
@@ -88,5 +96,34 @@ public class QuestionController {
 
         return ResponseEntity.ok(
                 AppResponseDto.successWithPagination(paginatedResponse.getData(), paginatedResponse.getPagination()));
+    }
+
+    @PostMapping("/generate")
+    @Operation(summary = "Generate Questions with AI", description = "Generate questions based on topic, grade, subject, and difficulty requirements")
+    public ResponseEntity<AppResponseDto<GeneratedQuestionsResponse>> generateQuestions(
+            @Valid @RequestBody GenerateQuestionsFromTopicRequest request) {
+
+        // TODO: Remove this - temporary test user ID when auth is disabled
+        String currentUserId;
+        try {
+            currentUserId = securityContextUtils.getCurrentUserId();
+            // Check if user is anonymous (not authenticated)
+            if ("anonymousUser".equals(currentUserId)) {
+                currentUserId = "00000000-0000-0000-0000-000000000001";
+                log.warn("Anonymous user detected, using test ID for question generation");
+            }
+        } catch (Exception e) {
+            // For testing without authentication, use a test UUID
+            currentUserId = "00000000-0000-0000-0000-000000000001";
+            log.warn("No authenticated user, using test ID for question generation");
+        }
+
+        UUID teacherId = UUID.fromString(currentUserId);
+
+        log.info("Generating questions for teacher: {}, topic: {}", teacherId, request.getTopic());
+
+        GeneratedQuestionsResponse response = questionGenerationService.generateAndSaveQuestions(request, teacherId);
+
+        return ResponseEntity.ok(AppResponseDto.success(response));
     }
 }

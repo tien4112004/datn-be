@@ -1,0 +1,40 @@
+package com.datn.datnbe.document.exam.dto.request;
+
+import com.datn.datnbe.document.exam.enums.GradeLevel;
+import com.datn.datnbe.document.exam.enums.QuestionType;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+import java.util.Map;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class GenerateQuestionsFromTopicRequest {
+
+    @NotNull(message = "Grade level is required")
+    private GradeLevel gradeLevel;
+
+    @NotEmpty(message = "Topic is required")
+    private String topic;
+
+    @NotEmpty(message = "Subject code is required")
+    private String subjectCode; // T, TV, TA
+
+    @NotNull(message = "Question counts per difficulty are required")
+    private Map<String, Integer> questionsPerDifficulty;
+    // e.g., { "easy": 5, "medium": 3, "hard": 2 }
+    // Keys should be valid ExamDifficulty enum names (case-insensitive)
+
+    @NotEmpty(message = "Question types are required")
+    private List<QuestionType> questionTypes;
+    // e.g., ["multiple_choice", "fill_blank"]
+
+    private String additionalRequirements; // Optional
+}

@@ -34,6 +34,14 @@ public class GenerateExamFromMatrixRequest {
     private ExamMatrixDto matrix;
 
     /**
+     * Subject code for the exam (T, TV, TA).
+     */
+    @NotBlank(message = "Subject code is required")
+    @JsonProperty("subjectCode")
+    @JsonAlias("subject_code")
+    private String subjectCode;
+
+    /**
      * Title for the exam.
      */
     @NotBlank(message = "Title is required")

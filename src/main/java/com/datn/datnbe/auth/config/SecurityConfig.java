@@ -80,21 +80,24 @@ public class SecurityConfig {
                                 "/api/exams/generate-matrix",
                                 "/api/exams/generate-matrix/**",
                                 "/api/exams/generate-matrix",
-                                "/api/exams/generate-from-matrix")
+                                "/api/exams/generate-from-matrix",
+                                "/api/question-bank/**")
                         .permitAll()
                         .requestMatchers(HttpMethod.PUT,
                                 "/api/slide-themes",
                                 "/api/slide-themes/**",
                                 "/api/slide-templates",
                                 "/api/slide-templates/**",
-                                "/api/students/**")
+                                "/api/students/**",
+                                "/api/question-bank/**")
                         .permitAll()
                         .requestMatchers(HttpMethod.DELETE,
                                 "/api/slide-templates",
                                 "/api/slide-templates/**",
-                                "/api/students/**")
+                                "/api/students/**",
+                                "/api/question-bank/**")
                         .permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/students/**")
+                        .requestMatchers(HttpMethod.GET, "/api/students/**", "/api/question-bank/**")
                         .permitAll()
 
                         // Admin endpoints - requires ADMIN role

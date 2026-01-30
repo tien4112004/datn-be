@@ -4,17 +4,23 @@ import com.datn.datnbe.ai.api.ContentGenerationApi;
 import com.datn.datnbe.ai.api.ModelSelectionApi;
 import com.datn.datnbe.ai.api.TokenUsageApi;
 import com.datn.datnbe.ai.apiclient.AIApiClient;
+import com.datn.datnbe.ai.dto.request.AIWorkerGenerateQuestionsRequest;
 import com.datn.datnbe.ai.dto.request.MindmapPromptRequest;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
 import com.datn.datnbe.ai.dto.response.AiWokerResponse;
 import com.datn.datnbe.ai.entity.TokenUsage;
+import com.datn.datnbe.ai.dto.response.QuestionWithContextDto;
 import com.datn.datnbe.ai.utils.MappingParamsUtils;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import com.datn.datnbe.document.exam.dto.ExamMatrixDto;
+import com.datn.datnbe.document.exam.enums.ExamDifficulty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.datn.datnbe.document.exam.dto.request.GenerateMatrixRequest;
+import com.datn.datnbe.document.exam.dto.request.GenerateQuestionsFromTopicRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -26,6 +32,10 @@ import reactor.core.publisher.Flux;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -36,6 +46,7 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     AIApiClient aiApiClient;
     TokenUsageApi tokenUsageApi;
     SecurityContextUtils securityContextUtils;
+    ObjectMapper objectMapper;
 
     @Value("${ai.api.outline-endpoint}")
     @NonFinal
@@ -60,6 +71,10 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     @Value("${ai.api.exam-matrix-endpoint}")
     @NonFinal
     String EXAM_MATRIX_API_ENDPOINT;
+
+    @Value("${ai.api.questions-endpoint:/api/questions/generate}")
+    @NonFinal
+    String QUESTIONS_API_ENDPOINT;
 
     @Override
     public Flux<String> generateOutline(OutlinePromptRequest request) {
@@ -174,6 +189,59 @@ public class ContentGenerationManagement implements ContentGenerationApi {
             return result;
         } catch (Exception e) {
             log.error("Error during exam matrix generation", e);
+            throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    @Override
+    public String generateQuestions(GenerateQuestionsFromTopicRequest request) {
+        log.info("Generating questions for topic: {}, grade: {}",
+                request.getTopic(),
+                request.getGradeLevel().getValue());
+
+        // Transform request to AI-Worker format
+        // Validate and convert string difficulty keys to lowercase
+        Map<String, Integer> difficultyMap = new HashMap<>();
+        request.getQuestionsPerDifficulty().forEach((difficultyStr, count) -> {
+            try {
+                // Validate that the string is a valid ExamDifficulty enum value
+                ExamDifficulty difficulty = ExamDifficulty.valueOf(difficultyStr.toLowerCase());
+                difficultyMap.put(difficulty.name().toLowerCase(), count);
+            } catch (IllegalArgumentException e) {
+                throw new AppException(ErrorCode.VALIDATION_ERROR,
+                        "Invalid difficulty level: " + difficultyStr + ". Valid values are: easy, medium, hard");
+            }
+        });
+
+        List<String> questionTypesList = request.getQuestionTypes()
+                .stream()
+                .map(qt -> qt.name().toLowerCase())
+                .collect(Collectors.toList());
+
+        AIWorkerGenerateQuestionsRequest aiRequest = AIWorkerGenerateQuestionsRequest.builder()
+                .topic(request.getTopic())
+                .gradeLevel(request.getGradeLevel().getValue())
+                .subjectCode(request.getSubjectCode())
+                .questionsPerDifficulty(difficultyMap)
+                .questionTypes(questionTypesList)
+                .additionalRequirements(request.getAdditionalRequirements())
+                .provider("google")
+                .model("gemini-2.5-flash-lite")
+                .build();
+
+        // Make synchronous call to AI-Worker
+        log.info("Calling AI-Worker at endpoint: {}", QUESTIONS_API_ENDPOINT);
+        try {
+            List<QuestionWithContextDto> questions = aiApiClient.post(QUESTIONS_API_ENDPOINT, aiRequest, List.class);
+
+            log.info("Successfully generated {} questions", questions.size());
+            return objectMapper.writeValueAsString(questions);
+        } catch (JsonProcessingException e) {
+            log.error("Error serializing questions to JSON", e);
+            throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR,
+                    "Failed to serialize questions: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Error during question generation", e);
             throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
         }
     }

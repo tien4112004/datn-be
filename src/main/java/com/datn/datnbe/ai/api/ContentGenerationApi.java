@@ -5,6 +5,7 @@ import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
 import com.datn.datnbe.document.exam.dto.ExamMatrixDto;
 import com.datn.datnbe.document.exam.dto.request.GenerateMatrixRequest;
+import com.datn.datnbe.document.exam.dto.request.GenerateQuestionsFromTopicRequest;
 
 import reactor.core.publisher.Flux;
 
@@ -26,4 +27,9 @@ public interface ContentGenerationApi {
      * Each cell is in format "count:points".
      */
     ExamMatrixDto generateExamMatrix(GenerateMatrixRequest request);
+
+    /**
+     * Generate questions based on topic and requirements using AI
+     */
+    String generateQuestions(GenerateQuestionsFromTopicRequest request);
 }

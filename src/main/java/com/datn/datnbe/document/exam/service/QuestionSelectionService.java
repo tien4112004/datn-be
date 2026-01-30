@@ -5,11 +5,12 @@ import com.datn.datnbe.document.exam.dto.request.GenerateExamFromMatrixRequest;
 import com.datn.datnbe.document.exam.dto.response.ExamDraftDto;
 import com.datn.datnbe.document.exam.dto.response.ExamQuestionDto;
 import com.datn.datnbe.document.exam.dto.response.MatrixGapDto;
-import com.datn.datnbe.document.exam.entity.Question;
+import com.datn.datnbe.document.entity.QuestionBankItem;
+import com.datn.datnbe.document.entity.questiondata.Difficulty;
+import com.datn.datnbe.document.entity.questiondata.QuestionType;
 import com.datn.datnbe.document.exam.enums.ExamDifficulty;
 import com.datn.datnbe.document.exam.enums.MissingQuestionStrategy;
-import com.datn.datnbe.document.exam.enums.QuestionType;
-import com.datn.datnbe.document.exam.repository.QuestionRepository;
+import com.datn.datnbe.document.exam.repository.ExamQuestionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class QuestionSelectionService {
 
-    QuestionRepository questionRepository;
+    ExamQuestionRepository questionRepository;
 
     /**
      * Select questions from the question bank to fulfill matrix requirements.
@@ -78,7 +79,8 @@ public class QuestionSelectionService {
 
                     if (count > 0) {
                         // Select questions for this cell
-                        SelectionResult result = selectQuestionsForCell(topic.getName(),
+                        SelectionResult result = selectQuestionsForCell(request.getSubjectCode(),
+                                topic.getName(),
                                 difficulty,
                                 questionType,
                                 count,
@@ -135,7 +137,8 @@ public class QuestionSelectionService {
     /**
      * Select questions for a specific matrix cell.
      */
-    private SelectionResult selectQuestionsForCell(String topicName,
+    private SelectionResult selectQuestionsForCell(String subjectCode,
+            String topicName,
             String difficultyStr,
             String questionTypeStr,
             int requiredCount,
@@ -144,8 +147,8 @@ public class QuestionSelectionService {
             boolean includePersonal,
             Set<UUID> alreadySelected,
             AtomicInteger orderIndex) {
-        ExamDifficulty difficulty = parseExamDifficulty(difficultyStr);
-        QuestionType questionType = parseQuestionType(questionTypeStr);
+        Difficulty difficulty = mapExamDifficultyToQuestionDifficulty(parseExamDifficulty(difficultyStr));
+        QuestionType questionType = mapExamQuestionTypeToQuestionType(parseQuestionType(questionTypeStr));
 
         // Calculate points per question
         double pointsPerQuestion = requiredCount > 0 ? pointsPerCell / requiredCount : 0;
@@ -153,29 +156,31 @@ public class QuestionSelectionService {
         // Fetch more questions than needed to filter out already selected ones
         int fetchLimit = requiredCount * 3;
 
-        List<Question> candidates;
+        List<QuestionBankItem> candidates;
         if (includePersonal && teacherId != null) {
-            candidates = questionRepository.findMatchingQuestionsForMatrix(teacherId,
+            candidates = questionRepository.findMatchingQuestionsForMatrix(teacherId
+                    .toString(), subjectCode, topicName, difficulty, questionType, PageRequest.of(0, fetchLimit));
+        } else {
+            candidates = questionRepository.findMatchingQuestionsForMatrix(null,
+                    subjectCode,
                     topicName,
                     difficulty,
                     questionType,
                     PageRequest.of(0, fetchLimit));
-        } else {
-            candidates = questionRepository
-                    .findPublicMatchingQuestions(topicName, difficulty, questionType, PageRequest.of(0, fetchLimit));
         }
 
         // Filter out already selected and take required count
         List<ExamQuestionDto> selected = new ArrayList<>();
         Set<UUID> newlySelectedIds = new HashSet<>();
 
-        for (Question q : candidates) {
+        for (QuestionBankItem q : candidates) {
             if (selected.size() >= requiredCount) {
                 break;
             }
-            if (!alreadySelected.contains(q.getQuestionId()) && !newlySelectedIds.contains(q.getQuestionId())) {
+            UUID questionId = UUID.fromString(q.getId());
+            if (!alreadySelected.contains(questionId) && !newlySelectedIds.contains(questionId)) {
                 selected.add(mapToExamQuestionDto(q, pointsPerQuestion, orderIndex.getAndIncrement()));
-                newlySelectedIds.add(q.getQuestionId());
+                newlySelectedIds.add(questionId);
             }
         }
 
@@ -190,21 +195,91 @@ public class QuestionSelectionService {
     }
 
     /**
-     * Map a Question entity to ExamQuestionDto.
+     * Map a QuestionBankItem entity to ExamQuestionDto.
      */
-    private ExamQuestionDto mapToExamQuestionDto(Question question, double points, int orderIndex) {
+    private ExamQuestionDto mapToExamQuestionDto(QuestionBankItem question, double points, int orderIndex) {
         return ExamQuestionDto.builder()
-                .questionId(question.getQuestionId())
-                .content(question.getContent())
-                .questionType(question.getQuestionType())
-                .topic(question.getTopic())
-                .difficulty(question.getDifficulty())
+                .questionId(UUID.fromString(question.getId()))
+                .content(question.getTitle())
+                .questionType(mapQuestionTypeToExamQuestionType(question.getType()))
+                .topic(question.getChapter())
+                .difficulty(mapQuestionDifficultyToExamDifficulty(question.getDifficulty()))
                 .points(points)
                 .orderIndex(orderIndex)
-                .answers(question.getAnswers())
-                .correctAnswer(question.getCorrectAnswer())
+                .answers(extractAnswersFromData(question.getData()))
+                .correctAnswer(extractCorrectAnswerFromData(question.getData()))
                 .explanation(question.getExplanation())
                 .build();
+    }
+
+    /**
+     * Extract answers from question data based on type.
+     */
+    private Object extractAnswersFromData(Object data) {
+        // Return the data as-is since it's already structured
+        return data;
+    }
+
+    /**
+     * Extract correct answer from question data based on type.
+     */
+    private Object extractCorrectAnswerFromData(Object data) {
+        // For now, return null as correct answer is embedded in the data structure
+        return null;
+    }
+
+    /**
+     * Map document QuestionType to exam QuestionType.
+     */
+    private com.datn.datnbe.document.exam.enums.QuestionType mapQuestionTypeToExamQuestionType(QuestionType type) {
+        if (type == null)
+            return null;
+        return switch (type) {
+            case MULTIPLE_CHOICE -> com.datn.datnbe.document.exam.enums.QuestionType.multiple_choice;
+            case FILL_IN_BLANK -> com.datn.datnbe.document.exam.enums.QuestionType.fill_blank;
+            case MATCHING -> com.datn.datnbe.document.exam.enums.QuestionType.matching;
+            case OPEN_ENDED -> com.datn.datnbe.document.exam.enums.QuestionType.long_answer;
+        };
+    }
+
+    /**
+     * Map exam QuestionType to document QuestionType.
+     */
+    private QuestionType mapExamQuestionTypeToQuestionType(com.datn.datnbe.document.exam.enums.QuestionType type) {
+        if (type == null)
+            return null;
+        return switch (type) {
+            case multiple_choice, true_false -> QuestionType.MULTIPLE_CHOICE;
+            case fill_blank -> QuestionType.FILL_IN_BLANK;
+            case matching -> QuestionType.MATCHING;
+            case long_answer -> QuestionType.OPEN_ENDED;
+        };
+    }
+
+    /**
+     * Map document Difficulty to exam ExamDifficulty.
+     */
+    private ExamDifficulty mapQuestionDifficultyToExamDifficulty(Difficulty difficulty) {
+        if (difficulty == null)
+            return null;
+        return switch (difficulty) {
+            case KNOWLEDGE -> ExamDifficulty.easy;
+            case COMPREHENSION -> ExamDifficulty.medium;
+            case APPLICATION, ADVANCED_APPLICATION -> ExamDifficulty.hard;
+        };
+    }
+
+    /**
+     * Map exam ExamDifficulty to document Difficulty.
+     */
+    private Difficulty mapExamDifficultyToQuestionDifficulty(ExamDifficulty difficulty) {
+        if (difficulty == null)
+            return null;
+        return switch (difficulty) {
+            case easy -> Difficulty.KNOWLEDGE;
+            case medium -> Difficulty.COMPREHENSION;
+            case hard -> Difficulty.APPLICATION;
+        };
     }
 
     /**
@@ -224,11 +299,11 @@ public class QuestionSelectionService {
     /**
      * Parse question type string to enum.
      */
-    private QuestionType parseQuestionType(String questionType) {
+    private com.datn.datnbe.document.exam.enums.QuestionType parseQuestionType(String questionType) {
         if (questionType == null)
             return null;
         try {
-            return QuestionType.valueOf(questionType.toLowerCase());
+            return com.datn.datnbe.document.exam.enums.QuestionType.valueOf(questionType.toLowerCase());
         } catch (IllegalArgumentException e) {
             log.warn("Unknown question type: {}", questionType);
             return null;

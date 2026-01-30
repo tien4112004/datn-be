@@ -160,6 +160,7 @@ ai:
     image-endpoint: ${AI_API_IMAGE_ENDPOINT:/api/image/generate/mock}
     mindmap-endpoint: ${AI_API_MINDMAP_ENDPOINT:/api/mindmap/generate}
     exam-matrix-endpoint: ${AI_API_EXAM_MATRIX_ENDPOINT:/exams/generate-matrix/mock}
+    questions-endpoint: ${AI_API_QUESTIONS_ENDPOINT:/api/questions/generate}
 
 rustfs:
   endpoint: ${S3_ENDPOINT:http://localhost:9000}
