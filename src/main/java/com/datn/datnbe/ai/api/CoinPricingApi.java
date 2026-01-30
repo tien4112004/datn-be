@@ -17,10 +17,9 @@ public interface CoinPricingApi {
      * Get all pricing configurations with optional filtering.
      *
      * @param resourceType optional filter by resource type
-     * @param isActive     optional filter by active status
      * @return list of pricing configurations
      */
-    List<CoinPricingResponseDto> getAllPricing(ResourceType resourceType, Boolean isActive);
+    List<CoinPricingResponseDto> getAllPricing(ResourceType resourceType);
 
     /**
      * Get a specific pricing configuration by ID.

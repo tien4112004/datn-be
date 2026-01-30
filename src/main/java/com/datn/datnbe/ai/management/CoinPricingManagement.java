@@ -5,8 +5,10 @@ import com.datn.datnbe.ai.dto.request.CoinPricingCreateRequest;
 import com.datn.datnbe.ai.dto.request.CoinPricingUpdateRequest;
 import com.datn.datnbe.ai.dto.response.CoinPricingResponseDto;
 import com.datn.datnbe.ai.entity.CoinPricing;
+import com.datn.datnbe.ai.entity.ModelConfigurationEntity;
 import com.datn.datnbe.ai.enums.ResourceType;
 import com.datn.datnbe.ai.repository.CoinPricingRepo;
+import com.datn.datnbe.ai.repository.interfaces.ModelConfigurationRepo;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import jakarta.transaction.Transactional;
@@ -25,17 +27,14 @@ import java.util.Objects;
 public class CoinPricingManagement implements CoinPricingApi {
 
     CoinPricingRepo coinPricingRepo;
+    ModelConfigurationRepo modelConfigurationRepo;
 
     @Override
-    public List<CoinPricingResponseDto> getAllPricing(ResourceType resourceType, Boolean isActive) {
+    public List<CoinPricingResponseDto> getAllPricing(ResourceType resourceType) {
         List<CoinPricing> pricingList;
 
-        if (resourceType != null && isActive != null) {
-            pricingList = coinPricingRepo.findByResourceTypeAndIsActive(resourceType, isActive);
-        } else if (resourceType != null) {
+        if (resourceType != null) {
             pricingList = coinPricingRepo.findByResourceType(resourceType);
-        } else if (isActive != null) {
-            pricingList = coinPricingRepo.findByIsActive(isActive);
         } else {
             pricingList = coinPricingRepo.findAll();
         }
@@ -54,26 +53,40 @@ public class CoinPricingManagement implements CoinPricingApi {
     @Override
     @Transactional
     public CoinPricingResponseDto createPricing(CoinPricingCreateRequest request) {
-        // Check for duplicate resource_type + model_name combination
-        if (coinPricingRepo.existsByResourceTypeAndModelName(request.getResourceType(), request.getModelName())) {
+        // Check for duplicate resource_type + model_id combination
+        boolean exists;
+        if (request.getModelId() == null) {
+            exists = coinPricingRepo.existsByResourceTypeAndModelIsNull(request.getResourceType());
+        } else {
+            exists = coinPricingRepo.existsByResourceTypeAndModelModelId(request.getResourceType(),
+                    request.getModelId());
+        }
+        if (exists) {
             throw new AppException(ErrorCode.COIN_PRICING_ALREADY_EXISTS);
+        }
+
+        // Look up the model if modelId is provided
+        ModelConfigurationEntity model = null;
+        if (request.getModelId() != null) {
+            model = modelConfigurationRepo.getModelById(request.getModelId());
+            if (model == null) {
+                throw new AppException(ErrorCode.MODEL_NOT_FOUND);
+            }
         }
 
         CoinPricing pricing = CoinPricing.builder()
                 .resourceType(request.getResourceType())
-                .modelName(request.getModelName())
+                .model(model)
                 .baseCost(request.getBaseCost())
                 .unitType(request.getUnitType())
-                .unitMultiplier(request.getUnitMultiplier())
                 .description(request.getDescription())
-                .isActive(request.getIsActive())
                 .build();
 
         CoinPricing saved = coinPricingRepo.save(pricing);
-        log.info("Created coin pricing: {} for resource type: {}, model: {}",
+        log.info("Created coin pricing: {} for resource type: {}, model_id: {}",
                 saved.getId(),
                 saved.getResourceType(),
-                saved.getModelName());
+                request.getModelId());
 
         return toResponseDto(saved);
     }
@@ -90,14 +103,8 @@ public class CoinPricingManagement implements CoinPricingApi {
         if (request.getUnitType() != null) {
             pricing.setUnitType(request.getUnitType());
         }
-        if (request.getUnitMultiplier() != null) {
-            pricing.setUnitMultiplier(request.getUnitMultiplier());
-        }
         if (request.getDescription() != null) {
             pricing.setDescription(request.getDescription());
-        }
-        if (request.getIsActive() != null) {
-            pricing.setIsActive(request.getIsActive());
         }
 
         CoinPricing updated = coinPricingRepo.save(pricing);
@@ -118,18 +125,19 @@ public class CoinPricingManagement implements CoinPricingApi {
     }
 
     private CoinPricingResponseDto toResponseDto(CoinPricing pricing) {
+        ModelConfigurationEntity model = pricing.getModel();
         return CoinPricingResponseDto.builder()
                 .id(pricing.getId())
                 .resourceType(pricing.getResourceType())
                 .resourceTypeDisplayName(pricing.getResourceType().getDisplayName())
-                .modelName(pricing.getModelName())
+                .modelId(model != null ? model.getModelId() : null)
+                .modelName(model != null ? model.getModelName() : null)
+                .modelDisplayName(model != null ? model.getDisplayName() : null)
                 .baseCost(pricing.getBaseCost())
                 .unitType(pricing.getUnitType())
                 .unitTypeDisplayName(
                         Objects.nonNull(pricing.getUnitType()) ? pricing.getUnitType().getDisplayName() : null)
-                .unitMultiplier(pricing.getUnitMultiplier())
                 .description(pricing.getDescription())
-                .isActive(pricing.getIsActive())
                 .createdAt(pricing.getCreatedAt())
                 .updatedAt(pricing.getUpdatedAt())
                 .build();

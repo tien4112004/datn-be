@@ -20,52 +20,36 @@ public interface CoinPricingRepo extends JpaRepository<CoinPricing, String> {
     List<CoinPricing> findByResourceType(ResourceType resourceType);
 
     /**
-     * Find all active pricing rules.
-     *
-     * @return list of active pricing rules
-     */
-    List<CoinPricing> findByIsActiveTrue();
-
-    /**
-     * Find pricing rule by resource type and model name.
+     * Find pricing rule by resource type and model ID.
      *
      * @param resourceType the resource type
-     * @param modelName    the model name
+     * @param modelId      the model ID
      * @return optional containing the pricing rule if found
      */
-    Optional<CoinPricing> findByResourceTypeAndModelName(ResourceType resourceType, String modelName);
+    Optional<CoinPricing> findByResourceTypeAndModelModelId(ResourceType resourceType, Integer modelId);
 
     /**
-     * Find default pricing rule for a resource type (where model_name is null).
+     * Find default pricing rule for a resource type (where model_id is null).
      *
      * @param resourceType the resource type
      * @return optional containing the default pricing rule if found
      */
-    Optional<CoinPricing> findByResourceTypeAndModelNameIsNull(ResourceType resourceType);
+    Optional<CoinPricing> findByResourceTypeAndModelIsNull(ResourceType resourceType);
 
     /**
-     * Check if a pricing rule exists for a resource type and model name combination.
+     * Check if a pricing rule exists for a resource type and model ID combination.
      *
      * @param resourceType the resource type
-     * @param modelName    the model name (can be null for default pricing)
+     * @param modelId      the model ID
      * @return true if pricing rule exists
      */
-    boolean existsByResourceTypeAndModelName(ResourceType resourceType, String modelName);
+    boolean existsByResourceTypeAndModelModelId(ResourceType resourceType, Integer modelId);
 
     /**
-     * Find all pricing rules by active status.
+     * Check if a pricing rule exists for a resource type with no model (default pricing).
      *
-     * @param isActive the active status to filter by
-     * @return list of pricing rules matching the active status
+     * @param resourceType the resource type
+     * @return true if default pricing rule exists
      */
-    List<CoinPricing> findByIsActive(Boolean isActive);
-
-    /**
-     * Find all pricing rules by resource type and active status.
-     *
-     * @param resourceType the resource type to filter by
-     * @param isActive     the active status to filter by
-     * @return list of pricing rules matching the criteria
-     */
-    List<CoinPricing> findByResourceTypeAndIsActive(ResourceType resourceType, Boolean isActive);
+    boolean existsByResourceTypeAndModelIsNull(ResourceType resourceType);
 }

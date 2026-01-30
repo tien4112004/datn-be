@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -17,13 +16,13 @@ public class CoinPricingResponseDto {
     String id;
     ResourceType resourceType;
     String resourceTypeDisplayName;
+    Integer modelId;
     String modelName;
+    String modelDisplayName;
     Integer baseCost;
     UnitType unitType;
     String unitTypeDisplayName;
-    BigDecimal unitMultiplier;
     String description;
-    Boolean isActive;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 }

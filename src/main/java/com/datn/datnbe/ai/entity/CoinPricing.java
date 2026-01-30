@@ -8,7 +8,6 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity(name = "coin_pricing")
@@ -19,9 +18,8 @@ import java.time.LocalDateTime;
 @Builder
 @Table(name = "coin_pricing", uniqueConstraints = {
         @UniqueConstraint(name = "uk_coin_pricing_resource_model", columnNames = {"resource_type",
-                "model_name"})}, indexes = {
-                        @Index(name = "idx_coin_pricing_resource_type", columnList = "resource_type"),
-                        @Index(name = "idx_coin_pricing_model_name", columnList = "model_name")})
+                "model_id"})}, indexes = {@Index(name = "idx_coin_pricing_resource_type", columnList = "resource_type"),
+                        @Index(name = "idx_coin_pricing_model_id", columnList = "model_id")})
 @SQLDelete(sql = "UPDATE coin_pricing SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 @SQLRestriction("deleted_at IS NULL")
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -35,8 +33,9 @@ public class CoinPricing {
     @Enumerated(EnumType.STRING)
     ResourceType resourceType;
 
-    @Column(name = "model_name", length = 100)
-    String modelName;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "model_id")
+    ModelConfigurationEntity model;
 
     @Column(name = "base_cost", nullable = false)
     Integer baseCost;
@@ -46,16 +45,8 @@ public class CoinPricing {
     @Builder.Default
     UnitType unitType = UnitType.PER_REQUEST;
 
-    @Column(name = "unit_multiplier", precision = 10, scale = 2)
-    @Builder.Default
-    BigDecimal unitMultiplier = BigDecimal.ONE;
-
     @Column(name = "description", columnDefinition = "TEXT")
     String description;
-
-    @Column(name = "is_active", columnDefinition = "boolean default true")
-    @Builder.Default
-    Boolean isActive = true;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     LocalDateTime createdAt;

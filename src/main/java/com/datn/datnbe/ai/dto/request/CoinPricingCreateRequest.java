@@ -8,8 +8,6 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
-import java.math.BigDecimal;
-
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CoinPricingCreateRequest {
@@ -17,7 +15,7 @@ public class CoinPricingCreateRequest {
     @NotNull(message = "Resource type is required")
     ResourceType resourceType;
 
-    String modelName;
+    Integer modelId;
 
     @NotNull(message = "Base cost is required")
     @Min(value = 0, message = "Base cost must be non-negative")
@@ -25,9 +23,5 @@ public class CoinPricingCreateRequest {
 
     UnitType unitType = UnitType.PER_REQUEST;
 
-    BigDecimal unitMultiplier = BigDecimal.ONE;
-
     String description;
-
-    Boolean isActive = true;
 }

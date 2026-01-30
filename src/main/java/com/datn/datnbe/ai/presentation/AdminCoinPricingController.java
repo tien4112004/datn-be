@@ -35,15 +35,13 @@ public class AdminCoinPricingController {
      * Get all coin pricing configurations with optional filtering.
      *
      * @param resourceType optional filter by resource type
-     * @param isActive     optional filter by active status
      * @return list of coin pricing configurations
      */
     @GetMapping
     public ResponseEntity<AppResponseDto<List<CoinPricingResponseDto>>> getAllPricing(
-            @RequestParam(name = "resourceType", required = false) ResourceType resourceType,
-            @RequestParam(name = "isActive", required = false) Boolean isActive) {
-        log.info("Fetching all coin pricing configurations with resourceType={}, isActive={}", resourceType, isActive);
-        var pricingList = coinPricingApi.getAllPricing(resourceType, isActive);
+            @RequestParam(name = "resourceType", required = false) ResourceType resourceType) {
+        log.info("Fetching all coin pricing configurations with resourceType={}", resourceType);
+        var pricingList = coinPricingApi.getAllPricing(resourceType);
         return ResponseEntity.ok(AppResponseDto.success(pricingList));
     }
 
