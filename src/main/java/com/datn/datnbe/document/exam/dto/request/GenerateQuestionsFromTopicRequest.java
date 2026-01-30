@@ -1,7 +1,7 @@
 package com.datn.datnbe.document.exam.dto.request;
 
 import com.datn.datnbe.document.exam.enums.GradeLevel;
-import com.datn.datnbe.document.exam.enums.QuestionType;
+import com.datn.datnbe.document.entity.questiondata.QuestionType;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
