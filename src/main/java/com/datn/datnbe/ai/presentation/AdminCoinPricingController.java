@@ -67,9 +67,9 @@ public class AdminCoinPricingController {
     @PostMapping
     public ResponseEntity<AppResponseDto<CoinPricingResponseDto>> createPricing(
             @Valid @RequestBody CoinPricingCreateRequest request) {
-        log.info("Creating coin pricing configuration for resourceType={}, modelName={}",
+        log.info("Creating coin pricing configuration for resourceType={}, modelId={}",
                 request.getResourceType(),
-                request.getModelName());
+                request.getModelId());
         var pricing = coinPricingApi.createPricing(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(AppResponseDto.success(pricing));
     }
