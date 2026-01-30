@@ -88,7 +88,7 @@ public class NotificationService {
             messageBuilder.putAllData(request.getData());
         }
 
-        FirebaseMessaging.getInstance().sendMulticast(messageBuilder.build());
+        FirebaseMessaging.getInstance().sendEachForMulticast(messageBuilder.build());
     }
 
     @Transactional
