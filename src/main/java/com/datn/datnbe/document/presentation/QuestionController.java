@@ -24,7 +24,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/question-bank")
@@ -118,11 +117,10 @@ public class QuestionController {
             log.warn("No authenticated user, using test ID for question generation");
         }
 
-        UUID teacherId = UUID.fromString(currentUserId);
+        log.info("Generating questions for teacher: {}, topic: {}", currentUserId, request.getTopic());
 
-        log.info("Generating questions for teacher: {}, topic: {}", teacherId, request.getTopic());
-
-        GeneratedQuestionsResponse response = questionGenerationService.generateAndSaveQuestions(request, teacherId);
+        GeneratedQuestionsResponse response = questionGenerationService.generateAndSaveQuestions(request,
+                currentUserId);
 
         return ResponseEntity.ok(AppResponseDto.success(response));
     }

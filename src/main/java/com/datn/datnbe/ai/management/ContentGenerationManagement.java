@@ -10,15 +10,11 @@ import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
 import com.datn.datnbe.ai.dto.response.AiWokerResponse;
 import com.datn.datnbe.ai.entity.TokenUsage;
-import com.datn.datnbe.ai.dto.response.QuestionWithContextDto;
 import com.datn.datnbe.ai.utils.MappingParamsUtils;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import com.datn.datnbe.document.exam.dto.ExamMatrixDto;
-import com.datn.datnbe.document.exam.enums.ExamDifficulty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.datn.datnbe.document.exam.dto.request.GenerateMatrixRequest;
 import com.datn.datnbe.document.exam.dto.request.GenerateQuestionsFromTopicRequest;
 import lombok.AccessLevel;
@@ -46,7 +42,6 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     AIApiClient aiApiClient;
     TokenUsageApi tokenUsageApi;
     SecurityContextUtils securityContextUtils;
-    ObjectMapper objectMapper;
 
     @Value("${ai.api.outline-endpoint}")
     @NonFinal
@@ -195,28 +190,18 @@ public class ContentGenerationManagement implements ContentGenerationApi {
 
     @Override
     public String generateQuestions(GenerateQuestionsFromTopicRequest request) {
-        log.info("Generating questions for topic: {}, grade: {}",
-                request.getTopic(),
-                request.getGradeLevel().getValue());
+        log.info("Generating questions for topic: {}, grade: {}", request.getTopic(), request.getGradeLevel());
 
         // Transform request to AI-Worker format
-        // Validate and convert string difficulty keys to lowercase
-        Map<String, Integer> difficultyMap = new HashMap<>();
-        request.getQuestionsPerDifficulty().forEach((difficultyStr, count) -> {
-            try {
-                // Validate that the string is a valid ExamDifficulty enum value
-                ExamDifficulty difficulty = ExamDifficulty.valueOf(difficultyStr.toLowerCase());
-                difficultyMap.put(difficulty.name().toLowerCase(), count);
-            } catch (IllegalArgumentException e) {
-                throw new AppException(ErrorCode.VALIDATION_ERROR,
-                        "Invalid difficulty level: " + difficultyStr + ". Valid values are: easy, medium, hard");
-            }
-        });
-
         List<String> questionTypesList = request.getQuestionTypes()
                 .stream()
-                .map(qt -> qt.name().toLowerCase())
+                .map(qt -> qt.name()) // Keep uppercase for AI-Worker
                 .collect(Collectors.toList());
+
+        // Convert difficulty keys to uppercase for AI-Worker
+        Map<String, Integer> difficultyMap = new HashMap<>();
+        request.getQuestionsPerDifficulty()
+                .forEach((difficulty, count) -> difficultyMap.put(difficulty.toUpperCase(), count));
 
         AIWorkerGenerateQuestionsRequest aiRequest = AIWorkerGenerateQuestionsRequest.builder()
                 .topic(request.getTopic())
@@ -225,21 +210,17 @@ public class ContentGenerationManagement implements ContentGenerationApi {
                 .questionsPerDifficulty(difficultyMap)
                 .questionTypes(questionTypesList)
                 .additionalRequirements(request.getAdditionalRequirements())
-                .provider("google")
-                .model("gemini-2.5-flash-lite")
+                .provider("google") // TODO: in request
+                .model("gemini-2.5-flash-lite") // TODO:    in request
                 .build();
 
-        // Make synchronous call to AI-Worker
+        // Make synchronous call to AI-Worker - return raw JSON string
         log.info("Calling AI-Worker at endpoint: {}", QUESTIONS_API_ENDPOINT);
         try {
-            List<QuestionWithContextDto> questions = aiApiClient.post(QUESTIONS_API_ENDPOINT, aiRequest, List.class);
+            String jsonResponse = aiApiClient.post(QUESTIONS_API_ENDPOINT, aiRequest, String.class);
 
-            log.info("Successfully generated {} questions", questions.size());
-            return objectMapper.writeValueAsString(questions);
-        } catch (JsonProcessingException e) {
-            log.error("Error serializing questions to JSON", e);
-            throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR,
-                    "Failed to serialize questions: " + e.getMessage());
+            log.info("Successfully received AI-Worker response");
+            return jsonResponse;
         } catch (Exception e) {
             log.error("Error during question generation", e);
             throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());

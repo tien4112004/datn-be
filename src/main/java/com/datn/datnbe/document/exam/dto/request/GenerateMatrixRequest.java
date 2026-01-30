@@ -73,7 +73,7 @@ public class GenerateMatrixRequest {
     @Builder.Default
     private String provider = "google";
 
-    @Schema(description = "AI model to use", example = "gemini-2.5-flash", defaultValue = "gemini-2.0-flash-exp")
+    @Schema(description = "AI model to use", example = "gemini-2.5-flash", defaultValue = "gemini-2.5-flash-lite")
     @Builder.Default
-    private String model = "gemini-2.0-flash-exp";
+    private String model = "gemini-2.5-flash-lite";
 }
