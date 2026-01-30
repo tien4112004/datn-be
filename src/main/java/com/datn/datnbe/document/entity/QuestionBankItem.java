@@ -9,14 +9,14 @@ import com.datn.datnbe.document.entity.questiondata.QuestionType;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
@@ -31,7 +31,7 @@ public class QuestionBankItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", length = 36)
+    @Column(name = "question_id", length = 36)
     String id;
 
     @Column(name = "type", nullable = false, length = 50)
@@ -68,7 +68,7 @@ public class QuestionBankItem {
             @JsonSubTypes.Type(value = MultipleChoiceData.class, name = "MULTIPLE_CHOICE"),
             @JsonSubTypes.Type(value = MatchingData.class, name = "MATCHING"),
             @JsonSubTypes.Type(value = FillInBlankData.class, name = "FILL_IN_BLANK")})
-    @JdbcTypeCode(SqlTypes.JSON)
+    @Type(JsonType.class)
     @Column(name = "data", columnDefinition = "jsonb")
     Object data;
 

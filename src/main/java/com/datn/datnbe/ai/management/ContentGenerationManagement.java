@@ -3,12 +3,16 @@ package com.datn.datnbe.ai.management;
 import com.datn.datnbe.ai.api.ContentGenerationApi;
 import com.datn.datnbe.ai.api.ModelSelectionApi;
 import com.datn.datnbe.ai.apiclient.AIApiClient;
+import com.datn.datnbe.ai.dto.request.AIWorkerGenerateQuestionsRequest;
 import com.datn.datnbe.ai.dto.request.MindmapPromptRequest;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
 import com.datn.datnbe.ai.utils.MappingParamsUtils;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+import com.datn.datnbe.document.exam.dto.ExamMatrixDto;
+import com.datn.datnbe.document.exam.dto.request.GenerateMatrixRequest;
+import com.datn.datnbe.document.exam.dto.request.GenerateQuestionsFromTopicRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -20,6 +24,10 @@ import reactor.core.publisher.Flux;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -48,6 +56,14 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     @Value("${ai.api.mindmap-endpoint}")
     @NonFinal
     String MINDMAP_API_ENDPOINT;
+
+    @Value("${ai.api.exam-matrix-endpoint}")
+    @NonFinal
+    String EXAM_MATRIX_API_ENDPOINT;
+
+    @Value("${ai.api.questions-endpoint:/api/questions/generate}")
+    @NonFinal
+    String QUESTIONS_API_ENDPOINT;
 
     @Override
     public Flux<String> generateOutline(OutlinePromptRequest request) {
@@ -133,6 +149,65 @@ public class ContentGenerationManagement implements ContentGenerationApi {
             return result;
         } catch (Exception e) {
             log.error("Error during mindmap generation", e);
+            throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    @Override
+    public ExamMatrixDto generateExamMatrix(GenerateMatrixRequest request) {
+        // TODO: select list topics from db
+        log.info("Starting exam matrix generation for topics: {}", request.getTopics());
+
+        if (!modelSelectionApi.isModelEnabled(request.getModel())) {
+            throw new AppException(ErrorCode.MODEL_NOT_ENABLED);
+        }
+
+        log.info("Calling AI to generate exam matrix via: {}", EXAM_MATRIX_API_ENDPOINT);
+        try {
+            ExamMatrixDto result = aiApiClient.post(EXAM_MATRIX_API_ENDPOINT, request, ExamMatrixDto.class);
+            log.info("Exam matrix generation completed successfully");
+            return result;
+        } catch (Exception e) {
+            log.error("Error during exam matrix generation", e);
+            throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    @Override
+    public String generateQuestions(GenerateQuestionsFromTopicRequest request) {
+        log.info("Generating questions for topic: {}, grade: {}", request.getTopic(), request.getGradeLevel());
+
+        // Transform request to AI-Worker format
+        List<String> questionTypesList = request.getQuestionTypes()
+                .stream()
+                .map(qt -> qt.name()) // Keep uppercase for AI-Worker
+                .collect(Collectors.toList());
+
+        // Convert difficulty keys to uppercase for AI-Worker
+        Map<String, Integer> difficultyMap = new HashMap<>();
+        request.getQuestionsPerDifficulty()
+                .forEach((difficulty, count) -> difficultyMap.put(difficulty.toUpperCase(), count));
+
+        AIWorkerGenerateQuestionsRequest aiRequest = AIWorkerGenerateQuestionsRequest.builder()
+                .topic(request.getTopic())
+                .gradeLevel(request.getGradeLevel().getValue())
+                .subjectCode(request.getSubjectCode())
+                .questionsPerDifficulty(difficultyMap)
+                .questionTypes(questionTypesList)
+                .additionalRequirements(request.getAdditionalRequirements())
+                .provider("google") // TODO: in request
+                .model("gemini-2.5-flash-lite") // TODO:    in request
+                .build();
+
+        // Make synchronous call to AI-Worker - return raw JSON string
+        log.info("Calling AI-Worker at endpoint: {}", QUESTIONS_API_ENDPOINT);
+        try {
+            String jsonResponse = aiApiClient.post(QUESTIONS_API_ENDPOINT, aiRequest, String.class);
+
+            log.info("Successfully received AI-Worker response");
+            return jsonResponse;
+        } catch (Exception e) {
+            log.error("Error during question generation", e);
             throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
         }
     }
