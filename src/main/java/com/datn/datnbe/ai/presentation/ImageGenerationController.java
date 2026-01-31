@@ -46,7 +46,8 @@ public class ImageGenerationController {
         ImageResponseDto uploadedMedia = imageGenerateMapper
                 .toImageResponseDto(imageResponse, mediaStorageApi, ownerId);
         log.info("Images uploaded successfully: {}", uploadedMedia);
-        recordImageTokenUsage(ownerId, "image", request);
+        String fullPrompt = MappingParamsUtils.createPrompt(request);
+        recordImageTokenUsage(ownerId, "image", request, null, fullPrompt);
 
         return ResponseEntity.ok(AppResponseDto.<ImageResponseDto>builder().data(uploadedMedia).build());
     }
@@ -100,7 +101,7 @@ public class ImageGenerationController {
         log.info("Images uploaded successfully: {}", uploadedMedia);
 
         // Record token usage
-        recordImageTokenUsage(ownerId, "image", request);
+        recordImageTokenUsage(ownerId, "image", request, request.getPresentationId(), fullPrompt);
 
         return ResponseEntity.ok(AppResponseDto.<ImageResponseDto>builder().data(uploadedMedia).build());
     }
@@ -132,13 +133,15 @@ public class ImageGenerationController {
         return ResponseEntity.ok(AppResponseDto.<ImageResponseDto>builder().data(uploadedMedia).build());
     }
 
-    private void recordImageTokenUsage(String userId, String requestType, ImagePromptRequest request) {
+    private void recordImageTokenUsage(String userId, String requestType, ImagePromptRequest request, String documentId, String requestBody) {
         try {
             TokenUsage tokenUsage = TokenUsage.builder()
                     .userId(userId)
                     .request(requestType)
                     .tokenCount(null)
                     .model(request.getModel())
+                    .documentId(documentId)
+                    .request(requestBody)
                     .provider(request.getProvider())
                     .build();
             tokenUsageApi.recordTokenUsage(tokenUsage);

@@ -9,6 +9,7 @@ import com.datn.datnbe.ai.dto.request.MindmapPromptRequest;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
 import com.datn.datnbe.ai.dto.response.AiWokerResponse;
+import com.datn.datnbe.ai.dto.response.TokenUsageInfoDto;
 import com.datn.datnbe.ai.entity.TokenUsage;
 import com.datn.datnbe.ai.utils.MappingParamsUtils;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
@@ -17,6 +18,8 @@ import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import com.datn.datnbe.document.exam.dto.ExamMatrixDto;
 import com.datn.datnbe.document.exam.dto.request.GenerateMatrixRequest;
 import com.datn.datnbe.document.exam.dto.request.GenerateQuestionsFromTopicRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -71,6 +74,8 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     @NonFinal
     String QUESTIONS_API_ENDPOINT;
 
+    ObjectMapper objectMapper = new ObjectMapper();
+
     @Override
     public Flux<String> generateOutline(OutlinePromptRequest request) {
 
@@ -108,12 +113,18 @@ public class ContentGenerationManagement implements ContentGenerationApi {
 
         log.info("Calling AI to generate outline in batch mode");
         try {
-            AiWokerResponse response = aiApiClient.post(OUTLINE_BATCH_API_ENDPOINT,
-                    MappingParamsUtils.constructParams(request),
-                    AiWokerResponse.class);
+            AiWokerResponse response = aiApiClient
+                    .post(OUTLINE_BATCH_API_ENDPOINT, MappingParamsUtils.constructParams(request), AiWokerResponse.class);
+            
 
-            saveTokenUsageIfPresent(response, "OUTLINE");
-
+            String requestBody = null;
+            try {
+                requestBody = objectMapper.writeValueAsString(request);
+            } catch (Exception e) {
+                log.error("Failed to serialize outline request body", e);
+            }
+            saveTokenUsageIfPresent(response, "OUTLINE", null, requestBody);
+            
             log.info("Batch outline generation completed successfully");
             return response.getData();
         } catch (Exception e) {
@@ -133,12 +144,18 @@ public class ContentGenerationManagement implements ContentGenerationApi {
 
         log.info("Calling AI to generate presentation slides in batch mode");
         try {
-            AiWokerResponse response = aiApiClient.post(PRESENTATION_BATCH_API_ENDPOINT,
-                    MappingParamsUtils.constructParams(request),
-                    AiWokerResponse.class);
+            AiWokerResponse response = aiApiClient
+                    .post(PRESENTATION_BATCH_API_ENDPOINT, MappingParamsUtils.constructParams(request), AiWokerResponse.class);
+            
+            String requestBody = null;
+            try{
+                requestBody = objectMapper.writeValueAsString(request);
+            } catch (Exception e) {
+                log.error("Failed to serialize presentation request body", e);
+            }
 
-            saveTokenUsageIfPresent(response, "PRESENTATION");
-
+            saveTokenUsageIfPresent(response, "PRESENTATION", request.getPresentationId(), requestBody);
+            
             log.info("Batch presentation generation completed successfully");
             return response.getData();
         } catch (Exception e) {
@@ -159,9 +176,8 @@ public class ContentGenerationManagement implements ContentGenerationApi {
         try {
             AiWokerResponse response = aiApiClient
                     .post(MINDMAP_API_ENDPOINT, MappingParamsUtils.constructParams(request), AiWokerResponse.class);
-
-            saveTokenUsageIfPresent(response, "MINDMAP");
-
+        
+            
             log.info("Mindmap generation completed successfully");
             return response.getData();
         } catch (Exception e) {
@@ -229,24 +245,82 @@ public class ContentGenerationManagement implements ContentGenerationApi {
         }
     }
 
-    private void saveTokenUsageIfPresent(AiWokerResponse response, String requestType) {
+    @Override
+    public ExamMatrixDto generateExamMatrix(GenerateMatrixRequest request) {
+        // TODO: select list topics from db
+        log.info("Starting exam matrix generation for topics: {}", request.getTopics());
+
+        if (!modelSelectionApi.isModelEnabled(request.getModel())) {
+            throw new AppException(ErrorCode.MODEL_NOT_ENABLED);
+        }
+
+        log.info("Calling AI to generate exam matrix via: {}", EXAM_MATRIX_API_ENDPOINT);
+        try {
+            ExamMatrixDto result = aiApiClient.post(EXAM_MATRIX_API_ENDPOINT, request, ExamMatrixDto.class);
+            log.info("Exam matrix generation completed successfully");
+            return result;
+        } catch (Exception e) {
+            log.error("Error during exam matrix generation", e);
+            throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    @Override
+    public String generateQuestions(GenerateQuestionsFromTopicRequest request) {
+        log.info("Generating questions for topic: {}, grade: {}", request.getTopic(), request.getGrade());
+
+        // Transform request to GenAI-Gateway format
+        List<String> questionTypesList = request.getQuestionTypes()
+                .stream()
+                .map(qt -> qt.name()) // Keep uppercase for GenAI-Gateway
+                .collect(Collectors.toList());
+
+        // Convert difficulty keys to uppercase for GenAI-Gateway
+        Map<String, Integer> difficultyMap = new HashMap<>();
+        request.getQuestionsPerDifficulty()
+                .forEach((difficulty, count) -> difficultyMap.put(difficulty.toUpperCase(), count));
+
+        AIWorkerGenerateQuestionsRequest aiRequest = AIWorkerGenerateQuestionsRequest.builder()
+                .topic(request.getTopic())
+                .grade(request.getGrade())
+                .subject(request.getSubject())
+                .questionsPerDifficulty(difficultyMap)
+                .questionTypes(questionTypesList)
+                .additionalRequirements(request.getAdditionalRequirements())
+                .provider(request.getProvider() != null ? request.getProvider() : "google")
+                .model(request.getModel() != null ? request.getModel() : "gemini-2.5-flash-lite")
+                .build();
+
+        // Make synchronous call to GenAI-Gateway - return raw JSON string
+        log.info("Calling GenAI-Gateway at endpoint: {}", QUESTIONS_API_ENDPOINT);
+        try {
+            String jsonResponse = aiApiClient.post(QUESTIONS_API_ENDPOINT, aiRequest, String.class);
+
+            log.info("Successfully received GenAI-Gateway response");
+            return jsonResponse;
+        } catch (Exception e) {
+            log.error("Error during question generation", e);
+            throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    private void saveTokenUsageIfPresent(AiWokerResponse response, String requestType, String documentId, String requestBody) {
         try {
             if (response != null && response.getTokenUsage() != null) {
                 String userId = securityContextUtils.getCurrentUserId();
+                TokenUsageInfoDto tokenUsageDto = response.getTokenUsage();
                 TokenUsage tokenUsage = TokenUsage.builder()
                         .userId(userId)
                         .request(requestType)
-                        .tokenCount(response.getTokenUsage().getTotalTokens())
-                        .model(response.getTokenUsage().getModel())
-                        .provider(response.getTokenUsage().getProvider())
+                        .inputTokens(tokenUsageDto.getInputTokens())
+                        .outputTokens(tokenUsageDto.getOutputTokens())
+                        .tokenCount(tokenUsageDto.getTotalTokens())
+                        .model(tokenUsageDto.getModel())
+                        .provider(tokenUsageDto.getProvider())
+                        .documentId(documentId)
+                        .requestBody(requestBody)
                         .build();
                 tokenUsageApi.recordTokenUsage(tokenUsage);
-                log.debug("Token usage saved - userId: {}, request: {}, tokens: {}, model: {}, provider: {}",
-                        userId,
-                        requestType,
-                        response.getTokenUsage().getTotalTokens(),
-                        response.getTokenUsage().getModel(),
-                        response.getTokenUsage().getProvider());
             }
         } catch (Exception e) {
             log.warn("Failed to save token usage for request type: {}", requestType, e);

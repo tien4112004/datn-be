@@ -48,6 +48,7 @@ public class ContentGenerationController {
     SecurityContextUtils securityContextUtils;
     static Integer OUTLINE_DELAY = 25; // milliseconds
     static Integer SLIDE_DELAY = 500; // milliseconds
+    ObjectMapper objectMapper = new ObjectMapper();
 
     @PostMapping(value = "presentations/outline-generate", produces = MediaType.TEXT_PLAIN_VALUE)
     public Flux<String> generateOutline(@RequestBody OutlinePromptRequest request) {
@@ -68,14 +69,21 @@ public class ContentGenerationController {
                 .doFinally(signalType -> {
                     log.info("Outline generation completed with signal: {}", signalType);
                     if (result.length() > 0) {
-                        extractAndSaveTokenUsage(result.toString(), userId, "outline");
+                        String requestBody = null;
+                        try {
+                            requestBody = objectMapper.writeValueAsString(request);
+                        }
+                        catch (Exception e) {
+                            log.error("Failed to serialize outline request for token usage recording", e);
+                        }
+                        extractAndSaveTokenUsage(result.toString(), userId, "outline", null, requestBody);
                     }
                 })
                 .map(chunk -> removeTokenUsageFromChunk(chunk))
                 .cache();
     }
 
-    private void extractAndSaveTokenUsage(String content, String userId, String requestType) {
+    private void extractAndSaveTokenUsage(String content, String userId, String requestType, String documentId, String requestBody) {
         try {
             int tokenUsageStart = content.lastIndexOf("{\"token_usage\":");
             if (tokenUsageStart != -1) {
@@ -86,7 +94,7 @@ public class ContentGenerationController {
                 if (tokenUsageNode.has("token_usage")) {
                     TokenUsageInfoDto tokenUsageInfo = mapper.treeToValue(tokenUsageNode.get("token_usage"),
                             TokenUsageInfoDto.class);
-                    recordTokenUsage(userId, tokenUsageInfo, requestType);
+                    recordTokenUsage(userId, tokenUsageInfo, requestType, documentId, requestBody);
                 }
             }
         } catch (Exception e) {
@@ -170,7 +178,8 @@ public class ContentGenerationController {
                 try {
                     String cleanedResult = result.toString();
                     // Extract and save token usage
-                    extractAndSaveTokenUsage(cleanedResult, userId, "presentation");
+                    extractAndSaveTokenUsage(cleanedResult, userId, "presentation", presentationId,
+                            objectMapper.writeValueAsString(request));
                     // Remove token usage from result before saving
                     cleanedResult = removeTokenUsageFromString(cleanedResult);
 
@@ -276,8 +285,8 @@ public class ContentGenerationController {
                 TokenUsageInfoDto tokenUsageInfo = mapper.treeToValue(tokenUsageNode, TokenUsageInfoDto.class);
                 mindmapDto.setExtraField("token_usage", tokenUsageInfo);
 
-                // Record token usage
-                recordTokenUsage(securityContextUtils.getCurrentUserId(), tokenUsageInfo, "mindmap");
+                String requestJson = mapper.writeValueAsString(request);
+                recordTokenUsage(securityContextUtils.getCurrentUserId(), tokenUsageInfo, "mindmap", null, requestJson);
             }
 
             return ResponseEntity.ok().body(AppResponseDto.success(mindmapDto));
@@ -287,7 +296,7 @@ public class ContentGenerationController {
         }
     }
 
-    private void recordTokenUsage(String userId, TokenUsageInfoDto tokenUsageInfo, String requestType) {
+    private void recordTokenUsage(String userId, TokenUsageInfoDto tokenUsageInfo, String requestType, String documentId, String requestBody) {
         try {
             Long totalTokens = tokenUsageInfo.getTotalTokens();
 
@@ -295,8 +304,12 @@ public class ContentGenerationController {
                 TokenUsage tokenUsage = TokenUsage.builder()
                         .userId(userId)
                         .request(requestType)
+                        .inputTokens(tokenUsageInfo.getInputTokens())
+                        .outputTokens(tokenUsageInfo.getOutputTokens())
                         .tokenCount(totalTokens)
                         .model(tokenUsageInfo.getModel())
+                        .documentId(documentId)
+                        .requestBody(requestBody)
                         .provider(tokenUsageInfo.getProvider())
                         .build();
                 tokenUsageApi.recordTokenUsage(tokenUsage);
