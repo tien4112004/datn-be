@@ -288,7 +288,7 @@ public class PostService implements PostApi {
                         .body(post.getContent() != null && post.getContent().length() > 50
                                 ? post.getContent().substring(0, 50) + "..."
                                 : post.getContent())
-                        .data(Map.of("postId", post.getId(), "classId", classId, "type", "POST"))
+                        .data(Map.of("type", "POST", "referenceId", classId))
                         .build();
                 notificationService.sendMulticast(tokens, notiRequest);
             } else {
