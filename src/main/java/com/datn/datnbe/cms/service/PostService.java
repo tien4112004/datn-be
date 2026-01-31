@@ -186,9 +186,9 @@ public class PostService implements PostApi {
 
         // Update linked resources in join table
         if (newLinkedResources != null) {
-            // Delete old linked resources
-            postLinkedResourceRepository.deleteByPostId(postId);
-
+            // Clear the collection from the entity to let Hibernate manage orphan removal
+            exist.getPostLinkedResources().clear();
+            
             // Save new linked resources
             if (!newLinkedResources.isEmpty()) {
                 List<PostLinkedResource> postLinkedResources = postLinkedResourceMapper
@@ -196,7 +196,9 @@ public class PostService implements PostApi {
                 for (PostLinkedResource plr : postLinkedResources) {
                     plr.setPostId(saved.getId());
                 }
-                postLinkedResourceRepository.saveAll(postLinkedResources);
+                List<PostLinkedResource> savedResources = postLinkedResourceRepository.saveAll(postLinkedResources);
+                // Add new resources back to the collection for consistency
+                exist.getPostLinkedResources().addAll(savedResources);
 
                 // Grant permissions for new resources
                 linkedResourcePermissionService.grantClassPermissions(classId, newLinkedResources);

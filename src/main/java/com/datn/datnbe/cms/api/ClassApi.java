@@ -16,4 +16,6 @@ public interface ClassApi {
     ClassResponseDto getClassById(String id);
 
     ClassResponseDto updateClass(String id, ClassUpdateRequest request);
+
+    void deleteClass(String id);
 }

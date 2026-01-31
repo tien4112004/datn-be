@@ -9,13 +9,19 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.ContentCachingRequestWrapper;
+import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 
 @Slf4j
 @Configuration
 public class RequestLoggingFilter {
+
+    // Maximum body size to cache for logging (10KB) - prevents memory issues with large payloads
+    private static final int MAX_BODY_CACHE_SIZE = 10 * 1024;
 
     @Bean
     public FilterRegistrationBean<RequestLoggingFilterImpl> loggingFilter() {
@@ -36,65 +42,123 @@ public class RequestLoggingFilter {
                 FilterChain filterChain) throws ServletException, IOException {
 
             String contentType = request.getContentType();
+            String method = request.getMethod();
 
             // Skip body caching for multipart requests to allow Spring's multipart resolver to work
             boolean isMultipart = contentType != null && contentType.toLowerCase().contains("multipart/");
+            
+            // Only wrap request when we actually need to log the body
+            boolean needsRequestBodyLogging = !isMultipart && shouldLogRequestBody(method, contentType);
 
             HttpServletRequest requestToUse = request;
-            if (!isMultipart) {
-                // Use custom wrapper that caches body on first read (only for non-multipart)
-                requestToUse = new CachedBodyHttpServletRequest(request);
+            ContentCachingRequestWrapper wrappedRequest = null;
+            
+            if (needsRequestBodyLogging) {
+                // Use Spring's ContentCachingRequestWrapper with size limit
+                wrappedRequest = new ContentCachingRequestWrapper(request, MAX_BODY_CACHE_SIZE);
+                requestToUse = wrappedRequest;
             }
+            
+            // Wrap response to capture response body
+            ContentCachingResponseWrapper wrappedResponse = new ContentCachingResponseWrapper(response);
 
             long startTime = System.currentTimeMillis();
 
-            String method = request.getMethod();
             String path = request.getRequestURI();
             String queryString = request.getQueryString();
             String origin = request.getHeader("Origin");
             String remoteAddr = getClientIp(request);
-
-            // Log incoming request with body if applicable
-            String bodyStr = "";
-            if (!isMultipart && shouldLogBody(method, contentType)) {
-                bodyStr = ((CachedBodyHttpServletRequest) requestToUse).getBody();
-            }
-
             String pathWithQuery = path + (queryString != null ? "?" + queryString : "");
             String headers = getHeadersAsString(request);
 
+            // Read request body for logging (with size limit)
+            String requestBodyStr = "N/A";
+            if (wrappedRequest != null) {
+                // Force reading the input stream to cache it
+                byte[] content = wrappedRequest.getContentAsByteArray();
+                if (content.length == 0) {
+                    // ContentCachingRequestWrapper only caches after getInputStream() is read
+                    // We need to read it manually for logging before controller processes it
+                    try {
+                        byte[] buffer = new byte[MAX_BODY_CACHE_SIZE];
+                        int bytesRead = wrappedRequest.getInputStream().read(buffer);
+                        if (bytesRead > 0) {
+                            requestBodyStr = new String(buffer, 0, bytesRead, StandardCharsets.UTF_8);
+                            if (bytesRead == MAX_BODY_CACHE_SIZE) {
+                                requestBodyStr += "... [TRUNCATED]";
+                            }
+                        }
+                    } catch (Exception e) {
+                        requestBodyStr = "[Error reading body: " + e.getMessage() + "]";
+                    }
+                } else {
+                    int length = Math.min(content.length, MAX_BODY_CACHE_SIZE);
+                    requestBodyStr = new String(content, 0, length, StandardCharsets.UTF_8);
+                    if (content.length > MAX_BODY_CACHE_SIZE) {
+                        requestBodyStr += "... [TRUNCATED, total size: " + content.length + " bytes]";
+                    }
+                }
+            }
+
+            // Log incoming request with body
             log.info(
-                    ">>> INCOMING REQUEST - Method: {}, Path: {}, Origin: {}, RemoteAddr: {}, ContentType: {}, Headers: {}, Body: {}",
+                    ">>> REQUEST - Method: {}, Path: {}, Origin: {}, RemoteAddr: {}, ContentType: {}, Headers: {}, Body: {}",
                     method,
                     pathWithQuery,
                     origin != null ? origin : "N/A",
                     remoteAddr,
                     contentType != null ? contentType : "N/A",
                     headers,
-                    bodyStr.isEmpty() ? "N/A" : bodyStr);
+                    requestBodyStr);
 
             try {
-                filterChain.doFilter(requestToUse, response);
+                filterChain.doFilter(requestToUse, wrappedResponse);
             } finally {
                 long duration = System.currentTimeMillis() - startTime;
-                int status = response.getStatus();
-                String responseHeaders = getResponseHeadersAsString(response);
-                log.info("<<< RESPONSE - Method: {}, Path: {}, Status: {}, Duration: {}ms, Headers: {}",
+                int status = wrappedResponse.getStatus();
+                String responseHeaders = getResponseHeadersAsString(wrappedResponse);
+                
+                // Get response body for logging
+                String responseBodyStr = "N/A";
+                String responseContentType = wrappedResponse.getContentType();
+                if (shouldLogResponseBody(responseContentType)) {
+                    byte[] content = wrappedResponse.getContentAsByteArray();
+                    if (content.length > 0) {
+                        int length = Math.min(content.length, MAX_BODY_CACHE_SIZE);
+                        responseBodyStr = new String(content, 0, length, StandardCharsets.UTF_8);
+                        if (content.length > MAX_BODY_CACHE_SIZE) {
+                            responseBodyStr += "... [TRUNCATED, total size: " + content.length + " bytes]";
+                        }
+                    }
+                }
+                
+                log.info("<<< RESPONSE - Method: {}, Path: {}, Status: {}, Duration: {}ms, Headers: {}, Body: {}",
                         method,
                         pathWithQuery,
                         status,
                         duration,
-                        responseHeaders);
+                        responseHeaders,
+                        responseBodyStr);
+                
+                // IMPORTANT: Copy cached content to the actual response
+                wrappedResponse.copyBodyToResponse();
             }
         }
 
-        private boolean shouldLogBody(String method, String contentType) {
+        private boolean shouldLogRequestBody(String method, String contentType) {
             return ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method)
                     || "PATCH".equalsIgnoreCase(method))
                     && contentType != null
                     && (contentType.contains("application/json")
                             || contentType.contains("application/x-www-form-urlencoded")
                             || contentType.contains("text/plain"));
+        }
+        
+        private boolean shouldLogResponseBody(String contentType) {
+            return contentType != null
+                    && (contentType.contains("application/json")
+                            || contentType.contains("text/plain")
+                            || contentType.contains("text/html"));
         }
 
         private String getClientIp(HttpServletRequest request) {

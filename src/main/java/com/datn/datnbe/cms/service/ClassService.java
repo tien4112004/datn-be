@@ -122,6 +122,19 @@ public class ClassService implements ClassApi {
         return dto;
     }
 
+    @Override
+    @Transactional
+    public void deleteClass(String id) {
+        log.info("Deleting class with id: {}", id);
+
+        ClassEntity entity = classRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.CLASS_NOT_FOUND,
+                        String.format("Class with id '%s' not found", id)));
+
+        classRepository.delete(entity);
+        log.info("Successfully deleted class with id: {}", id);
+    }
+
     private void populateTeacherInfo(ClassResponseDto dto, String ownerId) {
         UserMinimalInfoDto teacher = userProfileApi.getUserMinimalInfo(ownerId);
         if (teacher != null) {

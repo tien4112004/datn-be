@@ -59,7 +59,7 @@ class GetPresentationTest {
     private PresentationValidation presentationValidation;
 
     @MockitoBean
-    private com.datn.datnbe.document.service.DocumentVisitService documentVisitService;
+    private com.datn.datnbe.document.service.DocumentService documentVisitService;
 
     @Autowired
     private PresentationManagement presentationService;

@@ -1,6 +1,8 @@
 package com.datn.datnbe.document.repository;
 
+import com.datn.datnbe.document.dto.response.DocumentMinimalResponseDto;
 import com.datn.datnbe.document.entity.DocumentVisit;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -31,4 +33,11 @@ public interface DocumentVisitRepository extends JpaRepository<DocumentVisit, In
      * Delete all visits for a document (when document is deleted)
      */
     void deleteByDocumentId(String documentId);
+
+    @Query(value = """
+            SELECT drm.document_id as id, drm.resource_type as type, rsr.display_name as title
+            FROM document_resource_mappings drm JOIN resource_service_resource rsr on drm.keycloak_resource_id = rsr.id
+            WHERE drm.document_id = :documentId
+            """, nativeQuery = true)
+    Optional<DocumentMinimalResponseDto> findMinimalDocumentInfoByDocumentId(String documentId);
 }

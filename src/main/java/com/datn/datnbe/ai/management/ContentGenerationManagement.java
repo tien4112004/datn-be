@@ -2,13 +2,17 @@ package com.datn.datnbe.ai.management;
 
 import com.datn.datnbe.ai.api.ContentGenerationApi;
 import com.datn.datnbe.ai.api.ModelSelectionApi;
+import com.datn.datnbe.ai.api.TokenUsageApi;
 import com.datn.datnbe.ai.apiclient.AIApiClient;
 import com.datn.datnbe.ai.dto.request.MindmapPromptRequest;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
+import com.datn.datnbe.ai.dto.response.AiWokerResponse;
+import com.datn.datnbe.ai.entity.TokenUsage;
 import com.datn.datnbe.ai.utils.MappingParamsUtils;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -28,6 +32,8 @@ import java.util.Base64;
 public class ContentGenerationManagement implements ContentGenerationApi {
     ModelSelectionApi modelSelectionApi;
     AIApiClient aiApiClient;
+    TokenUsageApi tokenUsageApi;
+    SecurityContextUtils securityContextUtils;
 
     @Value("${ai.api.outline-endpoint}")
     @NonFinal
@@ -86,10 +92,13 @@ public class ContentGenerationManagement implements ContentGenerationApi {
 
         log.info("Calling AI to generate outline in batch mode");
         try {
-            String result = aiApiClient
-                    .post(OUTLINE_BATCH_API_ENDPOINT, MappingParamsUtils.constructParams(request), String.class);
+            AiWokerResponse response = aiApiClient
+                    .post(OUTLINE_BATCH_API_ENDPOINT, MappingParamsUtils.constructParams(request), AiWokerResponse.class);
+            
+            saveTokenUsageIfPresent(response, "OUTLINE");
+            
             log.info("Batch outline generation completed successfully");
-            return result;
+            return response.getData();
         } catch (Exception e) {
             log.error("Error during batch outline generation", e);
             throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
@@ -107,10 +116,13 @@ public class ContentGenerationManagement implements ContentGenerationApi {
 
         log.info("Calling AI to generate presentation slides in batch mode");
         try {
-            String result = aiApiClient
-                    .post(PRESENTATION_BATCH_API_ENDPOINT, MappingParamsUtils.constructParams(request), String.class);
+            AiWokerResponse response = aiApiClient
+                    .post(PRESENTATION_BATCH_API_ENDPOINT, MappingParamsUtils.constructParams(request), AiWokerResponse.class);
+            
+            saveTokenUsageIfPresent(response, "PRESENTATION");
+            
             log.info("Batch presentation generation completed successfully");
-            return result;
+            return response.getData();
         } catch (Exception e) {
             log.error("Error during batch presentation generation", e);
             throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
@@ -127,13 +139,39 @@ public class ContentGenerationManagement implements ContentGenerationApi {
 
         log.info("Calling AI to generate mindmap");
         try {
-            String result = aiApiClient
-                    .post(MINDMAP_API_ENDPOINT, MappingParamsUtils.constructParams(request), String.class);
+            AiWokerResponse response = aiApiClient
+                    .post(MINDMAP_API_ENDPOINT, MappingParamsUtils.constructParams(request), AiWokerResponse.class);
+            
+            saveTokenUsageIfPresent(response, "MINDMAP");
+            
             log.info("Mindmap generation completed successfully");
-            return result;
+            return response.getData();
         } catch (Exception e) {
             log.error("Error during mindmap generation", e);
             throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
         }
     }
-}
+
+    private void saveTokenUsageIfPresent(AiWokerResponse response, String requestType) {
+        try {
+            if (response != null && response.getTokenUsage() != null) {
+                String userId = securityContextUtils.getCurrentUserId();
+                TokenUsage tokenUsage = TokenUsage.builder()
+                        .userId(userId)
+                        .request(requestType)
+                        .tokenCount(response.getTokenUsage().getTotalTokens())
+                        .model(response.getTokenUsage().getModel())
+                        .provider(response.getTokenUsage().getProvider())
+                        .build();
+                tokenUsageApi.recordTokenUsage(tokenUsage);
+                log.debug("Token usage saved - userId: {}, request: {}, tokens: {}, model: {}, provider: {}",
+                        userId,
+                        requestType,
+                        response.getTokenUsage().getTotalTokens(),
+                        response.getTokenUsage().getModel(),
+                        response.getTokenUsage().getProvider());
+            }
+        } catch (Exception e) {
+            log.warn("Failed to save token usage for request type: {}", requestType, e);
+        }
+    }}

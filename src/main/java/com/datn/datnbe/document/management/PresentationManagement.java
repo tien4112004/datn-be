@@ -15,7 +15,7 @@ import com.datn.datnbe.document.entity.Presentation;
 import com.datn.datnbe.document.management.validation.PresentationValidation;
 import com.datn.datnbe.document.mapper.PresentationEntityMapper;
 import com.datn.datnbe.document.repository.PresentationRepository;
-import com.datn.datnbe.document.service.DocumentVisitService;
+import com.datn.datnbe.document.service.DocumentService;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
@@ -55,7 +55,7 @@ public class PresentationManagement implements PresentationApi {
     PresentationValidation validation;
     ResourcePermissionApi resourcePermissionApi;
     RustfsStorageService rustfsStorageService;
-    DocumentVisitService documentVisitService;
+    DocumentService documentVisitService;
     SecurityContextUtils securityContextUtils;
 
     @NonFinal

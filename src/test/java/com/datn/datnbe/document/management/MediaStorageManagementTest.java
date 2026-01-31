@@ -38,7 +38,7 @@ class MediaStorageManagementTest {
     private MediaRepository mediaRepository;
 
     @Mock
-    private com.datn.datnbe.document.service.DocumentVisitService documentVisitService;
+    private com.datn.datnbe.document.service.DocumentService documentVisitService;
 
     @Mock
     private MultipartFile mockFile;

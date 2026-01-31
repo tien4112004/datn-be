@@ -9,7 +9,7 @@ import com.datn.datnbe.document.entity.Media;
 import com.datn.datnbe.sharedkernel.enums.MediaType;
 import com.datn.datnbe.document.management.validation.MediaValidation;
 import com.datn.datnbe.document.repository.MediaRepository;
-import com.datn.datnbe.document.service.DocumentVisitService;
+import com.datn.datnbe.document.service.DocumentService;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
@@ -35,7 +35,7 @@ import static com.datn.datnbe.sharedkernel.utils.MediaStorageUtils.*;
 public class MediaStorageManagement implements MediaStorageApi {
     RustfsStorageService rustfsStorageService;
     MediaRepository mediaRepository;
-    DocumentVisitService documentVisitService;
+    DocumentService documentVisitService;
     SecurityContextUtils securityContextUtils;
 
     @NonFinal
