@@ -268,11 +268,17 @@ public class PostService implements PostApi {
 
     private void notifyStudents(String classId, Post post, String title) {
         try {
+            log.info("Notifying students in class: {}", classId);
             var students = studentApi.getStudentsByClassId(classId);
+            log.info("Found {} students in class", students.size());
 
             List<String> userIds = students.stream().map(StudentResponseDto::getUserId).toList();
-            if (userIds.isEmpty())
+            log.info("User IDs to notify: {}", userIds);
+
+            if (userIds.isEmpty()) {
+                log.warn("No students found to notify for class {}", classId);
                 return;
+            }
 
             List<String> tokens = userIds.stream()
                     .map(userDeviceRepository::findAllByUserId)
@@ -282,15 +288,19 @@ public class PostService implements PostApi {
                     .distinct()
                     .collect(Collectors.toList());
 
+            log.info("Found {} tokens for these users", tokens.size());
+
             if (!tokens.isEmpty()) {
                 NotificationRequest notiRequest = NotificationRequest.builder()
                         .title(title)
                         .body(post.getContent() != null && post.getContent().length() > 50
                                 ? post.getContent().substring(0, 50) + "..."
                                 : post.getContent())
-                        .data(Map.of("postId", post.getId(), "classId", classId, "type", "POST"))
+                        .data(Map.of("type", "POST", "referenceId", classId))
                         .build();
                 notificationService.sendMulticast(tokens, notiRequest);
+            } else {
+                log.warn("No valid FCM tokens found for students in class {}", classId);
             }
 
         } catch (Exception e) {

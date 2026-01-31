@@ -25,8 +25,8 @@ import com.datn.datnbe.auth.mapper.ResourcePermissionMapper;
 import com.datn.datnbe.auth.repository.DocumentResourceMappingRepository;
 import com.datn.datnbe.auth.repository.UserProfileRepo;
 import com.datn.datnbe.auth.service.KeycloakAuthorizationService;
-import com.datn.datnbe.sharedkernel.notification.dto.NotificationRequest;
-import com.datn.datnbe.sharedkernel.notification.repository.UserDeviceRepository;
+import com.datn.datnbe.sharedkernel.notification.dto.SendNotificationToUsersRequest;
+import com.datn.datnbe.sharedkernel.notification.enums.NotificationType;
 import com.datn.datnbe.sharedkernel.notification.service.NotificationService;
 import com.datn.datnbe.sharedkernel.api.ResourceSummaryApi;
 import com.datn.datnbe.sharedkernel.dto.ResourceSummaryDto;
@@ -57,7 +57,6 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
     private final KeycloakDtoMapper keycloakMapper;
     private final UserProfileRepo userProfileRepo;
     private final NotificationService notificationService;
-    private final UserDeviceRepository userDeviceRepository;
     private final ResourceSummaryApi resourceSummaryApi;
 
     // Constants for naming conventions
@@ -295,7 +294,12 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
                 log.info("Successfully shared resource {} with user {} at {} level", documentId, targetUserId, level);
 
                 // Notify the user
-                notifyUserResourceShared(targetUserId, documentId, level.toString(), currentUserId);
+                log.info("From user {} to user {}", currentUserId, targetUserId);
+                notifyUserResourceShared(keycloakUserId,
+                        documentId,
+                        mapping.getResourceType(),
+                        level.toString(),
+                        currentUserId);
 
                 successCount++;
 
@@ -681,30 +685,79 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
 
     private void notifyUserResourceShared(String targetUserId,
             String documentId,
+            String resourceType,
             String permissionLevel,
             String senderId) {
         try {
-            // Find user profile to get Keycloak ID
-            Optional<UserProfile> userProfileOnly = userProfileRepo.findByIdOrKeycloakUserId(targetUserId);
-            if (userProfileOnly.isEmpty())
-                return;
+            // TODO: Refactor ID handling. targetUserId here should be Keycloak ID, but historically might have been confused with Profile ID.
+            // Ensure we are using the correct ID for notification service which expects Keycloak ID.
 
-            // Get user devices
-            List<String> tokens = userDeviceRepository.findAllByUserId(userProfileOnly.get().getId())
-                    .stream()
-                    .map(com.datn.datnbe.sharedkernel.notification.entity.UserDevice::getFcmToken)
-                    .filter(token -> token != null && !token.isEmpty())
-                    .distinct()
-                    .toList();
+            // Determine NotificationType based on resourceType
+            NotificationType type;
+            String resourceTypeName;
 
-            if (!tokens.isEmpty()) {
-                NotificationRequest notiRequest = NotificationRequest.builder()
-                        .title("Resource Shared With You")
-                        .body("A resource has been shared with you with permission: " + permissionLevel)
-                        .data(Map.of("documentId", documentId, "permission", permissionLevel, "type", "RESOURCE_SHARE"))
-                        .build();
-                notificationService.sendMulticast(tokens, notiRequest);
+            if ("presentation".equalsIgnoreCase(resourceType)) {
+                type = NotificationType.SHARED_PRESENTATION;
+                resourceTypeName = "presentation";
+            } else if ("mindmap".equalsIgnoreCase(resourceType)) {
+                type = NotificationType.SHARED_MINDMAP;
+                resourceTypeName = "mindmap";
+            } else {
+                log.warn("Unknown resource type for sharing notification: {}", resourceType);
+                type = NotificationType.SYSTEM;
+                resourceTypeName = "resource";
             }
+
+            // Attempt to get resource title
+            String resourceTitle = "A " + resourceTypeName;
+            try {
+                if (type == NotificationType.SHARED_PRESENTATION) {
+                    Map<String, ResourceSummaryDto> summaries = resourceSummaryApi
+                            .getPresentationSummaries(List.of(documentId));
+                    if (summaries.containsKey(documentId)) {
+                        resourceTitle = summaries.get(documentId).getTitle();
+                    }
+                } else if (type == NotificationType.SHARED_MINDMAP) {
+                    Map<String, ResourceSummaryDto> summaries = resourceSummaryApi
+                            .getMindmapSummaries(List.of(documentId));
+                    if (summaries.containsKey(documentId)) {
+                        resourceTitle = summaries.get(documentId).getTitle();
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch resource summary for notification: {}", e.getMessage());
+            }
+
+            // Get sender name
+            String senderName = "Someone";
+            try {
+                Optional<UserProfile> senderProfile = userProfileRepo.findByIdOrKeycloakUserId(senderId);
+                if (senderProfile.isPresent()) {
+                    senderName = senderProfile.get().getFirstName() + " " + senderProfile.get().getLastName();
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch sender profile: {}", e.getMessage());
+            }
+
+            String body = senderName + " shared \"" + resourceTitle + "\" with you.";
+
+            SendNotificationToUsersRequest request = SendNotificationToUsersRequest.builder()
+                    .userIds(List.of(targetUserId))
+                    .title("Resource Shared")
+                    .body(body)
+                    .type(type)
+                    .referenceId(documentId)
+                    .data(Map.of("type",
+                            type.name(),
+                            "referenceId",
+                            documentId,
+                            "click_action",
+                            "FLUTTER_NOTIFICATION_CLICK"))
+                    .build();
+
+            notificationService.sendNotificationToUsers(request);
+            log.info("Sent persistent notification to user {} for shared resource {}", targetUserId, documentId);
+
         } catch (Exception e) {
             log.error("Failed to send notification for resource share to user {}", targetUserId, e);
         }
