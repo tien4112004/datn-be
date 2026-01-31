@@ -63,7 +63,11 @@ public enum ErrorCode {
     INVALID_SEATING_LAYOUT("Invalid seating layout configuration", 400),
 
     // External API errors
-    EXTERNAL_API_ERROR("External service error", 502);
+    EXTERNAL_API_ERROR("External service error", 502),
+
+    // Coin Pricing errors
+    COIN_PRICING_NOT_FOUND("Coin pricing configuration not found", 404),
+    COIN_PRICING_ALREADY_EXISTS("Coin pricing configuration already exists for this resource type and model", 409);
 
     private final String defaultMessage;
     private final Integer statusCode;
