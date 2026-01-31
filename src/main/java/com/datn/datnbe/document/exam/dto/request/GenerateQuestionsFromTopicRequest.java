@@ -37,4 +37,8 @@ public class GenerateQuestionsFromTopicRequest {
     // e.g., ["multiple_choice", "fill_blank"]
 
     private String additionalRequirements; // Optional
+
+    private String provider; // Optional: AI provider (e.g., "google", "openai"). Default: "google"
+
+    private String model; // Optional: AI model (e.g., "gemini-2.5-flash-lite", "gpt-4"). Default: "gemini-2.5-flash-lite"
 }
