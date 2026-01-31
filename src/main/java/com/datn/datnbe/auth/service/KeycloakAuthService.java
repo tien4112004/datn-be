@@ -183,11 +183,7 @@ public class KeycloakAuthService {
                 + request.getPassword() + "&grant_type=password" + "&client_secret=" + authProperties.getClientSecret()
                 + "&user_id=" + userKeycloakId;
 
-        final var result = exchangeToken(requestBody, "Keycloak signin");
-
-        log.info("result: {}", result);
-
-        return result;
+        return  exchangeToken(requestBody, "Keycloak signin");
     }
 
     /**
