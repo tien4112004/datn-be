@@ -28,7 +28,7 @@ public interface PostRepository extends JpaRepository<Post, String> {
 
     @Query(value = """
             SELECT a.*
-            FROM assignments a JOINS POSTS p ON a.id = p.assignment_id
+            FROM assignment_post a JOIN posts p ON a.id = p.assignment_id
             WHERE p.id = :postId
             """, nativeQuery = true)
     AssignmentResponse getAssignmentByPostId(String postId);

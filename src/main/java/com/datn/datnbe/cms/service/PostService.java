@@ -8,10 +8,12 @@ import com.datn.datnbe.cms.dto.request.PinPostRequest;
 import com.datn.datnbe.cms.dto.request.PostCreateRequest;
 import com.datn.datnbe.cms.dto.request.PostUpdateRequest;
 import com.datn.datnbe.cms.dto.response.PostResponseDto;
+import com.datn.datnbe.cms.entity.AssignmentPost;
 import com.datn.datnbe.cms.entity.Post;
 import com.datn.datnbe.cms.entity.PostLinkedResource;
 import com.datn.datnbe.cms.mapper.PostLinkedResourceMapper;
 import com.datn.datnbe.cms.mapper.PostMapper;
+import com.datn.datnbe.cms.repository.AssignmentPostRepository;
 import com.datn.datnbe.cms.repository.PostLinkedResourceRepository;
 import com.datn.datnbe.cms.repository.PostRepository;
 import com.datn.datnbe.document.dto.response.AssignmentResponse;
@@ -57,6 +59,7 @@ public class PostService implements PostApi {
     private final NotificationService notificationService;
     private final UserDeviceRepository userDeviceRepository;
     private final StudentApi studentApi;
+    private final AssignmentPostRepository assignmentPostRepository;
 
     @Override
     @Transactional
@@ -72,6 +75,9 @@ public class PostService implements PostApi {
         post.setClassId(classId);
         post.setAuthorId(securityContextUtils.getCurrentUserId());
         post.setAllowComments(Boolean.TRUE.equals(request.getAllowComments()));
+        AssignmentPost clonePost = assignmentPostRepository.findAssignmentById(post.getId());
+        var savedAssignmentPost = assignmentPostRepository.save(clonePost);
+        post.setAssignmentId(savedAssignmentPost.getId());
         if (post.getIsPinned() == null)
             post.setIsPinned(Boolean.FALSE);
         if (post.getCommentCount() == null)

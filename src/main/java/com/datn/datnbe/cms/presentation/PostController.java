@@ -5,6 +5,7 @@ import com.datn.datnbe.cms.dto.request.PinPostRequest;
 import com.datn.datnbe.cms.dto.request.PostCreateRequest;
 import com.datn.datnbe.cms.dto.request.PostUpdateRequest;
 import com.datn.datnbe.cms.dto.response.PostResponseDto;
+import com.datn.datnbe.document.dto.response.AssignmentResponse;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.security.annotation.RequireTeacherPermission;
@@ -72,5 +73,10 @@ public class PostController {
     public ResponseEntity<AppResponseDto<PostResponseDto>> pinPost(@PathVariable String postId,
             @Valid @RequestBody PinPostRequest request) {
         return ResponseEntity.ok(AppResponseDto.success(postApi.pinPost(postId, request)));
+    }
+
+    @GetMapping("/posts/{postId}/assignment")
+    public ResponseEntity<AppResponseDto<AssignmentResponse>> getAssignmentByPostId(@PathVariable String postId) {
+        return ResponseEntity.ok(AppResponseDto.success(postApi.getAssignmentByPostId(postId)));
     }
 }
