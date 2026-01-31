@@ -2,6 +2,7 @@ package com.datn.datnbe.sharedkernel.security.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +13,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 
@@ -50,15 +54,82 @@ public class RequestLoggingFilter {
             // Only wrap request when we actually need to log the body
             boolean needsRequestBodyLogging = !isMultipart && shouldLogRequestBody(method, contentType);
 
+            // Read and cache the request body BEFORE wrapping
+            // Use array to allow mutation while being effectively final
+            final byte[][] bodyBytesHolder = new byte[1][];
+            bodyBytesHolder[0] = new byte[0];
+            String requestBodyStr = "N/A";
+            
+            if (needsRequestBodyLogging) {
+                try {
+                    // Read the body from the original request
+                    InputStream inputStream = request.getInputStream();
+                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                    byte[] data = new byte[MAX_BODY_CACHE_SIZE];
+                    int nRead;
+                    while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
+                        buffer.write(data, 0, nRead);
+                        if (buffer.size() > MAX_BODY_CACHE_SIZE) {
+                            break;
+                        }
+                    }
+                    bodyBytesHolder[0] = buffer.toByteArray();
+                    
+                    // Convert to string for logging
+                    if (bodyBytesHolder[0].length > 0) {
+                        int length = Math.min(bodyBytesHolder[0].length, MAX_BODY_CACHE_SIZE);
+                        requestBodyStr = new String(bodyBytesHolder[0], 0, length, StandardCharsets.UTF_8);
+                        if (bodyBytesHolder[0].length > MAX_BODY_CACHE_SIZE) {
+                            requestBodyStr += "... [TRUNCATED, total size: " + bodyBytesHolder[0].length + " bytes]";
+                        }
+                    }
+                } catch (Exception e) {
+                    requestBodyStr = "[Error reading body: " + e.getMessage() + "]";
+                }
+            }
+
+            // Create wrapper with a fresh input stream from the cached body
             HttpServletRequest requestToUse = request;
             ContentCachingRequestWrapper wrappedRequest = null;
             
-            if (needsRequestBodyLogging) {
-                // Use Spring's ContentCachingRequestWrapper with size limit
-                wrappedRequest = new ContentCachingRequestWrapper(request, MAX_BODY_CACHE_SIZE);
+            if (needsRequestBodyLogging && bodyBytesHolder[0].length > 0) {
+                // Create a content caching wrapper that will work with the cached body
+                wrappedRequest = new ContentCachingRequestWrapper(request, MAX_BODY_CACHE_SIZE) {
+                    private boolean inputStreamRead = false;
+
+                    @Override
+                    public ServletInputStream getInputStream() throws IOException {
+                        if (!inputStreamRead) {
+                            inputStreamRead = true;
+                            final ByteArrayInputStream bais = new ByteArrayInputStream(bodyBytesHolder[0]);
+                            return new ServletInputStream() {
+                                @Override
+                                public int read() throws IOException {
+                                    return bais.read();
+                                }
+
+                                @Override
+                                public boolean isFinished() {
+                                    return bais.available() == 0;
+                                }
+
+                                @Override
+                                public boolean isReady() {
+                                    return true;
+                                }
+
+                                @Override
+                                public void setReadListener(jakarta.servlet.ReadListener listener) {
+                                    // Not implemented for cached input
+                                }
+                            };
+                        }
+                        return super.getInputStream();
+                    }
+                };
                 requestToUse = wrappedRequest;
             }
-            
+
             // Wrap response to capture response body
             ContentCachingResponseWrapper wrappedResponse = new ContentCachingResponseWrapper(response);
 
@@ -71,35 +142,6 @@ public class RequestLoggingFilter {
             String pathWithQuery = path + (queryString != null ? "?" + queryString : "");
             String headers = getHeadersAsString(request);
 
-            // Read request body for logging (with size limit)
-            String requestBodyStr = "N/A";
-            if (wrappedRequest != null) {
-                // Force reading the input stream to cache it
-                byte[] content = wrappedRequest.getContentAsByteArray();
-                if (content.length == 0) {
-                    // ContentCachingRequestWrapper only caches after getInputStream() is read
-                    // We need to read it manually for logging before controller processes it
-                    try {
-                        byte[] buffer = new byte[MAX_BODY_CACHE_SIZE];
-                        int bytesRead = wrappedRequest.getInputStream().read(buffer);
-                        if (bytesRead > 0) {
-                            requestBodyStr = new String(buffer, 0, bytesRead, StandardCharsets.UTF_8);
-                            if (bytesRead == MAX_BODY_CACHE_SIZE) {
-                                requestBodyStr += "... [TRUNCATED]";
-                            }
-                        }
-                    } catch (Exception e) {
-                        requestBodyStr = "[Error reading body: " + e.getMessage() + "]";
-                    }
-                } else {
-                    int length = Math.min(content.length, MAX_BODY_CACHE_SIZE);
-                    requestBodyStr = new String(content, 0, length, StandardCharsets.UTF_8);
-                    if (content.length > MAX_BODY_CACHE_SIZE) {
-                        requestBodyStr += "... [TRUNCATED, total size: " + content.length + " bytes]";
-                    }
-                }
-            }
-
             // Log incoming request with body
             log.info(
                     ">>> REQUEST - Method: {}, Path: {}, Origin: {}, RemoteAddr: {}, ContentType: {}, Headers: {}, Body: {}",
@@ -109,9 +151,7 @@ public class RequestLoggingFilter {
                     remoteAddr,
                     contentType != null ? contentType : "N/A",
                     headers,
-                    requestBodyStr);
-
-            try {
+                    requestBodyStr);            try {
                 filterChain.doFilter(requestToUse, wrappedResponse);
             } finally {
                 long duration = System.currentTimeMillis() - startTime;
