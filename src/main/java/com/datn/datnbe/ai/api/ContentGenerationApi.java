@@ -11,15 +11,15 @@ import reactor.core.publisher.Flux;
 
 public interface ContentGenerationApi {
 
-    Flux<String> generateOutline(OutlinePromptRequest request);
+    Flux<String> generateOutline(OutlinePromptRequest request, String traceId);
 
-    Flux<String> generateSlides(PresentationPromptRequest request);
+    Flux<String> generateSlides(PresentationPromptRequest request, String traceId);
 
-    String generateOutlineBatch(OutlinePromptRequest request);
+    String generateOutlineBatch(OutlinePromptRequest request, String traceId);
 
-    String generateSlidesBatch(PresentationPromptRequest request);
+    String generateSlidesBatch(PresentationPromptRequest request, String traceId);
 
-    String generateMindmap(MindmapPromptRequest request);
+    String generateMindmap(MindmapPromptRequest request, String traceId);
 
     /**
      * Generate an exam matrix using AI.

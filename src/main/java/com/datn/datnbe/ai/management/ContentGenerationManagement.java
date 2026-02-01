@@ -2,15 +2,12 @@ package com.datn.datnbe.ai.management;
 
 import com.datn.datnbe.ai.api.ContentGenerationApi;
 import com.datn.datnbe.ai.api.ModelSelectionApi;
-import com.datn.datnbe.ai.api.TokenUsageApi;
 import com.datn.datnbe.ai.apiclient.AIApiClient;
 import com.datn.datnbe.ai.dto.request.AIWorkerGenerateQuestionsRequest;
 import com.datn.datnbe.ai.dto.request.MindmapPromptRequest;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
 import com.datn.datnbe.ai.dto.response.AiWokerResponse;
-import com.datn.datnbe.ai.dto.response.TokenUsageInfoDto;
-import com.datn.datnbe.ai.entity.TokenUsage;
 import com.datn.datnbe.ai.utils.MappingParamsUtils;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
@@ -43,8 +40,6 @@ import java.util.stream.Collectors;
 public class ContentGenerationManagement implements ContentGenerationApi {
     ModelSelectionApi modelSelectionApi;
     AIApiClient aiApiClient;
-    TokenUsageApi tokenUsageApi;
-    SecurityContextUtils securityContextUtils;
 
     @Value("${ai.api.outline-endpoint}")
     @NonFinal
@@ -77,21 +72,25 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public Flux<String> generateOutline(OutlinePromptRequest request) {
+    public Flux<String> generateOutline(OutlinePromptRequest request, String traceId) {
 
         if (!modelSelectionApi.isModelEnabled(request.getModel())) {
             log.error("Model {} is not enabled for outline generation", request.getModel());
             return Flux.error(new AppException(ErrorCode.MODEL_NOT_ENABLED));
         }
 
-        log.info("Calling AI to stream outline generation");
-        return aiApiClient.postSse(OUTLINE_API_ENDPOINT, MappingParamsUtils.constructParams(request))
+        log.info("Calling AI to stream outline generation with traceId: {}", traceId);
+
+        Map<String, String> headers = new java.util.HashMap<>();
+        headers.put("X-Trace-ID", traceId);
+
+        return aiApiClient.postSse(OUTLINE_API_ENDPOINT, MappingParamsUtils.constructParams(request), headers)
                 .map(chunk -> new String(Base64.getDecoder().decode(chunk), StandardCharsets.UTF_8));
     }
 
     @Override
-    public Flux<String> generateSlides(PresentationPromptRequest request) {
-        log.info("Starting streaming presentation generation for slides");
+    public Flux<String> generateSlides(PresentationPromptRequest request, String traceId) {
+        log.info("Starting streaming presentation generation for slides with traceId: {}", traceId);
 
         if (!modelSelectionApi.isModelEnabled(request.getModel())) {
             log.error("Model {} is not enabled for slide generation", request.getModel());
@@ -100,12 +99,15 @@ public class ContentGenerationManagement implements ContentGenerationApi {
 
         log.info("Calling AI to stream presentation slides");
 
-        return aiApiClient.postSse(PRESENTATION_API_ENDPOINT, MappingParamsUtils.constructParams(request));
+        Map<String, String> headers = new java.util.HashMap<>();
+        headers.put("X-Trace-ID", traceId);
+
+        return aiApiClient.postSse(PRESENTATION_API_ENDPOINT, MappingParamsUtils.constructParams(request), headers);
     }
 
     @Override
-    public String generateOutlineBatch(OutlinePromptRequest request) {
-        log.info("Starting batch outline generation");
+    public String generateOutlineBatch(OutlinePromptRequest request, String traceId) {
+        log.info("Starting batch outline generation with traceId: {}", traceId);
 
         if (!modelSelectionApi.isModelEnabled(request.getModel())) {
             throw new AppException(ErrorCode.MODEL_NOT_ENABLED);
@@ -113,18 +115,17 @@ public class ContentGenerationManagement implements ContentGenerationApi {
 
         log.info("Calling AI to generate outline in batch mode");
         try {
-            AiWokerResponse response = aiApiClient
-                    .post(OUTLINE_BATCH_API_ENDPOINT, MappingParamsUtils.constructParams(request), AiWokerResponse.class);
-            
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.set("X-Trace-ID", traceId);
 
-            String requestBody = null;
-            try {
-                requestBody = objectMapper.writeValueAsString(request);
-            } catch (Exception e) {
-                log.error("Failed to serialize outline request body", e);
-            }
-            saveTokenUsageIfPresent(response, "OUTLINE", null, requestBody);
-            
+            AiWokerResponse response = aiApiClient.post(OUTLINE_BATCH_API_ENDPOINT,
+                    MappingParamsUtils.constructParams(request),
+                    AiWokerResponse.class,
+                    headers);
+
+            // Token usage will be extracted by controller via extractAndSaveTokenUsage(traceId)
+            // Do not call saveTokenUsageIfPresent here - it doesn't have correct traceId
+
             log.info("Batch outline generation completed successfully");
             return response.getData();
         } catch (Exception e) {
@@ -134,8 +135,8 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     }
 
     @Override
-    public String generateSlidesBatch(PresentationPromptRequest request) {
-        log.info("Starting batch presentation generation for slides");
+    public String generateSlidesBatch(PresentationPromptRequest request, String traceId) {
+        log.info("Starting batch presentation generation for slides with traceId: {}", traceId);
 
         if (!modelSelectionApi.isModelEnabled(request.getModel())) {
             log.error("Model {} is not enabled for slide generation", request.getModel());
@@ -144,18 +145,17 @@ public class ContentGenerationManagement implements ContentGenerationApi {
 
         log.info("Calling AI to generate presentation slides in batch mode");
         try {
-            AiWokerResponse response = aiApiClient
-                    .post(PRESENTATION_BATCH_API_ENDPOINT, MappingParamsUtils.constructParams(request), AiWokerResponse.class);
-            
-            String requestBody = null;
-            try{
-                requestBody = objectMapper.writeValueAsString(request);
-            } catch (Exception e) {
-                log.error("Failed to serialize presentation request body", e);
-            }
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.set("X-Trace-ID", traceId);
 
-            saveTokenUsageIfPresent(response, "PRESENTATION", request.getPresentationId(), requestBody);
-            
+            AiWokerResponse response = aiApiClient.post(PRESENTATION_BATCH_API_ENDPOINT,
+                    MappingParamsUtils.constructParams(request),
+                    AiWokerResponse.class,
+                    headers);
+
+            // Token usage will be extracted by controller via extractAndSaveTokenUsage(traceId)
+            // Do not call saveTokenUsageIfPresent here - it doesn't have correct traceId
+
             log.info("Batch presentation generation completed successfully");
             return response.getData();
         } catch (Exception e) {
@@ -165,8 +165,8 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     }
 
     @Override
-    public String generateMindmap(MindmapPromptRequest request) {
-        log.info("Starting mindmap generation");
+    public String generateMindmap(MindmapPromptRequest request, String traceId) {
+        log.info("Starting mindmap generation with traceId: {}", traceId);
 
         if (!modelSelectionApi.isModelEnabled(request.getModel())) {
             throw new AppException(ErrorCode.MODEL_NOT_ENABLED);
@@ -174,10 +174,14 @@ public class ContentGenerationManagement implements ContentGenerationApi {
 
         log.info("Calling AI to generate mindmap");
         try {
-            AiWokerResponse response = aiApiClient
-                    .post(MINDMAP_API_ENDPOINT, MappingParamsUtils.constructParams(request), AiWokerResponse.class);
-        
-            
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.set("X-Trace-ID", traceId);
+
+            AiWokerResponse response = aiApiClient.post(MINDMAP_API_ENDPOINT,
+                    MappingParamsUtils.constructParams(request),
+                    AiWokerResponse.class,
+                    headers);
+
             log.info("Mindmap generation completed successfully");
             return response.getData();
         } catch (Exception e) {
@@ -304,26 +308,122 @@ public class ContentGenerationManagement implements ContentGenerationApi {
         }
     }
 
-    private void saveTokenUsageIfPresent(AiWokerResponse response, String requestType, String documentId, String requestBody) {
+    @Override
+    public ExamMatrixDto generateExamMatrix(GenerateMatrixRequest request) {
+        // TODO: select list topics from db
+        log.info("Starting exam matrix generation for topics: {}", request.getTopics());
+
+        if (!modelSelectionApi.isModelEnabled(request.getModel())) {
+            throw new AppException(ErrorCode.MODEL_NOT_ENABLED);
+        }
+
+        log.info("Calling AI to generate exam matrix via: {}", EXAM_MATRIX_API_ENDPOINT);
         try {
-            if (response != null && response.getTokenUsage() != null) {
-                String userId = securityContextUtils.getCurrentUserId();
-                TokenUsageInfoDto tokenUsageDto = response.getTokenUsage();
-                TokenUsage tokenUsage = TokenUsage.builder()
-                        .userId(userId)
-                        .request(requestType)
-                        .inputTokens(tokenUsageDto.getInputTokens())
-                        .outputTokens(tokenUsageDto.getOutputTokens())
-                        .tokenCount(tokenUsageDto.getTotalTokens())
-                        .model(tokenUsageDto.getModel())
-                        .provider(tokenUsageDto.getProvider())
-                        .documentId(documentId)
-                        .requestBody(requestBody)
-                        .build();
-                tokenUsageApi.recordTokenUsage(tokenUsage);
-            }
+            ExamMatrixDto result = aiApiClient.post(EXAM_MATRIX_API_ENDPOINT, request, ExamMatrixDto.class);
+            log.info("Exam matrix generation completed successfully");
+            return result;
         } catch (Exception e) {
-            log.warn("Failed to save token usage for request type: {}", requestType, e);
+            log.error("Error during exam matrix generation", e);
+            throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
         }
     }
+
+    @Override
+    public String generateQuestions(GenerateQuestionsFromTopicRequest request) {
+        log.info("Generating questions for topic: {}, grade: {}", request.getTopic(), request.getGrade());
+
+        // Transform request to GenAI-Gateway format
+        List<String> questionTypesList = request.getQuestionTypes()
+                .stream()
+                .map(qt -> qt.name()) // Keep uppercase for GenAI-Gateway
+                .collect(Collectors.toList());
+
+        // Convert difficulty keys to uppercase for GenAI-Gateway
+        Map<String, Integer> difficultyMap = new HashMap<>();
+        request.getQuestionsPerDifficulty()
+                .forEach((difficulty, count) -> difficultyMap.put(difficulty.toUpperCase(), count));
+
+        AIWorkerGenerateQuestionsRequest aiRequest = AIWorkerGenerateQuestionsRequest.builder()
+                .topic(request.getTopic())
+                .grade(request.getGrade())
+                .subject(request.getSubject())
+                .questionsPerDifficulty(difficultyMap)
+                .questionTypes(questionTypesList)
+                .additionalRequirements(request.getAdditionalRequirements())
+                .provider(request.getProvider() != null ? request.getProvider() : "google")
+                .model(request.getModel() != null ? request.getModel() : "gemini-2.5-flash-lite")
+                .build();
+
+        // Make synchronous call to GenAI-Gateway - return raw JSON string
+        log.info("Calling GenAI-Gateway at endpoint: {}", QUESTIONS_API_ENDPOINT);
+        try {
+            String jsonResponse = aiApiClient.post(QUESTIONS_API_ENDPOINT, aiRequest, String.class);
+
+            log.info("Successfully received GenAI-Gateway response");
+            return jsonResponse;
+        } catch (Exception e) {
+            log.error("Error during question generation", e);
+            throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    @Override
+    public ExamMatrixDto generateExamMatrix(GenerateMatrixRequest request) {
+        // TODO: select list topics from db
+        log.info("Starting exam matrix generation for topics: {}", request.getTopics());
+
+        if (!modelSelectionApi.isModelEnabled(request.getModel())) {
+            throw new AppException(ErrorCode.MODEL_NOT_ENABLED);
+        }
+
+        log.info("Calling AI to generate exam matrix via: {}", EXAM_MATRIX_API_ENDPOINT);
+        try {
+            ExamMatrixDto result = aiApiClient.post(EXAM_MATRIX_API_ENDPOINT, request, ExamMatrixDto.class);
+            log.info("Exam matrix generation completed successfully");
+            return result;
+        } catch (Exception e) {
+            log.error("Error during exam matrix generation", e);
+            throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    @Override
+    public String generateQuestions(GenerateQuestionsFromTopicRequest request) {
+        log.info("Generating questions for topic: {}, grade: {}", request.getTopic(), request.getGrade());
+
+        // Transform request to GenAI-Gateway format
+        List<String> questionTypesList = request.getQuestionTypes()
+                .stream()
+                .map(qt -> qt.name()) // Keep uppercase for GenAI-Gateway
+                .collect(Collectors.toList());
+
+        // Convert difficulty keys to uppercase for GenAI-Gateway
+        Map<String, Integer> difficultyMap = new HashMap<>();
+        request.getQuestionsPerDifficulty()
+                .forEach((difficulty, count) -> difficultyMap.put(difficulty.toUpperCase(), count));
+
+        AIWorkerGenerateQuestionsRequest aiRequest = AIWorkerGenerateQuestionsRequest.builder()
+                .topic(request.getTopic())
+                .grade(request.getGrade())
+                .subject(request.getSubject())
+                .questionsPerDifficulty(difficultyMap)
+                .questionTypes(questionTypesList)
+                .additionalRequirements(request.getAdditionalRequirements())
+                .provider(request.getProvider() != null ? request.getProvider() : "google")
+                .model(request.getModel() != null ? request.getModel() : "gemini-2.5-flash-lite")
+                .build();
+
+        // Make synchronous call to GenAI-Gateway - return raw JSON string
+        log.info("Calling GenAI-Gateway at endpoint: {}", QUESTIONS_API_ENDPOINT);
+        try {
+            String jsonResponse = aiApiClient.post(QUESTIONS_API_ENDPOINT, aiRequest, String.class);
+
+            log.info("Successfully received GenAI-Gateway response");
+            return jsonResponse;
+        } catch (Exception e) {
+            log.error("Error during question generation", e);
+            throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
+        }
+    }
+
 }

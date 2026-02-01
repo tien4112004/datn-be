@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +21,7 @@ import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
 import com.datn.datnbe.ai.dto.response.MindmapGenerateResponseDto;
 import com.datn.datnbe.ai.dto.response.TokenUsageInfoDto;
 import com.datn.datnbe.ai.entity.TokenUsage;
+import com.datn.datnbe.ai.service.PhoenixQueryService;
 import com.datn.datnbe.document.api.PresentationApi;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
@@ -46,6 +48,7 @@ public class ContentGenerationController {
     AIResultApi aiResultApi;
     TokenUsageApi tokenUsageApi;
     SecurityContextUtils securityContextUtils;
+    PhoenixQueryService phoenixQueryService;
     static Integer OUTLINE_DELAY = 25; // milliseconds
     static Integer SLIDE_DELAY = 500; // milliseconds
     ObjectMapper objectMapper = new ObjectMapper();
@@ -56,10 +59,12 @@ public class ContentGenerationController {
 
         // Capture userId BEFORE entering reactive pipeline (on the request thread)
         String userId = securityContextUtils.getCurrentUserId();
+        // Generate traceId for this request to track in Phoenix
+        String traceId = java.util.UUID.randomUUID().toString().replace("-", "");
         StringBuilder result = new StringBuilder();
 
         // Create and return the flux with background processing
-        return contentGenerationExternalApi.generateOutline(request)
+        return contentGenerationExternalApi.generateOutline(request, traceId)
                 .delayElements(Duration.ofMillis(OUTLINE_DELAY))
                 .doOnNext(chunk -> {
                     result.append(chunk);
@@ -72,33 +77,42 @@ public class ContentGenerationController {
                         String requestBody = null;
                         try {
                             requestBody = objectMapper.writeValueAsString(request);
-                        }
-                        catch (Exception e) {
+                        } catch (Exception e) {
                             log.error("Failed to serialize outline request for token usage recording", e);
                         }
-                        extractAndSaveTokenUsage(result.toString(), userId, "outline", null, requestBody);
+                        extractAndSaveTokenUsage(result.toString(), userId, "outline", traceId, requestBody);
                     }
                 })
                 .map(chunk -> removeTokenUsageFromChunk(chunk))
                 .cache();
     }
 
-    private void extractAndSaveTokenUsage(String content, String userId, String requestType, String documentId, String requestBody) {
+    private void extractAndSaveTokenUsage(String content,
+            String userId,
+            String requestType,
+            String traceId,
+            String requestBody) {
         try {
-            int tokenUsageStart = content.lastIndexOf("{\"token_usage\":");
-            if (tokenUsageStart != -1) {
-                String tokenUsageJson = content.substring(tokenUsageStart);
-                ObjectMapper mapper = new ObjectMapper();
-                JsonNode tokenUsageNode = mapper.readTree(tokenUsageJson);
+            // Query Phoenix API to get token usage using traceId
+            log.debug("=== TOKEN_USAGE_DEBUG: Starting token usage extraction for traceId: {}, type: {}",
+                    traceId,
+                    requestType);
+            TokenUsageInfoDto tokenUsageInfo = phoenixQueryService.getTokenUsageFromPhoenix(traceId, requestType);
+            log.debug("=== TOKEN_USAGE_DEBUG: phoenixQueryService returned: {}",
+                    tokenUsageInfo != null ? tokenUsageInfo.getTotalTokens() + " tokens" : "null");
 
-                if (tokenUsageNode.has("token_usage")) {
-                    TokenUsageInfoDto tokenUsageInfo = mapper.treeToValue(tokenUsageNode.get("token_usage"),
-                            TokenUsageInfoDto.class);
-                    recordTokenUsage(userId, tokenUsageInfo, requestType, documentId, requestBody);
-                }
+            if (tokenUsageInfo != null) {
+                recordTokenUsage(userId, tokenUsageInfo, requestType, traceId, requestBody);
+                log.debug("=== TOKEN_USAGE_DEBUG: Token usage saved from Phoenix for {} - tokens: {}",
+                        requestType,
+                        tokenUsageInfo.getTotalTokens());
+            } else {
+                log.warn("=== TOKEN_USAGE_DEBUG: No token usage data available from Phoenix for {} with traceId: {}",
+                        requestType,
+                        traceId);
             }
         } catch (Exception e) {
-            log.warn("Failed to extract and save token usage from outline", e);
+            log.warn("=== TOKEN_USAGE_DEBUG: Failed to save token usage from Phoenix for {}", requestType, e);
         }
     }
 
@@ -121,10 +135,11 @@ public class ContentGenerationController {
     @PostMapping(value = "presentations/outline-generate/batch", produces = "application/json")
     public ResponseEntity<AppResponseDto<JsonNode>> generateOutlineBatch(@RequestBody OutlinePromptRequest request) {
         log.info("Received batch outline generation request: {}", request);
+        String traceId = java.util.UUID.randomUUID().toString().replace("-", "");
         String result;
 
         try {
-            result = contentGenerationExternalApi.generateOutlineBatch(request);
+            result = contentGenerationExternalApi.generateOutlineBatch(request, traceId);
             log.info("Batch outline generation completed successfully");
         } catch (Exception error) {
             log.error("Error generating outline in batch mode", error);
@@ -159,7 +174,10 @@ public class ContentGenerationController {
         // Use StringBuffer for thread safety, or AtomicReference<StringBuilder>
         StringBuffer result = new StringBuffer();
 
-        Flux<String> slideSse = contentGenerationExternalApi.generateSlides(request)
+        // Generate traceId for this request
+        String traceId = java.util.UUID.randomUUID().toString().replace("-", "");
+
+        Flux<String> slideSse = contentGenerationExternalApi.generateSlides(request, traceId)
                 .doOnNext(response -> log.info("Received response chunk: {}", response))
                 .map(slide -> slide.substring("data: ".length()) + "\n\n")
                 .delayElements(Duration.ofMillis(SLIDE_DELAY))
@@ -178,7 +196,10 @@ public class ContentGenerationController {
                 try {
                     String cleanedResult = result.toString();
                     // Extract and save token usage
-                    extractAndSaveTokenUsage(cleanedResult, userId, "presentation", presentationId,
+                    extractAndSaveTokenUsage(cleanedResult,
+                            userId,
+                            "presentation",
+                            presentationId,
                             objectMapper.writeValueAsString(request));
                     // Remove token usage from result before saving
                     cleanedResult = removeTokenUsageFromString(cleanedResult);
@@ -202,10 +223,11 @@ public class ContentGenerationController {
     public ResponseEntity<AppResponseDto<JsonNode>> generateSlidesBatch(
             @RequestBody PresentationPromptRequest request) {
         log.info("Received batch slide generation request: {}", request);
+        String traceId = java.util.UUID.randomUUID().toString().replace("-", "");
         String result;
 
         try {
-            result = contentGenerationExternalApi.generateSlidesBatch(request);
+            result = contentGenerationExternalApi.generateSlidesBatch(request, traceId);
 
             log.info("Batch slide generation completed successfully");
 
@@ -214,7 +236,7 @@ public class ContentGenerationController {
             throw new AppException(ErrorCode.GENERATION_ERROR,
                     "Failed to generate slides in batch mode: " + error.getMessage());
         }
-        String presentationId = UUID.randomUUID().toString();
+        String presentationId = UUID.randomUUID().toString().replace("-", "");
 
         // Serialize generation options to JSON
         String generationOptionsJson = null;
@@ -253,9 +275,10 @@ public class ContentGenerationController {
     public ResponseEntity<AppResponseDto<MindmapGenerateResponseDto>> generateMindmap(
             @RequestBody MindmapPromptRequest request) {
         log.info("Received mindmap generation request: {}", request);
+        String traceId = java.util.UUID.randomUUID().toString().replace("-", "");
 
         try {
-            String result = contentGenerationExternalApi.generateMindmap(request)
+            String result = contentGenerationExternalApi.generateMindmap(request, traceId)
                     .replace("```json", "")
                     .replace("```", "")
                     .trim();
@@ -296,7 +319,12 @@ public class ContentGenerationController {
         }
     }
 
-    private void recordTokenUsage(String userId, TokenUsageInfoDto tokenUsageInfo, String requestType, String documentId, String requestBody) {
+    @Async
+    private void recordTokenUsage(String userId,
+            TokenUsageInfoDto tokenUsageInfo,
+            String requestType,
+            String documentId,
+            String requestBody) {
         try {
             Long totalTokens = tokenUsageInfo.getTotalTokens();
 
@@ -311,8 +339,10 @@ public class ContentGenerationController {
                         .documentId(documentId)
                         .requestBody(requestBody)
                         .provider(tokenUsageInfo.getProvider())
+                        .actualPrice(tokenUsageInfo.getTotalPrice())
                         .build();
                 tokenUsageApi.recordTokenUsage(tokenUsage);
+                log.debug("Token usage saved with price: {}", tokenUsageInfo.getTotalPrice());
             }
         } catch (Exception e) {
             log.warn("Failed to record token usage for {}", requestType, e);

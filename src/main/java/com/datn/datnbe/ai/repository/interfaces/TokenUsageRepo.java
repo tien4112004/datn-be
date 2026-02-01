@@ -2,6 +2,7 @@ package com.datn.datnbe.ai.repository.interfaces;
 
 import com.datn.datnbe.ai.entity.TokenUsage;
 import com.datn.datnbe.ai.dto.response.TokenUsageStatsDto;
+import com.datn.datnbe.ai.dto.response.TokenUsageAggregatedDto;
 import java.util.List;
 
 public interface TokenUsageRepo {
@@ -67,4 +68,21 @@ public interface TokenUsageRepo {
      * @return list of TokenUsageStatsDto with request type and total tokens
      */
     List<TokenUsageStatsDto> getTokenUsageByRequestType(String userId);
+
+    /**
+     * Get aggregated token usage stats for a document (presentation, etc.)
+     * Tính tổng tokens, cost, breakdown by type/model/provider
+     *
+     * @param documentId the document ID (presentationId, etc.)
+     * @return TokenUsageAggregatedDto with aggregated stats
+     */
+    TokenUsageAggregatedDto getTokenUsageByDocumentId(String documentId);
+
+    /**
+     * Get all token usages for a specific document
+     *
+     * @param documentId the document ID
+     * @return list of TokenUsage entities
+     */
+    List<TokenUsage> getTokenUsagesByDocumentId(String documentId);
 }

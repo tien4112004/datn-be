@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity(name = "token_usage")
@@ -48,6 +49,9 @@ public class TokenUsage {
 
     @Column(name = "request_body", columnDefinition = "TEXT")
     String requestBody;
+
+    @Column(name = "actual_price", precision = 19, scale = 6)
+    BigDecimal actualPrice;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

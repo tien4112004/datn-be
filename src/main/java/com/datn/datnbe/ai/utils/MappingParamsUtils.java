@@ -16,9 +16,9 @@ public class MappingParamsUtils {
         params.put("model", request.getModel());
         params.put("provider", request.getProvider().toLowerCase());
 
-        String sanitizedGrade = PromptSanitizer.sanitizeGrade(request.getGrade());
+        Integer sanitizedGrade = PromptSanitizer.sanitizeGrade(request.getGrade());
         String sanitizedSubject = PromptSanitizer.sanitizeSubject(request.getSubject());
-        if (sanitizedGrade != null && !sanitizedGrade.isEmpty()) {
+        if (sanitizedGrade != null) {
             params.put("grade", sanitizedGrade);
         }
         if (sanitizedSubject != null && !sanitizedSubject.isEmpty()) {
@@ -35,9 +35,9 @@ public class MappingParamsUtils {
         params.put("language", request.getLanguage());
         params.put("slide_count", request.getSlideCount());
 
-        String sanitizedGrade = PromptSanitizer.sanitizeGrade(request.getGrade());
+        Integer sanitizedGrade = PromptSanitizer.sanitizeGrade(request.getGrade());
         String sanitizedSubject = PromptSanitizer.sanitizeSubject(request.getSubject());
-        if (sanitizedGrade != null && !sanitizedGrade.isEmpty()) {
+        if (sanitizedGrade != null) {
             params.put("grade", sanitizedGrade);
         }
         if (sanitizedSubject != null && !sanitizedSubject.isEmpty()) {
@@ -64,9 +64,9 @@ public class MappingParamsUtils {
         params.put("model", request.getModel());
         params.put("provider", request.getProvider().toLowerCase());
 
-        String sanitizedGrade = PromptSanitizer.sanitizeGrade(request.getGrade());
+        Integer sanitizedGrade = PromptSanitizer.sanitizeGrade(request.getGrade());
         String sanitizedSubject = PromptSanitizer.sanitizeSubject(request.getSubject());
-        if (sanitizedGrade != null && !sanitizedGrade.isEmpty()) {
+        if (sanitizedGrade != null) {
             params.put("grade", sanitizedGrade);
         }
         if (sanitizedSubject != null && !sanitizedSubject.isEmpty()) {

@@ -665,11 +665,6 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
                 .build();
     }
 
-    /**
-     * Helper: Determine highest permission level from permissions array
-     * @param permissions Collection of permission strings (e.g., ["read", "comment", "edit"])
-     * @return The highest permission level ("edit" > "comment" > "read")
-     */
     private String determineHighestPermission(Collection<String> permissions) {
         if (permissions.contains("edit")) {
             return "edit";
@@ -759,7 +754,7 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
             log.info("Sent persistent notification to user {} for shared resource {}", targetUserId, documentId);
 
         } catch (Exception e) {
-            log.error("Failed to send notification for resource share to user {}", targetUserId, e);
+            log.error("Failed to make notification request for resource share to user {}", targetUserId, e);
         }
     }
     @Override

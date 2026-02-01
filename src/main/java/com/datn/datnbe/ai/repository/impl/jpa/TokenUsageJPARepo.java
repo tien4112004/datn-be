@@ -43,4 +43,9 @@ public interface TokenUsageJPARepo extends JpaRepository<TokenUsage, Long> {
             + "FROM token_usage t WHERE t.userId = :userId AND t.request != 'IMAGE_GENERATION' "
             + "GROUP BY t.request ORDER BY COALESCE(SUM(t.tokenCount), 0) DESC")
     List<TokenUsageStatsDto> getTokenUsageByRequestType(@Param("userId") String userId);
+
+    /**
+     * Get all token usages for a specific document (presentation, etc.)
+     */
+    List<TokenUsage> findByDocumentId(@Param("documentId") String documentId);
 }

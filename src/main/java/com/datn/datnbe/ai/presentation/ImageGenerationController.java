@@ -4,9 +4,11 @@ import com.datn.datnbe.ai.api.ImageGenerationApi;
 import com.datn.datnbe.ai.api.TokenUsageApi;
 import com.datn.datnbe.ai.dto.request.ImagePromptRequest;
 import com.datn.datnbe.ai.dto.response.ImageResponseDto;
+import com.datn.datnbe.ai.dto.response.TokenUsageInfoDto;
 import com.datn.datnbe.ai.entity.TokenUsage;
 import com.datn.datnbe.ai.management.ImageGenerationIdempotencyService;
 import com.datn.datnbe.ai.mapper.ImageGenerateMapper;
+import com.datn.datnbe.ai.service.PhoenixQueryService;
 import com.datn.datnbe.ai.utils.MappingParamsUtils;
 import com.datn.datnbe.document.api.MediaStorageApi;
 import com.datn.datnbe.document.dto.MediaMetadataDto;
@@ -16,6 +18,7 @@ import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,6 +37,7 @@ public class ImageGenerationController {
     private final ImageGenerateMapper imageGenerateMapper;
     private final SecurityContextUtils securityContextUtils;
     private final TokenUsageApi tokenUsageApi;
+    private final PhoenixQueryService phoenixQueryService;
 
     @PostMapping("/images/generate")
     public ResponseEntity<AppResponseDto<ImageResponseDto>> generateImage(@RequestBody ImagePromptRequest request) {
@@ -133,18 +137,49 @@ public class ImageGenerationController {
         return ResponseEntity.ok(AppResponseDto.<ImageResponseDto>builder().data(uploadedMedia).build());
     }
 
-    private void recordImageTokenUsage(String userId, String requestType, ImagePromptRequest request, String documentId, String requestBody) {
+    @Async
+    private void recordImageTokenUsage(String userId,
+            String requestType,
+            ImagePromptRequest request,
+            String documentId,
+            String requestBody) {
         try {
-            TokenUsage tokenUsage = TokenUsage.builder()
-                    .userId(userId)
-                    .request(requestType)
-                    .tokenCount(null)
-                    .model(request.getModel())
-                    .documentId(documentId)
-                    .request(requestBody)
-                    .provider(request.getProvider())
-                    .build();
-            tokenUsageApi.recordTokenUsage(tokenUsage);
+            // Query Phoenix API to get token usage for image generation
+            TokenUsageInfoDto tokenUsageInfo = phoenixQueryService.getTokenUsageFromPhoenix(documentId, requestType);
+
+            if (tokenUsageInfo != null) {
+                TokenUsage tokenUsage = TokenUsage.builder()
+                        .userId(userId)
+                        .request(requestType)
+                        .inputTokens(tokenUsageInfo.getInputTokens())
+                        .outputTokens(tokenUsageInfo.getOutputTokens())
+                        .tokenCount(tokenUsageInfo.getTotalTokens())
+                        .model(tokenUsageInfo.getModel() != null ? tokenUsageInfo.getModel() : request.getModel())
+                        .documentId(documentId)
+                        .requestBody(requestBody)
+                        .provider(tokenUsageInfo.getProvider() != null
+                                ? tokenUsageInfo.getProvider()
+                                : request.getProvider())
+                        .actualPrice(tokenUsageInfo.getTotalPrice())
+                        .build();
+                tokenUsageApi.recordTokenUsage(tokenUsage);
+                log.debug("Token usage saved from Phoenix for image generation - tokens: {}, price: {}",
+                        tokenUsageInfo.getTotalTokens(),
+                        tokenUsageInfo.getTotalPrice());
+            } else {
+                // Fallback: if Phoenix is unavailable, record with model/provider from request (without token count and price)
+                TokenUsage tokenUsage = TokenUsage.builder()
+                        .userId(userId)
+                        .request(requestType)
+                        .model(request.getModel())
+                        .documentId(documentId)
+                        .requestBody(requestBody)
+                        .provider(request.getProvider())
+                        .build();
+                tokenUsageApi.recordTokenUsage(tokenUsage);
+                log.warn(
+                        "No token usage data from Phoenix for image generation, recorded without token count and price");
+            }
         } catch (Exception e) {
             log.warn("Failed to record token usage for user: {} with type: {}", userId, requestType, e);
         }

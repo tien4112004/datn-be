@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,4 +25,10 @@ public class TokenUsageInfoDto {
     private String model;
 
     private String provider;
+
+    @JsonProperty("price_per_token")
+    private BigDecimal pricePerToken;
+
+    @JsonProperty("total_price")
+    private BigDecimal totalPrice;
 }

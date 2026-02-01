@@ -2,6 +2,7 @@ package com.datn.datnbe.ai.management;
 
 import com.datn.datnbe.ai.api.TokenUsageApi;
 import com.datn.datnbe.ai.dto.response.TokenUsageStatsDto;
+import com.datn.datnbe.ai.dto.response.TokenUsageAggregatedDto;
 import com.datn.datnbe.ai.entity.TokenUsage;
 import com.datn.datnbe.ai.repository.interfaces.TokenUsageRepo;
 import lombok.AccessLevel;
@@ -77,5 +78,25 @@ public class TokenUsageManagement implements TokenUsageApi {
         List<TokenUsageStatsDto> results = tokenUsageRepo.getTokenUsageByRequestType(userId);
         log.debug("Token usage by request type for user {}: {} types found", userId, results.size());
         return results;
+    }
+
+    @Override
+    public TokenUsageAggregatedDto getTokenUsageByDocumentId(String documentId) {
+        log.debug("Fetching aggregated token usage for documentId: {}", documentId);
+        TokenUsageAggregatedDto result = tokenUsageRepo.getTokenUsageByDocumentId(documentId);
+        log.debug("Aggregated token usage for document {}: totalTokens: {}, totalCost: {}, operations: {}",
+                documentId,
+                result.getTotalTokens(),
+                result.getTotalCost(),
+                result.getTotalOperations());
+        return result;
+    }
+
+    @Override
+    public List<TokenUsage> getTokenUsagesByDocumentId(String documentId) {
+        log.debug("Fetching all token usages for documentId: {}", documentId);
+        List<TokenUsage> usages = tokenUsageRepo.getTokenUsagesByDocumentId(documentId);
+        log.debug("Found {} token usages for document: {}", usages.size(), documentId);
+        return usages;
     }
 }

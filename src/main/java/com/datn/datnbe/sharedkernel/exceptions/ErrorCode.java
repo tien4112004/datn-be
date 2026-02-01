@@ -38,6 +38,8 @@ public enum ErrorCode {
 
     IMAGE_INSERTION_FAILED("Failed to insert image into presentation", 400),
 
+    TRACE_CONTEXT_NOT_FOUND("Trace context not found", 404),
+
     EMAIL_ALREADY_EXISTS("Email already registered", 409), USER_NOT_FOUND("User not found", 404),
     USER_CREATION_FAILED("Failed to create authentication account", 500),
     USER_UPDATE_FAILED("Failed to update user data", 500), USER_INACTIVE("User account is inactive", 403),
