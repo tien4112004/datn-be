@@ -38,8 +38,8 @@ public class ExamController {
     @Operation(summary = "Generate Exam Matrix", description = """
             Generate an exam matrix using AI. The matrix has 3 dimensions:
             - **Topics** (first dimension): List of subject topics
-            - **Difficulties** (second dimension): easy, medium, hard
-            - **Question Types** (third dimension): multiple_choice, fill_in_blank, true_false, matching
+            - **Difficulties** (second dimension): KNOWLEDGE, COMPREHENSION, APPLICATION
+            - **Question Types** (third dimension): MULTIPLE_CHOICE, FILL_IN_BLANK, TRUE_FALSE, MATCHING
 
             Each cell is a string `"count:points"` representing:
             - `count`: Number of questions for that combination
@@ -60,8 +60,8 @@ public class ExamController {
                             {"id": "topic-1", "name": "Algebra"},
                             {"id": "topic-2", "name": "Geometry"}
                           ],
-                          "difficulties": ["easy", "medium", "hard"],
-                          "questionTypes": ["multiple_choice", "true_false"]
+                          "difficulties": ["KNOWLEDGE", "COMPREHENSION", "APPLICATION"],
+                          "questionTypes": ["MULTIPLE_CHOICE", "TRUE_FALSE"]
                         },
                         "matrix": [
                           [

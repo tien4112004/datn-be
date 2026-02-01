@@ -1,7 +1,7 @@
 package com.datn.datnbe.document.exam.dto.response;
 
-import com.datn.datnbe.document.exam.enums.ExamDifficulty;
-import com.datn.datnbe.document.exam.enums.QuestionType;
+import com.datn.datnbe.document.entity.questiondata.Difficulty;
+import com.datn.datnbe.document.entity.questiondata.QuestionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -41,7 +41,7 @@ public class ExamQuestionDto {
     /**
      * Difficulty level.
      */
-    private ExamDifficulty difficulty;
+    private Difficulty difficulty;
 
     /**
      * Points allocated for this question in the exam.

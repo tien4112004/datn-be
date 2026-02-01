@@ -28,7 +28,7 @@ public class MatrixDimensionsDto {
      * List of difficulty levels (second dimension).
      */
     @Builder.Default
-    private List<String> difficulties = Arrays.asList("easy", "medium", "hard");
+    private List<String> difficulties = Arrays.asList("KNOWLEDGE", "COMPREHENSION", "APPLICATION");
 
     /**
      * List of question types (third dimension).
@@ -36,5 +36,5 @@ public class MatrixDimensionsDto {
     @JsonProperty("questionTypes")
     @JsonAlias("question_types")
     @Builder.Default
-    private List<String> questionTypes = Arrays.asList("multiple_choice", "fill_in_blank", "true_false", "matching");
+    private List<String> questionTypes = Arrays.asList("MULTIPLE_CHOICE", "FILL_IN_BLANK", "TRUE_FALSE", "MATCHING");
 }

@@ -134,6 +134,17 @@ public class QuestionGenerationService {
     }
 
     private QuestionBankItem convertToQuestionBankItem(Question aiQuestion, String ownerId) {
+        // Use topic name directly as chapter field (String)
+        // The chapter field stores the topic name for filtering by grade, subject, and topic
+        String topicName = aiQuestion.getChapter();
+
+        if (topicName != null && !topicName.isEmpty()) {
+            log.debug("Setting topic name (chapter): '{}', subject: '{}', grade: '{}'",
+                    topicName,
+                    aiQuestion.getSubject(),
+                    aiQuestion.getGrade());
+        }
+
         return QuestionBankItem.builder()
                 // DO NOT set id - let JPA generate it
                 .type(aiQuestion.getType())
@@ -142,7 +153,7 @@ public class QuestionGenerationService {
                 .titleImageUrl(aiQuestion.getTitleImageUrl())
                 .explanation(aiQuestion.getExplanation())
                 .grade(aiQuestion.getGrade())
-                .chapter(aiQuestion.getChapter())
+                .chapter(topicName) // Store topic name directly as String
                 .subject(aiQuestion.getSubject())
                 .data(aiQuestion.getData())
                 .ownerId(ownerId)

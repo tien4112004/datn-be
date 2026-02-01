@@ -1,7 +1,7 @@
 package com.datn.datnbe.document.exam.entity;
 
+import com.datn.datnbe.document.entity.questiondata.Difficulty;
 import com.datn.datnbe.document.exam.entity.valueobject.QuestionOrderItem;
-import com.datn.datnbe.document.exam.enums.ExamDifficulty;
 import com.datn.datnbe.document.exam.enums.ExamStatus;
 import com.datn.datnbe.document.exam.enums.GradeLevel;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
@@ -48,7 +48,7 @@ public class Exam {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "difficulty", nullable = false, length = 20)
-    ExamDifficulty difficulty;
+    Difficulty difficulty;
 
     @Column(name = "total_questions", nullable = false)
     Integer totalQuestions;

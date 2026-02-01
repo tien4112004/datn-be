@@ -1,6 +1,6 @@
 package com.datn.datnbe.document.exam.dto.request;
 
-import com.datn.datnbe.document.exam.enums.ExamDifficulty;
+import com.datn.datnbe.document.entity.questiondata.Difficulty;
 import com.datn.datnbe.document.exam.enums.GradeLevel;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -31,7 +31,7 @@ public class CreateExamRequest {
     private GradeLevel gradeLevel;
 
     @NotNull(message = "Difficulty is required")
-    private ExamDifficulty difficulty;
+    private Difficulty difficulty;
 
     @Min(value = 1, message = "Time limit must be at least 1 minute")
     private Integer timeLimitMinutes;

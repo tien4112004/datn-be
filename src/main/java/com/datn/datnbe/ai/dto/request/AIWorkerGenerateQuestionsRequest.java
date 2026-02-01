@@ -20,8 +20,8 @@ public class AIWorkerGenerateQuestionsRequest {
     @JsonProperty("grade_level")
     private String gradeLevel;
 
-    @JsonProperty("subject_code")
-    private String subjectCode;
+    @JsonProperty("subject")
+    private String subject;
 
     @JsonProperty("questions_per_difficulty")
     private Map<String, Integer> questionsPerDifficulty;

@@ -1,6 +1,6 @@
 package com.datn.datnbe.document.exam.dto;
 
-import com.datn.datnbe.document.exam.enums.ExamDifficulty;
+import com.datn.datnbe.document.entity.questiondata.Difficulty;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -15,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MatrixContentDto {
-    private ExamDifficulty difficulty;
+    private Difficulty difficulty;
 
     @JsonProperty("numberOfQuestions")
     @JsonAlias("number_of_questions")

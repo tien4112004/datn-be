@@ -39,6 +39,12 @@ public class GenerateMatrixRequest {
     @NotBlank(message = "Grade level is required")
     private String gradeLevel;
 
+    @Schema(description = "Subject for the exam (T, TV, TA)", example = "T", requiredMode = Schema.RequiredMode.REQUIRED)
+    @JsonProperty("subject")
+    @JsonAlias("subject")
+    @NotBlank(message = "Subject is required")
+    private String subject;
+
     @Schema(description = "Target total number of questions", example = "20", requiredMode = Schema.RequiredMode.REQUIRED)
     @JsonProperty("totalQuestions")
     @JsonAlias("total_questions")
@@ -53,15 +59,15 @@ public class GenerateMatrixRequest {
     @Min(value = 1, message = "Total points must be at least 1")
     private Integer totalPoints;
 
-    @Schema(description = "Difficulty levels to include", example = "[\"easy\", \"medium\", \"hard\"]", defaultValue = "[\"easy\", \"medium\", \"hard\"]")
+    @Schema(description = "Difficulty levels to include", example = "[\"KNOWLEDGE\", \"COMPREHENSION\", \"APPLICATION\"]", defaultValue = "[\"KNOWLEDGE\", \"COMPREHENSION\", \"APPLICATION\"]")
     @Builder.Default
-    private List<String> difficulties = Arrays.asList("easy", "medium", "hard");
+    private List<String> difficulties = Arrays.asList("KNOWLEDGE", "COMPREHENSION", "APPLICATION");
 
-    @Schema(description = "Question types to include", example = "[\"multiple_choice\", \"true_false\"]", defaultValue = "[\"multiple_choice\", \"fill_in_blank\", \"true_false\", \"matching\"]")
+    @Schema(description = "Question types to include", example = "[\"MULTIPLE_CHOICE\", \"TRUE_FALSE\"]", defaultValue = "[\"MULTIPLE_CHOICE\", \"FILL_IN_BLANK\", \"TRUE_FALSE\", \"MATCHING\"]")
     @JsonProperty("questionTypes")
     @JsonAlias("question_types")
     @Builder.Default
-    private List<String> questionTypes = Arrays.asList("multiple_choice", "fill_in_blank", "true_false", "matching");
+    private List<String> questionTypes = Arrays.asList("MULTIPLE_CHOICE", "FILL_IN_BLANK", "TRUE_FALSE", "MATCHING");
 
     @Schema(description = "Additional requirements or context for the exam", example = "Focus on problem-solving skills")
     @JsonProperty("additionalRequirements")

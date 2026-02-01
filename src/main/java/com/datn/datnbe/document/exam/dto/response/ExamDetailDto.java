@@ -1,7 +1,7 @@
 package com.datn.datnbe.document.exam.dto.response;
 
+import com.datn.datnbe.document.entity.questiondata.Difficulty;
 import com.datn.datnbe.document.exam.entity.Exam;
-import com.datn.datnbe.document.exam.enums.ExamDifficulty;
 import com.datn.datnbe.document.exam.enums.ExamStatus;
 import com.datn.datnbe.document.exam.enums.GradeLevel;
 import lombok.AllArgsConstructor;
@@ -23,7 +23,7 @@ public class ExamDetailDto {
     private String description;
     private String topic;
     private GradeLevel gradeLevel;
-    private ExamDifficulty difficulty;
+    private Difficulty difficulty;
     private ExamStatus status;
     private Integer totalQuestions;
     private Integer totalPoints;

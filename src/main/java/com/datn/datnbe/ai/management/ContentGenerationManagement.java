@@ -206,7 +206,7 @@ public class ContentGenerationManagement implements ContentGenerationApi {
         AIWorkerGenerateQuestionsRequest aiRequest = AIWorkerGenerateQuestionsRequest.builder()
                 .topic(request.getTopic())
                 .gradeLevel(request.getGradeLevel().getValue())
-                .subjectCode(request.getSubjectCode())
+                .subject(request.getSubject())
                 .questionsPerDifficulty(difficultyMap)
                 .questionTypes(questionTypesList)
                 .additionalRequirements(request.getAdditionalRequirements())

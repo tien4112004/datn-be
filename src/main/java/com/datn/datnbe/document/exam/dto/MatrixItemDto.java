@@ -1,8 +1,8 @@
 package com.datn.datnbe.document.exam.dto;
 
+import com.datn.datnbe.document.entity.questiondata.Difficulty;
 import com.datn.datnbe.document.exam.enums.ContextType;
-import com.datn.datnbe.document.exam.enums.ExamDifficulty;
-import com.datn.datnbe.document.exam.enums.QuestionType;
+import com.datn.datnbe.document.entity.questiondata.QuestionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,7 +17,7 @@ public class MatrixItemDto {
     private QuestionType questionType;
     private Integer count;
     private Integer pointsEach;
-    private ExamDifficulty difficulty;
+    private Difficulty difficulty;
     private Boolean requiresContext;
     private ContextType contextType;
 }

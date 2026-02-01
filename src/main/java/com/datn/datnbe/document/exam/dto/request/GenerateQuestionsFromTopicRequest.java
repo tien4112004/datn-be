@@ -24,8 +24,8 @@ public class GenerateQuestionsFromTopicRequest {
     @NotEmpty(message = "Topic is required")
     private String topic;
 
-    @NotEmpty(message = "Subject code is required")
-    private String subjectCode; // T, TV, TA
+    @NotEmpty(message = "Subject is required")
+    private String subject; // T, TV, TA
 
     @NotNull(message = "Question counts per difficulty are required")
     private Map<String, Integer> questionsPerDifficulty;
