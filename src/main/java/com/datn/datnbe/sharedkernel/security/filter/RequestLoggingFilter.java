@@ -263,10 +263,11 @@ public class RequestLoggingFilter {
         @Override
         protected boolean shouldNotFilter(HttpServletRequest request) {
             String path = request.getRequestURI();
-            // Don't log static resources and health checks
+            // Don't log static resources, health checks, and streaming endpoints
             return path.startsWith("/static/") || path.startsWith("/resources/") || path.startsWith("/actuator/health")
                     || path.endsWith(".js") || path.endsWith(".css") || path.endsWith(".png") || path.endsWith(".jpg")
-                    || path.endsWith(".gif") || path.endsWith(".ico");
+                    || path.endsWith(".gif") || path.endsWith(".ico")
+                    || path.equals("/api/presentations/outline-generate") || path.equals("/api/presentations/generate");
         }
     }
 
