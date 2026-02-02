@@ -52,9 +52,9 @@ class QuestionSelectionServiceTest extends BaseIntegrationTest {
         ExamDraftDto result = questionSelectionService.selectQuestionsForMatrix(request, UUID.randomUUID());
 
         // Assert
-        assertThat(result.getSelectedQuestions()).hasSize(3);
+        assertThat(result.getQuestions()).hasSize(3);
         assertThat(result.getMissingQuestions()).isEmpty();
-        assertThat(result.isComplete()).isTrue();
+        assertThat(result.getIsComplete()).isTrue();
     }
 
     @Test
@@ -71,18 +71,18 @@ class QuestionSelectionServiceTest extends BaseIntegrationTest {
         GenerateExamFromMatrixRequest request = GenerateExamFromMatrixRequest.builder()
                 .subject(subject)
                 .matrix(matrix)
-                .missingStrategy(MissingQuestionStrategy.ALLOW_PARTIAL)
+                .missingStrategy(MissingQuestionStrategy.REPORT_GAPS)
                 .build();
 
         // Act
         ExamDraftDto result = questionSelectionService.selectQuestionsForMatrix(request, UUID.randomUUID());
 
         // Assert
-        assertThat(result.getSelectedQuestions()).hasSize(2);
+        assertThat(result.getQuestions()).hasSize(2);
         assertThat(result.getMissingQuestions()).hasSize(1);
         assertThat(result.getMissingQuestions().get(0).getRequiredCount()).isEqualTo(5);
         assertThat(result.getMissingQuestions().get(0).getAvailableCount()).isEqualTo(2);
-        assertThat(result.isComplete()).isFalse();
+        assertThat(result.getIsComplete()).isFalse();
     }
 
     @Test
@@ -129,14 +129,16 @@ class QuestionSelectionServiceTest extends BaseIntegrationTest {
                 .subject(subject)
                 .matrix(matrix)
                 .timeLimitMinutes(60)
-                .missingStrategy(MissingQuestionStrategy.ALLOW_PARTIAL) // Default
+                .missingStrategy(MissingQuestionStrategy.REPORT_GAPS) // Default
                 .build();
     }
 
     private ExamMatrixDto createSimpleMatrix(String topic, String diff, String type, int count, double points) {
         // Create Dimensions
         MatrixDimensionsDto dimensions = new MatrixDimensionsDto();
-        dimensions.setTopics(List.of(new DimensionTopicDto(topic, 100)));
+        DimensionTopicDto topicDto = new DimensionTopicDto();
+        topicDto.setName(topic);
+        dimensions.setTopics(List.of(topicDto));
         dimensions.setDifficulties(List.of(diff));
         dimensions.setQuestionTypes(List.of(type));
 

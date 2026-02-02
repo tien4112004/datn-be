@@ -6,6 +6,9 @@ import com.datn.datnbe.document.exam.dto.ExamMatrixDto;
 import com.datn.datnbe.document.exam.dto.request.GenerateExamFromMatrixRequest;
 import com.datn.datnbe.document.exam.dto.request.GenerateMatrixRequest;
 import com.datn.datnbe.document.exam.dto.response.ExamDraftDto;
+import com.datn.datnbe.document.exam.entity.ExamMatrix;
+import com.datn.datnbe.document.exam.repository.ExamMatrixRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -21,11 +24,37 @@ public class ExamService implements ExamApi {
 
     ContentGenerationApi contentGenerationApi;
     QuestionSelectionService questionSelectionService;
+    ExamMatrixRepository examMatrixRepository;
+    ObjectMapper objectMapper;
 
     @Override
-    public ExamMatrixDto generateMatrix(GenerateMatrixRequest request) {
-        log.info("Generating exam matrix for topics: {}", request.getTopics());
-        return contentGenerationApi.generateExamMatrix(request);
+    public ExamMatrixDto generateMatrix(GenerateMatrixRequest request, UUID teacherId) {
+        log.info("Generating exam matrix for topics: {} by teacher: {}", request.getTopics(), teacherId);
+        ExamMatrixDto matrixDto = contentGenerationApi.generateExamMatrix(request);
+
+        // Persist the generated matrix
+        String matrixId = UUID.randomUUID().toString();
+        log.info("Persisting generated matrix with ID: {}", matrixId);
+
+        try {
+            String matrixJson = objectMapper.writeValueAsString(matrixDto);
+            ExamMatrix examMatrix = ExamMatrix.builder()
+                    .id(matrixId)
+                    .ownerId(teacherId != null ? teacherId.toString() : "system")
+                    .name(matrixDto.getMetadata() != null ? matrixDto.getMetadata().getName() : null)
+                    .subject(matrixDto.getMetadata() != null ? matrixDto.getMetadata().getSubject() : null)
+                    .grade(matrixDto.getMetadata() != null ? matrixDto.getMetadata().getGrade() : null)
+                    .matrixData(matrixJson)
+                    .build();
+
+            examMatrixRepository.save(examMatrix);
+            log.info("Matrix persisted successfully with ID: {}", matrixId);
+        } catch (Exception e) {
+            log.error("Failed to persist matrix: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to persist exam matrix", e);
+        }
+
+        return matrixDto;
     }
 
     @Override
@@ -37,15 +66,61 @@ public class ExamService implements ExamApi {
             throw new IllegalArgumentException("Either matrixId or matrix must be provided");
         }
 
-        // If matrixId is provided, we would need to fetch it from the database
-        // For now, we only support inline matrix
-        if (request.getMatrix() == null) {
-            throw new UnsupportedOperationException(
-                    "Loading matrix by ID is not yet implemented. Please provide the matrix inline.");
+        ExamMatrixDto matrix;
+
+        // If matrixId is provided, load from database
+        if (request.getMatrixId() != null) {
+            log.info("Loading matrix from database: {}", request.getMatrixId());
+            ExamMatrix savedMatrix = examMatrixRepository
+                    .findByIdAndOwnerId(request.getMatrixId().toString(),
+                            teacherId != null ? teacherId.toString() : null)
+                    .orElseThrow(
+                            () -> new IllegalArgumentException("Matrix not found with id: " + request.getMatrixId()));
+
+            try {
+                matrix = objectMapper.readValue(savedMatrix.getMatrixData(), ExamMatrixDto.class);
+                log.info("Loaded matrix for subject: {}", matrix.getMetadata().getSubject());
+            } catch (Exception e) {
+                log.error("Failed to deserialize matrix data: {}", e.getMessage(), e);
+                throw new RuntimeException("Failed to read exam matrix from database", e);
+            }
+        } else {
+            matrix = request.getMatrix();
         }
 
         // Use the QuestionSelectionService to select questions from the question bank
-        ExamDraftDto draft = questionSelectionService.selectQuestionsForMatrix(request, teacherId);
+        ExamDraftDto draft = questionSelectionService.selectQuestionsForMatrix(GenerateExamFromMatrixRequest.builder()
+                .subject(request.getSubject())
+                .title(request.getTitle())
+                .description(request.getDescription())
+                .matrix(matrix)
+                .timeLimitMinutes(request.getTimeLimitMinutes())
+                .missingStrategy(request.getMissingStrategy())
+                .includePersonalQuestions(request.getIncludePersonalQuestions())
+                .build(), teacherId);
+
+        // Persist the matrix with the same ID as the generated draft
+        // This allows joining assignment and exam_matrices tables
+        if (request.getMatrixId() == null && draft.getId() != null) {
+            log.info("Persisting exam matrix with ID: {}", draft.getId());
+            try {
+                String matrixJson = objectMapper.writeValueAsString(matrix);
+                ExamMatrix examMatrix = ExamMatrix.builder()
+                        .id(draft.getId())
+                        .ownerId(teacherId != null ? teacherId.toString() : draft.getOwnerId())
+                        .name(matrix.getMetadata() != null ? matrix.getMetadata().getName() : null)
+                        .subject(matrix.getMetadata() != null ? matrix.getMetadata().getSubject() : null)
+                        .grade(matrix.getMetadata() != null ? matrix.getMetadata().getGrade() : null)
+                        .matrixData(matrixJson)
+                        .build();
+                examMatrixRepository.save(examMatrix);
+                log.info("Exam matrix persisted successfully");
+            } catch (Exception e) {
+                log.error("Failed to persist matrix with draft ID: {}", e.getMessage(), e);
+                // Don't fail the entire operation if matrix persistence fails
+                // The draft is still valid and can be used
+            }
+        }
 
         log.info("Generated exam draft with {} questions ({})",
                 draft.getTotalQuestions(),

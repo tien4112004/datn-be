@@ -117,18 +117,12 @@ public class QuestionGenerationService {
         }
 
         // Extract IDs and full question details
-        List<String> savedQuestionIds = savedQuestions.stream()
-                .map(QuestionBankItem::getId)
-                .collect(Collectors.toList());
-
         List<QuestionResponseDto> questionDetails = savedQuestions.stream()
                 .map(questionMapper::toResponseDto)
                 .collect(Collectors.toList());
 
         return GeneratedQuestionsResponse.builder()
-                .questionIds(savedQuestionIds)
-                .totalGenerated(savedQuestionIds.size())
-                .message("Successfully generated and saved questions")
+                .totalGenerated(savedQuestions.size())
                 .questions(questionDetails)
                 .build();
     }

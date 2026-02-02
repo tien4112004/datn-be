@@ -12,8 +12,12 @@ public interface ExamApi {
     /**
     * Generate an exam matrix using AI.
     * The matrix has dimensions: [topic][difficulty][question_type]
+    *
+    * @param request   The request containing matrix generation parameters
+    * @param teacherId The ID of the teacher creating the matrix
+    * @return Generated exam matrix
     */
-    ExamMatrixDto generateMatrix(GenerateMatrixRequest request);
+    ExamMatrixDto generateMatrix(GenerateMatrixRequest request, UUID teacherId);
 
     /**
      * Generate an exam by selecting questions from the question bank

@@ -87,7 +87,7 @@ public class ExamController {
         UUID teacherId = extractTeacherId(jwt);
         log.info("Generate matrix request from teacher: {} for topics: {}", teacherId, request.getTopics());
 
-        ExamMatrixDto matrix = examApi.generateMatrix(request);
+        ExamMatrixDto matrix = examApi.generateMatrix(request, teacherId);
         return ResponseEntity.ok(AppResponseDto.success(matrix));
     }
 

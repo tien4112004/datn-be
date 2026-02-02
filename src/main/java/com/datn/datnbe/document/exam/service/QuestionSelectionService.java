@@ -3,13 +3,12 @@ package com.datn.datnbe.document.exam.service;
 import com.datn.datnbe.document.exam.dto.*;
 import com.datn.datnbe.document.exam.dto.request.GenerateExamFromMatrixRequest;
 import com.datn.datnbe.document.exam.dto.response.ExamDraftDto;
-import com.datn.datnbe.document.exam.dto.response.ExamQuestionDto;
 import com.datn.datnbe.document.exam.dto.response.MatrixGapDto;
+import com.datn.datnbe.document.entity.Question;
 import com.datn.datnbe.document.entity.QuestionBankItem;
 import com.datn.datnbe.document.entity.questiondata.Difficulty;
 import com.datn.datnbe.document.entity.questiondata.QuestionType;
 import com.datn.datnbe.document.exam.enums.MissingQuestionStrategy;
-import com.datn.datnbe.document.exam.repository.ExamQuestionRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Service for selecting questions from the question bank based on exam matrix criteria.
@@ -31,7 +29,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class QuestionSelectionService {
 
-    ExamQuestionRepository questionRepository;
     EntityManager entityManager;
 
     /**
@@ -74,15 +71,17 @@ public class QuestionSelectionService {
 
         if (criteriaList.isEmpty()) {
             return ExamDraftDto.builder()
-                    .examId(UUID.randomUUID())
+                    .id(UUID.randomUUID().toString())
                     .title(request.getTitle())
                     .description(request.getDescription())
-                    .selectedQuestions(List.of())
+                    .subject(subject)
+                    .grade(grade)
+                    .duration(request.getTimeLimitMinutes())
+                    .questions(List.of())
                     .missingQuestions(List.of())
                     .totalPoints(0.0)
                     .totalQuestions(0)
                     .isComplete(true)
-                    .timeLimitMinutes(request.getTimeLimitMinutes())
                     .build();
         }
 
@@ -96,28 +95,27 @@ public class QuestionSelectionService {
         // Map results and check for gaps
         Map<String, List<QuestionBankItem>> groupedResults = groupResultsByCriteria(selectedQuestions, criteriaList);
 
-        List<ExamQuestionDto> examQuestions = new ArrayList<>();
+        List<Question> questions = new ArrayList<>();
         List<MatrixGapDto> gaps = new ArrayList<>();
-        AtomicInteger orderIndex = new AtomicInteger(1);
 
         for (SelectionCriteria criteria : criteriaList) {
             String key = buildCriteriaKey(criteria);
-            List<QuestionBankItem> questions = groupedResults.getOrDefault(key, List.of());
+            List<QuestionBankItem> matchedQuestions = groupedResults.getOrDefault(key, List.of());
 
             double pointsPerQuestion = criteria.requiredCount > 0 ? criteria.pointsPerCell / criteria.requiredCount : 0;
 
-            for (QuestionBankItem question : questions) {
-                examQuestions.add(mapToExamQuestionDto(question, pointsPerQuestion, orderIndex.getAndIncrement()));
+            for (QuestionBankItem question : matchedQuestions) {
+                questions.add(mapToQuestion(question, pointsPerQuestion));
             }
 
             // Check for gaps
-            if (questions.size() < criteria.requiredCount) {
+            if (matchedQuestions.size() < criteria.requiredCount) {
                 gaps.add(MatrixGapDto.builder()
                         .topic(criteria.topicName)
                         .difficulty(criteria.difficultyStr)
                         .questionType(criteria.questionTypeStr)
                         .requiredCount(criteria.requiredCount)
-                        .availableCount(questions.size())
+                        .availableCount(matchedQuestions.size())
                         .build());
             }
         }
@@ -131,18 +129,20 @@ public class QuestionSelectionService {
         }
 
         // Calculate totals
-        double totalPoints = examQuestions.stream().mapToDouble(q -> q.getPoints() != null ? q.getPoints() : 0).sum();
+        double totalPoints = questions.stream().mapToDouble(q -> q.getPoint() != null ? q.getPoint() : 0).sum();
 
         return ExamDraftDto.builder()
-                .examId(UUID.randomUUID())
+                .id(UUID.randomUUID().toString())
                 .title(request.getTitle())
                 .description(request.getDescription())
-                .selectedQuestions(examQuestions)
+                .subject(subject)
+                .grade(grade)
+                .duration(request.getTimeLimitMinutes())
+                .questions(questions)
                 .missingQuestions(gaps)
                 .totalPoints(totalPoints)
-                .totalQuestions(examQuestions.size())
+                .totalQuestions(questions.size())
                 .isComplete(gaps.isEmpty())
-                .timeLimitMinutes(request.getTimeLimitMinutes())
                 .build();
     }
 
@@ -398,29 +398,23 @@ public class QuestionSelectionService {
     }
 
     /**
-     * Map a QuestionBankItem entity to ExamQuestionDto.
+     * Map a QuestionBankItem entity to Question entity for Assignment.
      */
-    private ExamQuestionDto mapToExamQuestionDto(QuestionBankItem question, double points, int orderIndex) {
-        return ExamQuestionDto.builder()
-                .questionId(UUID.fromString(question.getId()))
-                .content(question.getTitle())
-                .questionType(question.getType())
-                .topic(question.getChapter())
+    private Question mapToQuestion(QuestionBankItem question, double points) {
+        return Question.builder()
+                .id(question.getId())
+                .type(question.getType())
                 .difficulty(question.getDifficulty())
-                .points(points)
-                .orderIndex(orderIndex)
-                .answers(extractAnswersFromData(question.getData()))
-                .correctAnswer(question.getData())
+                .title(question.getTitle())
+                .titleImageUrl(question.getTitleImageUrl())
                 .explanation(question.getExplanation())
+                .grade(question.getGrade())
+                .chapter(question.getChapter())
+                .subject(question.getSubject())
+                .contextId(question.getContextId())
+                .data(question.getData())
+                .point(points)
                 .build();
-    }
-
-    /**
-     * Extract answers from question data based on type.
-     */
-    private Object extractAnswersFromData(Object data) {
-        // Return the data as-is since it's already structured
-        return data;
     }
 
     /**

@@ -13,8 +13,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GeneratedQuestionsResponse {
-    private List<String> questionIds;
     private Integer totalGenerated;
-    private String message;
     private List<QuestionResponseDto> questions;
 }
