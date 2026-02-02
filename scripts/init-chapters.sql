@@ -1,3 +1,4 @@
+
 -- =====================================================
 -- Chapter Seed Data - Kết nối tri thức và cuộc sống
 -- Global sort_order: T (1-5) -> TV (1-5) -> TA (1-5)
@@ -5,6 +6,7 @@
 
 -- Clean existing data (optional - comment out if you want to preserve existing)
 -- DELETE FROM chapters;
+
 
 INSERT INTO chapters (id, name, grade, subject, sort_order) VALUES
 
@@ -64,7 +66,7 @@ INSERT INTO chapters (id, name, grade, subject, sort_order) VALUES
 ('40', 'Chủ đề 16: Ôn tập cuối năm', '3', 'T', 40),
 
 -- =====================================================
--- TOÁN LỚP 4 (14 Chủ đề) - sort_order: 41-54
+-- TOÁN LỚP 4 (13 Chủ đề) - sort_order: 41-53
 -- =====================================================
 
 ('41', 'Chủ đề 1: Ôn tập và bổ sung', '4', 'T', 41),
@@ -75,12 +77,12 @@ INSERT INTO chapters (id, name, grade, subject, sort_order) VALUES
 ('46', 'Chủ đề 6: Đường thẳng vuông góc, đường thẳng song song', '4', 'T', 46),
 ('47', 'Chủ đề 7: Ôn tập học kì I', '4', 'T', 47),
 ('48', 'Chủ đề 8: Phép nhân và phép chia', '4', 'T', 48),
-('49', 'Chủ đề 13: Làm quen với yếu tố thống kê và xác suất', '4', 'T', 49),
-('50', 'Chủ đề 9: Làm quen với hình học trực quan', '4', 'T', 50),
-('51', 'Chủ đề 10: Phân số', '4', 'T', 51),
-('52', 'Chủ đề 11: Phép cộng, phép trừ phân số', '4', 'T', 52),
-('53', 'Chủ đề 12: Phép nhân, phép chia phân số', '4', 'T', 53),
-('54', 'Chủ đề 14: Ôn tập cuối năm', '4', 'T', 54),
+('49', 'Chủ đề 9: Luyện tập chung', '4', 'T', 49),
+('50', 'Chủ đề 10: Phân số', '4', 'T', 50),
+('51', 'Chủ đề 11: Phép cộng, phép trừ phân số', '4', 'T', 51),
+('52', 'Chủ đề 12: Phép nhân, phép chia phân số', '4', 'T', 52),
+('53', 'Chủ đề 13: Ôn tập cuối năm', '4', 'T', 53),
+
 
 -- =====================================================
 -- TOÁN LỚP 5 (12 Chủ đề) - sort_order: 55-66
@@ -272,40 +274,40 @@ INSERT INTO chapters (id, name, grade, subject, sort_order) VALUES
 ('190', 'Unit 6: Our school facilities', '4', 'TA', 190),
 ('191', 'Unit 7: Our timetables', '4', 'TA', 191),
 ('192', 'Unit 8: My favourite subjects', '4', 'TA', 192),
-('193', 'Unit 9: Our school sports day', '4', 'TA', 193),
-('194', 'Unit 10: Our school trip', '4', 'TA', 194),
-('195', 'Unit 11: My family members', '4', 'TA', 195),
+('193', 'Unit 9: Our sports day', '4', 'TA', 193),
+('194', 'Unit 10: Our summer holidays', '4', 'TA', 194),
+('195', 'Unit 11: My home', '4', 'TA', 195),
 ('196', 'Unit 12: Jobs', '4', 'TA', 196),
 ('197', 'Unit 13: Appearance', '4', 'TA', 197),
 ('198', 'Unit 14: Daily activities', '4', 'TA', 198),
 ('199', 'Unit 15: My family''s weekends', '4', 'TA', 199),
 ('200', 'Unit 16: Weather', '4', 'TA', 200),
 ('201', 'Unit 17: In the city', '4', 'TA', 201),
-('202', 'Unit 18: At the shopping mall', '4', 'TA', 202),
-('203', 'Unit 19: Animal world', '4', 'TA', 203),
-('204', 'Unit 20: Our summer holidays', '4', 'TA', 204),
+('202', 'Unit 18: At the shopping centre', '4', 'TA', 202),
+('203', 'Unit 19: The animal world', '4', 'TA', 203),
+('204', 'Unit 20: At summer camp', '4', 'TA', 204),
 
 -- =====================================================
 -- TIẾNG ANH LỚP 5 (20 Units) - sort_order: 217-236
 -- =====================================================
 
 ('205', 'Unit 1: All about me', '5', 'TA', 205),
-('206', 'Unit 2: Our holidays', '5', 'TA', 206),
+('206', 'Unit 2: Our homes', '5', 'TA', 206),
 ('207', 'Unit 3: My foreign friends', '5', 'TA', 207),
-('208', 'Unit 4: My birthday party', '5', 'TA', 208),
-('209', 'Unit 5: My favourite food and drink', '5', 'TA', 209),
-('210', 'Unit 6: My school', '5', 'TA', 210),
-('211', 'Unit 7: My school timetable', '5', 'TA', 211),
-('212', 'Unit 8: My school subjects', '5', 'TA', 212),
-('213', 'Unit 9: Our school sports day', '5', 'TA', 213),
+('208', 'Unit 4: Our free-time activities', '5', 'TA', 208),
+('209', 'Unit 5: My future job', '5', 'TA', 209),
+('210', 'Unit 6: Our school rooms', '5', 'TA', 210),
+('211', 'Unit 7: Our favourite school activities', '5', 'TA', 211),
+('212', 'Unit 8: In our classroom', '5', 'TA', 212),
+('213', 'Unit 9: Our outdoor activities', '5', 'TA', 213),
 ('214', 'Unit 10: Our school trip', '5', 'TA', 214),
-('215', 'Unit 11: My family life', '5', 'TA', 215),
-('216', 'Unit 12: Jobs', '5', 'TA', 216),
-('217', 'Unit 13: My appearance', '5', 'TA', 217),
-('218', 'Unit 14: My daily activities', '5', 'TA', 218),
-('219', 'Unit 15: My family''s weekends', '5', 'TA', 219),
-('220', 'Unit 16: Weather', '5', 'TA', 220),
-('221', 'Unit 17: In the city', '5', 'TA', 221),
-('222', 'Unit 18: At the shopping mall', '5', 'TA', 222),
-('223', 'Unit 19: The animal world', '5', 'TA', 223),
-('224', 'Unit 20: Our summer holidays', '5', 'TA', 224);
+('215', 'Unit 11: My family', '5', 'TA', 215),
+('216', 'Unit 12: Our important days', '5', 'TA', 216),
+('217', 'Unit 13: My favourite stories', '5', 'TA', 217),
+('218', 'Unit 14: Aspects of life', '5', 'TA', 218),
+('219', 'Unit 15: Our health', '5', 'TA', 219),
+('220', 'Unit 16: Our geography', '5', 'TA', 220),
+('221', 'Unit 17: Our history', '5', 'TA', 221),
+('222', 'Unit 18: Our traditions', '5', 'TA', 222),
+('223', 'Unit 19: Famous people', '5', 'TA', 223),
+('224', 'Unit 20: Future life', '5', 'TA', 224);
