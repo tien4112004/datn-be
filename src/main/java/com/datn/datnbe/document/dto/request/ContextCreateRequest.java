@@ -9,4 +9,5 @@ public class ContextCreateRequest {
     private String subject;
     private Integer grade;
     private String author;
+    private Boolean fromBook;
 }

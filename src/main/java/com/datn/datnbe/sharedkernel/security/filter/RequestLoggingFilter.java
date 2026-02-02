@@ -50,7 +50,7 @@ public class RequestLoggingFilter {
 
             // Skip body caching for multipart requests to allow Spring's multipart resolver to work
             boolean isMultipart = contentType != null && contentType.toLowerCase().contains("multipart/");
-            
+
             // Only wrap request when we actually need to log the body
             boolean needsRequestBodyLogging = !isMultipart && shouldLogRequestBody(method, contentType);
 
@@ -59,7 +59,7 @@ public class RequestLoggingFilter {
             final byte[][] bodyBytesHolder = new byte[1][];
             bodyBytesHolder[0] = new byte[0];
             String requestBodyStr = "N/A";
-            
+
             if (needsRequestBodyLogging) {
                 try {
                     // Read the body from the original request
@@ -74,7 +74,7 @@ public class RequestLoggingFilter {
                         }
                     }
                     bodyBytesHolder[0] = buffer.toByteArray();
-                    
+
                     // Convert to string for logging
                     if (bodyBytesHolder[0].length > 0) {
                         int length = Math.min(bodyBytesHolder[0].length, MAX_BODY_CACHE_SIZE);
@@ -91,7 +91,7 @@ public class RequestLoggingFilter {
             // Create wrapper with a fresh input stream from the cached body
             HttpServletRequest requestToUse = request;
             ContentCachingRequestWrapper wrappedRequest = null;
-            
+
             if (needsRequestBodyLogging && bodyBytesHolder[0].length > 0) {
                 // Create a content caching wrapper that will work with the cached body
                 wrappedRequest = new ContentCachingRequestWrapper(request, MAX_BODY_CACHE_SIZE) {
@@ -151,13 +151,14 @@ public class RequestLoggingFilter {
                     remoteAddr,
                     contentType != null ? contentType : "N/A",
                     headers,
-                    requestBodyStr);            try {
+                    requestBodyStr);
+            try {
                 filterChain.doFilter(requestToUse, wrappedResponse);
             } finally {
                 long duration = System.currentTimeMillis() - startTime;
                 int status = wrappedResponse.getStatus();
                 String responseHeaders = getResponseHeadersAsString(wrappedResponse);
-                
+
                 // Get response body for logging
                 String responseBodyStr = "N/A";
                 String responseContentType = wrappedResponse.getContentType();
@@ -171,7 +172,7 @@ public class RequestLoggingFilter {
                         }
                     }
                 }
-                
+
                 log.info("<<< RESPONSE - Method: {}, Path: {}, Status: {}, Duration: {}ms, Headers: {}, Body: {}",
                         method,
                         pathWithQuery,
@@ -179,7 +180,7 @@ public class RequestLoggingFilter {
                         duration,
                         responseHeaders,
                         responseBodyStr);
-                
+
                 // IMPORTANT: Copy cached content to the actual response
                 wrappedResponse.copyBodyToResponse();
             }
@@ -193,12 +194,10 @@ public class RequestLoggingFilter {
                             || contentType.contains("application/x-www-form-urlencoded")
                             || contentType.contains("text/plain"));
         }
-        
+
         private boolean shouldLogResponseBody(String contentType) {
-            return contentType != null
-                    && (contentType.contains("application/json")
-                            || contentType.contains("text/plain")
-                            || contentType.contains("text/html"));
+            return contentType != null && (contentType.contains("application/json")
+                    || contentType.contains("text/plain") || contentType.contains("text/html"));
         }
 
         private String getClientIp(HttpServletRequest request) {

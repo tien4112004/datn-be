@@ -37,6 +37,9 @@ public class Context {
     @Column(name = "subject", length = 50)
     String subject;
 
+    @Column(name = "from_book")
+    Boolean fromBook;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     LocalDateTime createdAt;
