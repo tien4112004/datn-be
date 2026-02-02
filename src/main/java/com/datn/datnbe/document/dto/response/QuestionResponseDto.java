@@ -38,6 +38,8 @@ public class QuestionResponseDto {
 
     String contextId;
 
+    ContextResponse context;
+
     LocalDateTime createdAt;
 
     LocalDateTime updatedAt;
