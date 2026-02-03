@@ -1,7 +1,7 @@
 package com.datn.datnbe.document.exam.dto.request;
 
-import com.datn.datnbe.document.exam.enums.GradeLevel;
 import com.datn.datnbe.document.entity.questiondata.QuestionType;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -18,8 +18,8 @@ import java.util.Map;
 @AllArgsConstructor
 public class GenerateQuestionsFromTopicRequest {
 
-    @NotNull(message = "Grade level is required")
-    private GradeLevel gradeLevel;
+    @NotBlank(message = "Grade is required")
+    private String grade;
 
     @NotEmpty(message = "Topic is required")
     private String topic;
