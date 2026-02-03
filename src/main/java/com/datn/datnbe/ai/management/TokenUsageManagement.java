@@ -4,6 +4,7 @@ import com.datn.datnbe.ai.api.TokenUsageApi;
 import com.datn.datnbe.ai.dto.response.TokenUsageStatsDto;
 import com.datn.datnbe.ai.dto.response.TokenUsageAggregatedDto;
 import com.datn.datnbe.ai.entity.TokenUsage;
+import com.datn.datnbe.ai.repository.impl.jpa.TokenUsageJPARepo;
 import com.datn.datnbe.ai.repository.interfaces.TokenUsageRepo;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -18,14 +19,25 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class TokenUsageManagement implements TokenUsageApi {
     TokenUsageRepo tokenUsageRepo;
+    TokenUsageJPARepo tokenUsageJPARepo;
 
     @Override
     public void recordTokenUsage(TokenUsage tokenUsage) {
+        Long existingTokenCount = tokenUsageJPARepo.getTotalTokenIfExisted(tokenUsage.getDocumentId());
+        if (existingTokenCount != null) {
+            if (existingTokenCount > tokenUsage.getTokenCount()) {
+                tokenUsageJPARepo.updateTokenUsageWithNewData(tokenUsage.getDocumentId(),
+                        tokenUsage.getTokenCount(),
+                        tokenUsage.getInputTokens(),
+                        tokenUsage.getOutputTokens(),
+                        tokenUsage.getActualPrice());
+                return;
+            }
+            log.info("Skipping recording token usage for documentId {} as a larger token usage already exists.",
+                    tokenUsage.getDocumentId());
+            return;
+        }
         tokenUsageRepo.saveTokenUsage(tokenUsage);
-        log.debug("Recorded token usage - userId: {}, request: {}, tokens: {}",
-                tokenUsage.getUserId(),
-                tokenUsage.getRequest(),
-                tokenUsage.getTokenCount());
     }
 
     @Override

@@ -1,11 +1,17 @@
 package com.datn.datnbe.ai.repository.impl.jpa;
 
 import com.datn.datnbe.ai.entity.TokenUsage;
+
+import jakarta.transaction.Transactional;
+
 import com.datn.datnbe.ai.dto.response.TokenUsageStatsDto;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 @Repository
@@ -48,4 +54,27 @@ public interface TokenUsageJPARepo extends JpaRepository<TokenUsage, Long> {
      * Get all token usages for a specific document (presentation, etc.)
      */
     List<TokenUsage> findByDocumentId(@Param("documentId") String documentId);
+
+    @Query("""
+            SELECT t.token_count
+            FROM token_usage t
+            WHERE t.document_id = :documentId
+            """)
+    Long getTotalTokenIfExisted(@Param("documentId") String documentId);
+
+    @Query("""
+            Update token_usage t
+            SET t.token_count = :tokenCount
+            SET t.input_tokens = :inputTokens
+            SET t.output_tokens = :outputTokens
+            SET t.actual_price = :actualPrice
+            WHERE t.document_id = :documentId
+            """)
+    @Modifying
+    @Transactional
+    void updateTokenUsageWithNewData(@Param("documentId") String documentId,
+            @Param("tokenCount") Long tokenCount,
+            @Param("inputTokens") Long inputTokens,
+            @Param("outputTokens") Long outputTokens,
+            @Param("actualPrice") BigDecimal actualPrice);
 }

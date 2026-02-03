@@ -15,6 +15,8 @@ import com.datn.datnbe.document.dto.MediaMetadataDto;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.idempotency.api.Idempotent;
 import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -38,20 +40,28 @@ public class ImageGenerationController {
     private final SecurityContextUtils securityContextUtils;
     private final TokenUsageApi tokenUsageApi;
     private final PhoenixQueryService phoenixQueryService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostMapping("/images/generate")
     public ResponseEntity<AppResponseDto<ImageResponseDto>> generateImage(@RequestBody ImagePromptRequest request) {
         log.info("Received image generation request: {}", request);
         String ownerId = securityContextUtils.getCurrentUserId();
 
-        List<MultipartFile> imageResponse = imageGenerationApi.generateImage(request);
+        String traceId = java.util.UUID.randomUUID().toString();
+
+        List<MultipartFile> imageResponse = imageGenerationApi.generateImage(request, traceId.replace("-", ""));
 
         log.info("uploading images to media storage");
         ImageResponseDto uploadedMedia = imageGenerateMapper
                 .toImageResponseDto(imageResponse, mediaStorageApi, ownerId);
         log.info("Images uploaded successfully: {}", uploadedMedia);
-        String fullPrompt = MappingParamsUtils.createPrompt(request);
-        recordImageTokenUsage(ownerId, "image", request, null, fullPrompt);
+        String fullRequestBody;
+        try {
+            fullRequestBody = objectMapper.writeValueAsString(request);
+        } catch (Exception e) {
+            fullRequestBody = "";
+        }
+        recordImageTokenUsage(ownerId, "image", request, traceId, fullRequestBody);
 
         return ResponseEntity.ok(AppResponseDto.<ImageResponseDto>builder().data(uploadedMedia).build());
     }
@@ -87,7 +97,8 @@ public class ImageGenerationController {
             @RequestBody ImagePromptRequest request) {
         String ownerId = securityContextUtils.getCurrentUserId();
 
-        List<MultipartFile> imageResponse = imageGenerationApi.generateImage(request);
+        List<MultipartFile> imageResponse = imageGenerationApi.generateImage(request,
+                request.getPresentationId().replace("-", ""));
 
         // Prepare metadata with presentation context
         String fullPrompt = MappingParamsUtils.createPrompt(request);
@@ -103,9 +114,15 @@ public class ImageGenerationController {
         ImageResponseDto uploadedMedia = imageGenerateMapper
                 .toImageResponseDtoWithMetadata(imageResponse, mediaStorageApi, ownerId, metadata);
         log.info("Images uploaded successfully: {}", uploadedMedia);
+        String fullRequestBody;
+        try {
+            fullRequestBody = objectMapper.writeValueAsString(request);
+        } catch (Exception e) {
+            fullRequestBody = "";
+        }
 
         // Record token usage
-        recordImageTokenUsage(ownerId, "image", request, request.getPresentationId(), fullPrompt);
+        recordImageTokenUsage(ownerId, "image", request, request.getPresentationId(), fullRequestBody);
 
         return ResponseEntity.ok(AppResponseDto.<ImageResponseDto>builder().data(uploadedMedia).build());
     }
@@ -145,7 +162,8 @@ public class ImageGenerationController {
             String requestBody) {
         try {
             // Query Phoenix API to get token usage for image generation
-            TokenUsageInfoDto tokenUsageInfo = phoenixQueryService.getTokenUsageFromPhoenix(documentId, requestType);
+            TokenUsageInfoDto tokenUsageInfo = phoenixQueryService.getTokenUsageFromPhoenix(documentId.replace("-", ""),
+                    requestType);
 
             if (tokenUsageInfo != null) {
                 TokenUsage tokenUsage = TokenUsage.builder()

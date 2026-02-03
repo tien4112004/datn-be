@@ -1,7 +1,6 @@
 package com.datn.datnbe.ai.service;
 
 import com.datn.datnbe.ai.dto.response.TokenUsageInfoDto;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -18,7 +17,7 @@ import java.util.Map;
 
 @Slf4j
 @Service
-    public class PhoenixQueryService {
+public class PhoenixQueryService {
 
     @Value("${phoenix.api-url:http://localhost:6006}")
     private String phoenixApiUrl;
@@ -26,8 +25,10 @@ import java.util.Map;
     @Value("${phoenix.api-key:}")
     private String phoenixApiKey;
 
+    @Value("${phoenix.project-id:}")
+    private String projectId;
+
     private final RestTemplate restTemplate = new RestTemplate();
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public TokenUsageInfoDto getTokenUsageFromPhoenix(String traceId, String operationName) {
         try {
@@ -35,29 +36,40 @@ import java.util.Map;
             if (traceId == null || traceId.isEmpty()) {
                 return null;
             }
-            log.info("=== PHOENIX_DEBUG: Querying Phoenix for traceId: {}", traceId);
 
             // Use GraphQL to get trace by traceId
             String url = phoenixApiUrl + "/graphql";
 
-            String query = """
-                query GetTrace($traceId: String!) {
-                  trace: getTraceByOtelId(traceId: $traceId) {
-                    spans(first: 1000) {
-                      edges {
-                        node {
-                          attributes
+            // Use string formatting instead of GraphQL variables due to Phoenix API compatibility
+            String query = String.format("""
+                    query GetTraceCost {
+                      project: node(id: "%s") {
+                        ... on Project {
+                          trace(traceId: "%s") {
+                            costSummary {
+                              total {
+                                cost
+                                tokens
+                              }
+                              prompt {
+                                cost
+                                tokens
+                              }
+                              completion {
+                                cost
+                                tokens
+                              }
+                            }
+                          }
                         }
                       }
                     }
-                  }
-                }
-                """;
+                    """, projectId, traceId);
 
-            Map<String, Object> requestBody = Map.of(
-                "query", query,
-                "variables", Map.of("traceId", traceId)
-            );
+            Map<String, Object> requestBody = Map.of("query", query);
+
+            log.info("Phoenix GraphQL request - URL: {}, traceId: {}, projectId: {}", url, traceId, projectId);
+            log.info("Full request body: {}", requestBody);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
@@ -68,181 +80,82 @@ import java.util.Map;
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
 
             try {
+                log.info("Querying Phoenix for traceId: {} with projectId: {}", traceId, projectId);
                 ResponseEntity<Map<String, Object>> response = (ResponseEntity<Map<String, Object>>) (ResponseEntity<?>) restTemplate
                         .exchange(url, HttpMethod.POST, requestEntity, Map.class);
 
                 if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                    log.debug("Phoenix response: {}", response.getBody());
                     TokenUsageInfoDto result = parseTokenUsageFromGraphQLResponse(response.getBody());
+                    if (result == null) {
+                        log.warn("Failed to parse token usage from Phoenix response for traceId: {}. Response: {}",
+                                traceId,
+                                response.getBody());
+                    } else {
+                        log.info("Successfully retrieved token usage from Phoenix for traceId: {} - total tokens: {}",
+                                traceId,
+                                result.getTotalTokens());
+                    }
                     return result;
                 }
 
+                log.warn("Phoenix returned non-2xx status or empty body for traceId: {}", traceId);
                 return null;
 
             } catch (HttpClientErrorException e) {
+                log.error("HTTP error querying Phoenix for traceId: {} - Status: {}, Body: {}",
+                        traceId,
+                        e.getStatusCode(),
+                        e.getResponseBodyAsString());
                 return null;
             } catch (UnknownContentTypeException e) {
+                log.error("Unknown content type from Phoenix for traceId: {}", traceId, e);
                 return null;
             }
 
         } catch (Exception e) {
+            log.error("Unexpected error querying Phoenix for traceId: {}", traceId, e);
             return null;
         }
     }
 
     private TokenUsageInfoDto parseTokenUsageFromGraphQLResponse(Map<String, Object> graphqlResponse) {
-        try {
-            
-            java.util.List<?> edges = extractEdgesFromResponse(graphqlResponse);
-            
-            if (edges == null || edges.isEmpty()) {
+        Map<String, Object> costSummary = getNestedMap(graphqlResponse, "data", "project", "trace", "costSummary");
+        if (costSummary == null)
+            return null;
+
+        long in = toLong(safe(costSummary, "prompt").get("tokens"));
+        long out = toLong(safe(costSummary, "completion").get("tokens"));
+        if (in == 0 && out == 0)
+            return null;
+
+        TokenUsageInfoDto dto = new TokenUsageInfoDto();
+        dto.setInputTokens(in);
+        dto.setOutputTokens(out);
+        dto.setTotalTokens(in + out);
+
+        Object cost = safe(costSummary, "total").get("cost");
+        if (cost instanceof Number) {
+            dto.setTotalPrice(BigDecimal.valueOf(((Number) cost).doubleValue()));
+        }
+        return dto;
+    }
+
+    private Map<String, Object> getNestedMap(Map<String, Object> root, String... keys) {
+        Object current = root;
+        for (String key : keys) {
+            if (!(current instanceof Map))
                 return null;
-            }
-
-            TokenUsageInfoDto tokenUsage = new TokenUsageInfoDto();
-            long totalInputTokens = 0L;
-            long totalOutputTokens = 0L;
-            String model = null;
-            String provider = null;
-            BigDecimal totalPrice = null;
-
-            for (int i = 0; i < edges.size(); i++) {
-                Object edgeObj = edges.get(i);
-                
-                if (!(edgeObj instanceof Map)) {
-                    continue;
-                }
-
-                Map<String, Object> attributes = extractAttributesFromEdge((Map<String, Object>) edgeObj);
-                
-                if (attributes == null) {
-                    continue;
-                }
-
-                long promptTokens = getTokenCount(attributes, "prompt");
-                long completionTokens = getTokenCount(attributes, "completion");
-                
-                totalInputTokens += promptTokens;
-                totalOutputTokens += completionTokens;
-
-                if (model == null) {
-                    model = getString(attributes, "model_name");
-                }
-                if (provider == null) {
-                    provider = getString(attributes, "provider");
-                }
-                if (totalPrice == null) {
-                    totalPrice = getPrice(attributes, "price");
-                }
-            }
-            
-            // Return result only if we found token data
-            if (totalInputTokens > 0 || totalOutputTokens > 0) {
-                tokenUsage.setInputTokens(totalInputTokens);
-                tokenUsage.setOutputTokens(totalOutputTokens);
-                tokenUsage.setTotalTokens(totalInputTokens + totalOutputTokens);
-                tokenUsage.setModel(model);
-                tokenUsage.setProvider(provider);
-                tokenUsage.setTotalPrice(totalPrice);  
-                
-                return tokenUsage;
-            }
-
-            return null;
-
-        } catch (Exception e) {
-            return null;
+            current = ((Map<String, Object>) current).get(key);
         }
+        return (current instanceof Map) ? (Map<String, Object>) current : null;
     }
 
-    private java.util.List<?> extractEdgesFromResponse(Map<String, Object> graphqlResponse) {
-        Object data = graphqlResponse.get("data");
-        if (!(data instanceof Map)) return null;
-
-        Object trace = ((Map<String, Object>) data).get("trace");
-        if (!(trace instanceof Map)) return null;
-
-        Object spans = ((Map<String, Object>) trace).get("spans");
-        if (!(spans instanceof Map)) return null;
-
-        Object edges = ((Map<String, Object>) spans).get("edges");
-        return (edges instanceof java.util.List) ? (java.util.List<?>) edges : null;
+    private Map<String, Object> safe(Map<String, Object> map, String key) {
+        return (map != null && map.get(key) instanceof Map) ? (Map<String, Object>) map.get(key) : Map.of();
     }
 
-    private Map<String, Object> extractAttributesFromEdge(Map<String, Object> edge) {
-        
-        Object node = edge.get("node");
-        if (!(node instanceof Map)) {
-            return null;
-        }
-
-        Map<String, Object> nodeMap = (Map<String, Object>) node;
-        
-        Object attributes = nodeMap.get("attributes");
-        
-        // If attributes is a String (JSON), parse it to Map
-        if (attributes instanceof String) {
-            try {
-                attributes = objectMapper.readValue((String) attributes, Map.class);
-            } catch (Exception e) {
-                return null;
-            }
-        }
-        
-        if (!(attributes instanceof Map)) {
-            return null;
-        }
-        
-        return (Map<String, Object>) attributes;
-    }
-
-    private long getTokenCount(Map<String, Object> attributes, String key) {
-        // Handle nested structure: attributes["llm"]["token_count"]["prompt|completion"]
-        Object llm = attributes.get("llm");
-        if (llm instanceof Map) {
-            Map<String, Object> llmMap = (Map<String, Object>) llm;
-            Object tokenCount = llmMap.get("token_count");
-            
-            if (tokenCount instanceof Map) {
-                Map<String, Object> tokenCountMap = (Map<String, Object>) tokenCount;
-                Object value = tokenCountMap.get(key);
-                return (value instanceof Number) ? ((Number) value).longValue() : 0L;
-            }
-        }
-        
-        // Fallback to flat structure for backward compatibility
-        Object value = attributes.get("llm.token_count." + key);
-        return (value instanceof Number) ? ((Number) value).longValue() : 0L;
-    }
-
-    private String getString(Map<String, Object> attributes, String key) {
-        // Handle nested structure: attributes["llm"]["model_name|provider"]
-        Object llm = attributes.get("llm");
-        if (llm instanceof Map) {
-            Map<String, Object> llmMap = (Map<String, Object>) llm;
-            Object value = llmMap.get(key);
-            if (value != null) {
-                return String.valueOf(value);
-            }
-        }
-        
-        // Fallback to flat structure for backward compatibility
-        Object value = attributes.get("llm." + key);
-        return value != null ? String.valueOf(value) : null;
-    }
-
-    private BigDecimal getPrice(Map<String, Object> attributes, String key) {
-        // Handle nested structure: attributes["llm"]["price"]
-        Object llm = attributes.get("llm");
-        if (llm instanceof Map) {
-            Map<String, Object> llmMap = (Map<String, Object>) llm;
-            Object value = llmMap.get(key);
-            if (value instanceof Number) {
-                return BigDecimal.valueOf(((Number) value).doubleValue());
-            }
-        }
-        
-        // Fallback to flat structure for backward compatibility
-        Object value = attributes.get("llm." + key);
-        return (value instanceof Number) ? BigDecimal.valueOf(((Number) value).doubleValue()) : null;
+    private long toLong(Object obj) {
+        return obj instanceof Number ? ((Number) obj).longValue() : 0;
     }
 }

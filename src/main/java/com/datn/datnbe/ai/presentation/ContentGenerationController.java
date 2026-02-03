@@ -60,11 +60,11 @@ public class ContentGenerationController {
         // Capture userId BEFORE entering reactive pipeline (on the request thread)
         String userId = securityContextUtils.getCurrentUserId();
         // Generate traceId for this request to track in Phoenix
-        String traceId = java.util.UUID.randomUUID().toString().replace("-", "");
+        String traceId = java.util.UUID.randomUUID().toString();
         StringBuilder result = new StringBuilder();
 
         // Create and return the flux with background processing
-        return contentGenerationExternalApi.generateOutline(request, traceId)
+        return contentGenerationExternalApi.generateOutline(request, traceId.replace("-", ""))
                 .delayElements(Duration.ofMillis(OUTLINE_DELAY))
                 .doOnNext(chunk -> {
                     result.append(chunk);
@@ -80,39 +80,37 @@ public class ContentGenerationController {
                         } catch (Exception e) {
                             log.error("Failed to serialize outline request for token usage recording", e);
                         }
-                        extractAndSaveTokenUsage(result.toString(), userId, "outline", traceId, requestBody);
+                        extractAndSaveTokenUsage(userId,
+                                "outline",
+                                traceId,
+                                requestBody,
+                                request.getModel(),
+                                request.getProvider());
                     }
                 })
                 .map(chunk -> removeTokenUsageFromChunk(chunk))
                 .cache();
     }
 
-    private void extractAndSaveTokenUsage(String content,
-            String userId,
+    private void extractAndSaveTokenUsage(String userId,
             String requestType,
             String traceId,
-            String requestBody) {
+            String requestBody,
+            String model,
+            String provider) {
         try {
-            // Query Phoenix API to get token usage using traceId
-            log.debug("=== TOKEN_USAGE_DEBUG: Starting token usage extraction for traceId: {}, type: {}",
-                    traceId,
+            TokenUsageInfoDto tokenUsageInfo = phoenixQueryService.getTokenUsageFromPhoenix(traceId.replace("-", ""),
                     requestType);
-            TokenUsageInfoDto tokenUsageInfo = phoenixQueryService.getTokenUsageFromPhoenix(traceId, requestType);
-            log.debug("=== TOKEN_USAGE_DEBUG: phoenixQueryService returned: {}",
-                    tokenUsageInfo != null ? tokenUsageInfo.getTotalTokens() + " tokens" : "null");
 
             if (tokenUsageInfo != null) {
+                tokenUsageInfo.setModel(model);
+                tokenUsageInfo.setProvider(provider);
                 recordTokenUsage(userId, tokenUsageInfo, requestType, traceId, requestBody);
-                log.debug("=== TOKEN_USAGE_DEBUG: Token usage saved from Phoenix for {} - tokens: {}",
-                        requestType,
-                        tokenUsageInfo.getTotalTokens());
             } else {
-                log.warn("=== TOKEN_USAGE_DEBUG: No token usage data available from Phoenix for {} with traceId: {}",
-                        requestType,
-                        traceId);
+                log.warn("No token usage data available from Phoenix for {} with traceId: {}", requestType, traceId);
             }
         } catch (Exception e) {
-            log.warn("=== TOKEN_USAGE_DEBUG: Failed to save token usage from Phoenix for {}", requestType, e);
+            log.warn("Failed to save token usage from Phoenix for {}", requestType, e);
         }
     }
 
@@ -135,11 +133,11 @@ public class ContentGenerationController {
     @PostMapping(value = "presentations/outline-generate/batch", produces = "application/json")
     public ResponseEntity<AppResponseDto<JsonNode>> generateOutlineBatch(@RequestBody OutlinePromptRequest request) {
         log.info("Received batch outline generation request: {}", request);
-        String traceId = java.util.UUID.randomUUID().toString().replace("-", "");
+        String traceId = java.util.UUID.randomUUID().toString();
         String result;
 
         try {
-            result = contentGenerationExternalApi.generateOutlineBatch(request, traceId);
+            result = contentGenerationExternalApi.generateOutlineBatch(request, traceId.replace("-", ""));
             log.info("Batch outline generation completed successfully");
         } catch (Exception error) {
             log.error("Error generating outline in batch mode", error);
@@ -174,10 +172,8 @@ public class ContentGenerationController {
         // Use StringBuffer for thread safety, or AtomicReference<StringBuilder>
         StringBuffer result = new StringBuffer();
 
-        // Generate traceId for this request
-        String traceId = java.util.UUID.randomUUID().toString().replace("-", "");
-
-        Flux<String> slideSse = contentGenerationExternalApi.generateSlides(request, traceId)
+        Flux<String> slideSse = contentGenerationExternalApi
+                .generateSlides(request, request.getPresentationId().replace("-", ""))
                 .doOnNext(response -> log.info("Received response chunk: {}", response))
                 .map(slide -> slide.substring("data: ".length()) + "\n\n")
                 .delayElements(Duration.ofMillis(SLIDE_DELAY))
@@ -196,11 +192,12 @@ public class ContentGenerationController {
                 try {
                     String cleanedResult = result.toString();
                     // Extract and save token usage
-                    extractAndSaveTokenUsage(cleanedResult,
-                            userId,
+                    extractAndSaveTokenUsage(userId,
                             "presentation",
                             presentationId,
-                            objectMapper.writeValueAsString(request));
+                            objectMapper.writeValueAsString(request),
+                            request.getModel(),
+                            request.getProvider());
                     // Remove token usage from result before saving
                     cleanedResult = removeTokenUsageFromString(cleanedResult);
 
@@ -275,10 +272,10 @@ public class ContentGenerationController {
     public ResponseEntity<AppResponseDto<MindmapGenerateResponseDto>> generateMindmap(
             @RequestBody MindmapPromptRequest request) {
         log.info("Received mindmap generation request: {}", request);
-        String traceId = java.util.UUID.randomUUID().toString().replace("-", "");
+        String traceId = java.util.UUID.randomUUID().toString();
 
         try {
-            String result = contentGenerationExternalApi.generateMindmap(request, traceId)
+            String result = contentGenerationExternalApi.generateMindmap(request, traceId.replace("-", ""))
                     .replace("```json", "")
                     .replace("```", "")
                     .trim();
@@ -301,16 +298,12 @@ public class ContentGenerationController {
 
             // Convert to MindmapGenerateResponseDto
             MindmapGenerateResponseDto mindmapDto = mapper.treeToValue(dataNode, MindmapGenerateResponseDto.class);
-
-            // Add token_usage to extraFields if present and save to database
-            if (rootNode.has("token_usage")) {
-                JsonNode tokenUsageNode = rootNode.get("token_usage");
-                TokenUsageInfoDto tokenUsageInfo = mapper.treeToValue(tokenUsageNode, TokenUsageInfoDto.class);
-                mindmapDto.setExtraField("token_usage", tokenUsageInfo);
-
-                String requestJson = mapper.writeValueAsString(request);
-                recordTokenUsage(securityContextUtils.getCurrentUserId(), tokenUsageInfo, "mindmap", null, requestJson);
-            }
+            extractAndSaveTokenUsage(securityContextUtils.getCurrentUserId(),
+                    "mindmap",
+                    traceId,
+                    mapper.writeValueAsString(request),
+                    request.getModel(),
+                    request.getProvider());
 
             return ResponseEntity.ok().body(AppResponseDto.success(mindmapDto));
         } catch (Exception error) {

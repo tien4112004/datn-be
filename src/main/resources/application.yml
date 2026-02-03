@@ -186,7 +186,6 @@ pexels:
       duration-minutes: 60
 
 phoenix:
-  enabled: true
   api-url: ${PHOENIX_API_URL:http://localhost:6006}
   api-key: ${PHOENIX_API_KEY:}
-
+  project-id: ${PHOENIX_PROJECT_ID:}
