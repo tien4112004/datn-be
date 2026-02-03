@@ -58,7 +58,8 @@ public class DocumentController {
     }
 
     @GetMapping("/documents/{documentId}/minimal")
-    public ResponseEntity<AppResponseDto<DocumentMinimalResponseDto>> getMinimalDocumentInfo(@PathVariable String documentId) {
+    public ResponseEntity<AppResponseDto<DocumentMinimalResponseDto>> getMinimalDocumentInfo(
+            @PathVariable String documentId) {
         log.info("Fetching minimal info for document: {}", documentId);
         var documentInfo = documentVisitService.getMinimalDocumentInfo(documentId);
         return ResponseEntity.ok(AppResponseDto.success(documentInfo));

@@ -1,6 +1,7 @@
 package com.datn.datnbe.document.dto.response;
 
 import lombok.*;
+import com.datn.datnbe.document.entity.AssignmentMatrix;
 import com.datn.datnbe.document.entity.Question;
 import lombok.Builder;
 import lombok.Data;
@@ -23,6 +24,7 @@ public class AssignmentResponse {
     String subject;
     private String grade;
     private List<Question> questions;
+    private AssignmentMatrix matrix;
     private LocalDateTime createdAt;
 
     LocalDateTime updatedAt;

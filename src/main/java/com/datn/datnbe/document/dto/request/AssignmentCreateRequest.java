@@ -1,5 +1,6 @@
 package com.datn.datnbe.document.dto.request;
 
+import com.datn.datnbe.document.entity.AssignmentMatrix;
 import lombok.Data;
 import java.util.List;
 
@@ -11,5 +12,5 @@ public class AssignmentCreateRequest {
     private String subject;
     private String grade;
     private List<QuestionItemRequest> questions;
-
+    private AssignmentMatrix matrix;
 }
