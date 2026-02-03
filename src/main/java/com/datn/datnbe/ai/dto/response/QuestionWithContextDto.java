@@ -21,7 +21,7 @@ public class QuestionWithContextDto {
 
     private String topic;
 
-    @JsonProperty("grade_level")
+    @JsonProperty("grade")
     private String gradeLevel;
 
     private String difficulty;
