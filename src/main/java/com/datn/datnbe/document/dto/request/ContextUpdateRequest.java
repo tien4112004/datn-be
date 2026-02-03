@@ -7,6 +7,6 @@ public class ContextUpdateRequest {
     private String title;
     private String content;
     private String subject;
-    private Integer grade;
+    private String grade;
     private String author;
 }

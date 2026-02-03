@@ -15,7 +15,7 @@ public class ContextResponse {
     String title;
     String content;
     String subject;
-    Integer grade;
+    String grade;
     String author;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;

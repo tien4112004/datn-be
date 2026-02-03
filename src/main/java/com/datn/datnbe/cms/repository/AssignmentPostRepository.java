@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 public interface AssignmentPostRepository extends JpaRepository<AssignmentPost, String> {
 
     @Query(value = """
-            SELECT * FROM Assigments 
+            SELECT * FROM Assigments
             WHERE id = :id
             """, nativeQuery = true)
     public AssignmentPost findAssignmentById(String id);
