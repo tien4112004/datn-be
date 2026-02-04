@@ -54,6 +54,7 @@ class ImageGenerationManagementIntegrationTest extends BaseIntegrationTest {
 
     private static final String BASE64_IMAGE_SAMPLE = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
     private static final String BASE64_IMAGE_SAMPLE_2 = "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mNk+M9QzwAEjDAGACCKAoFFBJHUAAAAAElFTkSuQmCC";
+    private static final String TRACE_ID = "test-trace-id-integration-12345";
 
     @BeforeEach
     void setUp() {
@@ -113,7 +114,7 @@ class ImageGenerationManagementIntegrationTest extends BaseIntegrationTest {
                 .thenReturn(mockResponse);
 
         // When
-        List<MultipartFile> result = imageGenerationManagement.generateImage(request);
+        List<MultipartFile> result = imageGenerationManagement.generateImage(request, TRACE_ID);
 
         // Then
         assertThat(result).isNotNull();
@@ -146,7 +147,7 @@ class ImageGenerationManagementIntegrationTest extends BaseIntegrationTest {
                 .thenReturn(mockResponse);
 
         // When
-        List<MultipartFile> result = imageGenerationManagement.generateImage(request);
+        List<MultipartFile> result = imageGenerationManagement.generateImage(request, TRACE_ID);
 
         // Then
         assertThat(result).isNotNull();
@@ -171,7 +172,7 @@ class ImageGenerationManagementIntegrationTest extends BaseIntegrationTest {
                 .build();
 
         // When & Then
-        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request)).isInstanceOf(AppException.class)
+        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request, TRACE_ID)).isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.MODEL_NOT_ENABLED);
 
         // Verify AI API was never called
@@ -189,7 +190,7 @@ class ImageGenerationManagementIntegrationTest extends BaseIntegrationTest {
                 .build();
 
         // When & Then
-        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request)).isInstanceOf(AppException.class)
+        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request, TRACE_ID)).isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.MODEL_NOT_FOUND);
 
         verify(aiApiClient, never()).post(anyString(), any(Map.class), eq(ImageGeneratedResponseDto.class));
@@ -213,7 +214,7 @@ class ImageGenerationManagementIntegrationTest extends BaseIntegrationTest {
                 .thenReturn(mockResponse);
 
         // When & Then
-        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request)).isInstanceOf(AppException.class)
+        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request, TRACE_ID)).isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.GENERATION_ERROR)
                 .hasMessageContaining("API key is invalid");
 
@@ -238,7 +239,7 @@ class ImageGenerationManagementIntegrationTest extends BaseIntegrationTest {
                 .thenReturn(mockResponse);
 
         // When & Then
-        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request)).isInstanceOf(AppException.class)
+        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request, TRACE_ID)).isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.GENERATION_ERROR);
 
         verify(aiApiClient, times(1)).post(anyString(), any(Map.class), eq(ImageGeneratedResponseDto.class));
@@ -262,7 +263,7 @@ class ImageGenerationManagementIntegrationTest extends BaseIntegrationTest {
                 .thenReturn(mockResponse);
 
         // When & Then
-        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request)).isInstanceOf(AppException.class)
+        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request, TRACE_ID)).isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.GENERATION_ERROR);
 
         verify(aiApiClient, times(1)).post(anyString(), any(Map.class), eq(ImageGeneratedResponseDto.class));
@@ -286,7 +287,7 @@ class ImageGenerationManagementIntegrationTest extends BaseIntegrationTest {
                 .thenReturn(mockResponse);
 
         // When & Then
-        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request)).isInstanceOf(AppException.class)
+        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request, TRACE_ID)).isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_BASE64_FORMAT);
 
         verify(aiApiClient, times(1)).post(anyString(), any(Map.class), eq(ImageGeneratedResponseDto.class));
@@ -315,7 +316,7 @@ class ImageGenerationManagementIntegrationTest extends BaseIntegrationTest {
                 .thenReturn(mockResponse);
 
         // When
-        List<MultipartFile> result = imageGenerationManagement.generateImage(request);
+        List<MultipartFile> result = imageGenerationManagement.generateImage(request, TRACE_ID);
 
         // Then
         assertThat(result).isNotNull();
@@ -343,7 +344,7 @@ class ImageGenerationManagementIntegrationTest extends BaseIntegrationTest {
                 .thenReturn(mockResponse);
 
         // When
-        List<MultipartFile> result = imageGenerationManagement.generateImage(request);
+        List<MultipartFile> result = imageGenerationManagement.generateImage(request, TRACE_ID);
 
         // Then
         assertThat(result).isNotNull();
@@ -358,7 +359,7 @@ class ImageGenerationManagementIntegrationTest extends BaseIntegrationTest {
         modelConfigurationRepo.save(model);
 
         // Try to generate again
-        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request)).isInstanceOf(AppException.class)
+        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request, TRACE_ID)).isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.MODEL_NOT_ENABLED);
     }
 
@@ -380,7 +381,7 @@ class ImageGenerationManagementIntegrationTest extends BaseIntegrationTest {
                 .thenReturn(mockResponse);
 
         // First generation should succeed
-        List<MultipartFile> result1 = imageGenerationManagement.generateImage(request);
+        List<MultipartFile> result1 = imageGenerationManagement.generateImage(request, TRACE_ID);
         assertThat(result1).hasSize(1);
 
         // Disable model
@@ -389,7 +390,7 @@ class ImageGenerationManagementIntegrationTest extends BaseIntegrationTest {
         modelConfigurationRepo.save(model);
 
         // Second generation should fail
-        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request)).isInstanceOf(AppException.class)
+        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request, TRACE_ID)).isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.MODEL_NOT_ENABLED);
 
         // Re-enable model
@@ -397,7 +398,7 @@ class ImageGenerationManagementIntegrationTest extends BaseIntegrationTest {
         modelConfigurationRepo.save(model);
 
         // Third generation should succeed
-        List<MultipartFile> result2 = imageGenerationManagement.generateImage(request);
+        List<MultipartFile> result2 = imageGenerationManagement.generateImage(request, TRACE_ID);
         assertThat(result2).hasSize(1);
     }
 
@@ -419,7 +420,7 @@ class ImageGenerationManagementIntegrationTest extends BaseIntegrationTest {
                 .thenReturn(mockResponse);
 
         // When
-        List<MultipartFile> result = imageGenerationManagement.generateImage(request);
+        List<MultipartFile> result = imageGenerationManagement.generateImage(request, TRACE_ID);
 
         // Then
         assertThat(result).hasSize(1);

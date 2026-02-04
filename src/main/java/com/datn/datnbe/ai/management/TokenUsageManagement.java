@@ -25,16 +25,12 @@ public class TokenUsageManagement implements TokenUsageApi {
     public void recordTokenUsage(TokenUsage tokenUsage) {
         Long existingTokenCount = tokenUsageJPARepo.getTotalTokenIfExisted(tokenUsage.getDocumentId());
         if (existingTokenCount != null) {
-            if (existingTokenCount > tokenUsage.getTokenCount()) {
-                tokenUsageJPARepo.updateTokenUsageWithNewData(tokenUsage.getDocumentId(),
-                        tokenUsage.getTokenCount(),
-                        tokenUsage.getInputTokens(),
-                        tokenUsage.getOutputTokens(),
-                        tokenUsage.getActualPrice());
-                return;
-            }
-            log.info("Skipping recording token usage for documentId {} as a larger token usage already exists.",
-                    tokenUsage.getDocumentId());
+            tokenUsageJPARepo.updateTokenUsageWithNewData(tokenUsage.getDocumentId(),
+                    tokenUsage.getTokenCount(),
+                    tokenUsage.getInputTokens(),
+                    tokenUsage.getOutputTokens(),
+                    tokenUsage.getActualPrice(),
+                    tokenUsage.getCalculatedPrice());
             return;
         }
         tokenUsageRepo.saveTokenUsage(tokenUsage);

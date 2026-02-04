@@ -1,5 +1,6 @@
 package com.datn.datnbe.ai.presentation;
 
+import com.datn.datnbe.ai.api.CoinPricingApi;
 import com.datn.datnbe.ai.api.ImageGenerationApi;
 import com.datn.datnbe.ai.api.TokenUsageApi;
 import com.datn.datnbe.ai.dto.request.ImagePromptRequest;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
 
@@ -40,6 +42,7 @@ public class ImageGenerationController {
     private final SecurityContextUtils securityContextUtils;
     private final TokenUsageApi tokenUsageApi;
     private final PhoenixQueryService phoenixQueryService;
+    private final CoinPricingApi coinPricingApi;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostMapping("/images/generate")
@@ -94,8 +97,15 @@ public class ImageGenerationController {
     @PostMapping("/images/generate-in-presentation")
     @Idempotent(serviceType = ImageGenerationIdempotencyService.class)
     public ResponseEntity<AppResponseDto<ImageResponseDto>> generateImageWithIdempotency(
-            @RequestBody ImagePromptRequest request) {
+            @RequestBody ImagePromptRequest request,
+            HttpServletRequest httpRequest) {
         String ownerId = securityContextUtils.getCurrentUserId();
+        String idempotencyKey = httpRequest.getHeader("idempotency-key");
+        String presentationId = idempotencyKey.split(":")[0];
+        if (request.getPresentationId() == null || request.getPresentationId().isEmpty()) {
+            request.setPresentationId(presentationId);
+        }
+        log.info("Idempotency key: {}", idempotencyKey);
 
         List<MultipartFile> imageResponse = imageGenerationApi.generateImage(request,
                 request.getPresentationId().replace("-", ""));
@@ -130,8 +140,16 @@ public class ImageGenerationController {
     @PostMapping("/image/generate-in-presentation/mock")
     @Idempotent(serviceType = ImageGenerationIdempotencyService.class)
     public ResponseEntity<AppResponseDto<ImageResponseDto>> generateMockImageWithIdempotency(
-            @RequestBody ImagePromptRequest request) {
-        log.info("Received mock image generation request with idempotency: {}", request);
+            @RequestBody ImagePromptRequest request,
+            HttpServletRequest httpRequest) {
+        String idempotencyKey = httpRequest.getHeader("idempotency-key");
+        log.info("Received mock image generation request with idempotency: {}, idempotency-key: {}",
+                request,
+                idempotencyKey);
+        String presentationId = idempotencyKey.split(":")[0];
+        if (request.getPresentationId() == null || request.getPresentationId().isEmpty()) {
+            request.setPresentationId(presentationId);
+        }
         String ownerId = securityContextUtils.getCurrentUserId();
 
         List<MultipartFile> imageResponse = imageGenerationApi.generateMockImage(request);
@@ -166,6 +184,9 @@ public class ImageGenerationController {
                     requestType);
 
             if (tokenUsageInfo != null) {
+                Long PriceInCoinOfRequest = coinPricingApi.getTokenPriceInCoins(tokenUsageInfo.getModel(),
+                        tokenUsageInfo.getProvider(),
+                        requestType.toUpperCase());
                 TokenUsage tokenUsage = TokenUsage.builder()
                         .userId(userId)
                         .request(requestType)
@@ -179,6 +200,7 @@ public class ImageGenerationController {
                                 ? tokenUsageInfo.getProvider()
                                 : request.getProvider())
                         .actualPrice(tokenUsageInfo.getTotalPrice())
+                        .calculatedPrice(PriceInCoinOfRequest)
                         .build();
                 tokenUsageApi.recordTokenUsage(tokenUsage);
                 log.debug("Token usage saved from Phoenix for image generation - tokens: {}, price: {}",

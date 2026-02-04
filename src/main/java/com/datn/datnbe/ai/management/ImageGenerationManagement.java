@@ -55,6 +55,7 @@ public class ImageGenerationManagement implements ImageGenerationApi {
 
         org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
         headers.set("X-Trace-ID", traceId.replace("-", ""));
+        headers.set("provider", request.getProvider());
 
         ImageGeneratedResponseDto generatedImage = aiApiClient.post(IMAGE_API_ENDPOINT,
                 MappingParamsUtils.constructParams(request),

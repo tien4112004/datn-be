@@ -20,6 +20,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpHeaders;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -48,6 +49,7 @@ class ImageGenerationManagementTest {
     private static final String IMAGE_API_ENDPOINT = "/api/image/generate";
     private static final String BASE64_IMAGE_SAMPLE = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
     private static final String BASE64_IMAGE_SAMPLE_2 = "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mNk+M9QzwAEjDAGACCKAoFFBJHUAAAAAElFTkSuQmCC";
+    private static final String TRACE_ID = "test-trace-id-12345";
 
     @BeforeEach
     void setUp() {
@@ -71,11 +73,11 @@ class ImageGenerationManagementTest {
         mockResponse.setError(null);
 
         when(modelSelectionApi.isModelEnabled("dall-e-3")).thenReturn(true);
-        when(aiApiClient.post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class)))
+        when(aiApiClient.post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class), any(HttpHeaders.class)))
                 .thenReturn(mockResponse);
 
         // When
-        List<MultipartFile> result = imageGenerationManagement.generateImage(request);
+        List<MultipartFile> result = imageGenerationManagement.generateImage(request, TRACE_ID);
 
         // Then
         assertThat(result).isNotNull();
@@ -85,7 +87,7 @@ class ImageGenerationManagementTest {
         assertThat(result.get(0).getName()).isEqualTo("image");
 
         verify(modelSelectionApi, times(1)).isModelEnabled("dall-e-3");
-        verify(aiApiClient, times(1)).post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class));
+        verify(aiApiClient, times(1)).post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class), any(HttpHeaders.class));
     }
 
     @Test
@@ -104,11 +106,11 @@ class ImageGenerationManagementTest {
         mockResponse.setError(null);
 
         when(modelSelectionApi.isModelEnabled("dall-e-3")).thenReturn(true);
-        when(aiApiClient.post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class)))
+        when(aiApiClient.post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class), any(HttpHeaders.class)))
                 .thenReturn(mockResponse);
 
         // When
-        List<MultipartFile> result = imageGenerationManagement.generateImage(request);
+        List<MultipartFile> result = imageGenerationManagement.generateImage(request, TRACE_ID);
 
         // Then
         assertThat(result).isNotNull();
@@ -117,7 +119,7 @@ class ImageGenerationManagementTest {
         assertThat(result.get(1).getOriginalFilename()).isEqualTo("AI_generated_image.png");
 
         verify(modelSelectionApi, times(1)).isModelEnabled("dall-e-3");
-        verify(aiApiClient, times(1)).post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class));
+        verify(aiApiClient, times(1)).post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class), any(HttpHeaders.class));
     }
 
     @Test
@@ -133,7 +135,7 @@ class ImageGenerationManagementTest {
         when(modelSelectionApi.isModelEnabled("disabled-model")).thenReturn(false);
 
         // When & Then
-        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request)).isInstanceOf(AppException.class)
+        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request, TRACE_ID)).isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.MODEL_NOT_ENABLED);
 
         verify(modelSelectionApi, times(1)).isModelEnabled("disabled-model");
@@ -155,16 +157,16 @@ class ImageGenerationManagementTest {
         mockResponse.setError("Invalid API key provided");
 
         when(modelSelectionApi.isModelEnabled("dall-e-3")).thenReturn(true);
-        when(aiApiClient.post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class)))
+        when(aiApiClient.post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class), any(HttpHeaders.class)))
                 .thenReturn(mockResponse);
 
         // When & Then
-        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request)).isInstanceOf(AppException.class)
+        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request, TRACE_ID)).isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.GENERATION_ERROR)
                 .hasMessageContaining("Invalid API key provided");
 
         verify(modelSelectionApi, times(1)).isModelEnabled("dall-e-3");
-        verify(aiApiClient, times(1)).post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class));
+        verify(aiApiClient, times(1)).post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class), any(HttpHeaders.class));
     }
 
     @Test
@@ -182,15 +184,15 @@ class ImageGenerationManagementTest {
         mockResponse.setError(null);
 
         when(modelSelectionApi.isModelEnabled("dall-e-3")).thenReturn(true);
-        when(aiApiClient.post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class)))
+        when(aiApiClient.post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class), any(HttpHeaders.class)))
                 .thenReturn(mockResponse);
 
         // When & Then
-        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request)).isInstanceOf(AppException.class)
+        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request, TRACE_ID)).isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.GENERATION_ERROR);
 
         verify(modelSelectionApi, times(1)).isModelEnabled("dall-e-3");
-        verify(aiApiClient, times(1)).post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class));
+        verify(aiApiClient, times(1)).post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class), any(HttpHeaders.class));
     }
 
     @Test
@@ -208,15 +210,15 @@ class ImageGenerationManagementTest {
         mockResponse.setError(null);
 
         when(modelSelectionApi.isModelEnabled("dall-e-3")).thenReturn(true);
-        when(aiApiClient.post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class)))
+        when(aiApiClient.post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class), any(HttpHeaders.class)))
                 .thenReturn(mockResponse);
 
         // When & Then
-        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request)).isInstanceOf(AppException.class)
+        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request, TRACE_ID)).isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.GENERATION_ERROR);
 
         verify(modelSelectionApi, times(1)).isModelEnabled("dall-e-3");
-        verify(aiApiClient, times(1)).post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class));
+        verify(aiApiClient, times(1)).post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class), any(HttpHeaders.class));
     }
 
     @Test
@@ -234,15 +236,15 @@ class ImageGenerationManagementTest {
         mockResponse.setError(null);
 
         when(modelSelectionApi.isModelEnabled("dall-e-3")).thenReturn(true);
-        when(aiApiClient.post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class)))
+        when(aiApiClient.post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class), any(HttpHeaders.class)))
                 .thenReturn(mockResponse);
 
         // When & Then
-        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request)).isInstanceOf(AppException.class)
+        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request, TRACE_ID)).isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_BASE64_FORMAT);
 
         verify(modelSelectionApi, times(1)).isModelEnabled("dall-e-3");
-        verify(aiApiClient, times(1)).post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class));
+        verify(aiApiClient, times(1)).post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class), any(HttpHeaders.class));
     }
 
     @Test
@@ -265,11 +267,11 @@ class ImageGenerationManagementTest {
         mockResponse.setError(null);
 
         when(modelSelectionApi.isModelEnabled("stable-diffusion")).thenReturn(true);
-        when(aiApiClient.post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class)))
+        when(aiApiClient.post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class), any(HttpHeaders.class)))
                 .thenReturn(mockResponse);
 
         // When
-        List<MultipartFile> result = imageGenerationManagement.generateImage(request);
+        List<MultipartFile> result = imageGenerationManagement.generateImage(request, TRACE_ID);
 
         // Then
         assertThat(result).isNotNull();
@@ -277,7 +279,7 @@ class ImageGenerationManagementTest {
         assertThat(result.get(0).getSize()).isGreaterThan(0);
 
         verify(modelSelectionApi, times(1)).isModelEnabled("stable-diffusion");
-        verify(aiApiClient, times(1)).post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class));
+        verify(aiApiClient, times(1)).post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class), any(HttpHeaders.class));
     }
 
     @Test
@@ -295,15 +297,15 @@ class ImageGenerationManagementTest {
         mockResponse.setError(null);
 
         when(modelSelectionApi.isModelEnabled("dall-e-3")).thenReturn(true);
-        when(aiApiClient.post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class)))
+        when(aiApiClient.post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class), any(HttpHeaders.class)))
                 .thenReturn(mockResponse);
 
         // When & Then
-        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request)).isInstanceOf(AppException.class)
+        assertThatThrownBy(() -> imageGenerationManagement.generateImage(request, TRACE_ID)).isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.GENERATION_ERROR);
 
         verify(modelSelectionApi, times(1)).isModelEnabled("dall-e-3");
-        verify(aiApiClient, times(1)).post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class));
+        verify(aiApiClient, times(1)).post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class), any(HttpHeaders.class));
     }
 
     @Test
@@ -321,11 +323,11 @@ class ImageGenerationManagementTest {
         mockResponse.setError(null);
 
         when(modelSelectionApi.isModelEnabled("dall-e-3")).thenReturn(true);
-        when(aiApiClient.post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class)))
+        when(aiApiClient.post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class), any(HttpHeaders.class)))
                 .thenReturn(mockResponse);
 
         // When
-        List<MultipartFile> result = imageGenerationManagement.generateImage(request);
+        List<MultipartFile> result = imageGenerationManagement.generateImage(request, TRACE_ID);
 
         // Then
         assertThat(result).isNotNull();
@@ -339,7 +341,7 @@ class ImageGenerationManagementTest {
         assertThat(file.getSize()).isGreaterThan(0);
 
         verify(modelSelectionApi, times(1)).isModelEnabled("dall-e-3");
-        verify(aiApiClient, times(1)).post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class));
+        verify(aiApiClient, times(1)).post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class), any(HttpHeaders.class));
     }
 
     @Test
@@ -360,11 +362,11 @@ class ImageGenerationManagementTest {
             mockResponse.setError(null);
 
             when(modelSelectionApi.isModelEnabled(model)).thenReturn(true);
-            when(aiApiClient.post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class)))
+            when(aiApiClient.post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class), any(HttpHeaders.class)))
                     .thenReturn(mockResponse);
 
             // When
-            List<MultipartFile> result = imageGenerationManagement.generateImage(request);
+            List<MultipartFile> result = imageGenerationManagement.generateImage(request, TRACE_ID);
 
             // Then
             assertThat(result).isNotNull();
@@ -372,6 +374,6 @@ class ImageGenerationManagementTest {
         }
 
         verify(modelSelectionApi, times(3)).isModelEnabled(anyString());
-        verify(aiApiClient, times(3)).post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class));
+        verify(aiApiClient, times(3)).post(eq(IMAGE_API_ENDPOINT), any(Map.class), eq(ImageGeneratedResponseDto.class), any(HttpHeaders.class));
     }
 }

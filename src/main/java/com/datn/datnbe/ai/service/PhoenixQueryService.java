@@ -69,7 +69,6 @@ public class PhoenixQueryService {
             Map<String, Object> requestBody = Map.of("query", query);
 
             log.info("Phoenix GraphQL request - URL: {}, traceId: {}, projectId: {}", url, traceId, projectId);
-            log.info("Full request body: {}", requestBody);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);

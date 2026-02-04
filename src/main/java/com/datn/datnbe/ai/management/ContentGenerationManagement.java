@@ -83,6 +83,7 @@ public class ContentGenerationManagement implements ContentGenerationApi {
 
         Map<String, String> headers = new java.util.HashMap<>();
         headers.put("X-Trace-ID", traceId);
+        headers.put("provider", request.getProvider());
 
         return aiApiClient.postSse(OUTLINE_API_ENDPOINT, MappingParamsUtils.constructParams(request), headers)
                 .map(chunk -> new String(Base64.getDecoder().decode(chunk), StandardCharsets.UTF_8));
@@ -101,6 +102,7 @@ public class ContentGenerationManagement implements ContentGenerationApi {
 
         Map<String, String> headers = new java.util.HashMap<>();
         headers.put("X-Trace-ID", traceId);
+        headers.put("provider", request.getProvider());
 
         return aiApiClient.postSse(PRESENTATION_API_ENDPOINT, MappingParamsUtils.constructParams(request), headers);
     }
@@ -117,6 +119,7 @@ public class ContentGenerationManagement implements ContentGenerationApi {
         try {
             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
             headers.set("X-Trace-ID", traceId);
+            headers.set("provider", request.getProvider());
 
             AiWokerResponse response = aiApiClient.post(OUTLINE_BATCH_API_ENDPOINT,
                     MappingParamsUtils.constructParams(request),
@@ -147,6 +150,7 @@ public class ContentGenerationManagement implements ContentGenerationApi {
         try {
             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
             headers.set("X-Trace-ID", traceId);
+            headers.set("provider", request.getProvider());
 
             AiWokerResponse response = aiApiClient.post(PRESENTATION_BATCH_API_ENDPOINT,
                     MappingParamsUtils.constructParams(request),
@@ -176,6 +180,7 @@ public class ContentGenerationManagement implements ContentGenerationApi {
         try {
             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
             headers.set("X-Trace-ID", traceId);
+            headers.set("provider", request.getProvider());
 
             AiWokerResponse response = aiApiClient.post(MINDMAP_API_ENDPOINT,
                     MappingParamsUtils.constructParams(request),

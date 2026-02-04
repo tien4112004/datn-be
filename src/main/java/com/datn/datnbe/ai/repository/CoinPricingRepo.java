@@ -3,6 +3,7 @@ package com.datn.datnbe.ai.repository;
 import com.datn.datnbe.ai.entity.CoinPricing;
 import com.datn.datnbe.ai.enums.ResourceType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -52,4 +53,17 @@ public interface CoinPricingRepo extends JpaRepository<CoinPricing, String> {
      * @return true if default pricing rule exists
      */
     boolean existsByResourceTypeAndModelIsNull(ResourceType resourceType);
+
+    @Query(value = """
+            SELECT COALESCE(
+                (SELECT c.base_cost FROM coin_pricing c
+                 JOIN model_configuration m ON c.model_id = m.id
+                 WHERE m.model_name = :model AND LOWER(m.provider) = LOWER(:provider) AND c.resource_type = :resourceType
+                 LIMIT 1),
+                (SELECT c.base_cost FROM coin_pricing c
+                 WHERE c.resource_type like :resourceType AND c.model_id IS NULL
+                 LIMIT 1)
+            )
+            """, nativeQuery = true)
+    Long getTokenPriceInCoins(String model, String provider, String resourceType);
 }

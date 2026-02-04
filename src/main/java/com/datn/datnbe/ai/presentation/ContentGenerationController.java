@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.datn.datnbe.ai.api.AIResultApi;
+import com.datn.datnbe.ai.api.CoinPricingApi;
 import com.datn.datnbe.ai.api.ContentGenerationApi;
 import com.datn.datnbe.ai.api.TokenUsageApi;
 import com.datn.datnbe.ai.dto.request.MindmapPromptRequest;
@@ -52,6 +53,7 @@ public class ContentGenerationController {
     static Integer OUTLINE_DELAY = 25; // milliseconds
     static Integer SLIDE_DELAY = 500; // milliseconds
     ObjectMapper objectMapper = new ObjectMapper();
+    CoinPricingApi coinPricingApi;
 
     @PostMapping(value = "presentations/outline-generate", produces = MediaType.TEXT_PLAIN_VALUE)
     public Flux<String> generateOutline(@RequestBody OutlinePromptRequest request) {
@@ -298,7 +300,9 @@ public class ContentGenerationController {
 
             // Convert to MindmapGenerateResponseDto
             MindmapGenerateResponseDto mindmapDto = mapper.treeToValue(dataNode, MindmapGenerateResponseDto.class);
-            extractAndSaveTokenUsage(securityContextUtils.getCurrentUserId(),
+
+            // Extract and save token usage asynchronously AFTER response is sent
+            recordTokenUsageAsync(securityContextUtils.getCurrentUserId(),
                     "mindmap",
                     traceId,
                     mapper.writeValueAsString(request),
@@ -313,7 +317,7 @@ public class ContentGenerationController {
     }
 
     @Async
-    private void recordTokenUsage(String userId,
+    protected void recordTokenUsage(String userId,
             TokenUsageInfoDto tokenUsageInfo,
             String requestType,
             String documentId,
@@ -322,6 +326,9 @@ public class ContentGenerationController {
             Long totalTokens = tokenUsageInfo.getTotalTokens();
 
             if (totalTokens != null) {
+                Long PriceInCoinOfRequest = coinPricingApi.getTokenPriceInCoins(tokenUsageInfo.getModel(),
+                        tokenUsageInfo.getProvider(),
+                        requestType.toUpperCase());
                 TokenUsage tokenUsage = TokenUsage.builder()
                         .userId(userId)
                         .request(requestType)
@@ -333,12 +340,31 @@ public class ContentGenerationController {
                         .requestBody(requestBody)
                         .provider(tokenUsageInfo.getProvider())
                         .actualPrice(tokenUsageInfo.getTotalPrice())
+                        .calculatedPrice(PriceInCoinOfRequest)
                         .build();
                 tokenUsageApi.recordTokenUsage(tokenUsage);
                 log.debug("Token usage saved with price: {}", tokenUsageInfo.getTotalPrice());
             }
         } catch (Exception e) {
             log.warn("Failed to record token usage for {}", requestType, e);
+        }
+    }
+
+    /**
+     * Async wrapper to ensure token usage recording runs AFTER response is sent
+     */
+    @Async
+    protected void recordTokenUsageAsync(String userId,
+            String requestType,
+            String traceId,
+            String requestBody,
+            String model,
+            String provider) {
+        try {
+            Thread.sleep(200);
+            extractAndSaveTokenUsage(userId, requestType, traceId, requestBody, model, provider);
+        } catch (Exception e) {
+            log.warn("Failed to record token usage for {} with traceId: {}", requestType, traceId, e);
         }
     }
 

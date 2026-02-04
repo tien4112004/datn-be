@@ -53,6 +53,9 @@ public class TokenUsage {
     @Column(name = "actual_price", precision = 19, scale = 6)
     BigDecimal actualPrice;
 
+    @Column(name = "calculated_price")
+    Long calculatedPrice;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     LocalDateTime createdAt;

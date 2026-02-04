@@ -55,26 +55,28 @@ public interface TokenUsageJPARepo extends JpaRepository<TokenUsage, Long> {
      */
     List<TokenUsage> findByDocumentId(@Param("documentId") String documentId);
 
-    @Query("""
+    @Query(value = """
             SELECT t.token_count
             FROM token_usage t
             WHERE t.document_id = :documentId
-            """)
+            """, nativeQuery = true)
     Long getTotalTokenIfExisted(@Param("documentId") String documentId);
 
-    @Query("""
-            Update token_usage t
-            SET t.token_count = :tokenCount
-            SET t.input_tokens = :inputTokens
-            SET t.output_tokens = :outputTokens
-            SET t.actual_price = :actualPrice
-            WHERE t.document_id = :documentId
-            """)
+    @Query(value = """
+            Update token_usage
+            SET token_count = :tokenCount,
+                input_tokens = :inputTokens,
+                output_tokens = :outputTokens,
+                actual_price = :actualPrice,
+                calculated_price = calculated_price + :calculatedPrice
+            WHERE document_id = :documentId
+            """, nativeQuery = true)
     @Modifying
     @Transactional
     void updateTokenUsageWithNewData(@Param("documentId") String documentId,
             @Param("tokenCount") Long tokenCount,
             @Param("inputTokens") Long inputTokens,
             @Param("outputTokens") Long outputTokens,
-            @Param("actualPrice") BigDecimal actualPrice);
+            @Param("actualPrice") BigDecimal actualPrice,
+            @Param("calculatedPrice") Long calculatedPrice);
 }

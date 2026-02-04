@@ -52,4 +52,6 @@ public interface CoinPricingApi {
      * @param id the pricing configuration ID
      */
     void deletePricing(String id);
+
+    Long getTokenPriceInCoins(String model, String provider, String resourceType);
 }
