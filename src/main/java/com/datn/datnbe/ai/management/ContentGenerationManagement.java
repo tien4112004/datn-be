@@ -212,8 +212,8 @@ public class ContentGenerationManagement implements ContentGenerationApi {
                 .questionsPerDifficulty(difficultyMap)
                 .questionTypes(questionTypesList)
                 .additionalRequirements(request.getAdditionalRequirements())
-                .provider("google") // TODO: in request
-                .model("gemini-2.5-flash-lite") // TODO:    in request
+                .provider(request.getProvider() != null ? request.getProvider() : "google")
+                .model(request.getModel() != null ? request.getModel() : "gemini-2.5-flash-lite")
                 .build();
 
         // Make synchronous call to GenAI-Gateway - return raw JSON string

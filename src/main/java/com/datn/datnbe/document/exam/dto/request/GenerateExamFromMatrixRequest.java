@@ -77,4 +77,18 @@ public class GenerateExamFromMatrixRequest {
     @JsonAlias("include_personal_questions")
     @Builder.Default
     private Boolean includePersonalQuestions = true;
+
+    /**
+     * AI provider to use for GENERATE_WITH_AI strategy (optional).
+     * Default: "google"
+     */
+    @Builder.Default
+    private String provider = "google";
+
+    /**
+     * AI model to use for GENERATE_WITH_AI strategy (optional).
+     * Default: "gemini-2.5-flash-lite"
+     */
+    @Builder.Default
+    private String model = "gemini-2.5-flash-lite";
 }
