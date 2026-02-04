@@ -40,6 +40,9 @@ public class Context {
     @Column(name = "from_book")
     Boolean fromBook;
 
+    @Column(name = "owner_id", length = 36)
+    String ownerId;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     LocalDateTime createdAt;

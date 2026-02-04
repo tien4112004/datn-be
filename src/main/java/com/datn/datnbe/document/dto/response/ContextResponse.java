@@ -18,6 +18,7 @@ public class ContextResponse {
     Integer grade;
     String author;
     Boolean fromBook;
+    String ownerId;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 }

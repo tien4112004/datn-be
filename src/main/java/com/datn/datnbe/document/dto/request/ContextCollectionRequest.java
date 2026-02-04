@@ -1,0 +1,36 @@
+package com.datn.datnbe.document.dto.request;
+
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+import java.util.List;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class ContextCollectionRequest {
+
+    @NotNull(message = "Bank type is required (personal or public)")
+    @Pattern(regexp = "personal|public", flags = Pattern.Flag.CASE_INSENSITIVE, message = "Bank type must be either 'personal' or 'public'")
+    String bankType;
+
+    @Builder.Default
+    Integer page = 1;
+
+    @Builder.Default
+    Integer pageSize = 10;
+
+    String search;
+
+    List<String> grade;
+
+    List<String> subject;
+
+    String sortBy;
+
+    String sortDirection;
+}

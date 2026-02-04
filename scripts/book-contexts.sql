@@ -2,7 +2,7 @@
 
 -- Chủ điểm: Tôi và các bạn
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (1, 'TV', 'TÔI LÀ HỌC SINH LỚP 1', 'Tôi tên là Nam, học sinh lớp 1A, Trường Tiểu học Lê Quý Đôn. Ngày đầu đi học, mặc bộ đồng phục của trường, tôi hãnh diện lắm.
 
 Hồi đầu năm học, tôi mới học chữ cái. Thế mà bây giờ, tôi đã đọc được truyện tranh. Tôi còn biết làm toán nữa. Tôi có thêm nhiều bạn mới.
@@ -39,11 +39,11 @@ Bỗng nhiên, Hoẵng vấp phải một hòn đá rồi ngã oạch. Nai vội
 Tuy không ai giành giải nhất, nhưng Nai và Hoẵng đều nhận được "Giải thưởng tình bạn".', 'Sưu tầm', true),
 (1, 'TV', 'SINH NHẬT CỦA VOI CON', 'Hôm nay là sinh nhật của Voi Con, nhưng nó bị ốm. Đang buồn bã, bỗng Voi Con nghe tiếng gọi. Thì ra các bạn đến chúc mừng sinh nhật Voi. Thỏ Trắng mang cà rốt. Gấu Đen ngoạm nguyên một nải chuối. Khỉ Vàng và Sóc Nâu tặng Voi tiết mục "ngúc ngoắc đuôi". Vẹt Mỏ Khoằm thay mặt các bạn nói những lời chúc tốt đẹp.
 
-Voi Con vui ơi là vui. Nó huơ vòi mấy vòng để cảm ơn các bạn.', 'Sưu tầm', true);
+Voi Con vui ơi là vui. Nó huơ vòi mấy vòng để cảm ơn các bạn.', 'Sưu tầm', true, NULL);
 
 -- Chủ điểm: Mái ấm gia đình
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (1, 'TV', 'NỤ HÔN TRÊN BÀN TAY', 'Ngày đầu đi học, Nam hồi hộp lắm. Mẹ nhẹ nhàng đặt một nụ hôn vào bàn tay Nam và dặn:
 
 - Mỗi khi lo lắng, con hãy áp bàn tay này lên má. Mẹ lúc nào cũng ở bên con.
@@ -69,11 +69,11 @@ Chi chạy lại xem lịch:
 - A, ngày 28 tháng 6, ngày Gia đình Việt Nam.
 - Đúng rồi. Vì thế, hôm nay nhà mình liên hoan con ạ.
 
-Chi vui lắm. Em nhặt rau giúp mẹ. Bố dọn nhà, rửa xoong nồi, cốc chén. Ông bà trông em bé để mẹ nấu ăn. Cả nhà quây quần bên nhau. Bữa cơm thật tuyệt. Chi thích ngày nào cũng là ngày Gia đình Việt Nam.', 'Châu Anh', true);
+Chi vui lắm. Em nhặt rau giúp mẹ. Bố dọn nhà, rửa xoong nồi, cốc chén. Ông bà trông em bé để mẹ nấu ăn. Cả nhà quây quần bên nhau. Bữa cơm thật tuyệt. Chi thích ngày nào cũng là ngày Gia đình Việt Nam.', 'Châu Anh', true, NULL);
 
 -- Chủ điểm: Mái trường mến yêu
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (1, 'TV', 'TÔI ĐI HỌC', 'Hằng năm cứ vào cuối thu, lá ngoài đường rụng nhiều và trên không có những đám mây bàng bạc, lòng tôi lại nao nức những kỉ niệm mơn man của buổi tựu trường.
 
 Buổi mai hôm ấy, một buổi mai đầy sương thu và gió lạnh. Mẹ tôi âu yếm nắm tay tôi dẫn đi trên con đường làng dài và hẹp. Con đường này, tôi đã quen đi lại lắm lần, nhưng lần này tôi tự nhiên thấy lạ. Cảnh vật chung quanh tôi đều thay đổi, vì chính lòng tôi đang có sự thay đổi lớn: hôm nay tôi đi học.', 'Thanh Tịnh', true),
@@ -143,11 +143,11 @@ Tung nắng hồng lên ngực.
 Giờ chơi vừa chấm dứt
 Đàn chim non vội vàng
 Xếp hàng nhanh vào lớp
-Bài học mới sang trang.', 'Nguyễn Lãm Thắng', true);
+Bài học mới sang trang.', 'Nguyễn Lãm Thắng', true, NULL);
 
 -- Chủ điểm: Điều em cần biết
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (1, 'TV', 'KIẾN VÀ CHIM BỒ CÂU', 'Một con kiến không may bị rơi xuống nước. Nó vùng vẫy và la lên:
 - Cứu tôi với, cứu tôi với!
 Nghe tiếng kêu cứu của kiến, bồ câu nhanh trí nhặt một chiếc lá thả xuống nước. Kiến bám vào chiếc lá và leo được lên bờ.
@@ -201,11 +201,11 @@ Nam nhìn quanh, thấy một chú bảo vệ đang đứng gần đấy. Nam ch
 
 Còn đèn vàng báo hiệu phải đi chậm lại trước khi dừng hẳn.
 
-Cây đèn ba màu này được gọi là đèn giao thông. Nó điều khiển việc đi lại trên đường phố. Nếu không có đèn giao thông thì việc đi lại sẽ rất lộn xộn và nguy hiểm. Tuân thủ sự điều khiển của đèn giao thông giúp chúng ta bảo đảm an toàn khi đi lại.', 'Trung Kiên', true);
+Cây đèn ba màu này được gọi là đèn giao thông. Nó điều khiển việc đi lại trên đường phố. Nếu không có đèn giao thông thì việc đi lại sẽ rất lộn xộn và nguy hiểm. Tuân thủ sự điều khiển của đèn giao thông giúp chúng ta bảo đảm an toàn khi đi lại.', 'Trung Kiên', true, NULL);
 
 -- Chủ điểm: Bài học từ cuộc sống (tiếp)
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (1, 'TV', 'CÂU CHUYỆN CỦA RỄ', 'Hoa nở trên cành
 Khoe muôn sắc thắm
 Giữa vòm lá xanh
@@ -238,11 +238,11 @@ Sói thả sóc ra. Sóc nhảy tót lên cao, rồi đáp vọng xuống:
 Nghe tiếng kêu cứu, mấy bác nông dân đang làm việc gần đấy tức tốc chạy tới. Nhưng họ không thấy sói đâu. Thấy vậy, chú khoái chí lắm.
 Mấy hôm sau, chú lại bày ra trò ấy. Các bác nông dân lại chạy tới. Rồi một hôm, sói đến thật. Chú hốt hoảng kêu gào xin cứu giúp. Các bác nông dân nghĩ là chú lại lừa mình, nên vẫn thản nhiên làm việc. Thế là sói thỏa thuê ăn thịt hết cả đàn cừu.', 'Theo Ngụ ngôn Ê-dốp', true),
 (1, 'TV', 'TIẾNG VỌNG CỦA NÚI', 'Đang đi chơi trong núi, gấu con chợt nhìn thấy một hạt dẻ. Gấu con vui mừng reo lên: “A!”. Ngay lập tức, có tiếng “A!” vọng lại. Gấu con ngạc nhiên kêu to: “Bạn là ai?”. Lại có tiếng vọng ra từ vách núi: “Bạn là ai?”. Gấu con hét lên: “Sao không nói cho tôi biết?”. Núi cũng đáp lại như vậy. Gấu con bực tức: “Tôi ghét bạn.”. Khắp nơi có tiếng vọng: “Tôi ghét bạn.”. Gấu con tủi thân, òa khóc.
-Về nhà, gấu con kể cho mẹ nghe. Gấu mẹ cười bảo: “Con hay quay lại và nói với núi: Tôi yêu bạn.”. Gấu con làm theo lời mẹ. Quả nhiên, có tiếng vọng lại: “Tôi yêu bạn.”. Gấu con bật cười vui vẻ.', 'Theo 365 truyện kể hằng đêm', true);
+Về nhà, gấu con kể cho mẹ nghe. Gấu mẹ cười bảo: “Con hay quay lại và nói với núi: Tôi yêu bạn.”. Gấu con làm theo lời mẹ. Quả nhiên, có tiếng vọng lại: “Tôi yêu bạn.”. Gấu con bật cười vui vẻ.', 'Theo 365 truyện kể hằng đêm', true, NULL);
 
 -- Chủ điểm: Thiên nhiên kì thú
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (1, 'TV', 'LOÀI CHIM CỦA BIỂN CẢ', 'Hải âu là loài chim của biển cả. Chúng có sải cánh lớn, nên có thể bay rất ra, vượt qua cả những đại dương mênh mông. Hải âu còn bơi rất giỏi nhờ chân của chúng có màng như chân vịt.
 Hải âu bay suốt ngày trên mặt biển. Đôi khi, chúng đậu ngay trên mặt nước dập dềnh. Khi trời sắp có bão, chúng bay thành đàn tìm nơi trú ẩn. Vì vậy, hải âu được gọi là loài chim báo bão. Chúng cũng được coi là bạn của những người đi biển.', 'Trung Nguyên', true),
 (1, 'TV', 'BẢY SẮC CẦU VỒNG', 'Vừa mưa lại nắng
@@ -273,11 +273,11 @@ Các con vật đều xứng đáng nhận phần thưởng.', 'Lâm Anh', true)
 Mẹ mỉm cười đáp:
 - Con yên tâm, cây liễu sẽ không sao đâu!
 Mẹ giải thích thêm:
-- Thân cây liễu tuy không to nhưng dẻo dai. Cành liễu mềm mại, có thể chuyển động theo chiều gió. Vì vậy, cây không dễ bị gãy. Liễu còn là loài cây dễ trồng. Chỉ cần cắm cành xuống đất, nó có thể nhanh chóng mọc lên cây non.', 'Hải An', true);
+- Thân cây liễu tuy không to nhưng dẻo dai. Cành liễu mềm mại, có thể chuyển động theo chiều gió. Vì vậy, cây không dễ bị gãy. Liễu còn là loài cây dễ trồng. Chỉ cần cắm cành xuống đất, nó có thể nhanh chóng mọc lên cây non.', 'Hải An', true, NULL);
 
 -- Chủ điểm: Thế giới trong mắt em
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (1, 'TV', 'TIA NẮNG ĐI ĐÂU?', 'Buổi sáng thức dậy,
 Bé thấy buồn cười:
 Có ai đang nhảy.
@@ -358,11 +358,11 @@ Bé chưa ngủ được
 Bé nằm bé nghe
 Âm thầm rạo rực
 Cả buổi trưa hè.', 'Huy Cận', true),
-(1, 'TV', 'HOA PHƯỢNG', 'Mùa xuân phượng ra lá. Lá lấm tấm, bé xíu như lá me. Một hôm, trên những cành cây xuất hiện những nụ hồng chen lẫn màu lá. Rồi bỗng sau một đêm, hoa phượng bừng nở. Muôn ngàn cánh hoa như muôn ngàn mắt lửa.', 'Theo Xuân Diệu', true);
+(1, 'TV', 'HOA PHƯỢNG', 'Mùa xuân phượng ra lá. Lá lấm tấm, bé xíu như lá me. Một hôm, trên những cành cây xuất hiện những nụ hồng chen lẫn màu lá. Rồi bỗng sau một đêm, hoa phượng bừng nở. Muôn ngàn cánh hoa như muôn ngàn mắt lửa.', 'Theo Xuân Diệu', true, NULL);
 
 -- Chủ điểm: Đất nước và con người
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (1, 'TV', 'CẬU BÉ THÔNG MINH', 'Một hôm, cậu bé Vinh đem một quả bưởi ra bãi cỏ làm bóng để cùng chơi với các bạn. Đang chơi, bỗng quả bóng lăn xuống một cái hố gần đó. Cái hố hẹp và rất sâu nên không thể với tay lấy quả bóng lên được. Bọn trẻ nhìn xuống cái hố đầy nuối tiếc.
 
 Suy nghĩ một lát, cậu bé Vinh rủ bạn đi mượn mấy chiếc nón, rồi múc nước đổ đầy hố. Các bạn không hiểu Vinh làm thế để làm gì. Lát sau, thấy Vinh cúi xuống cầm quả bóng lên. Các bạn nhìn Vinh trầm trồ thán phục.', 'Sưu tầm', true),
@@ -403,13 +403,13 @@ Nhớ người vun trồng.
 Nhớ người làm giàn.
 Ăn hạt lúa vàng,
 Nhớ người trồng trọt.', 'Đồng dao', true),
-(1, 'TV', 'DU LỊCH BIỂN VIỆT NAM', 'Biển nước ta nơi đâu cũng đẹp. Thanh Hóa, Đà Nẵng, Khánh Hòa… có những bãi biển nổi tiếng, được du khách yêu thích. Nhưng suốt chiều dài đất nước cũng có nhiều bãi biển còn hoang sơ. Đi biển, bạn sẽ được thỏa sức bơi lội, nô đùa trên sóng, nhặt vỏ sò, xây lâu đài cát. Nếu đến Mũi Né, bạn sẽ được ngắm nhìn những đồi cát mênh mông. Cát bay làm cho hình dạng các đồi cát luôn thay đổi. Trượt cát ở đây rất thú vị. Biển là món quà kì diệu mà thiên nhiên đã ban tặng cho nước ta.', 'Sưu tầm', true);
+(1, 'TV', 'DU LỊCH BIỂN VIỆT NAM', 'Biển nước ta nơi đâu cũng đẹp. Thanh Hóa, Đà Nẵng, Khánh Hòa… có những bãi biển nổi tiếng, được du khách yêu thích. Nhưng suốt chiều dài đất nước cũng có nhiều bãi biển còn hoang sơ. Đi biển, bạn sẽ được thỏa sức bơi lội, nô đùa trên sóng, nhặt vỏ sò, xây lâu đài cát. Nếu đến Mũi Né, bạn sẽ được ngắm nhìn những đồi cát mênh mông. Cát bay làm cho hình dạng các đồi cát luôn thay đổi. Trượt cát ở đây rất thú vị. Biển là món quà kì diệu mà thiên nhiên đã ban tặng cho nước ta.', 'Sưu tầm', true, NULL);
 
 -- Grade 2 - Tiếng Việt 2 Tập 1 - Kết nối tri thức
 
 -- Chủ điểm: Em lớn lên từng ngày
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (2, 'TV', 'TÔI LÀ HỌC SINH LỚP 2', 'Ngày khai trường đã đến. Sáng sớm, mẹ mới gọi một câu mà tôi đã vùng dậy, khác hẳn mọi ngày. Loáng một cái, tôi đã chuẩn bị xong mọi thứ. Bố ngạc nhiên nhìn tôi, còn mẹ cười tủm tỉm. Tôi rối rít: “Con muốn đến lớp sớm nhất.”
 
 Tôi háo hức tưởng tượng ra cảnh mình đến đầu tiên, cất tiếng chào thật to những bạn đến sau. Nhưng vừa đến cổng trường, tôi đã thấy mấy bạn cùng lớp đang ríu rít nói cười ở trong sân. Thì ra, không chỉ mình tôi muốn đến sớm nhất. Tôi chào mẹ, chạy ào vào cùng các bạn. Chúng tôi tranh nhau kể về chuyện ngày hè. Ngay cạnh chúng tôi, mấy em lớp 1 đang rụt rè níu chặt tay bố mẹ, thật giống tôi năm ngoái.
@@ -486,11 +486,11 @@ Một hôm, đến sân bóng thấy gấu đang luyện tập, các bạn ngạ
 
 – Hiệp đầu cậu đá cho đội đỏ, hiệp sau cậu đá cho đội xanh. – Khỉ nói.
 
-Gấu vui vẻ gật đầu.', 'Sưu tầm', true);
+Gấu vui vẻ gật đầu.', 'Sưu tầm', true, NULL);
 
 -- Chủ điểm: Đi học vui sao
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (2, 'TV', 'CÔ GIÁO LỚP EM', 'Sáng nào em đến lớp
 Cũng thấy cô đến rồi.
 Đáp lời “Chào cô ạ!”
@@ -585,11 +585,11 @@ Thấy giấy trắng bay bay.
 Khi trang sách mở ra,
 Em thấy mình khôn lớn,
 Bao điều hay, điều lạ,
-Cứ thế mà mở ra.', 'Nguyễn Nhật Ánh', true);
+Cứ thế mà mở ra.', 'Nguyễn Nhật Ánh', true, NULL);
 
 -- Chủ điểm: Niềm vui tuổi thơ
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (2, 'TV', 'GỌI BẠN', 'Tự xa xưa thuở nào
 Trong rừng xanh sâu thẳm
 Đôi bạn sống bên nhau
@@ -666,11 +666,11 @@ Vểnh râu "meo meo"!
 Ngoài hiên đã nắng,
 Bé nặn xong rồi.
 Đừng sờ vào đấy,
-Bé còn đang phơi.', 'Nguyễn Ngọc Ký', true);
+Bé còn đang phơi.', 'Nguyễn Ngọc Ký', true, NULL);
 
 -- Chủ điểm: Mái ấm gia đình
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (2, 'TV', 'SỰ TÍCH HOA TỈ MUỘI', 'Ngày xưa, có hai chị em Nết và Na mồ côi cha mẹ, sống trong ngôi nhà nhỏ bên sườn núi. Nết thương Na, cái gì cũng nhường em. Đêm đông, gió ù ù lùa vào nhà, Nết vòng tay ôm em: "Em rét không?". Na ôm choàng lấy chị, cười rúc rích: "Ấm quá!". Nết ôm em chặt hơn, thầm thì: "Mẹ bảo, chị em mình là hai bông hoa hồng, chị là bông to, em là bông nhỏ. Chị em mình mãi bên nhau nhé!". Na gật đầu. Hai chị em cứ thế ôm nhau ngủ.
 
 Năm ấy, nước lũ dâng cao, Nết cõng em chạy theo dân làng đến nơi an toàn. Hai bàn chân Nết rớm máu. Thấy vậy, Bụt thương lắm. Ông giơ gậy thần lên. Kì lạ thay, bàn chân Nết bỗng lành hẳn. Nơi bàn chân Nết đi qua, mọc lên những khóm hoa đỏ thắm. Hoa kết thành chùm, bông hoa lớn che chở cho nụ hoa bé nhỏ. Chúng cũng đẹp như tình chị em của Nết và Na. Dân làng đặt tên cho loài hoa ấy là hoa tỉ muội.', 'Trần Mạnh Hùng', true),
@@ -761,11 +761,11 @@ Quên cả đớn đau.
 Ôm cháu xoa đầu:
 Hoan hô thằng bé.
 Bé thế mà khỏe.
-Vì nó thương ông.', 'Tú Mỡ', true);
+Vì nó thương ông.', 'Tú Mỡ', true, NULL);
 
 -- Chủ điểm: Vẻ đẹp quanh em
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (2, 'TV', 'CHUYỆN BỐN MÙA', 'Ngày đầu năm, bốn nàng tiên Xuân, Hạ, Thu, Đông gặp nhau. Đông cầm tay Xuân bảo:
 
 – Chị là người sung sướng nhất. Ai cũng yêu chị. Chị về, cây nào cũng đâm chồi nảy lộc.
@@ -850,11 +850,11 @@ Suốt đêm dài thắp sáng.
 Bỗng gà lên tiếng gáy.
 Xôn xao ngoài luỹ tre.
 Đêm chuyển dần về sáng.
-Mầm măng đợi nắng về.', 'Nguyễn Công Dương', true);
+Mầm măng đợi nắng về.', 'Nguyễn Công Dương', true, NULL);
 
 -- Chủ điểm: Hành tinh xanh của em
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (2, 'TV', 'VÈ CHIM', 'Hay chạy lon xon
 Là gà mới nở.
 
@@ -884,11 +884,11 @@ Là cô tu hú.
 
 Nhấp nhem buồn ngủ
 Là bác cú mèo.', 'Đồng dao', true),
-(2, 'TV', 'KHỦNG LONG', 'Khủng long là loài vật sống ở các vùng đất khô. Chúng có kích thước lớn nhỏ khác nhau, thích ăn cỏ và thịt. Chân khủng long thẳng và rất khoẻ. Vì thế chúng có thể đi khắp một vùng rộng lớn để kiếm ăn. Khủng long có khả năng săn mồi tốt nhờ có đôi mắt tinh tường cùng cái mũi và đôi tai thính. Khủng long cũng có khả năng tự vệ tốt nhờ vào cái đầu cứng và cái quất đuôi dũng mãnh. Trước khi con người xuất hiện thì khủng long đã bị tuyệt chủng, thế nên chúng ta không thể gặp chúng ngoài đời thật.', 'Theo Bách khoa tri thức về khám phá thế giới cho trẻ em', true);
+(2, 'TV', 'KHỦNG LONG', 'Khủng long là loài vật sống ở các vùng đất khô. Chúng có kích thước lớn nhỏ khác nhau, thích ăn cỏ và thịt. Chân khủng long thẳng và rất khoẻ. Vì thế chúng có thể đi khắp một vùng rộng lớn để kiếm ăn. Khủng long có khả năng săn mồi tốt nhờ có đôi mắt tinh tường cùng cái mũi và đôi tai thính. Khủng long cũng có khả năng tự vệ tốt nhờ vào cái đầu cứng và cái quất đuôi dũng mãnh. Trước khi con người xuất hiện thì khủng long đã bị tuyệt chủng, thế nên chúng ta không thể gặp chúng ngoài đời thật.', 'Theo Bách khoa tri thức về khám phá thế giới cho trẻ em', true, NULL);
 
 -- Chủ điểm: Hành tinh xanh của em (tiếp)
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (2, 'TV', 'SỰ TÍCH CÂY THÌ LÀ', 'Ngày xưa, cây cối trên trái đất chưa có tên gọi. Trời bèn gọi chúng lên để đặt tên. Cây cối mừng rỡ kéo nhau lên trời. Trời chỉ tay vào từng cây và đặt tên:
 — Chú thì ta đặt tên cho là cây dừa.
 — Chú thì ta đặt tên cho là cây cau.
@@ -997,11 +997,11 @@ Người đàn ông trìu mến nhìn cậu bé và cùng cậu cứu những co
 
 Cánh cam có đôi cánh xanh biếc, óng ánh dưới ánh nắng mặt trời. Mỗi khi nghe tiếng động, chú khệ nệ ôm cái bụng tròn lẳn, trốn vào đám cỏ rối. Bống chăm sóc cánh cam rất cẩn thận. Hằng ngày, em đều bỏ vào chiếc lọ một chút nước và những ngọn cỏ xanh non.
 
-Nhưng Bống cảm thấy cánh cam vẫn có vẻ ngơ ngác không vui, chắc chú nhớ nhà và nhớ bạn bè. Đoán vậy, Bống mang cánh cam thả ra bãi cỏ sau nhà. Tạm biệt cánh cam bé nhỏ, Bống hi vọng chú sẽ tìm được đường về căn nhà thân thương của mình.', 'Minh Đăng', true);
+Nhưng Bống cảm thấy cánh cam vẫn có vẻ ngơ ngác không vui, chắc chú nhớ nhà và nhớ bạn bè. Đoán vậy, Bống mang cánh cam thả ra bãi cỏ sau nhà. Tạm biệt cánh cam bé nhỏ, Bống hi vọng chú sẽ tìm được đường về căn nhà thân thương của mình.', 'Minh Đăng', true, NULL);
 
 -- Chủ điểm: Giao tiếp và kết nối
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (2, 'TV', 'NHỮNG CÁCH CHÀO ĐỘC ĐÁO', 'Hằng ngày, chúng ta thường chào và đáp lời chào của mọi người bằng nhiều cách khác nhau. Trên thế giới, có rất nhiều cách chào hỏi độc đáo thể hiện nét văn hóa riêng của từng dân tộc.
 
 Theo bài đọc, trên thế giới có những cách chào phổ biến như bắt tay, vẫy tay và cúi chào. Ngoài ra, còn có những cách chào đặc biệt khác.
@@ -1025,11 +1025,11 @@ Vài năm sau, nhà vua lâm bệnh, khó qua khỏi. Một hôm, nhà vua bỗn
 
 Từ xa xưa, người ta đã biết huấn luyện bồ câu để đưa thư. Bồ câu nhớ đường rất tốt. Nó có thể bay qua một chặng đường dài hàng nghìn cây số để mang thư đến đúng nơi nhận. Những người đi biển còn nghĩ ra cách bỏ thư vào trong những chiếc chai thủy tinh. Nhờ sóng biển, những chiếc chai này được đẩy vào đất liền. Có những bức thư vài chục năm sau mới được tìm thấy.
 
-Ngày nay, việc trao đổi thông tin dễ dàng hơn rất nhiều. Bạn có thể viết thư, gọi điện cho người khác. Nhờ có in-tơ-nét, bạn cũng có thể nhìn thấy người nói chuyện với mình, dù hai người đang ở cách nhau rất xa.', 'Nguyễn Hồng Kiên', true);
+Ngày nay, việc trao đổi thông tin dễ dàng hơn rất nhiều. Bạn có thể viết thư, gọi điện cho người khác. Nhờ có in-tơ-nét, bạn cũng có thể nhìn thấy người nói chuyện với mình, dù hai người đang ở cách nhau rất xa.', 'Nguyễn Hồng Kiên', true, NULL);
 
 -- Chủ điểm: Con người Việt Nam
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (2, 'TV', 'MAI AN TIÊM', 'Ngày xưa, có một người tên là Mai An Tiêm được Vua Hùng yêu mến nhận làm con nuôi. Một lần, vì hiểu lầm lời nói của An Tiêm nên nhà vua nổi giận, đày An Tiêm ra đảo hoang.
 
 Ở đảo hoang, hai vợ chồng An Tiêm dựng nhà bằng tre nứa, lấy cỏ phơi khô tết thành quần áo. Một hôm, An Tiêm thấy một đàn chim bay qua thả xuống loại hạt đen nhánh. Chàng bèn nhặt và gieo xuống cát, thầm nghĩ: “Thứ quả này chim ăn được thì người cũng ăn được”.
@@ -1075,11 +1075,11 @@ Nói rồi, Bác cuộn chiếc rễ thành một vòng tròn, cùng chú cần 
 
 Bác khẽ cười: "Rồi chú sẽ biết."
 
-Nhiều năm sau, chiếc rễ đã lớn và thành cây đa con có vòng lá tròn. Thiếu nhi vào thăm vườn Bác, em nào cũng thích chơi trò chui qua chui lại vòng lá ấy. Lúc đó, mọi người mới hiểu vì sao Bác cho trồng chiếc rễ đa thành hình tròn như thế.', 'Theo Bác Hồ kính yêu', true);
+Nhiều năm sau, chiếc rễ đã lớn và thành cây đa con có vòng lá tròn. Thiếu nhi vào thăm vườn Bác, em nào cũng thích chơi trò chui qua chui lại vòng lá ấy. Lúc đó, mọi người mới hiểu vì sao Bác cho trồng chiếc rễ đa thành hình tròn như thế.', 'Theo Bác Hồ kính yêu', true, NULL);
 
 -- Chủ điểm: Việt Nam quê hương em
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (2, 'TV', 'ĐẤT NƯỚC CHÚNG MÌNH', 'Việt Nam là đất nước tươi đẹp của chúng mình. Thủ đô nước mình là Hà Nội. Lá cờ Tổ quốc hình chữ nhật, nền đỏ, ở giữa có ngôi sao vàng năm cánh. Việt Nam có những vị anh hùng có công lớn với đất nước như Hai Bà Trưng, Bà Triệu, Trần Hưng Đạo, Quang Trung, Hồ Chí Minh,... Những con người ấy đã làm rạng danh lịch sử nước nhà.
 
 Đất nước mình có ba miền Bắc, Trung, Nam với khí hậu khác nhau. Miền Bắc và miền Trung một năm có bốn mùa: xuân, hạ, thu, đông. Miền Nam có hai mùa: mùa mưa và mùa khô. Trang phục truyền thống của người Việt Nam là áo dài. Áo dài thường được mặc trong dịp Tết hay lễ hội.', 'Trung Sơn', true),
@@ -1113,12 +1113,12 @@ Dập dờn đồng lúa xanh.
 Đàn chiền chiện bay quanh.
 Hót tích ri tích ri.
 Lũ châu chấu tinh nghịch.
-Đu cỏ uống sương rơi.', 'Bùi Minh Huế', true);
+Đu cỏ uống sương rơi.', 'Bùi Minh Huế', true, NULL);
 
 -- Grade 3
 -- Chủ điểm: Những trải nghiệm thú vị
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (3, 'TV', 'NGÀY GẶP LẠI', 'Chi mở tung cửa sổ đón những tia nắng đầu thu. Thế là hết hè rồi. Ngày mai bắt đầu năm học mới.
 Có tiếng gọi ngoài cổng. Chi nhìn ra, thấy Sơn giơ chiếc diều rất xinh, vẫy rối rít:
 – Cho cậu này.
@@ -1232,11 +1232,11 @@ Mùa hè của Diệu là những lần đến nhà bà cụ Khởi ở cuối l
 
 Mùa hè của Diệu là những buổi ra chợ cùng mẹ. Khu chợ quê nghèo ấy thật giản dị mà gần gũi, thân quen. Diệu yêu những người cô, người bác tảo tần bán từng giỏ cua, mớ tép; yêu cả những người bà sáng nào cũng dắt cháu đi mua một ít kẹo bột, vài chiếc bánh mì,...
 
-Tạm biệt mùa hè, mai Diệu sẽ bước vào năm học mới...', 'Theo Vũ Thị Huyền Trang', true);
+Tạm biệt mùa hè, mai Diệu sẽ bước vào năm học mới...', 'Theo Vũ Thị Huyền Trang', true, NULL);
 
 -- Chủ điểm: Cổng trường rộng mở
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (3, 'TV', 'lỜI GIẢI TOÁN ĐẶC BIỆT', 'Vích-to Huy-gô bộc lộ tài năng thơ ca của mình từ rất sớm. Hồi còn là học sinh tiểu học, cậu học chăm, thông minh, giỏi đều các môn.
 
 Một lần, vào giờ kiểm tra Toán cuối năm, trong khi các bạn khác mải miết làm bài thì không hiểu sao Huy-gô lại ngồi cắn bút từ đầu giờ. Thầy giáo cũng sốt ruột thay cho học trò của mình. Chỉ còn hai mươi phút nữa là phải nộp bài. Các bạn xung quanh đã có người làm xong, thế mà Huy-gô vẫn ngồi cắn bút, hai tai đỏ nhừ. Thầy giáo lại giơ đồng hồ ra xem và nhìn Huy-gô. Còn mười lăm phút nữa. Lúc này, Huy-gô bắt đầu đặt bút viết. Thầy giáo thở phào. Nhưng liệu có kịp không nhỉ? Ông lo lắng thay cho Huy-gô.
@@ -1309,11 +1309,11 @@ Cả nhóm nhao nhao:
 – Cần phải nhắc nhở Hoàng ngay!
 
 Bác Chữ A kết luận:
-– Từ nay, mỗi khi em Hoàng định chấm câu, anh Dấu Chấm cần yêu cầu Hoàng đọc lại câu văn một lần nữa đã. Được không nào?', 'Trần Ninh Hồ', true);
+– Từ nay, mỗi khi em Hoàng định chấm câu, anh Dấu Chấm cần yêu cầu Hoàng đọc lại câu văn một lần nữa đã. Được không nào?', 'Trần Ninh Hồ', true, NULL);
 
 -- Chủ điểm: Mái nhà yêu thương
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (3, 'TV', 'NGƯỠNG CỬA', 'Nơi này ai cũng quen
 Ngay từ thời tấm bé
 Khi tay bà, tay mẹ
@@ -1394,11 +1394,11 @@ Nó cũng chia tớ.', 'Phạm Hổ', true),
 
 Tôi chưa dạy Cúp những chuyện tài giỏi như làm xiếc. Nhưng so với những chú chó bình thường khác, Cúp không thua kém gì. Cúp biết chui vào gầm giường lấy trái banh, đem cho tôi chiếc khăn lau nhà, đưa hai chân trước lên mỗi khi tôi chìa tay cho nó bắt. Cúp còn rất thích nghe tôi đọc truyện. Mỗi khi tôi đọc cho Cúp nghe, nó nằm khoanh tròn trên lòng tôi. Lúc tôi đọc xong, gấp sách lại, đã thấy cu cậu ngủ khò từ lúc nào.
 
-Tôi và Cúp ngày ngày quấn quýt bên nhau. Mỗi khi tôi đi học về, Cúp chạy vọt ra, chồm hai chân trước lên mừng rỡ. Tôi cúi xuống vỗ về Cúp. Nó âu yếm dụi cái mõm ươn ướt, mềm mềm vào chân tôi.', 'Trần Đức Tiến', true);
+Tôi và Cúp ngày ngày quấn quýt bên nhau. Mỗi khi tôi đi học về, Cúp chạy vọt ra, chồm hai chân trước lên mừng rỡ. Tôi cúi xuống vỗ về Cúp. Nó âu yếm dụi cái mõm ươn ướt, mềm mềm vào chân tôi.', 'Trần Đức Tiến', true, NULL);
 
 -- Chủ điểm: Cộng đồng gắn bó
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (3, 'TV', 'NHỮNG BẬC ĐÁ CHẠM MÂY', 'Ngày xưa, dưới chân núi Hồng Lĩnh có một xóm nhỏ, người dân sống bằng nghề đánh cá. Cuộc sống đang yên lành thì bỗng một trận bão khủng khiếp ập đến, cuốn đi tất cả thuyền bè của người dân. Dân xóm chài không còn đường sinh sống, đành phải lên núi kiếm củi đem ra chợ bán. Tuy nhiên, sườn núi phía họ dựng đứng, khiến bà con phải đi đường vòng rất xa để lên núi.
 
 Trong xóm lúc bấy giờ có một ông lão tên là Đương. Chứng kiến cảnh mọi người đi lại vất vả, ông Đương nảy ra ý định ghép đá thành bậc thang lên núi. Lúc đầu, nhiều người can ngăn vì cho rằng đó là việc không thể thực hiện được. Thế nhưng, cố Đương không nản lòng, ông vẫn kiên trì thực hiện công việc của mình. Cuối cùng, những bậc đá vững chắc đã được hình thành, giúp bà con đi lại dễ dàng hơn rất nhiều.
@@ -1466,12 +1466,12 @@ Những ngọn hải đăng được thắp sáng bằng điện năng lượng 
 
 Có những đêm mưa gió, họ phải buộc dây bảo hiểm quanh người, trèo lên đỉnh cột đèn xem xét. Bất kể ngày đêm, mưa nắng, trời yên biển lặng hay dông tố bão bùng, họ luôn sẵn sàng khắc phục mọi sự cố. Ngọn đèn biển không bao giờ tắt trong đêm là nhờ công sức của những người canh giữ hải đăng.
 
-Với lòng yêu nghề, yêu biển đảo quê hương, họ đã vượt qua bao khó khăn, gian khổ nơi biển khơi xa vắng, góp sức mình bảo vệ vùng biển, vùng trời của Tổ quốc.', 'Sơn Tùng', true);
+Với lòng yêu nghề, yêu biển đảo quê hương, họ đã vượt qua bao khó khăn, gian khổ nơi biển khơi xa vắng, góp sức mình bảo vệ vùng biển, vùng trời của Tổ quốc.', 'Sơn Tùng', true, NULL);
 
 -- Grade 3
 -- Chủ điểm: Những sắc màu thiên nhiên
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (3, 'TV', 'BẦU TRỜI', 'Ngẩng đầu nhìn lên trời, bạn thấy gì nào? Bạn có thể thấy những con chim đang bay, những vòm cây xanh biếc, những tia nắng xuyên qua đám mây trắng muốt như bông. Đôi khi bạn còn thấy những giọt mưa đang rơi xuống hay đàn bướm dập dờn trong gió nhẹ.
 
 Bầu trời có màu gì nhỉ? Bầu trời thường có màu xanh lơ vào ban ngày, màu đen vào ban đêm. Tuy vậy, tùy vào thời tiết mà bầu trời có những sắc màu khác nhau. Khi mặt trời chiếu vào bầu không khí chứa nhiều hơi nước sau cơn mưa, bạn sẽ nhìn thấy bảy sắc màu rực rỡ của cầu vồng.
@@ -1573,11 +1573,11 @@ Mặt trời xanh của tôi.', 'Nguyễn Viết Bình', true),
 
 Voi sống thành từng bầy rất đông. Chúng ăn rất khỏe. Để nuôi sống cơ thể to lớn của mình, mỗi con voi phải ăn khoảng 150 ki-lô-gam cây cỏ mỗi ngày. Chúng phải đi liên tục để tìm cái ăn. Từ trên núi, chúng xuống đồng cỏ, rồi từ đồng cỏ, chúng lại lên núi. Buổi trưa, chúng trú nắng trong cánh rừng rậm. Chiều xuống, chúng đi tắm ở những quãng sông vắng.
 
-Voi là loài vật thông minh và có tình nghĩa. Chúng thường giúp con người nhiều việc nặng nhọc như kéo gỗ, chở hàng. Voi con mới sinh ra nặng khoảng 90 ki-lô-gam, cao gần 1 mét. Khi trưởng thành, voi có thể nặng tới 6 tấn và cao hơn 3 mét. Với bộ ngà trắng muốt và chiếc vòi dũng mãnh, bầy voi rừng Trường Sơn trông thật hùng vĩ và đầy uy lực.', 'Ngô Quân Miện', true);
+Voi là loài vật thông minh và có tình nghĩa. Chúng thường giúp con người nhiều việc nặng nhọc như kéo gỗ, chở hàng. Voi con mới sinh ra nặng khoảng 90 ki-lô-gam, cao gần 1 mét. Khi trưởng thành, voi có thể nặng tới 6 tấn và cao hơn 3 mét. Với bộ ngà trắng muốt và chiếc vòi dũng mãnh, bầy voi rừng Trường Sơn trông thật hùng vĩ và đầy uy lực.', 'Ngô Quân Miện', true, NULL);
 
 -- Chủ điểm: Bài học từ cuộc sống
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (3, 'TV', 'LỜI KÊU GỌI TOÀN DÂN TẬP THỂ DỤC', 'Giữ gìn dân chủ, xây dựng nước nhà, gây đời sống mới, việc gì cũng cần có sức khỏe mới làm thành công. Mỗi một người dân yếu ớt tức là cả nước yếu ớt, mỗi một người dân mạnh khỏe là cả nước mạnh khỏe. Vậy nên luyện tập thể dục, bồi bổ sức khỏe là bổn phận của mỗi một người yêu nước. Việc đó không tốn kém, khó khăn gì. Gái trai, già trẻ ai cũng nên làm và ai cũng làm được. Mỗi người lúc ngủ dậy, tập ít phút thể dục. Ngày nào cũng tập thì khí huyết lưu thông, tinh thần đầy đủ, như vậy là sức khỏe. Dân cường thì nước thịnh. Tôi mong đồng bào ta ai cũng gắng tập thể dục. Tự tôi, ngày nào tôi cũng tập.
 
 Ngày 27 – 3 – 1946', 'Hồ Chí Minh', true),
@@ -1607,11 +1607,11 @@ Sáng hôm sau, tay phải thực hiện nhiệm vụ đánh răng. Nhưng tay t
 
 Tay phải hối hận lắm, liền xin lỗi tay trái. Thế là tay phải và tay trái lại cùng nhau làm việc. Việc gì cũng hoàn thành một cách nhanh chóng. Tay phải thốt lên:
 
-– Cậu và tớ đều quan trọng như nhau. Nếu không có cậu thì có nhiều việc, một mình tớ không thể nào làm được.', 'Lý Thị Minh Hà', true);
+– Cậu và tớ đều quan trọng như nhau. Nếu không có cậu thì có nhiều việc, một mình tớ không thể nào làm được.', 'Lý Thị Minh Hà', true, NULL);
 
 -- Chủ điểm: Đất nước ngàn năm
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (3, 'TV', 'ĐẤT NƯỚC LÀ GÌ?', 'Cho con hỏi nhé
 Đất nước là gì?
 Vẽ bằng bút chì
@@ -1688,11 +1688,11 @@ Nhận được tin dữ, Hai Bà Trưng liền kéo quân về thành Luy Lâu 
 
 Hai Bà Trưng bước lên bành voi. Đoàn quân rùng rùng lên đường; giáo lao, cung nỏ, rìu búa, khiên mộc cuồn cuộn tràn theo bóng voi ẩn hiện của Hai Bà. Tiếng trống dội lên vòm cây, đập vào sườn đồi, theo suốt đường hành quân.
 
-Thành trì quân giặc lần lượt sụp đổ dưới chân của đoàn quân khởi nghĩa. Tô Định ôm đầu chạy về nước. Đất nước ta sạch bóng quân thù. Hai Bà Trưng trở thành hai vị anh hùng chống giặc ngoại xâm đầu tiên trong lịch sử nước nhà.', 'Theo Đại Việt sử kí toàn thư', true);
+Thành trì quân giặc lần lượt sụp đổ dưới chân của đoàn quân khởi nghĩa. Tô Định ôm đầu chạy về nước. Đất nước ta sạch bóng quân thù. Hai Bà Trưng trở thành hai vị anh hùng chống giặc ngoại xâm đầu tiên trong lịch sử nước nhà.', 'Theo Đại Việt sử kí toàn thư', true, NULL);
 
 -- Chủ điểm: Trái Đất của chúng mình
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (3, 'TV', 'THƯ CỦA ÔNG TRÁI ĐẤT GỬI CÁC BẠN NHỎ', 'Các bạn nhỏ yêu quý!
 
 Ta viết thư này cho các bạn trong lúc ta đang bị sốt rất cao. Các bạn có nghe thấy hằng ngày trên báo đài nói rằng "Trái Đất đang nóng lên" không?
@@ -1746,13 +1746,13 @@ Ngước mắt lên trông.
 Bạn ơi, hãy hát.
 Hát câu cuối cùng:
 Một mái nhà chung.
-Một mái nhà chung…', 'Định Hải', true);
+Một mái nhà chung…', 'Định Hải', true, NULL);
 
 -- Grade 4
 
 -- Chủ điểm: Mỗi người một vẻ
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (4, 'TV', 'ĐIỀU KÌ DIỆU', 'Bạn có thấy lạ không
 Mỗi đứa mình một khác.
 Cùng ngân nga câu hát
@@ -1829,11 +1829,11 @@ Tàu biển nói:
 Đò ngang sững sờ. Nó chưa bao giờ nghĩ rằng công việc của mình lại có ý nghĩa đến thế.', 'Theo SGK Tiếng Việt 4', true),
 (4, 'TV', 'Những bức chân dung', 'Màu Nước là một họa sĩ tài năng. Cậu thường vẽ chân dung cho bạn bè. Một hôm, Bông Tuyết và Mắt Xanh đến nhờ Màu Nước vẽ. Bức chân dung của Bông Tuyết có làn da trắng mịn, còn Mắt Xanh thì có đôi mắt biếc rất đẹp.
 
-Hoa Nhỏ cũng muốn được vẽ. Nhưng cô bé cứ đòi Màu Nước chỉnh sửa: mắt phải to hơn, lông mi dài hơn, miệng nhỏ đi. Màu Nước chiều ý bạn. Cuối cùng, bức tranh hoàn thành. Hoa Nhỏ trong tranh có đôi mắt to đùng, lông mi dài thượt và cái miệng bé xíu. Hoa Nhỏ rất thích, nhưng mọi người nhìn vào đều lắc đầu. Màu Nước bảo: “Mỗi người đều có vẻ đẹp riêng. Nếu cứ muốn giống người khác thì sẽ đánh mất chính mình”.', 'Theo Tiếng Việt 4', true);
+Hoa Nhỏ cũng muốn được vẽ. Nhưng cô bé cứ đòi Màu Nước chỉnh sửa: mắt phải to hơn, lông mi dài hơn, miệng nhỏ đi. Màu Nước chiều ý bạn. Cuối cùng, bức tranh hoàn thành. Hoa Nhỏ trong tranh có đôi mắt to đùng, lông mi dài thượt và cái miệng bé xíu. Hoa Nhỏ rất thích, nhưng mọi người nhìn vào đều lắc đầu. Màu Nước bảo: “Mỗi người đều có vẻ đẹp riêng. Nếu cứ muốn giống người khác thì sẽ đánh mất chính mình”.', 'Theo Tiếng Việt 4', true, NULL);
 
 -- Chủ điểm: Trải nghiệm và khám phá
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (4, 'TV', 'BẦU TRỜI TRONG QUẢ TRỨNG', 'Tôi kể với các bạn một bí mật. Hồi tôi còn nằm trong quả trứng, bầu trời của tôi chỉ là vòm vỏ trứng mỏng manh. Tôi cứ ngỡ bầu trời là như thế. Nhưng rồi một hôm, tôi mổ vỡ cái vòm ấy, chui ra ngoài. Ôi chao! Bầu trời thật bao la, rộng lớn. Nắng vàng rực rỡ, gió mát rượi. Cỏ cây xanh tươi, hoa thơm bướm lượn. Hóa ra, thế giới bên ngoài quả trứng kì diệu hơn tôi tưởng tượng rất nhiều. Tôi sung sướng chạy nhảy, khám phá khắp nơi. Mỗi bước đi là một điều mới lạ mở ra trước mắt.', 'Theo Xuân Quỳnh (phỏng theo ý)', true),
 (4, 'TV', 'TIẾNG NÓI CỦA CỎ CÂY', 'Những ngày hè ở nhà ông bà, Ta-nhi-a được thoả thích chạy nhảy trong vườn. Thấy khóm hoa hồng bạch có vẻ chật chỗ, cô bé liền bứng một cây nhỏ nhất trồng vào chỗ đất trống dưới cửa sổ. Ngắm nghía một hồi, cảm thấy chưa hài lòng, cô đến bên khóm huệ, chọn một cây đem trồng cạnh cây hoa hồng.
 
@@ -1897,11 +1897,11 @@ Buổi chia tay kéo dài mãi đến khi trời tối mịt.', 'Theo Thanh Tị
 
 Tôi ngắm nhìn cây hoa hồng. Thân cây xanh thẫm, có những chiếc gai nhọn. Lá cây xanh mướt, viền răng cưa. Đóa hoa hồng nhung đỏ thắm, cánh hoa mịn màng xếp tròn vào nhau. Hương hoa thơm ngát.
 
-Trở về nhà, tôi cắm cúi viết. Tôi nhớ lại từng chi tiết đã quan sát được. Bài văn của tôi được cô giáo khen là chân thực và sinh động. Tôi hiểu ra rằng, muốn viết văn hay, cần phải quan sát tỉ mỉ và viết bằng tình cảm của mình.', 'Theo Tiếng Việt 4', true);
+Trở về nhà, tôi cắm cúi viết. Tôi nhớ lại từng chi tiết đã quan sát được. Bài văn của tôi được cô giáo khen là chân thực và sinh động. Tôi hiểu ra rằng, muốn viết văn hay, cần phải quan sát tỉ mỉ và viết bằng tình cảm của mình.', 'Theo Tiếng Việt 4', true, NULL);
 
 -- Chủ điểm: Niềm vui sáng tạo
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (4, 'TV', 'VẼ MÀU', 'Màu đỏ cánh hoa hồng
 Nhuộm bừng cho đôi má.
 Còn màu xanh chiếc lá
@@ -1965,11 +1965,11 @@ Bài văn của Quy được điểm cao. Quy thầm cảm ơn bố và bức t�
 Bản nhạc ấy chính là bản xô-nát Ánh trăng bất hủ.', 'Theo Tiếng Việt 4', true),
 (4, 'TV', 'Người tìm đường lên các vì sao', 'Từ nhỏ, Xi-ôn-cốp-xki đã mơ ước được bay lên bầu trời. Có lần, ông dại dột nhảy qua cửa sổ để bay theo những cánh chim. Kết quả là ông bị ngã gãy chân. Nhưng rủi ro lại làm nảy ra trong đầu non nớt của ông một câu hỏi: “Vì sao quả bóng không có cánh mà vẫn bay được?”.
 
-Để tìm lời giải đáp, ông đọc không biết bao nhiêu là sách. Ông hì hục làm thí nghiệm, có khi đến hàng trăm lần. Ông nghiên cứu về khí cầu, về tên lửa. Sau này, chính ông là người đã tìm ra nguyên lí để chế tạo tên lửa nhiều tầng, mở đường cho con người chinh phục vũ trụ.', 'Theo Tiếng Việt 4', true);
+Để tìm lời giải đáp, ông đọc không biết bao nhiêu là sách. Ông hì hục làm thí nghiệm, có khi đến hàng trăm lần. Ông nghiên cứu về khí cầu, về tên lửa. Sau này, chính ông là người đã tìm ra nguyên lí để chế tạo tên lửa nhiều tầng, mở đường cho con người chinh phục vũ trụ.', 'Theo Tiếng Việt 4', true, NULL);
 
 -- Chủ điểm: Chắp cánh ước mơ
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (4, 'TV', 'CON CHUỒN CHUỒN NƯỚC', 'Ôi chao! Chú chuồn chuồn nước mới đẹp làm sao! Màu vàng trên lưng chú lấp lánh. Bốn cái cánh mỏng như giấy bóng. Cái đầu tròn và hai con mắt long lanh như thủy tinh. Thân hình chú nhỏ và thon vàng như màu vàng của nắng mùa thu.
 
 Chú đậu trên một cành lộc vừng ngả dài trên mặt hồ. Bốn cánh khẽ rung rung như đang còn phân vân. Rồi đột nhiên, chú chuồn chuồn nước tung cánh bay vọt lên. Cái bóng chú nhỏ xíu lướt nhanh trên mặt hồ. Mặt hồ trải rộng mênh mông và lặng sóng.
@@ -2058,11 +2058,11 @@ Mãi mãi không còn mùa đông.
 Nếu chúng mình có phép lạ
 Hóa trái bom thành trái ngon
 Trong ruột không còn thuốc nổ
-Chỉ toàn kẹo với bi tròn.', 'Định Hải', true);
+Chỉ toàn kẹo với bi tròn.', 'Định Hải', true, NULL);
 
 -- Chủ điểm: Sống để yêu thương
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (4, 'TV', 'HẢI THƯỢNG LÃN ÔNG', 'Hải Thượng Lãn Ông là một thầy thuốc nổi tiếng của nước ta ở thế kỉ XVIII. Ông là người thông minh, học rộng. Nhận thấy nghề y có thể cứu người, ông đã quyết tâm theo học. Ông không quản ngại vất vả, đi khắp nơi chữa bệnh cho dân. Đối với người nghèo, ông thường khám bệnh và cho thuốc không lấy tiền. Có lần, ông đã chữa khỏi bệnh cho một đứa bé con nhà nghèo và còn giúp đỡ gia đình họ gạo, củi. Ông không chỉ là một thầy thuốc giỏi mà còn là một người có tấm lòng nhân hậu, luôn hết lòng vì người bệnh.', 'Theo SGK Tiếng Việt 4', true),
 (4, 'TV', 'VỆT PHẤN TRÊN MẶT BÀN', 'Minh không ưa cô bạn mới tên Thi Ca vì bạn ấy chậm chạp và hay làm rơi đồ. Một lần, trong giờ vẽ, Thi Ca lỡ tay làm Minh bị vệt phấn lem trên bàn. Minh đã rất giận dữ. Nhưng chiều hôm đó, nghe tin Thi Ca bị ngã gãy tay, Minh hối hận vô cùng. Minh đến thăm bạn và xin lỗi. Từ đó, Minh hiểu và yêu quý Thi Ca hơn.', 'Theo SGK Tiếng Việt 4', true),
 (4, 'TV', 'QUẢ NGỌT CUỐI MÙA', 'Trong vòm lá mới chồi non,
@@ -2110,11 +2110,11 @@ Mai kể lại sự tình. Ông già cười hiền hậu: “Đừng lo, ông s
 Tối đó, Mai kể với mẹ là có ông Bụt giúp. Mẹ nhìn lọ hoa, mỉm cười: “Đó là ông nhạc sĩ già ở xóm bên đấy con ạ. Ông khéo tay và tốt bụng lắm”. Mai thầm cảm ơn “ông Bụt” đời thường.', 'Theo Tiếng Việt 4', true),
 (4, 'TV', 'Trên khóm tre đầu ngõ', 'Đầu ngõ nhà Bua Kham có một khóm tre ngà. Mùa xuân, đôi cò trắng về làm tổ. Bua Kham vui lắm, ngày nào cũng ra ngắm nghía.
 
-Một đêm bão lớn, gió giật mạnh. Sáng ra, Bua Kham thấy tổ cò bị hất tung, mấy chú cò con rơi xuống đất, ướt sũng. Bua Kham vội gọi ông nội. Hai ông cháu mang cò con vào nhà, sưởi ấm và cho ăn. Khi bão tan, ông bắc thang đưa cò con trở lại khóm tre, sửa lại tổ cho chúng. Vợ chồng cò mẹ bay về, kêu rối rít như lời cảm ơn.', 'Theo Tiếng Việt 4', true);
+Một đêm bão lớn, gió giật mạnh. Sáng ra, Bua Kham thấy tổ cò bị hất tung, mấy chú cò con rơi xuống đất, ướt sũng. Bua Kham vội gọi ông nội. Hai ông cháu mang cò con vào nhà, sưởi ấm và cho ăn. Khi bão tan, ông bắc thang đưa cò con trở lại khóm tre, sửa lại tổ cho chúng. Vợ chồng cò mẹ bay về, kêu rối rít như lời cảm ơn.', 'Theo Tiếng Việt 4', true, NULL);
 
 -- Chủ điểm: Uống nước nhớ nguồn
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (4, 'TV', 'SÁNG THÁNG NĂM', 'Vui sao một sáng tháng Năm.
 Đường về Việt Bắc lên thăm Bác Hồ.
 Suối dài xanh mướt nương ngô.
@@ -2179,11 +2179,11 @@ Sương giăng trắng xóa lối nhỏ
 Các anh lính biên phòng trẻ
 Cưỡi ngựa tuần tra biên cương
 Giữ bình yên cho đất nước
-Cho em thơ giấc ngủ ngon.', 'Phan Thị Thanh Nhàn', true);
+Cho em thơ giấc ngủ ngon.', 'Phan Thị Thanh Nhàn', true, NULL);
 
 -- Chủ điểm: Quê hương trong tôi
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (4, 'TV', 'ĐƯỜNG ĐI SA PA', 'Xe chúng tôi leo chênh vênh trên dốc cao của con đường xuyên tỉnh. Những đám mây trắng nhỏ sà xuống cửa kính ô tô tạo nên cảm giác bồng bềnh huyền ảo. Chúng tôi đang đi bên những thác trắng xóa tựa mây trời, những rừng cây âm âm, những bông chuối rực lên như ngọn lửa. Tôi lim dim mắt ngắm mấy con ngựa đang ăn cỏ trong một vườn đào ven đường. Con đen huyền, con trắng tuyết, con đỏ hoe. Một lát sau, xe lại tiếp tục đi trong sương mù dày đặc. Sa Pa hiện ra trước mắt tôi với những mái nhà sàn thấp thoáng trong mây. Những người Mông, người Tu Dí, người Phù Lá đang gùi trên lưng những gùi măng, gùi củi, gùi hoa quả. Tôi thấy lòng mình bình yên lạ.', 'Theo Nguyễn Phan Hách', true),
 (4, 'TV', 'CÂY ĐA QUÊ HƯƠNG', 'Nói đến làng quê, trong kí ức tôi, đậm nét nhất là hình ảnh cây đa trước xóm... Cây đa nghìn năm đã gắn liền với thời thơ ấu của chúng tôi. Cành cây lớn hơn cột đình. Đỉnh chót vót giữa trời xanh. Rễ cây nổi lên mặt đất thành những hình thù quái lạ... Chiều chiều, chúng tôi ra ngồi gốc đa hóng mát. Lúa vàng gợn sóng. Đàn trâu lững thững ra về... Cây đa là biểu tượng thân thương của quê hương trong lòng mỗi người con xa xứ.', 'Theo Nguyễn Khắc Viện', true),
 (4, 'TV', 'Tiếng sáo diều', 'Không biết tự bao giờ, mùa hạ đã in đậm trong tôi. Đó là mùa của những cánh diều no gió, mùa của những tâm hồn khát vọng tuổi thơ. Mỗi buổi chiều, khi những tia nắng chói chang tắt dần cũng là lúc tụi trẻ chúng tôi ùa ra cánh đồng, tung lên trời những cánh diều nhỏ. Xếp lại những toan lo bài vở, chúng tôi đau đáu nhìn theo những cánh diều trên bầu trời cao rộng. Thả diều trong buổi chiều lộng gió, tôi được lắng nghe tiếng sáo vi vu hòa lẫn tiếng reo hò của bọn trẻ.
@@ -2236,11 +2236,11 @@ Thuyền buồm đi ngược, thuyền thoi đi xuôi.
 Yêu cái cầu tre, cái cầu tre nhỏ
 Cha làm cho con đi học hàng ngày
 Đất nước mình đây, nhiều sông nhiều suối
-Nối nhịp cầu vui, nối những bàn tay.', 'Phạm Tiến Duật', true);
+Nối nhịp cầu vui, nối những bàn tay.', 'Phạm Tiến Duật', true, NULL);
 
 -- Chủ điểm: Vì một thế giới hòa bình
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (4, 'TV', 'Khu bảo tồn động vật hoang dã Ngô-rông-gô-rô', 'Khu bảo tồn động vật Ngô-rông-gô-rô có diện tích 8 202 ki-lô-mét vuông, nằm ở phía đông bắc quốc gia Tan-da-ni-a (Châu Phi). Tên của khu bảo tồn được đặt theo tên của miệng núi lửa Ngô-rông-gô-rô, một núi lửa lớn nằm trong vườn quốc gia. Ngô-rông-gô-rô theo tiếng địa phương có nghĩa là “Quà tặng cuộc sống”. Khu bảo tồn được UNESCO công nhận là Di sản thế giới.
 
 Nơi đây có khoảng 25 000 loài động vật, trong đó có tê giác đen, trâu rừng Châu Phi, linh dương đầu bò, ngựa vằn, hà mã, sư tử,… Ở khu bảo tồn, các loài động vật được sinh sống trong môi trường tự nhiên và không sợ bị săn bắn. Vì thế, sự xuất hiện của con người không làm chúng sợ hãi. Lũ sư tử nằm nghỉ dưới tán cây, dửng dưng nhìn những chiếc xe du lịch lướt qua. Nhiều chú voi lững thững đi qua đường, ngay trước mũi xe của du khách. Trong công viên có hàng nghìn con hồng hạc sống quanh các hồ nước. Mỗi lần cất cánh, chúng tạo nên một đám mây trắng hồng phủ kín một khu vực của vùng bình nguyên.', 'Theo Minh Quang', true),
@@ -2260,10 +2260,10 @@ Băng tan là lời cảnh báo về biến đổi khí hậu. Chúng ta cần c
 Chuyến đi giúp tớ mở mang tầm mắt. Tớ mong có ngày chúng mình cùng đi du lịch nhé!”.', 'Theo Tiếng Việt 4', true),
 (4, 'TV', 'Ngày hội', 'Trại hè thiếu nhi thế giới khai mạc tưng bừng. Các bạn nhỏ đủ mọi màu da, sắc tộc nắm tay nhau ca hát. Tiếng cười nói rộn rã xóa nhòa mọi khoảng cách.
 
-Trong ngày hội, các bạn cùng vẽ tranh, thả chim bồ câu nguyện cầu hòa bình. Những bức tranh vẽ trái đất xanh, vẽ bàn tay nắm chặt bàn tay... Tất cả đều gửi gắm ước mơ về một thế giới không có chiến tranh, tràn ngập tình yêu thương.', 'Theo Tiếng Việt 4', true);
+Trong ngày hội, các bạn cùng vẽ tranh, thả chim bồ câu nguyện cầu hòa bình. Những bức tranh vẽ trái đất xanh, vẽ bàn tay nắm chặt bàn tay... Tất cả đều gửi gắm ước mơ về một thế giới không có chiến tranh, tràn ngập tình yêu thương.', 'Theo Tiếng Việt 4', true, NULL);
 
 -- Grade 5 Theme 1: Thế giới tuổi thơ
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (5, 'TV', 'Thanh âm của gió', 'Chúng tôi đi chăn trâu, ngày nào cũng qua suối. Cỏ gần nước tươi tốt nên trâu ăn cỏ men theo bờ suối, rồi mới lên đồi, lên núi. Suối nhỏ, nước trong vắt, nắng chiều xuống đáy làm cát, sỏi ánh lên lấp lánh. Một bên suối là đồng cỏ rộng, tha hồ cho gió rong chơi. Thỉnh thoảng gió lại vút qua tai chúng tôi như đùa nghịch. Chiều về, đàn trâu no cỏ đằm mình dưới suối, chúng tôi tha thẩn tìm những viên đá đẹp cho mình.
 
 Bỗng em Bống nói:
@@ -2396,10 +2396,10 @@ Ngày triển lãm, lớp học như một cửa hiệu tạp hoá vui nhộn. �
 – Tớ chúc các bạn học thật giỏi để làm rạng danh lớp mình!
 – Chúc các bạn luôn đoàn kết, yêu thương nhau!
 
-Cứ thế, những lời chúc, những câu nói vui của các bạn lần lượt vang lên. Cả lớp cười lăn. Thầy Dương tươi cười nhìn cả lớp. Thầy nói: "Đây đúng là một bộ sưu tập độc đáo và ý nghĩa nhất!"', 'Theo Lê Khánh Kiểm', true);
+Cứ thế, những lời chúc, những câu nói vui của các bạn lần lượt vang lên. Cả lớp cười lăn. Thầy Dương tươi cười nhìn cả lớp. Thầy nói: "Đây đúng là một bộ sưu tập độc đáo và ý nghĩa nhất!"', 'Theo Lê Khánh Kiểm', true, NULL);
 
 -- Grade 5 Theme 2: Thiên nhiên kì thú
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (5, 'TV', 'Hành tinh kì lạ', 'Khi tàu vượt qua hành lang lửa trên hành trình thám hiểm không gian, phía trước tàu bỗng xuất hiện những tia sáng nhấp nháy. Các kim đồng hồ ở buồng lái rối loạn, rồi không nhúc nhích nữa. Tàu buộc phải đáp xuống hành tinh gần nhất. Cửa tàu hé mở, hai người ăn mặc như sĩ quan bước vào.
 
 Tôi lại gần một cây cổ thụ. Chăn-bai huých tôi, nói nhỏ: "Cây này không phải cây thật đâu. Nó làm bằng máy móc đấy!". Tôi ngạc nhiên nhìn. Thật vậy! Gốc rễ xù xì, thân cây to lớn, cành lá sum suê đều được ghép lại bằng những mảnh kim loại đủ màu sắc, sáng bóng.
@@ -2493,10 +2493,10 @@ Chúng tôi trèo lên yên lạc đà. Chúng đứng bổng dậy, cao lừng 
 
 Trời tối dần, lạ thay, trời rất mát, thậm chí rất lạnh. Gió thổi lồng lộng kéo bật tóc tôi ra khỏi khăn trùm đầu. Chúng tôi đi khá lâu mới đến khu lều dành cho khách du lịch, nhưng không ai muốn vào những túp lều du mục ấy.
 
-Năm giờ sáng, trời hửng.', 'Mai Thanh Vân', true);
+Năm giờ sáng, trời hửng.', 'Mai Thanh Vân', true, NULL);
 
 -- Grade 5 Theme 3: Bài ca học tập
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (5, 'TV', 'Thư gửi các học sinh', 'Các em học sinh,
 
 Ngày hôm nay là ngày khai trường đầu tiên ở nước Việt Nam Dân chủ Cộng hòa. Tôi đã tưởng tượng thấy trước mắt cái cảnh nhộn nhịp tưng bừng của ngày tựu trường ở khắp các nơi. Các em hết thảy đều vui vẻ vì sau mấy tháng giời nghỉ học, sau bao nhiêu công việc giúp đỡ gia đình, bây giờ lại được gặp thầy gặp bạn. Các em vui vẻ, tôi cũng vui vẻ.
@@ -2563,11 +2563,11 @@ Những dòng sông nóng lòng tìm biển cả...
 Trên sông Đà.
 Một đêm trăng chơi vơi.
 Tôi đã nghe tiếng ba-la-lai-ca như thế.
-Một cô gái Nga mái tóc màu hạt dẻ.', 'Quang Huy', true);
+Một cô gái Nga mái tóc màu hạt dẻ.', 'Quang Huy', true, NULL);
 
 -- Grade 5 Theme: Nghệ thuật muôn màu
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (5, 'TV', 'Trí tưởng tượng phong phú', 'Giô-an Rô-linh là một cô bé có trí tưởng tượng rất phong phú. Giô-an thường nghĩ ra nhiều câu chuyện và kể cho em gái nghe. Chỉ cần nhìn thấy một chú thỏ là Giô-an có ngay một câu chuyện. Cô bắt đầu kể cho em: “Thỏ con bị sốt. Cô ong mang đến cho thỏ một chiếc bánh quy mật ong. Thỏ ăn xong, khỏi bệnh liền”.
 
 Hôm sau, em gái nài nỉ cô kể tiếp. Giô-an kể: “Cô ong lo lắng cho bệnh tình của thỏ. Ong tiêm cho thỏ một mũi...”. Đứa em vội kêu: “Không phải, hôm qua chị kể khác.” Giô-an nghĩ có nên viết ra câu chuyện của mình, trước khi quên mất. Câu chuyện Chú thỏ con được ra đời như thế. Đó cũng là lần đầu tiên Giô-an ước mơ trở thành nhà văn.
@@ -2611,11 +2611,11 @@ Anh Tễu: – Dạ, con tên Tễu. Đến xin học nghề.
 Anh Tễu: – Con thích ca hát mà tướng mạo khó coi, “bụng trống chầu, đầu cá trê", vào phường ta mới mong được giấu mặt mình, trình mặt rối mà hát sau bức mành ạ.
 Ông quản: – Ta thấy con ngộ nghĩnh, hoạt bát đấy chứ! Ai mách con tới đây?
 Anh Tễu: – Mẹ con ạ. Mẹ con bảo tới đây “không đẹp nay thì đẹp mai, học cười má phấn có hai đồng tiền”.
-Ông quản: – Ha ha! Phường ta đưa tiếng cười mua vui cho làng xóm. “Một nụ cười bằng mười thang thuốc bổ!”. Để ta dạy con diễn mấy quân hề. Tha hồ mà cười! Nào ta sang thuỷ đình ao làng để tập.', 'Sưu tầm', true);
+Ông quản: – Ha ha! Phường ta đưa tiếng cười mua vui cho làng xóm. “Một nụ cười bằng mười thang thuốc bổ!”. Để ta dạy con diễn mấy quân hề. Tha hồ mà cười! Nào ta sang thuỷ đình ao làng để tập.', 'Sưu tầm', true, NULL);
 
 -- Grade 5 Theme: Vẻ đẹp cuộc sống
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (5, 'TV', 'Tiếng hát của người đá', 'Trên đỉnh núi cao ở vùng Chư Bô-đa, có một mỏm đá xanh giống hình một em bé cưỡi voi. Những tia nắng vàng dịu, những hạt mưa trong vắt thay nhau tắm gội, sưởi ấm cho mỏm đá. Gió rì rào kể cho mỏm đá nghe những câu chuyện về mọi miền. Chim hót cho mỏm đá nghe những điệu ca du dương. Cứ thế, năm này qua năm khác, những câu chuyện của gió, những bài ca của chim thấm sâu vào mỏm đá hình em bé.
 
 Một buổi sáng, mỏm đá khẽ cựa quậy, rồi từ từ biến thành một em bé xinh đẹp. Em bước xuống núi, thấy muông thú từng đàn kéo về phá nương rẫy, dân làng đuổi đằng đông, dồn đằng tây mà chẳng ăn thua gì. Em bé liền cất giọng hát. Tiếng hát của em vang khắp núi rừng. Muông thú quên cả phá lúa, nhảy múa theo tiếng hát. Dân làng vây quanh em bé, hỏi em từ đâu tới, tên em là gì, nhưng em chỉ cười. Mọi người đặt tên cho em là Nai Ngọc.
@@ -2750,11 +2750,11 @@ Một hôm, tai họa ập đến. Một tia sét đánh trúng ngọn cây cao 
 
 Ông nội Mát lúc đó đang bị bệnh. Khi ông biết chuyện, ông động viên Mát rằng: “Con trai à, con đừng buồn. Chúng ta sẽ làm lại. Khu rừng này không mất đi đâu cả, nó vẫn ở trong tim ta. Quan trọng là chúng ta không từ bỏ hy vọng”. Mát nhớ lời ông, cậu bé quyết tâm gây dựng lại khu rừng.
 
-Mát bắt tay vào việc. Cậu thu gom những hạt giống còn sót lại, ươm mầm, chăm sóc từng cây con. Mát còn tìm tòi, học hỏi thêm kiến thức về trồng rừng từ những người có kinh nghiệm. Nhiều năm trôi qua, với sự kiên trì và nỗ lực không ngừng nghỉ, khu rừng của Mát đã dần hồi sinh, thậm chí còn tươi tốt và đa dạng hơn trước.', 'Sưu tầm', true);
+Mát bắt tay vào việc. Cậu thu gom những hạt giống còn sót lại, ươm mầm, chăm sóc từng cây con. Mát còn tìm tòi, học hỏi thêm kiến thức về trồng rừng từ những người có kinh nghiệm. Nhiều năm trôi qua, với sự kiên trì và nỗ lực không ngừng nghỉ, khu rừng của Mát đã dần hồi sinh, thậm chí còn tươi tốt và đa dạng hơn trước.', 'Sưu tầm', true, NULL);
 
 -- Grade 5 Theme: Hương sắc trăm miền
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (5, 'TV', 'Hội thổi cơm thi ở Đồng Vân', 'Hội thổi cơm thi ở làng Đồng Vân bắt nguồn từ các cuộc trẩy quân đánh giặc của người Việt cổ bên bờ sông Đáy xưa. Hội thi bắt đầu bằng việc lấy lửa. Khi tiếng trống hiệu vừa dứt, bốn đội nhanh như sóc, thoăn thoắt leo lên bốn cây chuối bôi mỡ bóng nhẫy để lấy nén hương cắm ở trên ngọn. Có người leo lên, tụt xuống, lại leo lên... Khi mang được nén hương xuống, người dự thi được phát ba que diêm để châm vào hương cho cháy thành ngọn lửa.
 
 Trong khi đó, những người trong đội, mỗi người một việc. Người thì ngồi vót những thanh tre già thành những chiếc đũa bông. Người thì nhanh tay giã thóc, giần sàng thành gạo, người thì lấy nước và bắt đầu thổi cơm. Mỗi người nấu cơm đều mang một cái cần tre được cắm rất khéo vào dây lưng, uốn cong hình cánh cung từ phía sau ra trước mặt, đầu cần treo cái nồi nho nhỏ. Người nấu cơm tay giữ cần, tay cầm đuốc đung đưa cho ánh lửa bập bùng. Các đội vừa thổi cơm vừa đan xen nhau uốn lượn trên sân đình trong sự cổ vũ nồng nhiệt của người xem hội.
@@ -2862,11 +2862,11 @@ Cho bãi bồi vươn xa.
 Lần đầu về Đất Mũi.
 Như về với nhà mình.
 Nơi địa đầu Tổ quốc.
-Rạng ngời ánh bình minh!', 'Hoài Anh', true);
+Rạng ngời ánh bình minh!', 'Hoài Anh', true, NULL);
 
 -- Grade 5 Theme: Tiếp bước cha ông
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (5, 'TV', 'Nghìn năm văn hiến', 'Năm 1070, vua Lý Thánh Tông cho xây Văn Miếu Thăng Long để thờ Khổng Tử. Kể từ đó, hệ thống Văn Miếu đã được xây dựng ở khắp nơi. Ở Văn Miếu Thăng Long, vua còn cho xây Quốc Tử Giám làm nơi dạy học cho các hoàng tử và con em quý tộc. Về sau, học trò giỏi là con em dân thường cũng được học ở đây.
 
 Đến thăm Văn Miếu – Quốc Tử Giám, nơi được coi là trường đại học đầu tiên của Việt Nam, khách nước ngoài không khỏi ngạc nhiên khi biết rằng từ năm 1075, nước ta đã mở khoa thi tiến sĩ. Ngót 10 thế kỉ, tính từ khoa thi năm 1075 đến khoa thi cuối cùng năm 1919, các triều vua Việt Nam đã tổ chức được 185 khoa thi, lấy đỗ gần 3 000 tiến sĩ.
@@ -2962,11 +2962,11 @@ Yêu ai yêu trọn tấm tình thuỷ chung.
 Đất trăm nghề của trăm vùng
 Khách phương xa tới lạ lùng tìm xem.
 Tay người như có phép tiên
-Trên tre lá cũng dệt nghìn bài thơ.', 'Nguyễn Đình Thi', true);
+Trên tre lá cũng dệt nghìn bài thơ.', 'Nguyễn Đình Thi', true, NULL);
 
 -- Grade 5 Theme: Thế giới của chúng ta
 
-INSERT INTO contexts (grade, subject, title, content, author, from_book) VALUES 
+INSERT INTO contexts (grade, subject, title, content, author, from_book, owner_id) VALUES 
 (5, 'TV', 'Bài ca trái đất', 'Trái đất này là của chúng mình
 Quả bóng xanh bay giữa trời xanh.
 Bồ câu ơi, tiếng chim gù thương mến.
@@ -3019,4 +3019,4 @@ Ngày nay, công nghệ cải tiến đã giúp kích thước của điện tho
 
 Các công viên và khu thương mại ở Mát-xđa được xây dựng theo mô hình khu vườn Ả Rập truyền thống, ngập tràn màu xanh, giúp giảm thiểu tối đa lượng khí thải. Chính quyền thành phố cũng khuyến khích người dân đi bộ, đi xe đạp hoặc sử dụng các phương tiện giao thông công cộng chạy bằng điện năng lượng mặt trời.
 
-Việc xây dựng thành công thành phố thông minh Mát-xđa đã truyền cảm hứng cho một số dự án phát triển nhà ở Anh, Bồ Đào Nha,... Đây là một thành phố năng động, tự tin đi đầu thử nghiệm những chiến lược, suy nghĩ mới để các nước khác học tập và thực hiện theo.', 'Sưu tầm', true);
+Việc xây dựng thành công thành phố thông minh Mát-xđa đã truyền cảm hứng cho một số dự án phát triển nhà ở Anh, Bồ Đào Nha,... Đây là một thành phố năng động, tự tin đi đầu thử nghiệm những chiến lược, suy nghĩ mới để các nước khác học tập và thực hiện theo.', 'Sưu tầm', true, NULL);
