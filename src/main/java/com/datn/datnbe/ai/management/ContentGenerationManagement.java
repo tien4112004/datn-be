@@ -194,13 +194,13 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     public String generateQuestions(GenerateQuestionsFromTopicRequest request) {
         log.info("Generating questions for topic: {}, grade: {}", request.getTopic(), request.getGrade());
 
-        // Transform request to AI-Worker format
+        // Transform request to GenAI-Gateway format
         List<String> questionTypesList = request.getQuestionTypes()
                 .stream()
-                .map(qt -> qt.name()) // Keep uppercase for AI-Worker
+                .map(qt -> qt.name()) // Keep uppercase for GenAI-Gateway
                 .collect(Collectors.toList());
 
-        // Convert difficulty keys to uppercase for AI-Worker
+        // Convert difficulty keys to uppercase for GenAI-Gateway
         Map<String, Integer> difficultyMap = new HashMap<>();
         request.getQuestionsPerDifficulty()
                 .forEach((difficulty, count) -> difficultyMap.put(difficulty.toUpperCase(), count));
@@ -216,12 +216,12 @@ public class ContentGenerationManagement implements ContentGenerationApi {
                 .model("gemini-2.5-flash-lite") // TODO:    in request
                 .build();
 
-        // Make synchronous call to AI-Worker - return raw JSON string
-        log.info("Calling AI-Worker at endpoint: {}", QUESTIONS_API_ENDPOINT);
+        // Make synchronous call to GenAI-Gateway - return raw JSON string
+        log.info("Calling GenAI-Gateway at endpoint: {}", QUESTIONS_API_ENDPOINT);
         try {
             String jsonResponse = aiApiClient.post(QUESTIONS_API_ENDPOINT, aiRequest, String.class);
 
-            log.info("Successfully received AI-Worker response");
+            log.info("Successfully received GenAI-Gateway response");
             return jsonResponse;
         } catch (Exception e) {
             log.error("Error during question generation", e);

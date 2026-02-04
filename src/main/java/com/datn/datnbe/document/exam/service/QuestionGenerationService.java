@@ -46,9 +46,28 @@ public class QuestionGenerationService {
         // Parse JSON string to list of Question POJOs
         List<Question> aiQuestions;
         try {
-            aiQuestions = objectMapper.readValue(jsonResult, new TypeReference<List<Question>>() {
+            // Configure ObjectMapper to be lenient with unknown properties
+            ObjectMapper lenientMapper = objectMapper.copy();
+            lenientMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+                    false);
+            lenientMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY,
+                    true);
+
+            aiQuestions = lenientMapper.readValue(jsonResult, new TypeReference<List<Question>>() {
             });
             log.info("Parsed {} questions from AI response", aiQuestions.size());
+
+            // Log first question details for debugging
+            if (!aiQuestions.isEmpty()) {
+                Question firstQ = aiQuestions.get(0);
+                log.debug("First question sample - type: {}, difficulty: {}, title: {}, data type: {}",
+                        firstQ.getType(),
+                        firstQ.getDifficulty(),
+                        firstQ.getTitle() != null
+                                ? firstQ.getTitle().substring(0, Math.min(50, firstQ.getTitle().length()))
+                                : "null",
+                        firstQ.getData() != null ? firstQ.getData().getClass().getSimpleName() : "null");
+            }
         } catch (Exception e) {
             log.error("Failed to parse AI response. Error: {}, Response preview: {}",
                     e.getMessage(),
