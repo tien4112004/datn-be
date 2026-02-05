@@ -13,6 +13,8 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 public interface ContextMapper {
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "fromBook", ignore = true)
+    @Mapping(target = "ownerId", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     Context toEntity(ContextCreateRequest request);
@@ -20,6 +22,8 @@ public interface ContextMapper {
     ContextResponse toDto(Context entity);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "fromBook", ignore = true)
+    @Mapping(target = "ownerId", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     void updateEntity(@MappingTarget Context entity, ContextUpdateRequest request);

@@ -8,7 +8,6 @@ import com.datn.datnbe.document.dto.response.ContextResponse;
 import com.datn.datnbe.document.service.ContextService;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
-import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -21,25 +20,25 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/contexts")
+@RequestMapping("/api/admin/contexts")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
-public class ContextController {
+public class AdminContextController {
 
     ContextService contextService;
-    SecurityContextUtils securityContextUtils;
 
+    /**
+     * Get all public contexts (ownerId = null)
+     */
     @GetMapping({"", "/"})
-    public ResponseEntity<AppResponseDto<List<ContextResponse>>> getAllContexts(
+    public ResponseEntity<AppResponseDto<List<ContextResponse>>> getAllPublicContexts(
             @Valid @ModelAttribute ContextCollectionRequest request) {
 
-        String currentUserId = null;
-        if ("personal".equalsIgnoreCase(request.getBankType())) {
-            currentUserId = securityContextUtils.getCurrentUserId();
-        }
+        log.info("GET /api/admin/contexts - Fetching public contexts");
 
-        PaginatedResponseDto<ContextResponse> paginatedResponse = contextService.getAllContexts(request, currentUserId);
+        // Pass null as ownerIdFilter to get only public contexts
+        PaginatedResponseDto<ContextResponse> paginatedResponse = contextService.getAllContexts(request, null);
 
         return ResponseEntity.ok(
                 AppResponseDto.successWithPagination(paginatedResponse.getData(), paginatedResponse.getPagination()));
@@ -47,7 +46,7 @@ public class ContextController {
 
     @GetMapping("/{id}")
     public ResponseEntity<AppResponseDto<ContextResponse>> getContextById(@PathVariable String id) {
-        log.info("GET /api/contexts/{} - Fetching context", id);
+        log.info("GET /api/admin/contexts/{} - Fetching context", id);
 
         ContextResponse response = contextService.getContextById(id);
 
@@ -58,45 +57,52 @@ public class ContextController {
     public ResponseEntity<AppResponseDto<List<ContextResponse>>> getContextsByIds(
             @Valid @RequestBody ContextsByIdsRequest request) {
 
-        log.info("POST /api/contexts/by-ids - Fetching {} contexts by IDs", request.getIds().size());
+        log.info("POST /api/admin/contexts/by-ids - Fetching {} contexts by IDs", request.getIds().size());
 
         List<ContextResponse> response = contextService.getContextsByIds(request);
 
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 
+    /**
+     * Create a public context (ownerId = null)
+     */
     @PostMapping({"", "/"})
-    public ResponseEntity<AppResponseDto<ContextResponse>> createContext(
+    public ResponseEntity<AppResponseDto<ContextResponse>> createPublicContext(
             @Valid @RequestBody ContextCreateRequest request) {
 
-        String currentUserId = securityContextUtils.getCurrentUserId();
-        log.info("POST /api/contexts - Creating personal context with title: {}, userId: {}",
-                request.getTitle(),
-                currentUserId);
+        log.info("POST /api/admin/contexts - Creating public context with title: {}", request.getTitle());
 
-        ContextResponse response = contextService.createContext(request, currentUserId);
+        // Pass null as ownerId to create a public context
+        ContextResponse response = contextService.createContext(request, null);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(AppResponseDto.success(response));
     }
 
+    /**
+     * Update a public context (admin can only modify public contexts)
+     */
     @PutMapping("/{id}")
     public ResponseEntity<AppResponseDto<ContextResponse>> updateContext(@PathVariable String id,
             @Valid @RequestBody ContextUpdateRequest request) {
 
-        String currentUserId = securityContextUtils.getCurrentUserId();
-        log.info("PUT /api/contexts/{} - Updating context, userId: {}", id, currentUserId);
+        log.info("PUT /api/admin/contexts/{} - Admin updating context", id);
 
-        ContextResponse response = contextService.updateContext(id, request, currentUserId);
+        // Pass null as userId for admin operations
+        ContextResponse response = contextService.updateContext(id, request, null);
 
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 
+    /**
+     * Delete a public context (admin can only delete public contexts)
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteContext(@PathVariable String id) {
-        String currentUserId = securityContextUtils.getCurrentUserId();
-        log.info("DELETE /api/contexts/{} - Deleting context, userId: {}", id, currentUserId);
+        log.info("DELETE /api/admin/contexts/{} - Admin deleting context", id);
 
-        contextService.deleteContext(id, currentUserId);
+        // Pass null as userId for admin operations
+        contextService.deleteContext(id, null);
 
         return ResponseEntity.noContent().build();
     }

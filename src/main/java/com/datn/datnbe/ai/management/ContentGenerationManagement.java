@@ -92,11 +92,12 @@ public class ContentGenerationManagement implements ContentGenerationApi {
 
         log.info("Calling AI to generate outline in batch mode");
         try {
-            AiWokerResponse response = aiApiClient
-                    .post(OUTLINE_BATCH_API_ENDPOINT, MappingParamsUtils.constructParams(request), AiWokerResponse.class);
-            
+            AiWokerResponse response = aiApiClient.post(OUTLINE_BATCH_API_ENDPOINT,
+                    MappingParamsUtils.constructParams(request),
+                    AiWokerResponse.class);
+
             saveTokenUsageIfPresent(response, "OUTLINE");
-            
+
             log.info("Batch outline generation completed successfully");
             return response.getData();
         } catch (Exception e) {
@@ -116,11 +117,12 @@ public class ContentGenerationManagement implements ContentGenerationApi {
 
         log.info("Calling AI to generate presentation slides in batch mode");
         try {
-            AiWokerResponse response = aiApiClient
-                    .post(PRESENTATION_BATCH_API_ENDPOINT, MappingParamsUtils.constructParams(request), AiWokerResponse.class);
-            
+            AiWokerResponse response = aiApiClient.post(PRESENTATION_BATCH_API_ENDPOINT,
+                    MappingParamsUtils.constructParams(request),
+                    AiWokerResponse.class);
+
             saveTokenUsageIfPresent(response, "PRESENTATION");
-            
+
             log.info("Batch presentation generation completed successfully");
             return response.getData();
         } catch (Exception e) {
@@ -141,9 +143,9 @@ public class ContentGenerationManagement implements ContentGenerationApi {
         try {
             AiWokerResponse response = aiApiClient
                     .post(MINDMAP_API_ENDPOINT, MappingParamsUtils.constructParams(request), AiWokerResponse.class);
-            
+
             saveTokenUsageIfPresent(response, "MINDMAP");
-            
+
             log.info("Mindmap generation completed successfully");
             return response.getData();
         } catch (Exception e) {
@@ -174,4 +176,5 @@ public class ContentGenerationManagement implements ContentGenerationApi {
         } catch (Exception e) {
             log.warn("Failed to save token usage for request type: {}", requestType, e);
         }
-    }}
+    }
+}

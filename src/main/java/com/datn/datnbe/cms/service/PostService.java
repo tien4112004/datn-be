@@ -194,7 +194,7 @@ public class PostService implements PostApi {
         if (newLinkedResources != null) {
             // Clear the collection from the entity to let Hibernate manage orphan removal
             exist.getPostLinkedResources().clear();
-            
+
             // Save new linked resources
             if (!newLinkedResources.isEmpty()) {
                 List<PostLinkedResource> postLinkedResources = postLinkedResourceMapper
