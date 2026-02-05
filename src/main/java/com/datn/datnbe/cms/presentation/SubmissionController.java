@@ -3,7 +3,10 @@ package com.datn.datnbe.cms.presentation;
 import com.datn.datnbe.cms.api.SubmissionApi;
 import com.datn.datnbe.cms.dto.request.SubmissionCreateRequest;
 import com.datn.datnbe.cms.dto.request.SubmissionGradeRequest;
+import com.datn.datnbe.cms.dto.request.SubmissionValidationRequest;
 import com.datn.datnbe.cms.dto.response.SubmissionResponseDto;
+import com.datn.datnbe.cms.dto.response.SubmissionStatisticsDto;
+import com.datn.datnbe.cms.dto.response.SubmissionValidationResponse;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.security.annotation.RequireTeacherPermission;
 import lombok.RequiredArgsConstructor;
@@ -53,5 +56,42 @@ public class SubmissionController {
             @RequestBody SubmissionGradeRequest request) {
         SubmissionResponseDto response = submissionApi.gradeSubmissionManually(id, request);
         return ResponseEntity.ok(AppResponseDto.success(response));
+    }
+
+    // New endpoints for assignment feature alignment
+
+    @GetMapping("/assignments/{assignmentId}/submissions")
+    public ResponseEntity<AppResponseDto<List<SubmissionResponseDto>>> getAssignmentSubmissions(
+            @PathVariable String assignmentId,
+            @RequestParam(required = false) String studentId) {
+        List<SubmissionResponseDto> submissions;
+        if (studentId != null) {
+            submissions = submissionApi.getSubmissionsByAssignmentIdAndStudentId(assignmentId, studentId);
+        } else {
+            submissions = submissionApi.getSubmissionsByAssignmentId(assignmentId);
+        }
+        return ResponseEntity.ok(AppResponseDto.success(submissions));
+    }
+
+    @GetMapping("/posts/{postId}/submissions/statistics")
+    public ResponseEntity<AppResponseDto<SubmissionStatisticsDto>> getPostStatistics(
+            @PathVariable String postId) {
+        return ResponseEntity.ok(AppResponseDto.success(
+                submissionApi.getSubmissionStatistics(postId)));
+    }
+
+    @GetMapping("/assignments/{assignmentId}/submissions/statistics")
+    public ResponseEntity<AppResponseDto<SubmissionStatisticsDto>> getAssignmentStatistics(
+            @PathVariable String assignmentId) {
+        return ResponseEntity.ok(AppResponseDto.success(
+                submissionApi.getAssignmentStatistics(assignmentId)));
+    }
+
+    @PostMapping("/assignments/{assignmentId}/validate-submission")
+    public ResponseEntity<AppResponseDto<SubmissionValidationResponse>> validateSubmission(
+            @PathVariable String assignmentId,
+            @RequestBody SubmissionValidationRequest request) {
+        return ResponseEntity.ok(AppResponseDto.success(
+                submissionApi.validateSubmission(assignmentId, request)));
     }
 }
