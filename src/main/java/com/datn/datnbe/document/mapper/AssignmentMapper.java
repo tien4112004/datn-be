@@ -1,5 +1,6 @@
 package com.datn.datnbe.document.mapper;
 
+import com.datn.datnbe.cms.entity.AssignmentPost;
 import com.datn.datnbe.document.dto.request.AssignmentCreateRequest;
 import com.datn.datnbe.document.dto.request.AssignmentUpdateRequest;
 import com.datn.datnbe.document.dto.response.AssignmentResponse;
@@ -20,6 +21,12 @@ public interface AssignmentMapper {
     Assignment toEntity(AssignmentCreateRequest request);
 
     AssignmentResponse toDto(Assignment entity);
+
+    /**
+     * Convert AssignmentPost to AssignmentResponse.
+     * Used for students accessing cloned assignments from assignment_post table.
+     */
+    AssignmentResponse toDto(AssignmentPost assignmentPost);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "ownerId", ignore = true)
