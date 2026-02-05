@@ -28,8 +28,8 @@ public class Context {
     @Column(name = "content", columnDefinition = "TEXT", nullable = false)
     String content;
 
-    @Column(name = "grade")
-    Integer grade;
+    @Column(name = "grade", length = 50)
+    String grade;
 
     @Column(name = "author", columnDefinition = "TEXT")
     String author;

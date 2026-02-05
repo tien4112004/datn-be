@@ -6,6 +6,8 @@ import com.datn.datnbe.document.entity.questiondata.MatchingData;
 import com.datn.datnbe.document.entity.questiondata.MultipleChoiceData;
 import com.datn.datnbe.document.entity.questiondata.OpenEndedData;
 import com.datn.datnbe.document.entity.questiondata.QuestionType;
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.*;
@@ -22,11 +24,18 @@ public class Question {
     QuestionType type;
     Difficulty difficulty;
     String title;
+
+    @JsonProperty("titleImageUrl")
+    @JsonAlias({"title_image_url", "titleImageUrl"})
     String titleImageUrl;
+
     String explanation;
     String grade;
     String chapter;
     String subject;
+
+    @JsonProperty("contextId")
+    @JsonAlias({"context_id", "contextId"})
     String contextId;
 
     @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
