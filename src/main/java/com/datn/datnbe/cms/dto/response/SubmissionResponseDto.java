@@ -33,6 +33,7 @@ public class SubmissionResponseDto {
     private Integer score;
     private Integer maxScore;
     private List<QuestionGrade> grades;
+    private String feedback;
     private LocalDateTime submittedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

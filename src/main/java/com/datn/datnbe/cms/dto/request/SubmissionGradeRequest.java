@@ -13,4 +13,10 @@ import java.util.Map;
 public class SubmissionGradeRequest {
     // Map questionId -> score
     private Map<String, Integer> questionScores;
+
+    // Map questionId -> feedback (per-question feedback)
+    private Map<String, String> questionFeedback;
+
+    // Overall feedback for the submission
+    private String overallFeedback;
 }
