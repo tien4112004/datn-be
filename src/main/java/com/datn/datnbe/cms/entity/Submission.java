@@ -74,6 +74,9 @@ public class Submission {
     @Column(name = "grades", columnDefinition = "jsonb")
     List<QuestionGrade> grades;
 
+    @Column(name = "feedback", columnDefinition = "TEXT")
+    String feedback;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     LocalDateTime createdAt;

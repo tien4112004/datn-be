@@ -152,6 +152,30 @@ public class SubmissionService implements SubmissionApi {
             submission.setGrade(totalScore);
             submission.setScore(totalScore);
 
+            // Create detailed grades list
+            List<QuestionGrade> grades = new ArrayList<>();
+            Map<String, String> questionFeedback = request.getQuestionFeedback();
+
+            for (Map.Entry<String, Integer> entry : questionScores.entrySet()) {
+                String questionId = entry.getKey();
+                String feedback = (questionFeedback != null) ? questionFeedback.get(questionId) : null;
+
+                QuestionGrade grade = QuestionGrade.builder()
+                        .questionId(questionId)
+                        .points(entry.getValue())
+                        .maxPoints(null) // Can be populated from assignment if needed
+                        .feedback(feedback)
+                        .isAutoGraded(false)
+                        .build();
+                grades.add(grade);
+            }
+            submission.setGrades(grades);
+
+            // Set overall feedback
+            if (request.getOverallFeedback() != null && !request.getOverallFeedback().trim().isEmpty()) {
+                submission.setFeedback(request.getOverallFeedback());
+            }
+
             // Set grading metadata
             submission.setGradedBy(currentUser);
             submission.setGradedAt(LocalDateTime.now());
