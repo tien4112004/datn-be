@@ -9,7 +9,9 @@ import com.datn.datnbe.document.dto.response.BatchCreateQuestionResponseDto;
 import com.datn.datnbe.document.dto.response.PublishRequestResponseDto;
 import com.datn.datnbe.document.entity.QuestionBankItem;
 import com.datn.datnbe.document.entity.PublishRequest;
+import com.datn.datnbe.document.mapper.ContextMapper;
 import com.datn.datnbe.document.mapper.QuestionEntityMapper;
+import com.datn.datnbe.document.repository.ContextRepository;
 import com.datn.datnbe.document.repository.QuestionRepository;
 import com.datn.datnbe.document.repository.PublishRequestRepository;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
@@ -41,7 +43,9 @@ public class QuestionManagement implements QuestionApi {
 
     private final QuestionRepository questionRepository;
     private final PublishRequestRepository publishRequestRepository;
+    private final ContextRepository contextRepository;
     private final QuestionEntityMapper questionMapper;
+    private final ContextMapper contextMapper;
     private final SmartValidator validator;
 
     @Override
@@ -304,7 +308,14 @@ public class QuestionManagement implements QuestionApi {
             return new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Question not found with id: " + id);
         });
 
-        return questionMapper.toResponseDto(question);
+        QuestionResponseDto dto = questionMapper.toResponseDto(question);
+
+        if (question.getContextId() != null) {
+            contextRepository.findById(question.getContextId())
+                    .ifPresent(context -> dto.setContext(contextMapper.toDto(context)));
+        }
+
+        return dto;
     }
 
     @Override
