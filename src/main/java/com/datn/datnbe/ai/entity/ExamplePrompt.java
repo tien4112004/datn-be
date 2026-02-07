@@ -32,6 +32,10 @@ public class ExamplePrompt {
     @Column(name = "type", length = 50, nullable = false)
     ExamplePromptType type;
 
+    @Column(name = "language", length = 10)
+    @Builder.Default
+    String language = "vi";
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "data", columnDefinition = "JSONB")
     String data; // Changed to String to store JSON string, or could be Map/Object depending on serializer
