@@ -78,9 +78,6 @@ public class AssignmentPost {
     @Column(name = "passing_score")
     Double passingScore;
 
-    @Column(name = "time_limit")
-    Integer timeLimit;
-
     @Column(name = "available_from")
     LocalDateTime availableFrom;
 

@@ -20,7 +20,6 @@ public class AssignmentSettingsUpdateRequest {
     Boolean showCorrectAnswers;
     Boolean showScoreImmediately;
     Double passingScore;
-    Integer timeLimit;
     LocalDateTime availableFrom;
     LocalDateTime availableUntil;
     List<AssignmentTopic> topics;
