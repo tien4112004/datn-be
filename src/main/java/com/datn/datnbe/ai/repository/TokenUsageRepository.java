@@ -1,10 +1,8 @@
-package com.datn.datnbe.ai.repository.impl.jpa;
-
-import com.datn.datnbe.ai.entity.TokenUsage;
-
-import jakarta.transaction.Transactional;
+package com.datn.datnbe.ai.repository;
 
 import com.datn.datnbe.ai.dto.response.TokenUsageStatsDto;
+import com.datn.datnbe.ai.entity.TokenUsage;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -15,17 +13,18 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Repository
-public interface TokenUsageJPARepo extends JpaRepository<TokenUsage, Long> {
-    @Query("SELECT COALESCE(SUM(t.tokenCount), 0) FROM token_usage t WHERE t.userId = :userId")
+public interface TokenUsageRepository extends JpaRepository<TokenUsage, Integer> {
+
+    @Query("SELECT SUM(t.tokenCount) FROM TokenUsage t WHERE t.userId = :userId")
     Long getTotalTokensUsedByUser(@Param("userId") String userId);
 
-    @Query("SELECT COUNT(t) FROM token_usage t WHERE t.userId = :userId")
+    @Query("SELECT COUNT(t) FROM TokenUsage t WHERE t.userId = :userId")
     Long getRequestCountByUser(@Param("userId") String userId);
 
-    @Query("SELECT COUNT(t) FROM token_usage t WHERE t.userId = :userId AND t.request = :request")
-    Long getRequestCountByUserAndType(@Param("userId") String userId, @Param("request") String requestType);
+    @Query("SELECT COUNT(t) FROM TokenUsage t WHERE t.userId = :userId AND t.request = :requestType")
+    Long getRequestCountByUserAndType(@Param("userId") String userId, @Param("requestType") String requestType);
 
-    @Query("SELECT COALESCE(SUM(t.tokenCount), 0) FROM token_usage t WHERE t.userId = :userId "
+    @Query("SELECT SUM(t.tokenCount) FROM TokenUsage t " + "WHERE (:userId IS NULL OR t.userId = :userId) "
             + "AND (:model IS NULL OR t.model = :model) " + "AND (:provider IS NULL OR t.provider = :provider) "
             + "AND (:requestType IS NULL OR t.request = :requestType)")
     Long getTotalTokensWithFilters(@Param("userId") String userId,
@@ -33,27 +32,23 @@ public interface TokenUsageJPARepo extends JpaRepository<TokenUsage, Long> {
             @Param("provider") String provider,
             @Param("requestType") String requestType);
 
-    @Query("SELECT COUNT(t) FROM token_usage t WHERE t.userId = :userId " + "AND (:model IS NULL OR t.model = :model) "
-            + "AND (:provider IS NULL OR t.provider = :provider) "
+    @Query("SELECT COUNT(t) FROM TokenUsage t " + "WHERE (:userId IS NULL OR t.userId = :userId) "
+            + "AND (:model IS NULL OR t.model = :model) " + "AND (:provider IS NULL OR t.provider = :provider) "
             + "AND (:requestType IS NULL OR t.request = :requestType)")
     Long getRequestCountWithFilters(@Param("userId") String userId,
             @Param("model") String model,
             @Param("provider") String provider,
             @Param("requestType") String requestType);
 
-    @Query("SELECT new com.datn.datnbe.ai.dto.response.TokenUsageStatsDto(COALESCE(SUM(t.tokenCount), 0), null, t.model, null) "
-            + "FROM token_usage t WHERE t.userId = :userId GROUP BY t.model ORDER BY COALESCE(SUM(t.tokenCount), 0) DESC")
+    @Query("SELECT new com.datn.datnbe.ai.dto.response.TokenUsageStatsDto(t.model, SUM(t.tokenCount), COUNT(t)) "
+            + "FROM TokenUsage t WHERE t.userId = :userId GROUP BY t.model")
     List<TokenUsageStatsDto> getTokenUsageByModel(@Param("userId") String userId);
 
-    @Query("SELECT new com.datn.datnbe.ai.dto.response.TokenUsageStatsDto(COALESCE(SUM(t.tokenCount), 0), null, null, t.request) "
-            + "FROM token_usage t WHERE t.userId = :userId AND t.request != 'IMAGE_GENERATION' "
-            + "GROUP BY t.request ORDER BY COALESCE(SUM(t.tokenCount), 0) DESC")
+    @Query("SELECT new com.datn.datnbe.ai.dto.response.TokenUsageStatsDto(t.request, SUM(t.tokenCount), COUNT(t)) "
+            + "FROM TokenUsage t WHERE t.userId = :userId GROUP BY t.request")
     List<TokenUsageStatsDto> getTokenUsageByRequestType(@Param("userId") String userId);
 
-    /**
-     * Get all token usages for a specific document (presentation, etc.)
-     */
-    List<TokenUsage> findByDocumentId(@Param("documentId") String documentId);
+    List<TokenUsage> findByDocumentId(String documentId);
 
     @Query(value = """
             SELECT t.token_count

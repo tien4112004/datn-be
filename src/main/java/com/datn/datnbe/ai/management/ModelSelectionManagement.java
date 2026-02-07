@@ -7,7 +7,7 @@ import com.datn.datnbe.ai.dto.response.ModelResponseDto;
 import com.datn.datnbe.ai.entity.ModelConfigurationEntity;
 import com.datn.datnbe.ai.enums.ModelType;
 import com.datn.datnbe.ai.mapper.ModelDataMapper;
-import com.datn.datnbe.ai.repository.interfaces.ModelConfigurationRepo;
+import com.datn.datnbe.ai.repository.ModelConfigurationRepository;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import jakarta.transaction.Transactional;
@@ -25,12 +25,12 @@ import java.util.Objects;
 @RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class ModelSelectionManagement implements ModelSelectionApi {
-    ModelConfigurationRepo modelConfigurationRepo;
+    ModelConfigurationRepository modelConfigurationRepo;
     ModelDataMapper modelDataMapper;
 
     @Override
     public List<ModelResponseDto> getModelConfigurations() {
-        return modelConfigurationRepo.getModels()
+        return modelConfigurationRepo.findAll()
                 .stream()
                 .sorted(Comparator.comparing(ModelConfigurationEntity::getProvider))
                 .map(modelDataMapper::toModelResponseDto)
@@ -42,7 +42,7 @@ public class ModelSelectionManagement implements ModelSelectionApi {
         if (Objects.isNull(modelType)) {
             return getModelConfigurations();
         } else {
-            return modelConfigurationRepo.getModelsByType(modelType)
+            return modelConfigurationRepo.findAllByModelType(modelType)
                     .stream()
                     .sorted(Comparator.comparing(ModelConfigurationEntity::getProvider))
                     .map(modelDataMapper::toModelResponseDto)
@@ -51,6 +51,7 @@ public class ModelSelectionManagement implements ModelSelectionApi {
     }
 
     @Override
+    @Transactional
     public ModelResponseDto setModelStatus(Integer modelId, UpdateModelStatusRequest request) {
         final Boolean isEnabled = request.getIsEnabled();
         final Boolean isDefault = request.getIsDefault();
@@ -61,9 +62,13 @@ public class ModelSelectionManagement implements ModelSelectionApi {
                     "At least one of isEnabled or isDefault must be provided");
         }
 
+        // Fetch current model state
+        ModelConfigurationEntity modelEntity = modelConfigurationRepo.findById(modelId)
+                .orElseThrow(() -> new AppException(ErrorCode.MODEL_NOT_FOUND));
+
         // If setting default=true, ensure effective enabled state is true
         if (Boolean.TRUE.equals(isDefault)) {
-            boolean effectiveEnabled = (isEnabled != null) ? isEnabled : modelConfigurationRepo.isModelEnabled(modelId);
+            boolean effectiveEnabled = (isEnabled != null) ? isEnabled : modelEntity.isEnabled();
             if (!effectiveEnabled) {
                 throw new AppException(ErrorCode.INVALID_MODEL_STATUS, "A model cannot be default if it is disabled");
             }
@@ -71,29 +76,52 @@ public class ModelSelectionManagement implements ModelSelectionApi {
 
         // If the model currently is default, ensure that it cannot be disabled
         if (Boolean.FALSE.equals(isEnabled)) {
-            boolean effectiveDefault = (isDefault != null) ? isDefault : modelConfigurationRepo.isModelDefault(modelId);
+            boolean effectiveDefault = (isDefault != null) ? isDefault : modelEntity.isDefault();
             if (effectiveDefault) {
                 throw new AppException(ErrorCode.INVALID_MODEL_STATUS, "Cannot disable the default model");
             }
         }
 
-        // Apply updates (each independently if present)
+        // Apply updates
         if (isEnabled != null) {
-            modelConfigurationRepo.setEnabled(modelId, isEnabled);
+            setEnabled(modelEntity, isEnabled);
         }
         if (isDefault != null) {
-            modelConfigurationRepo.setDefault(modelId, isDefault);
+            setDefault(modelEntity, isDefault);
         }
 
-        var modelEntity = modelConfigurationRepo.getModelById(modelId);
+        // The entity is managed, but explicit save ensures consistency if new logic is added
+        modelConfigurationRepo.save(modelEntity);
         return modelDataMapper.toModelResponseDto(modelEntity);
+    }
+
+    private void setEnabled(ModelConfigurationEntity model, boolean isEnabled) {
+        if (!isEnabled) {
+            // Check if it's the last enabled model of this type
+            String modelType = model.getModelType().name();
+            long countEnabled = modelConfigurationRepo.countEnabledModelsByType(modelType);
+            if (countEnabled <= 1 && model.isEnabled()) {
+                throw new AppException(ErrorCode.INVALID_MODEL_STATUS,
+                        "Cannot disable the last enabled model of type: " + modelType);
+            }
+        }
+        model.setEnabled(isEnabled);
+    }
+
+    private void setDefault(ModelConfigurationEntity model, boolean isDefault) {
+        if (!isDefault) {
+            throw new AppException(ErrorCode.INVALID_MODEL_STATUS, "Cannot remove default status from model.");
+        }
+
+        modelConfigurationRepo.disableDefaultModelsExcept(model.getModelType().name(), model.getModelId());
+        model.setDefault(true);
     }
 
     @Override
     public boolean isModelEnabled(String modelName) {
-        var modelEntity = modelConfigurationRepo.getModelByName(modelName);
-
-        return modelConfigurationRepo.isModelEnabled(modelEntity.getModelId());
+        return modelConfigurationRepo.findByModelName(modelName)
+                .map(ModelConfigurationEntity::isEnabled)
+                .orElseThrow(() -> new AppException(ErrorCode.MODEL_NOT_FOUND, "Model not found: " + modelName));
     }
 
     @Override
@@ -113,17 +141,38 @@ public class ModelSelectionManagement implements ModelSelectionApi {
 
     @Override
     public boolean existByNameAndType(String modelName, String modelType) {
-        return modelConfigurationRepo.existsByModelNameAndType(modelName, modelType);
+        return modelConfigurationRepo.existsByModelNameAndModelType(modelName, ModelType.valueOf(modelType));
     }
 
     @Override
     @Transactional
     public void removeModelByName(String modelName) {
-        if (modelConfigurationRepo.existsByModelName(modelName)) {
-            modelConfigurationRepo.deleteByModelName(modelName);
-            log.info("Successfully removed model: {}", modelName);
-        } else {
+        ModelConfigurationEntity model = modelConfigurationRepo.findByModelName(modelName).orElse(null);
+
+        if (model == null) {
             log.warn("Attempted to remove non-existent model: {}", modelName);
+            return;
         }
+
+        // If default, reassign default to another enabled model
+        if (model.isDefault()) {
+            resetDefaultModel(model.getModelType());
+        }
+
+        modelConfigurationRepo.delete(model);
+        log.info("Successfully removed model: {}", modelName);
+    }
+
+    private void resetDefaultModel(ModelType modelType) {
+        modelConfigurationRepo.findAllByModelType(modelType)
+                .stream()
+                .filter(ModelConfigurationEntity::isEnabled)
+                .filter(m -> !m.isDefault()) // Exclude current default (which we are deleting)
+                .findFirst()
+                .ifPresentOrElse(newDefaultModel -> {
+                    newDefaultModel.setDefault(true);
+                    modelConfigurationRepo.save(newDefaultModel);
+                    log.info("Set model '{}' as the new default.", newDefaultModel.getModelName());
+                }, () -> log.warn("Could not find an enabled model to set as the new default after deletion."));
     }
 }

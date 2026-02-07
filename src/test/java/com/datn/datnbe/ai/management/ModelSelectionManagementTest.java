@@ -10,11 +10,12 @@ import com.datn.datnbe.ai.dto.response.ModelResponseDto;
 import com.datn.datnbe.ai.entity.ModelConfigurationEntity;
 import com.datn.datnbe.ai.enums.ModelType;
 import com.datn.datnbe.ai.mapper.ModelDataMapper;
-import com.datn.datnbe.ai.repository.interfaces.ModelConfigurationRepo;
+import com.datn.datnbe.ai.repository.ModelConfigurationRepository;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,7 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ModelSelectionManagementTest {
 
     @Mock
-    private ModelConfigurationRepo modelConfigurationRepo;
+    private ModelConfigurationRepository modelConfigurationRepo;
     private ModelDataMapper modelDataMapper;
 
     private ModelSelectionManagement modelSelectionService;
@@ -130,16 +131,14 @@ class ModelSelectionManagementTest {
     void isModelEnabled_ModelEnabled() {
         // Given
         String modelName = "gpt-4";
-        when(modelConfigurationRepo.getModelByName(modelName)).thenReturn(modelEntity1);
-        when(modelConfigurationRepo.isModelEnabled(modelEntity1.getModelId())).thenReturn(true);
+        when(modelConfigurationRepo.findByModelName(modelName)).thenReturn(Optional.of(modelEntity1));
 
         // When
         boolean result = modelSelectionService.isModelEnabled(modelName);
 
         // Then
         assertTrue(result);
-        verify(modelConfigurationRepo).getModelByName(modelName);
-        verify(modelConfigurationRepo).isModelEnabled(modelEntity1.getModelId());
+        verify(modelConfigurationRepo).findByModelName(modelName);
     }
 
     @Test
@@ -147,16 +146,14 @@ class ModelSelectionManagementTest {
     void isModelEnabled_ModelDisabled() {
         // Given
         String modelName = "claude-3";
-        when(modelConfigurationRepo.getModelByName(modelName)).thenReturn(modelEntity2);
-        when(modelConfigurationRepo.isModelEnabled(modelEntity2.getModelId())).thenReturn(false);
+        when(modelConfigurationRepo.findByModelName(modelName)).thenReturn(Optional.of(modelEntity2));
 
         // When
         boolean result = modelSelectionService.isModelEnabled(modelName);
 
         // Then
         assertFalse(result);
-        verify(modelConfigurationRepo).getModelByName(modelName);
-        verify(modelConfigurationRepo).isModelEnabled(modelEntity2.getModelId());
+        verify(modelConfigurationRepo).findByModelName(modelName);
     }
 
     @Test
@@ -164,14 +161,14 @@ class ModelSelectionManagementTest {
     void isModelEnabled_ModelNotFound() {
         // Given
         String modelName = "non-existent-model";
-        when(modelConfigurationRepo.getModelByName(modelName)).thenThrow(new AppException(ErrorCode.MODEL_NOT_FOUND));
+        when(modelConfigurationRepo.findByModelName(modelName)).thenReturn(Optional.empty());
 
         // When & Then
         AppException exception = assertThrows(AppException.class,
                 () -> modelSelectionService.isModelEnabled(modelName));
 
         assertEquals(ErrorCode.MODEL_NOT_FOUND, exception.getErrorCode());
-        verify(modelConfigurationRepo, never()).isModelEnabled(anyInt());
+        // verify(modelConfigurationRepo, never()).isModelEnabled(anyInt()); // Logic moved to service, no repo call for check
     }
 
     // ===============================
@@ -186,7 +183,7 @@ class ModelSelectionManagementTest {
 
         // by provider
         // Passing modelType as null to get all models
-        when(modelConfigurationRepo.getModels()).thenReturn(models);
+        when(modelConfigurationRepo.findAll()).thenReturn(models);
 
         // When
         // Passing ModelType as Null for get all models
@@ -195,7 +192,7 @@ class ModelSelectionManagementTest {
         // Then
         assertNotNull(result);
         assertEquals(3, result.size());
-        verify(modelConfigurationRepo).getModels();
+        verify(modelConfigurationRepo).findAll();
 
         // Verify the models are sorted by provider (anthropic, google, openai)
         assertEquals("claude-3", result.get(0).getModelName());
@@ -207,7 +204,7 @@ class ModelSelectionManagementTest {
     @DisplayName("Should return empty list when no models exist")
     void getModelConfigurations_EmptyList() {
         // Given
-        when(modelConfigurationRepo.getModels()).thenReturn(Arrays.asList());
+        when(modelConfigurationRepo.findAll()).thenReturn(Arrays.asList());
 
         // When
         List<ModelResponseDto> result = modelSelectionService.getModelConfigurations();
@@ -215,7 +212,7 @@ class ModelSelectionManagementTest {
         // Then
         assertNotNull(result);
         assertTrue(result.isEmpty());
-        verify(modelConfigurationRepo).getModels();
+        verify(modelConfigurationRepo).findAll();
     }
 
     // ===============================
@@ -261,14 +258,14 @@ class ModelSelectionManagementTest {
     void removeModelByName_ModelExists_Success() {
         // Given
         String modelName = "gpt-4";
-        when(modelConfigurationRepo.existsByModelName(modelName)).thenReturn(true);
+        when(modelConfigurationRepo.findByModelName(modelName)).thenReturn(Optional.of(modelEntity1));
 
         // When
         assertDoesNotThrow(() -> modelSelectionService.removeModelByName(modelName));
 
         // Then
-        verify(modelConfigurationRepo).existsByModelName(modelName);
-        verify(modelConfigurationRepo).deleteByModelName(modelName);
+        verify(modelConfigurationRepo).findByModelName(modelName);
+        verify(modelConfigurationRepo).delete(modelEntity1);
     }
 
     @Test
@@ -276,14 +273,14 @@ class ModelSelectionManagementTest {
     void removeModelByName_ModelDoesNotExist_NoAction() {
         // Given
         String modelName = "non-existent-model";
-        when(modelConfigurationRepo.existsByModelName(modelName)).thenReturn(false);
+        when(modelConfigurationRepo.findByModelName(modelName)).thenReturn(Optional.empty());
 
         // When
         assertDoesNotThrow(() -> modelSelectionService.removeModelByName(modelName));
 
         // Then
-        verify(modelConfigurationRepo).existsByModelName(modelName);
-        verify(modelConfigurationRepo, never()).deleteByModelName(anyString());
+        verify(modelConfigurationRepo).findByModelName(modelName);
+        verify(modelConfigurationRepo, never()).delete(any(ModelConfigurationEntity.class));
     }
 
     // ===============================
@@ -294,7 +291,7 @@ class ModelSelectionManagementTest {
     @DisplayName("Should handle repository exception during model configuration retrieval")
     void getModelConfigurations_RepositoryException_ThrowsException() {
         // Given
-        when(modelConfigurationRepo.getModels())
+        when(modelConfigurationRepo.findAll())
                 .thenThrow(new RuntimeException("Database connection error"));
 
         // When & Then
@@ -302,12 +299,11 @@ class ModelSelectionManagementTest {
                 () -> modelSelectionService.getModelConfigurations());
 
         assertEquals("Database connection error", exception.getMessage());
-        verify(modelConfigurationRepo).getModels();
+        verify(modelConfigurationRepo).findAll();
     }
 
     // ===============================
     // Integration tests between text and image
-
     // ===============================
     @Test
     @DisplayName("Should return different results for text vs image models")
@@ -316,8 +312,8 @@ class ModelSelectionManagementTest {
         List<ModelConfigurationEntity> textModels = Arrays.asList(textModel1, textModel2);
         List<ModelConfigurationEntity> imageModels = Arrays.asList(imageModel1, imageModel2);
 
-        when(modelConfigurationRepo.getModelsByType(ModelType.TEXT)).thenReturn(textModels);
-        when(modelConfigurationRepo.getModelsByType(ModelType.IMAGE)).thenReturn(imageModels);
+        when(modelConfigurationRepo.findAllByModelType(ModelType.TEXT)).thenReturn(textModels);
+        when(modelConfigurationRepo.findAllByModelType(ModelType.IMAGE)).thenReturn(imageModels);
 
         // When
         List<ModelResponseDto> textResult = modelSelectionService.getModelConfigurations(ModelType.TEXT);
