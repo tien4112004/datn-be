@@ -319,7 +319,7 @@ public class QuestionSelectionService {
                         : " AND q.owner_id IS NULL")
                 + """
                         )
-                        SELECT question_id, chapter, context_id, created_at, data, difficulty,
+                        SELECT id, chapter, context_id, created_at, data, difficulty,
                                explanation, grade, owner_id, subject, title, title_image_url,
                                type, updated_at
                         FROM RankedQuestions
