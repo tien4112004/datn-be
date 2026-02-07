@@ -27,17 +27,6 @@ public class AssignmentResponse {
     List<Question> questions;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
-
-    // Assignment settings
-    Integer maxSubmissions;
-    Boolean allowRetake;
-    Boolean shuffleQuestions;
-    Boolean showCorrectAnswers;
-    Boolean showScoreImmediately;
-    Double passingScore;
-    Integer timeLimit;
-    LocalDateTime availableFrom;
-    LocalDateTime availableUntil;
     List<AssignmentTopic> topics;
     List<AssessmentMatrixCell> matrixCells;
 }
