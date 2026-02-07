@@ -26,10 +26,10 @@ public interface ModelConfigurationRepository extends JpaRepository<ModelConfigu
 
     List<ModelConfigurationEntity> findAllByModelType(ModelType modelType);
 
-    @Query("SELECT COUNT(m) FROM ModelConfigurationEntity m WHERE m.modelType = :modelType AND m.isEnabled = true")
-    long countEnabledModelsByType(@Param("modelType") String modelType);
+    @Query("SELECT COUNT(m) FROM model_configuration m WHERE m.modelType = :modelType AND m.isEnabled = true")
+    long countEnabledModelsByType(@Param("modelType") ModelType modelType);
 
     @Modifying
-    @Query("UPDATE ModelConfigurationEntity m SET m.isDefault = false WHERE m.modelType = :modelType AND m.id <> :modelId")
-    void disableDefaultModelsExcept(@Param("modelType") String modelType, @Param("modelId") Integer modelId);
+    @Query("UPDATE model_configuration m SET m.isDefault = false WHERE m.modelType = :modelType AND m.modelId <> :modelId")
+    void disableDefaultModelsExcept(@Param("modelType") ModelType modelType, @Param("modelId") Integer modelId);
 }

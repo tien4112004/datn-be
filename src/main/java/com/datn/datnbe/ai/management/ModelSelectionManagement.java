@@ -98,11 +98,11 @@ public class ModelSelectionManagement implements ModelSelectionApi {
     private void setEnabled(ModelConfigurationEntity model, boolean isEnabled) {
         if (!isEnabled) {
             // Check if it's the last enabled model of this type
-            String modelType = model.getModelType().name();
+            ModelType modelType = model.getModelType();
             long countEnabled = modelConfigurationRepo.countEnabledModelsByType(modelType);
             if (countEnabled <= 1 && model.isEnabled()) {
                 throw new AppException(ErrorCode.INVALID_MODEL_STATUS,
-                        "Cannot disable the last enabled model of type: " + modelType);
+                        "Cannot disable the last enabled model of type: " + modelType.name());
             }
         }
         model.setEnabled(isEnabled);
@@ -113,7 +113,7 @@ public class ModelSelectionManagement implements ModelSelectionApi {
             throw new AppException(ErrorCode.INVALID_MODEL_STATUS, "Cannot remove default status from model.");
         }
 
-        modelConfigurationRepo.disableDefaultModelsExcept(model.getModelType().name(), model.getModelId());
+        modelConfigurationRepo.disableDefaultModelsExcept(model.getModelType(), model.getModelId());
         model.setDefault(true);
     }
 

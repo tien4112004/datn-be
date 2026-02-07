@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface ExamplePromptRepository extends JpaRepository<ExamplePrompt, String> {
     List<ExamplePrompt> findByType(ExamplePromptType type);
+
+    List<ExamplePrompt> findByTypeAndLanguage(ExamplePromptType type, String language);
 }

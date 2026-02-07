@@ -15,16 +15,16 @@ import java.util.List;
 @Repository
 public interface TokenUsageRepository extends JpaRepository<TokenUsage, Integer> {
 
-    @Query("SELECT SUM(t.tokenCount) FROM TokenUsage t WHERE t.userId = :userId")
+    @Query("SELECT SUM(t.tokenCount) FROM token_usage t WHERE t.userId = :userId")
     Long getTotalTokensUsedByUser(@Param("userId") String userId);
 
-    @Query("SELECT COUNT(t) FROM TokenUsage t WHERE t.userId = :userId")
+    @Query("SELECT COUNT(t) FROM token_usage t WHERE t.userId = :userId")
     Long getRequestCountByUser(@Param("userId") String userId);
 
-    @Query("SELECT COUNT(t) FROM TokenUsage t WHERE t.userId = :userId AND t.request = :requestType")
+    @Query("SELECT COUNT(t) FROM token_usage t WHERE t.userId = :userId AND t.request = :requestType")
     Long getRequestCountByUserAndType(@Param("userId") String userId, @Param("requestType") String requestType);
 
-    @Query("SELECT SUM(t.tokenCount) FROM TokenUsage t " + "WHERE (:userId IS NULL OR t.userId = :userId) "
+    @Query("SELECT SUM(t.tokenCount) FROM token_usage t " + "WHERE (:userId IS NULL OR t.userId = :userId) "
             + "AND (:model IS NULL OR t.model = :model) " + "AND (:provider IS NULL OR t.provider = :provider) "
             + "AND (:requestType IS NULL OR t.request = :requestType)")
     Long getTotalTokensWithFilters(@Param("userId") String userId,
@@ -32,7 +32,7 @@ public interface TokenUsageRepository extends JpaRepository<TokenUsage, Integer>
             @Param("provider") String provider,
             @Param("requestType") String requestType);
 
-    @Query("SELECT COUNT(t) FROM TokenUsage t " + "WHERE (:userId IS NULL OR t.userId = :userId) "
+    @Query("SELECT COUNT(t) FROM token_usage t " + "WHERE (:userId IS NULL OR t.userId = :userId) "
             + "AND (:model IS NULL OR t.model = :model) " + "AND (:provider IS NULL OR t.provider = :provider) "
             + "AND (:requestType IS NULL OR t.request = :requestType)")
     Long getRequestCountWithFilters(@Param("userId") String userId,
@@ -41,11 +41,11 @@ public interface TokenUsageRepository extends JpaRepository<TokenUsage, Integer>
             @Param("requestType") String requestType);
 
     @Query("SELECT new com.datn.datnbe.ai.dto.response.TokenUsageStatsDto(t.model, SUM(t.tokenCount), COUNT(t)) "
-            + "FROM TokenUsage t WHERE t.userId = :userId GROUP BY t.model")
+            + "FROM token_usage t WHERE t.userId = :userId GROUP BY t.model")
     List<TokenUsageStatsDto> getTokenUsageByModel(@Param("userId") String userId);
 
     @Query("SELECT new com.datn.datnbe.ai.dto.response.TokenUsageStatsDto(t.request, SUM(t.tokenCount), COUNT(t)) "
-            + "FROM TokenUsage t WHERE t.userId = :userId GROUP BY t.request")
+            + "FROM token_usage t WHERE t.userId = :userId GROUP BY t.request")
     List<TokenUsageStatsDto> getTokenUsageByRequestType(@Param("userId") String userId);
 
     List<TokenUsage> findByDocumentId(String documentId);
