@@ -31,7 +31,6 @@ public class QuestionBankItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "question_id", length = 36)
     String id;
 
     @Column(name = "type", nullable = false, length = 50)
