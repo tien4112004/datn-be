@@ -112,7 +112,7 @@ app:
     allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
     allow-credentials: true
     max-age: 3600
-    exposed-headers: X-Presentation, permission
+    exposed-headers: X-Presentation, permission, X-Trace-ID
   media:
     file-size-limit: 104857600 # 100MB
   api-client:
@@ -189,3 +189,7 @@ pexels:
     rate-limit:
       requests: 200
       duration-minutes: 60
+phoenix:
+  api-url: ${PHOENIX_API_URL:http://localhost:6006}
+  api-key: ${PHOENIX_API_KEY:}
+  project-id: ${PHOENIX_PROJECT_ID:}

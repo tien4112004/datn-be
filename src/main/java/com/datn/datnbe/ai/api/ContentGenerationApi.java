@@ -11,25 +11,25 @@ import reactor.core.publisher.Flux;
 
 public interface ContentGenerationApi {
 
-    Flux<String> generateOutline(OutlinePromptRequest request);
+    Flux<String> generateOutline(OutlinePromptRequest request, String traceId);
 
-    Flux<String> generateSlides(PresentationPromptRequest request);
+    Flux<String> generateSlides(PresentationPromptRequest request, String traceId);
 
-    String generateOutlineBatch(OutlinePromptRequest request);
+    String generateOutlineBatch(OutlinePromptRequest request, String traceId);
 
-    String generateSlidesBatch(PresentationPromptRequest request);
+    String generateSlidesBatch(PresentationPromptRequest request, String traceId);
 
-    String generateMindmap(MindmapPromptRequest request);
+    String generateMindmap(MindmapPromptRequest request, String traceId);
 
     /**
      * Generate an exam matrix using AI.
      * The matrix has dimensions: [topic][difficulty][question_type]
      * Each cell is in format "count:points".
      */
-    ExamMatrixDto generateExamMatrix(GenerateMatrixRequest request);
+    ExamMatrixDto generateExamMatrix(GenerateMatrixRequest request, String traceId);
 
     /**
      * Generate questions based on topic and requirements using AI
      */
-    String generateQuestions(GenerateQuestionsFromTopicRequest request);
+    String generateQuestions(GenerateQuestionsFromTopicRequest request, String traceId);
 }

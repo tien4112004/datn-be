@@ -2,7 +2,9 @@ package com.datn.datnbe.ai.management;
 
 import com.datn.datnbe.ai.api.TokenUsageApi;
 import com.datn.datnbe.ai.dto.response.TokenUsageStatsDto;
+import com.datn.datnbe.ai.dto.response.TokenUsageAggregatedDto;
 import com.datn.datnbe.ai.entity.TokenUsage;
+import com.datn.datnbe.ai.repository.impl.jpa.TokenUsageJPARepo;
 import com.datn.datnbe.ai.repository.interfaces.TokenUsageRepo;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -17,14 +19,21 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class TokenUsageManagement implements TokenUsageApi {
     TokenUsageRepo tokenUsageRepo;
+    TokenUsageJPARepo tokenUsageJPARepo;
 
     @Override
     public void recordTokenUsage(TokenUsage tokenUsage) {
+        Long existingTokenCount = tokenUsageJPARepo.getTotalTokenIfExisted(tokenUsage.getDocumentId());
+        if (existingTokenCount != null) {
+            tokenUsageJPARepo.updateTokenUsageWithNewData(tokenUsage.getDocumentId(),
+                    tokenUsage.getTokenCount(),
+                    tokenUsage.getInputTokens(),
+                    tokenUsage.getOutputTokens(),
+                    tokenUsage.getActualPrice(),
+                    tokenUsage.getCalculatedPrice());
+            return;
+        }
         tokenUsageRepo.saveTokenUsage(tokenUsage);
-        log.debug("Recorded token usage - userId: {}, request: {}, tokens: {}",
-                tokenUsage.getUserId(),
-                tokenUsage.getRequest(),
-                tokenUsage.getTokenCount());
     }
 
     @Override
@@ -77,5 +86,25 @@ public class TokenUsageManagement implements TokenUsageApi {
         List<TokenUsageStatsDto> results = tokenUsageRepo.getTokenUsageByRequestType(userId);
         log.debug("Token usage by request type for user {}: {} types found", userId, results.size());
         return results;
+    }
+
+    @Override
+    public TokenUsageAggregatedDto getTokenUsageByDocumentId(String documentId) {
+        log.debug("Fetching aggregated token usage for documentId: {}", documentId);
+        TokenUsageAggregatedDto result = tokenUsageRepo.getTokenUsageByDocumentId(documentId);
+        log.debug("Aggregated token usage for document {}: totalTokens: {}, totalCost: {}, operations: {}",
+                documentId,
+                result.getTotalTokens(),
+                result.getTotalCost(),
+                result.getTotalOperations());
+        return result;
+    }
+
+    @Override
+    public List<TokenUsage> getTokenUsagesByDocumentId(String documentId) {
+        log.debug("Fetching all token usages for documentId: {}", documentId);
+        List<TokenUsage> usages = tokenUsageRepo.getTokenUsagesByDocumentId(documentId);
+        log.debug("Found {} token usages for document: {}", usages.size(), documentId);
+        return usages;
     }
 }

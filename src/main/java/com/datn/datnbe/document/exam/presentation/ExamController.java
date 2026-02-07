@@ -1,6 +1,7 @@
 package com.datn.datnbe.document.exam.presentation;
 
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
+import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import com.datn.datnbe.document.exam.api.ExamApi;
 import com.datn.datnbe.document.exam.dto.ExamMatrixDto;
 import com.datn.datnbe.document.exam.dto.request.GenerateExamFromMatrixRequest;
@@ -16,11 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -31,6 +28,7 @@ import java.util.UUID;
 public class ExamController {
 
     ExamApi examApi;
+    SecurityContextUtils securityContextUtils;
 
     /**
      * Generate an exam matrix using AI.
@@ -82,9 +80,8 @@ public class ExamController {
                     """)))})
     @PostMapping("/generate-matrix")
     public ResponseEntity<AppResponseDto<ExamMatrixDto>> generateMatrix(
-            @Valid @RequestBody GenerateMatrixRequest request,
-            @AuthenticationPrincipal Jwt jwt) {
-        UUID teacherId = extractTeacherId(jwt);
+            @Valid @RequestBody GenerateMatrixRequest request) {
+        String teacherId = securityContextUtils.getCurrentUserId();
         log.info("Generate matrix request from teacher: {} for topics: {}", teacherId, request.getTopics());
 
         ExamMatrixDto matrix = examApi.generateMatrix(request, teacherId);
@@ -110,30 +107,11 @@ public class ExamController {
     @ApiResponse(responseCode = "200", description = "Exam draft generated successfully")
     @PostMapping("/generate-from-matrix")
     public ResponseEntity<AppResponseDto<ExamDraftDto>> generateExamFromMatrix(
-            @Valid @RequestBody GenerateExamFromMatrixRequest request,
-            @AuthenticationPrincipal Jwt jwt) {
-        UUID teacherId = extractTeacherId(jwt);
+            @Valid @RequestBody GenerateExamFromMatrixRequest request) {
+        String teacherId = securityContextUtils.getCurrentUserId();
         log.info("Generate exam from matrix request from teacher: {}", teacherId);
 
         ExamDraftDto draft = examApi.generateExamFromMatrix(request, teacherId);
         return ResponseEntity.ok(AppResponseDto.success(draft));
-    }
-
-    /**
-     * Extract and validate teacher ID from JWT token.
-     *
-     * @param jwt the JWT token, may be null
-     * @return the teacher UUID, or null if jwt is null or subject is not a valid UUID
-     */
-    private UUID extractTeacherId(Jwt jwt) {
-        if (jwt == null || jwt.getSubject() == null) {
-            return null;
-        }
-        try {
-            return UUID.fromString(jwt.getSubject());
-        } catch (IllegalArgumentException e) {
-            log.warn("Invalid UUID format in JWT subject: {}", jwt.getSubject());
-            return null;
-        }
     }
 }

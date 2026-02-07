@@ -1,6 +1,11 @@
 package com.datn.datnbe.document.exam.service;
 
+import com.datn.datnbe.ai.api.CoinPricingApi;
 import com.datn.datnbe.ai.api.ContentGenerationApi;
+import com.datn.datnbe.ai.api.TokenUsageApi;
+import com.datn.datnbe.ai.dto.response.TokenUsageInfoDto;
+import com.datn.datnbe.ai.entity.TokenUsage;
+import com.datn.datnbe.ai.service.PhoenixQueryService;
 import com.datn.datnbe.document.dto.response.QuestionResponseDto;
 import com.datn.datnbe.document.entity.Question;
 import com.datn.datnbe.document.entity.QuestionBankItem;
@@ -15,6 +20,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +38,9 @@ public class QuestionGenerationService {
     QuestionRepository questionRepository;
     QuestionEntityMapper questionMapper;
     ObjectMapper objectMapper;
+    PhoenixQueryService phoenixQueryService;
+    TokenUsageApi tokenUsageApi;
+    CoinPricingApi coinPricingApi;
 
     @Transactional
     public GeneratedQuestionsResponse generateAndSaveQuestions(GenerateQuestionsFromTopicRequest request,
@@ -39,9 +49,10 @@ public class QuestionGenerationService {
         log.info("Generating questions for teacher: {}", teacherId);
 
         // Call AI service to generate questions (returns JSON string)
-        String jsonResult = contentGenerationApi.generateQuestions(request);
+        String traceId = java.util.UUID.randomUUID().toString();
+        String jsonResult = contentGenerationApi.generateQuestions(request, traceId);
+        extractAndSaveTokenUsage(traceId, request, "question", teacherId);
         log.info("AI response received, length: {} chars", jsonResult != null ? jsonResult.length() : 0);
-        log.debug("AI response JSON: {}", jsonResult);
 
         // Parse JSON string to list of Question POJOs
         List<Question> aiQuestions;
@@ -172,5 +183,47 @@ public class QuestionGenerationService {
                 .ownerId(ownerId)
                 // createdAt and updatedAt are auto-generated
                 .build();
+    }
+
+    @Async
+    protected void extractAndSaveTokenUsage(String traceId,
+            GenerateQuestionsFromTopicRequest request,
+            String requestType,
+            String userId) {
+        try {
+            TokenUsageInfoDto tokenUsageInfo = phoenixQueryService.getTokenUsageFromPhoenix(traceId.replace("-", ""),
+                    requestType);
+
+            if (tokenUsageInfo != null && tokenUsageInfo.getTotalTokens() != null
+                    && tokenUsageInfo.getTotalTokens() > 0) {
+                tokenUsageInfo.setModel(request.getModel());
+                tokenUsageInfo.setProvider(request.getProvider());
+                Long totalTokens = tokenUsageInfo.getTotalTokens();
+
+                Long PriceInCoinOfRequest = coinPricingApi.getTokenPriceInCoins(tokenUsageInfo.getModel(),
+                        tokenUsageInfo.getProvider(),
+                        requestType.toUpperCase());
+                String requestBody = objectMapper.writeValueAsString(request);
+                TokenUsage tokenUsage = TokenUsage.builder()
+                        .userId(userId)
+                        .request(requestType)
+                        .inputTokens(tokenUsageInfo.getInputTokens())
+                        .outputTokens(tokenUsageInfo.getOutputTokens())
+                        .tokenCount(totalTokens)
+                        .model(tokenUsageInfo.getModel())
+                        .documentId(traceId)
+                        .requestBody(requestBody)
+                        .provider(tokenUsageInfo.getProvider())
+                        .actualPrice(tokenUsageInfo.getTotalPrice())
+                        .calculatedPrice(PriceInCoinOfRequest)
+                        .build();
+                tokenUsageApi.recordTokenUsage(tokenUsage);
+                log.debug("Token usage saved with price: {}", tokenUsageInfo.getTotalPrice());
+            } else {
+                log.warn("No token usage data available from Phoenix for {} with traceId: {}", requestType, traceId);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to save token usage from Phoenix for generate-questions-from-topic", e);
+        }
     }
 }

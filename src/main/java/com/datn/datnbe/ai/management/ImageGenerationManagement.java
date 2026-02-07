@@ -38,7 +38,7 @@ public class ImageGenerationManagement implements ImageGenerationApi {
     PicsumPhotoService picsumPhotoService;
 
     @Override
-    public List<MultipartFile> generateImage(ImagePromptRequest request) {
+    public List<MultipartFile> generateImage(ImagePromptRequest request, String traceId) {
         log.info("Image generation start");
 
         if (!modelSelectionApi.isModelEnabled(request.getModel())) {
@@ -48,8 +48,19 @@ public class ImageGenerationManagement implements ImageGenerationApi {
 
         //TODO: check if model supports image generation
 
-        ImageGeneratedResponseDto generatedImage = aiApiClient
-                .post(IMAGE_API_ENDPOINT, MappingParamsUtils.constructParams(request), ImageGeneratedResponseDto.class);
+        if (request.getPresentationId() != null && !request.getPresentationId().isEmpty()) {
+            traceId = request.getPresentationId();
+        }
+        log.info("Calling AI to generate image with traceId: {}", traceId);
+
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.set("X-Trace-ID", traceId.replace("-", ""));
+        headers.set("provider", request.getProvider());
+
+        ImageGeneratedResponseDto generatedImage = aiApiClient.post(IMAGE_API_ENDPOINT,
+                MappingParamsUtils.constructParams(request),
+                ImageGeneratedResponseDto.class,
+                headers);
 
         if (generatedImage.getError() != null || generatedImage.getImages() == null
                 || generatedImage.getImages().isEmpty()) {
@@ -57,7 +68,7 @@ public class ImageGenerationManagement implements ImageGenerationApi {
             throw new AppException(ErrorCode.GENERATION_ERROR, generatedImage.getError());
         }
 
-        log.info("Image generation completed");
+        log.info("Image generation completed with traceId: {}", traceId);
 
         return generatedImage.getImages().stream().map(this::convertBase64ToMultipartFile).toList();
     }

@@ -40,7 +40,7 @@ public class QuestionSelectionService {
      * @return ExamDraftDto containing selected questions and any gaps
      */
     @Transactional(readOnly = true)
-    public ExamDraftDto selectQuestionsForMatrix(GenerateExamFromMatrixRequest request, UUID teacherId) {
+    public ExamDraftDto selectQuestionsForMatrix(GenerateExamFromMatrixRequest request, String teacherId) {
         ExamMatrixDto matrix = request.getMatrix();
         MatrixDimensionsDto dimensions = matrix.getDimensions();
         MatrixMetadataDto metadata = matrix.getMetadata();
@@ -236,7 +236,7 @@ public class QuestionSelectionService {
     private List<QuestionBankItem> selectQuestionsWithWindowFunction(String subject,
             String grade,
             List<SelectionCriteria> criteriaList,
-            UUID teacherId,
+            String teacherId,
             boolean includePersonal) {
 
         // Build the WHERE clause conditions dynamically
@@ -329,7 +329,6 @@ public class QuestionSelectionService {
                 criteriaList.size(),
                 subject,
                 grade);
-        log.info("SQL Query:\n{}", sql);
 
         Query query = entityManager.createNativeQuery(sql, QuestionBankItem.class);
 

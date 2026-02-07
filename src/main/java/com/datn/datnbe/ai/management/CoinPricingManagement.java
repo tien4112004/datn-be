@@ -142,4 +142,14 @@ public class CoinPricingManagement implements CoinPricingApi {
                 .updatedAt(pricing.getUpdatedAt())
                 .build();
     }
+
+    @Override
+    public Long getTokenPriceInCoins(String model, String provider, String resourceType) {
+        Long pricing = coinPricingRepo.getTokenPriceInCoins(model, provider, resourceType.toUpperCase());
+        if (pricing == null) {
+            throw new AppException(ErrorCode.COIN_PRICING_NOT_FOUND,
+                    "Pricing not found for model: " + model + " and provider: " + provider);
+        }
+        return pricing;
+    }
 }

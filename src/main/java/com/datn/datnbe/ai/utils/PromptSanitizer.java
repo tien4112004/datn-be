@@ -31,26 +31,11 @@ public final class PromptSanitizer {
                 .trim();
     }
 
-    /**
-     * Sanitizes grade input with length limit.
-     *
-     * @param grade the grade string to sanitize
-     * @return sanitized grade limited to 50 characters, or null if input is null or empty after sanitization
-     */
-    public static String sanitizeGrade(String grade) {
-        String sanitized = sanitize(grade);
-        if (sanitized == null || sanitized.isEmpty()) {
-            return null;
-        }
-        return sanitized.length() > MAX_GRADE_LENGTH ? sanitized.substring(0, MAX_GRADE_LENGTH) : sanitized;
+    public static Integer sanitizeGrade(Integer grade) {
+        // Integer is already safe, no sanitization needed
+        return grade;
     }
 
-    /**
-     * Sanitizes subject input with length limit.
-     *
-     * @param subject the subject string to sanitize
-     * @return sanitized subject limited to 100 characters, or null if input is null or empty after sanitization
-     */
     public static String sanitizeSubject(String subject) {
         String sanitized = sanitize(subject);
         if (sanitized == null || sanitized.isEmpty()) {

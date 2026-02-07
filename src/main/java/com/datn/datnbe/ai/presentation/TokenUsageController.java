@@ -3,6 +3,8 @@ package com.datn.datnbe.ai.presentation;
 import com.datn.datnbe.ai.api.TokenUsageApi;
 import com.datn.datnbe.ai.dto.request.TokenUsageFilterRequest;
 import com.datn.datnbe.ai.dto.response.TokenUsageStatsDto;
+import com.datn.datnbe.ai.dto.response.TokenUsageAggregatedDto;
+import com.datn.datnbe.ai.entity.TokenUsage;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import jakarta.validation.Valid;
@@ -88,5 +90,20 @@ public class TokenUsageController {
         List<TokenUsageStatsDto> results = tokenUsageApi.getTokenUsageByRequestType(userId);
 
         return ResponseEntity.ok(AppResponseDto.success(results));
+    }
+
+    @GetMapping("/documents/{documentId}/aggregated")
+    public ResponseEntity<AppResponseDto<TokenUsageAggregatedDto>> getTokenUsageByDocument(
+            @PathVariable String documentId) {
+        log.info("Fetching aggregated token usage for documentId: {}", documentId);
+        TokenUsageAggregatedDto result = tokenUsageApi.getTokenUsageByDocumentId(documentId);
+        return ResponseEntity.ok(AppResponseDto.success(result));
+    }
+
+    @GetMapping("/documents/{documentId}/all")
+    public ResponseEntity<AppResponseDto<List<TokenUsage>>> getTokenUsagesForDocument(@PathVariable String documentId) {
+        log.info("Fetching all token usages for documentId: {}", documentId);
+        List<TokenUsage> usages = tokenUsageApi.getTokenUsagesByDocumentId(documentId);
+        return ResponseEntity.ok(AppResponseDto.success(usages));
     }
 }

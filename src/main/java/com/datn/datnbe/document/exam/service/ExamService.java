@@ -1,6 +1,11 @@
 package com.datn.datnbe.document.exam.service;
 
+import com.datn.datnbe.ai.api.CoinPricingApi;
 import com.datn.datnbe.ai.api.ContentGenerationApi;
+import com.datn.datnbe.ai.api.TokenUsageApi;
+import com.datn.datnbe.ai.dto.response.TokenUsageInfoDto;
+import com.datn.datnbe.ai.entity.TokenUsage;
+import com.datn.datnbe.ai.service.PhoenixQueryService;
 import com.datn.datnbe.document.exam.api.ExamApi;
 import com.datn.datnbe.document.exam.dto.ExamMatrixDto;
 import com.datn.datnbe.document.exam.dto.request.GenerateExamFromMatrixRequest;
@@ -12,6 +17,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -26,14 +33,18 @@ public class ExamService implements ExamApi {
     QuestionSelectionService questionSelectionService;
     ExamMatrixRepository examMatrixRepository;
     ObjectMapper objectMapper;
+    TokenUsageApi tokenUsageApi;
+    PhoenixQueryService phoenixQueryService;
+    CoinPricingApi coinPricingApi;
 
     @Override
-    public ExamMatrixDto generateMatrix(GenerateMatrixRequest request, UUID teacherId) {
+    public ExamMatrixDto generateMatrix(GenerateMatrixRequest request, String teacherId) {
         log.info("Generating exam matrix for topics: {} by teacher: {}", request.getTopics(), teacherId);
-        ExamMatrixDto matrixDto = contentGenerationApi.generateExamMatrix(request);
+        String matrixId = UUID.randomUUID().toString();
+        ExamMatrixDto matrixDto = contentGenerationApi.generateExamMatrix(request, matrixId);
+        extractAndSaveTokenUsage(matrixId, request, "matrix", teacherId);
 
         // Persist the generated matrix
-        String matrixId = UUID.randomUUID().toString();
         log.info("Persisting generated matrix with ID: {}", matrixId);
 
         try {
@@ -58,7 +69,7 @@ public class ExamService implements ExamApi {
     }
 
     @Override
-    public ExamDraftDto generateExamFromMatrix(GenerateExamFromMatrixRequest request, UUID teacherId) {
+    public ExamDraftDto generateExamFromMatrix(GenerateExamFromMatrixRequest request, String teacherId) {
         log.info("Generating exam from matrix for teacher: {}", teacherId);
 
         // Validate that either matrixId or matrix is provided
@@ -127,5 +138,47 @@ public class ExamService implements ExamApi {
                 draft.getIsComplete() ? "complete" : "has gaps");
 
         return draft;
+    }
+
+    @Async
+    protected void extractAndSaveTokenUsage(String traceId,
+            GenerateMatrixRequest request,
+            String requestType,
+            String userId) {
+        try {
+            TokenUsageInfoDto tokenUsageInfo = phoenixQueryService.getTokenUsageFromPhoenix(traceId.replace("-", ""),
+                    requestType);
+
+            if (tokenUsageInfo != null && tokenUsageInfo.getTotalTokens() != null
+                    && tokenUsageInfo.getTotalTokens() > 0) {
+                tokenUsageInfo.setModel(request.getModel());
+                tokenUsageInfo.setProvider(request.getProvider());
+                Long totalTokens = tokenUsageInfo.getTotalTokens();
+
+                Long PriceInCoinOfRequest = coinPricingApi.getTokenPriceInCoins(tokenUsageInfo.getModel(),
+                        tokenUsageInfo.getProvider(),
+                        requestType.toUpperCase());
+                String requestBody = objectMapper.writeValueAsString(request);
+                TokenUsage tokenUsage = TokenUsage.builder()
+                        .userId(userId)
+                        .request(requestType)
+                        .inputTokens(tokenUsageInfo.getInputTokens())
+                        .outputTokens(tokenUsageInfo.getOutputTokens())
+                        .tokenCount(totalTokens)
+                        .model(tokenUsageInfo.getModel())
+                        .documentId(traceId)
+                        .requestBody(requestBody)
+                        .provider(tokenUsageInfo.getProvider())
+                        .actualPrice(tokenUsageInfo.getTotalPrice())
+                        .calculatedPrice(PriceInCoinOfRequest)
+                        .build();
+                tokenUsageApi.recordTokenUsage(tokenUsage);
+                log.debug("Token usage saved with price: {}", tokenUsageInfo.getTotalPrice());
+            } else {
+                log.warn("No token usage data available from Phoenix for {} with traceId: {}", requestType, traceId);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to save token usage from Phoenix for generate-questions-from-topic", e);
+        }
     }
 }

@@ -1,11 +1,17 @@
 package com.datn.datnbe.ai.repository.impl.jpa;
 
 import com.datn.datnbe.ai.entity.TokenUsage;
+
+import jakarta.transaction.Transactional;
+
 import com.datn.datnbe.ai.dto.response.TokenUsageStatsDto;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 @Repository
@@ -43,4 +49,34 @@ public interface TokenUsageJPARepo extends JpaRepository<TokenUsage, Long> {
             + "FROM token_usage t WHERE t.userId = :userId AND t.request != 'IMAGE_GENERATION' "
             + "GROUP BY t.request ORDER BY COALESCE(SUM(t.tokenCount), 0) DESC")
     List<TokenUsageStatsDto> getTokenUsageByRequestType(@Param("userId") String userId);
+
+    /**
+     * Get all token usages for a specific document (presentation, etc.)
+     */
+    List<TokenUsage> findByDocumentId(@Param("documentId") String documentId);
+
+    @Query(value = """
+            SELECT t.token_count
+            FROM token_usage t
+            WHERE t.document_id = :documentId
+            """, nativeQuery = true)
+    Long getTotalTokenIfExisted(@Param("documentId") String documentId);
+
+    @Query(value = """
+            Update token_usage
+            SET token_count = :tokenCount,
+                input_tokens = :inputTokens,
+                output_tokens = :outputTokens,
+                actual_price = :actualPrice,
+                calculated_price = calculated_price + :calculatedPrice
+            WHERE document_id = :documentId
+            """, nativeQuery = true)
+    @Modifying
+    @Transactional
+    void updateTokenUsageWithNewData(@Param("documentId") String documentId,
+            @Param("tokenCount") Long tokenCount,
+            @Param("inputTokens") Long inputTokens,
+            @Param("outputTokens") Long outputTokens,
+            @Param("actualPrice") BigDecimal actualPrice,
+            @Param("calculatedPrice") Long calculatedPrice);
 }

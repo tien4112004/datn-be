@@ -2,21 +2,19 @@ package com.datn.datnbe.ai.management;
 
 import com.datn.datnbe.ai.api.ContentGenerationApi;
 import com.datn.datnbe.ai.api.ModelSelectionApi;
-import com.datn.datnbe.ai.api.TokenUsageApi;
 import com.datn.datnbe.ai.apiclient.AIApiClient;
 import com.datn.datnbe.ai.dto.request.AIWorkerGenerateQuestionsRequest;
 import com.datn.datnbe.ai.dto.request.MindmapPromptRequest;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
 import com.datn.datnbe.ai.dto.response.AiWokerResponse;
-import com.datn.datnbe.ai.entity.TokenUsage;
 import com.datn.datnbe.ai.utils.MappingParamsUtils;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
-import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import com.datn.datnbe.document.exam.dto.ExamMatrixDto;
 import com.datn.datnbe.document.exam.dto.request.GenerateMatrixRequest;
 import com.datn.datnbe.document.exam.dto.request.GenerateQuestionsFromTopicRequest;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -40,8 +38,6 @@ import java.util.stream.Collectors;
 public class ContentGenerationManagement implements ContentGenerationApi {
     ModelSelectionApi modelSelectionApi;
     AIApiClient aiApiClient;
-    TokenUsageApi tokenUsageApi;
-    SecurityContextUtils securityContextUtils;
 
     @Value("${ai.api.outline-endpoint}")
     @NonFinal
@@ -72,21 +68,26 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     String QUESTIONS_API_ENDPOINT;
 
     @Override
-    public Flux<String> generateOutline(OutlinePromptRequest request) {
+    public Flux<String> generateOutline(OutlinePromptRequest request, String traceId) {
 
         if (!modelSelectionApi.isModelEnabled(request.getModel())) {
             log.error("Model {} is not enabled for outline generation", request.getModel());
             return Flux.error(new AppException(ErrorCode.MODEL_NOT_ENABLED));
         }
 
-        log.info("Calling AI to stream outline generation");
-        return aiApiClient.postSse(OUTLINE_API_ENDPOINT, MappingParamsUtils.constructParams(request))
+        log.info("Calling AI to stream outline generation with traceId: {}", traceId);
+
+        Map<String, String> headers = new java.util.HashMap<>();
+        headers.put("X-Trace-ID", traceId);
+        headers.put("provider", request.getProvider());
+
+        return aiApiClient.postSse(OUTLINE_API_ENDPOINT, MappingParamsUtils.constructParams(request), headers)
                 .map(chunk -> new String(Base64.getDecoder().decode(chunk), StandardCharsets.UTF_8));
     }
 
     @Override
-    public Flux<String> generateSlides(PresentationPromptRequest request) {
-        log.info("Starting streaming presentation generation for slides");
+    public Flux<String> generateSlides(PresentationPromptRequest request, String traceId) {
+        log.info("Starting streaming presentation generation for slides with traceId: {}", traceId);
 
         if (!modelSelectionApi.isModelEnabled(request.getModel())) {
             log.error("Model {} is not enabled for slide generation", request.getModel());
@@ -95,12 +96,16 @@ public class ContentGenerationManagement implements ContentGenerationApi {
 
         log.info("Calling AI to stream presentation slides");
 
-        return aiApiClient.postSse(PRESENTATION_API_ENDPOINT, MappingParamsUtils.constructParams(request));
+        Map<String, String> headers = new java.util.HashMap<>();
+        headers.put("X-Trace-ID", traceId);
+        headers.put("provider", request.getProvider());
+
+        return aiApiClient.postSse(PRESENTATION_API_ENDPOINT, MappingParamsUtils.constructParams(request), headers);
     }
 
     @Override
-    public String generateOutlineBatch(OutlinePromptRequest request) {
-        log.info("Starting batch outline generation");
+    public String generateOutlineBatch(OutlinePromptRequest request, String traceId) {
+        log.info("Starting batch outline generation with traceId: {}", traceId);
 
         if (!modelSelectionApi.isModelEnabled(request.getModel())) {
             throw new AppException(ErrorCode.MODEL_NOT_ENABLED);
@@ -108,11 +113,17 @@ public class ContentGenerationManagement implements ContentGenerationApi {
 
         log.info("Calling AI to generate outline in batch mode");
         try {
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.set("X-Trace-ID", traceId);
+            headers.set("provider", request.getProvider());
+
             AiWokerResponse response = aiApiClient.post(OUTLINE_BATCH_API_ENDPOINT,
                     MappingParamsUtils.constructParams(request),
-                    AiWokerResponse.class);
+                    AiWokerResponse.class,
+                    headers);
 
-            saveTokenUsageIfPresent(response, "OUTLINE");
+            // Token usage will be extracted by controller via extractAndSaveTokenUsage(traceId)
+            // Do not call saveTokenUsageIfPresent here - it doesn't have correct traceId
 
             log.info("Batch outline generation completed successfully");
             return response.getData();
@@ -123,8 +134,8 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     }
 
     @Override
-    public String generateSlidesBatch(PresentationPromptRequest request) {
-        log.info("Starting batch presentation generation for slides");
+    public String generateSlidesBatch(PresentationPromptRequest request, String traceId) {
+        log.info("Starting batch presentation generation for slides with traceId: {}", traceId);
 
         if (!modelSelectionApi.isModelEnabled(request.getModel())) {
             log.error("Model {} is not enabled for slide generation", request.getModel());
@@ -133,11 +144,17 @@ public class ContentGenerationManagement implements ContentGenerationApi {
 
         log.info("Calling AI to generate presentation slides in batch mode");
         try {
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.set("X-Trace-ID", traceId);
+            headers.set("provider", request.getProvider());
+
             AiWokerResponse response = aiApiClient.post(PRESENTATION_BATCH_API_ENDPOINT,
                     MappingParamsUtils.constructParams(request),
-                    AiWokerResponse.class);
+                    AiWokerResponse.class,
+                    headers);
 
-            saveTokenUsageIfPresent(response, "PRESENTATION");
+            // Token usage will be extracted by controller via extractAndSaveTokenUsage(traceId)
+            // Do not call saveTokenUsageIfPresent here - it doesn't have correct traceId
 
             log.info("Batch presentation generation completed successfully");
             return response.getData();
@@ -148,8 +165,8 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     }
 
     @Override
-    public String generateMindmap(MindmapPromptRequest request) {
-        log.info("Starting mindmap generation");
+    public String generateMindmap(MindmapPromptRequest request, String traceId) {
+        log.info("Starting mindmap generation with traceId: {}", traceId);
 
         if (!modelSelectionApi.isModelEnabled(request.getModel())) {
             throw new AppException(ErrorCode.MODEL_NOT_ENABLED);
@@ -157,10 +174,14 @@ public class ContentGenerationManagement implements ContentGenerationApi {
 
         log.info("Calling AI to generate mindmap");
         try {
-            AiWokerResponse response = aiApiClient
-                    .post(MINDMAP_API_ENDPOINT, MappingParamsUtils.constructParams(request), AiWokerResponse.class);
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.set("X-Trace-ID", traceId);
+            headers.set("provider", request.getProvider());
 
-            saveTokenUsageIfPresent(response, "MINDMAP");
+            AiWokerResponse response = aiApiClient.post(MINDMAP_API_ENDPOINT,
+                    MappingParamsUtils.constructParams(request),
+                    AiWokerResponse.class,
+                    headers);
 
             log.info("Mindmap generation completed successfully");
             return response.getData();
@@ -171,7 +192,7 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     }
 
     @Override
-    public ExamMatrixDto generateExamMatrix(GenerateMatrixRequest request) {
+    public ExamMatrixDto generateExamMatrix(GenerateMatrixRequest request, String traceId) {
         // TODO: select list topics from db
         log.info("Starting exam matrix generation for topics: {}", request.getTopics());
 
@@ -181,7 +202,9 @@ public class ContentGenerationManagement implements ContentGenerationApi {
 
         log.info("Calling AI to generate exam matrix via: {}", EXAM_MATRIX_API_ENDPOINT);
         try {
-            ExamMatrixDto result = aiApiClient.post(EXAM_MATRIX_API_ENDPOINT, request, ExamMatrixDto.class);
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.set("X-Trace-ID", traceId);
+            ExamMatrixDto result = aiApiClient.post(EXAM_MATRIX_API_ENDPOINT, request, ExamMatrixDto.class, headers);
             log.info("Exam matrix generation completed successfully");
             return result;
         } catch (Exception e) {
@@ -191,7 +214,7 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     }
 
     @Override
-    public String generateQuestions(GenerateQuestionsFromTopicRequest request) {
+    public String generateQuestions(GenerateQuestionsFromTopicRequest request, String traceId) {
         log.info("Generating questions for topic: {}, grade: {}", request.getTopic(), request.getGrade());
 
         // Transform request to GenAI-Gateway format
@@ -219,7 +242,9 @@ public class ContentGenerationManagement implements ContentGenerationApi {
         // Make synchronous call to GenAI-Gateway - return raw JSON string
         log.info("Calling GenAI-Gateway at endpoint: {}", QUESTIONS_API_ENDPOINT);
         try {
-            String jsonResponse = aiApiClient.post(QUESTIONS_API_ENDPOINT, aiRequest, String.class);
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.set("X-Trace-ID", traceId);
+            String jsonResponse = aiApiClient.post(QUESTIONS_API_ENDPOINT, aiRequest, String.class, headers);
 
             log.info("Successfully received GenAI-Gateway response");
             return jsonResponse;
@@ -229,27 +254,4 @@ public class ContentGenerationManagement implements ContentGenerationApi {
         }
     }
 
-    private void saveTokenUsageIfPresent(AiWokerResponse response, String requestType) {
-        try {
-            if (response != null && response.getTokenUsage() != null) {
-                String userId = securityContextUtils.getCurrentUserId();
-                TokenUsage tokenUsage = TokenUsage.builder()
-                        .userId(userId)
-                        .request(requestType)
-                        .tokenCount(response.getTokenUsage().getTotalTokens())
-                        .model(response.getTokenUsage().getModel())
-                        .provider(response.getTokenUsage().getProvider())
-                        .build();
-                tokenUsageApi.recordTokenUsage(tokenUsage);
-                log.debug("Token usage saved - userId: {}, request: {}, tokens: {}, model: {}, provider: {}",
-                        userId,
-                        requestType,
-                        response.getTokenUsage().getTotalTokens(),
-                        response.getTokenUsage().getModel(),
-                        response.getTokenUsage().getProvider());
-            }
-        } catch (Exception e) {
-            log.warn("Failed to save token usage for request type: {}", requestType, e);
-        }
-    }
 }

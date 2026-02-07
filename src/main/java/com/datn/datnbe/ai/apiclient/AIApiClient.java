@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
@@ -20,13 +21,15 @@ public class AIApiClient {
 
     private final RestTemplate restTemplate;
     private final WebClient webClient;
+    private final SecurityContextUtils securityContextUtils;
 
     @Value("${ai.api.base-url}")
     private String baseUrl;
 
-    public AIApiClient(RestTemplate restTemplate, WebClient webClient) {
+    public AIApiClient(RestTemplate restTemplate, WebClient webClient, SecurityContextUtils securityContextUtils) {
         this.restTemplate = restTemplate;
         this.webClient = webClient;
+        this.securityContextUtils = securityContextUtils;
     }
 
     public <T> T get(String endpoint, Class<T> responseType) {
@@ -35,7 +38,8 @@ public class AIApiClient {
 
     public <T> T get(String endpoint, Class<T> responseType, HttpHeaders headers) {
         String url = buildUrl(endpoint);
-        HttpEntity<?> entity = new HttpEntity<>(headers);
+        HttpHeaders enrichedHeaders = addUserIdHeader(headers);
+        HttpEntity<?> entity = new HttpEntity<>(enrichedHeaders);
 
         ResponseEntity<T> response = restTemplate.exchange(url, HttpMethod.GET, entity, responseType);
 
@@ -48,7 +52,8 @@ public class AIApiClient {
 
     public <T, R> R post(String endpoint, T requestBody, Class<R> responseType, HttpHeaders headers) {
         String url = buildUrl(endpoint);
-        HttpEntity<T> entity = new HttpEntity<>(requestBody, headers);
+        HttpHeaders enrichedHeaders = addUserIdHeader(headers);
+        HttpEntity<T> entity = new HttpEntity<>(requestBody, enrichedHeaders);
 
         ResponseEntity<R> response = restTemplate.exchange(url, HttpMethod.POST, entity, responseType);
 
@@ -78,6 +83,15 @@ public class AIApiClient {
         WebClient.RequestBodySpec spec = webClient.post().uri(url).contentType(MediaType.APPLICATION_JSON);
 
         WebClient.RequestHeadersSpec<?> req = spec.bodyValue(requestBody);
+
+        // Add X-User-ID header
+        try {
+            String userId = securityContextUtils.getCurrentUserId();
+            req.header("X-User-ID", userId);
+        } catch (Exception e) {
+            log.warn("Could not get current user ID for X-User-ID header: {}", e.getMessage());
+        }
+
         if (headers != null)
             headers.forEach(req::header);
 
@@ -103,6 +117,25 @@ public class AIApiClient {
                 .map(String::trim)
                 .doOnComplete(() -> log.info("SSE stream completed"))
                 .doOnError(err -> log.error("SSE stream error", err));
+    }
+
+    /**
+     * Add X-User-ID header to existing headers
+     */
+    private HttpHeaders addUserIdHeader(HttpHeaders existingHeaders) {
+        HttpHeaders headers = existingHeaders != null ? new HttpHeaders() : new HttpHeaders();
+        if (existingHeaders != null) {
+            headers.addAll(existingHeaders);
+        }
+
+        try {
+            String userId = securityContextUtils.getCurrentUserId();
+            headers.set("X-User-ID", userId);
+        } catch (Exception e) {
+            log.warn("Could not get current user ID for X-User-ID header: {}", e.getMessage());
+        }
+
+        return headers;
     }
 
 }

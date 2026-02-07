@@ -6,6 +6,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface ImageGenerationApi {
-    List<MultipartFile> generateImage(ImagePromptRequest request);
+    List<MultipartFile> generateImage(ImagePromptRequest request, String traceId);
     List<MultipartFile> generateMockImage(ImagePromptRequest request);
 }

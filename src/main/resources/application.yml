@@ -49,10 +49,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
         dialect: org.hibernate.dialect.PostgreSQLDialect
     database-platform: org.hibernate.dialect.PostgreSQLDialect
   security:
@@ -112,7 +112,7 @@ app:
     allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
     allow-credentials: true
     max-age: 3600
-    exposed-headers: X-Presentation, permission
+    exposed-headers: X-Presentation, permission, X-Trace-ID
   media:
     file-size-limit: 104857600 # 100MB
     avatar-size-limit: "104857600" # 100MB
@@ -185,8 +185,7 @@ pexels:
       requests: 200
       duration-minutes: 60
 
-logging:
-  level:
-    "org.springframework.data.mongodb.core.MongoTemplate": DEBUG
-    com.datn.datnbe.auth.config.SecurityConfig: WARN
-    com.datn.datnbe.sharedkernel.security.filter: DEBUG
+phoenix:
+  api-url: ${PHOENIX_API_URL:http://localhost:6006}
+  api-key: ${PHOENIX_API_KEY:}
+  project-id: ${PHOENIX_PROJECT_ID:}
