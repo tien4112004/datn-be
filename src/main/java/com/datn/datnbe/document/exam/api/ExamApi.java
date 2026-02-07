@@ -5,8 +5,6 @@ import com.datn.datnbe.document.exam.dto.request.GenerateExamFromMatrixRequest;
 import com.datn.datnbe.document.exam.dto.request.GenerateMatrixRequest;
 import com.datn.datnbe.document.exam.dto.response.ExamDraftDto;
 
-import java.util.UUID;
-
 public interface ExamApi {
 
     /**
@@ -17,7 +15,7 @@ public interface ExamApi {
     * @param teacherId The ID of the teacher creating the matrix
     * @return Generated exam matrix
     */
-    ExamMatrixDto generateMatrix(GenerateMatrixRequest request, UUID teacherId);
+    ExamMatrixDto generateMatrix(GenerateMatrixRequest request, String teacherId);
 
     /**
      * Generate an exam by selecting questions from the question bank
@@ -27,5 +25,5 @@ public interface ExamApi {
      * @param teacherId The ID of the teacher (for personal questions)
      * @return ExamDraftDto containing selected questions and any gaps
      */
-    ExamDraftDto generateExamFromMatrix(GenerateExamFromMatrixRequest request, UUID teacherId);
+    ExamDraftDto generateExamFromMatrix(GenerateExamFromMatrixRequest request, String teacherId);
 }

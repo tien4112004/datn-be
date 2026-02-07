@@ -26,10 +26,10 @@ public interface ContentGenerationApi {
      * The matrix has dimensions: [topic][difficulty][question_type]
      * Each cell is in format "count:points".
      */
-    ExamMatrixDto generateExamMatrix(GenerateMatrixRequest request);
+    ExamMatrixDto generateExamMatrix(GenerateMatrixRequest request, String traceId);
 
     /**
      * Generate questions based on topic and requirements using AI
      */
-    String generateQuestions(GenerateQuestionsFromTopicRequest request);
+    String generateQuestions(GenerateQuestionsFromTopicRequest request, String traceId);
 }
