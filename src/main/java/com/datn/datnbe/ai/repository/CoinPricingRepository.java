@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface CoinPricingRepo extends JpaRepository<CoinPricing, String> {
+public interface CoinPricingRepository extends JpaRepository<CoinPricing, String> {
 
     /**
      * Find all pricing rules by resource type.
