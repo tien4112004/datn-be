@@ -12,7 +12,6 @@ import com.datn.datnbe.cms.dto.response.SubmissionResponseDto;
 import com.datn.datnbe.cms.dto.response.SubmissionStatisticsDto;
 import com.datn.datnbe.cms.dto.response.SubmissionValidationResponse;
 import com.datn.datnbe.cms.entity.AssignmentPost;
-import com.datn.datnbe.cms.entity.QuestionGrade;
 import com.datn.datnbe.cms.entity.Submission;
 import com.datn.datnbe.cms.entity.answerData.AnswerData;
 import com.datn.datnbe.cms.entity.answerData.FillInBlankAnswer;
@@ -21,8 +20,6 @@ import com.datn.datnbe.cms.entity.answerData.MultipleChoiceAnswer;
 import com.datn.datnbe.cms.mapper.SubmissionMapper;
 import com.datn.datnbe.cms.repository.AssignmentPostRepository;
 import com.datn.datnbe.cms.repository.SubmissionRepository;
-import com.datn.datnbe.document.api.AssignmentApi;
-import com.datn.datnbe.document.dto.response.AssignmentResponse;
 import com.datn.datnbe.document.entity.Question;
 import com.datn.datnbe.document.entity.questiondata.BlankSegment;
 import com.datn.datnbe.document.entity.questiondata.FillInBlankData;
@@ -56,7 +53,6 @@ public class SubmissionService implements SubmissionApi {
     private final SecurityContextUtils securityContextUtils;
     private final PostApi postApi;
     private final UserProfileApi userProfileApi;
-    private final AssignmentApi assignmentApi;
     private final AssignmentPostRepository assignmentPostRepository;
 
     @Override
@@ -77,7 +73,8 @@ public class SubmissionService implements SubmissionApi {
             try {
                 AssignmentPost assignment = assignmentPostRepository.findAssignmentById(post.getAssignmentId());
                 if (assignment != null && assignment.getQuestions() != null) {
-                    int maxScore = assignment.getQuestions().stream()
+                    int maxScore = assignment.getQuestions()
+                            .stream()
                             .mapToInt(q -> q.getPoint() != null ? q.getPoint().intValue() : 0)
                             .sum();
                     submission.setMaxScore(maxScore);
@@ -101,9 +98,7 @@ public class SubmissionService implements SubmissionApi {
     @Override
     public List<SubmissionResponseDto> getSubmissions(String postId) {
         List<Submission> list = submissionRepository.findByPostId(postId);
-        return enrichSubmissionDtoList(list.stream()
-                .map(submissionMapper::toDto)
-                .collect(Collectors.toList()));
+        return enrichSubmissionDtoList(list.stream().map(submissionMapper::toDto).collect(Collectors.toList()));
     }
 
     @Override
@@ -145,31 +140,24 @@ public class SubmissionService implements SubmissionApi {
         // Update scores based on request
         Map<String, Integer> questionScores = request.getQuestionScores();
         if (questionScores != null && !questionScores.isEmpty()) {
-            int totalScore = questionScores.values().stream().mapToInt(Integer::intValue).sum();
+            double totalScore = questionScores.values().stream().mapToInt(Integer::intValue).sum();
 
-            // Update both old and new fields for backward compatibility
-            submission.setPoint(totalScore);
-            submission.setGrade(totalScore);
             submission.setScore(totalScore);
 
-            // Create detailed grades list
-            List<QuestionGrade> grades = new ArrayList<>();
             Map<String, String> questionFeedback = request.getQuestionFeedback();
+            List<AnswerData> answers = submission.getQuestions();
 
             for (Map.Entry<String, Integer> entry : questionScores.entrySet()) {
                 String questionId = entry.getKey();
                 String feedback = (questionFeedback != null) ? questionFeedback.get(questionId) : null;
-
-                QuestionGrade grade = QuestionGrade.builder()
-                        .questionId(questionId)
-                        .points(entry.getValue())
-                        .maxPoints(null) // Can be populated from assignment if needed
-                        .feedback(feedback)
-                        .isAutoGraded(false)
-                        .build();
-                grades.add(grade);
+                answers.stream().filter(a -> a.getId().equals(questionId)).findFirst().ifPresent(a -> {
+                    a.setPoint(entry.getValue().doubleValue());
+                    if (feedback != null) {
+                        a.setFeedback(feedback);
+                    }
+                    a.setAutoGraded(false);
+                });
             }
-            submission.setGrades(grades);
 
             // Set overall feedback
             if (request.getOverallFeedback() != null && !request.getOverallFeedback().trim().isEmpty()) {
@@ -188,7 +176,7 @@ public class SubmissionService implements SubmissionApi {
     }
 
     @Async
-    private void gradeSubmission(Submission submission) {
+    protected void gradeSubmission(Submission submission) {
         try {
             log.info("Grading submission: {}", submission.getId());
             var assignment = postApi.getAssignmentByPostId(submission.getPostId());
@@ -198,32 +186,15 @@ public class SubmissionService implements SubmissionApi {
             Map<String, AnswerData> answerMap = answers.stream().collect(Collectors.toMap(AnswerData::getId, a -> a));
 
             // Create detailed grading list
-            List<QuestionGrade> grades = new ArrayList<>();
-            int totalScore = 0;
+            double totalScore = 0;
 
             for (Question question : questions) {
-                int points = gradeQuestion(question, answerMap);
-                int maxPoints = question.getPoint() != null ? question.getPoint().intValue() : 0;
-
-                QuestionGrade grade = QuestionGrade.builder()
-                        .questionId(question.getId())
-                        .points(points)
-                        .maxPoints(maxPoints)
-                        .feedback(null) // Auto-grading has no feedback
-                        .isAutoGraded(true)
-                        .build();
-
-                grades.add(grade);
+                double points = gradeQuestion(question, answerMap);
                 totalScore += points;
             }
 
-            // Update submission with grading results
-            submission.setGrades(grades);
-            submission.setPoint(totalScore);
-            submission.setGrade(totalScore); // Backward compatibility
-            submission.setScore(totalScore);
             submission.setStatus("graded");
-            submission.setGradedAt(LocalDateTime.now());
+            submission.setScore(totalScore);
 
             submissionRepository.save(submission);
             log.info("Grading completed for submission: {}. Score: {}", submission.getId(), totalScore);
@@ -233,22 +204,39 @@ public class SubmissionService implements SubmissionApi {
         }
     }
 
-    private int gradeQuestion(Question question, Map<String, AnswerData> answerMap) {
+    private double gradeQuestion(Question question, Map<String, AnswerData> answerMap) {
         AnswerData answer = answerMap.get(question.getId());
         if (answer == null) {
             log.warn("Answer not found for question: {}", question.getId());
             return 0;
         }
+        answer.setAutoGraded(true);
 
         return switch (question.getType()) {
-            case MULTIPLE_CHOICE -> gradeMultipleChoice(question, answer);
-            case FILL_IN_BLANK -> gradeFillInBlank(question, answer);
-            case MATCHING -> gradeMatching(question, answer);
-            default -> 0;
+            case MULTIPLE_CHOICE : {
+                double point = gradeMultipleChoice(question, answer);
+                log.info("Question {} (MULTIPLE_CHOICE) - Points: {}", question.getId(), point);
+                answer.setPoint(point);
+                yield point;
+            }
+            case FILL_IN_BLANK : {
+                double point = gradeFillInBlank(question, answer);
+                log.info("Question {} (FILL_IN_BLANK) - Points: {}", question.getId(), point);
+                answer.setPoint(point);
+                yield point;
+            }
+            case MATCHING : {
+                double point = gradeMatching(question, answer);
+                log.info("Question {} (MATCHING) - Points: {}", question.getId(), point);
+                answer.setPoint(point);
+                yield point;
+            }
+            default :
+                yield 0;
         };
     }
 
-    private int gradeMultipleChoice(Question question, AnswerData answer) {
+    private double gradeMultipleChoice(Question question, AnswerData answer) {
         MultipleChoiceData mcData = (MultipleChoiceData) question.getData();
         MultipleChoiceOption correctOption = mcData.getOptions()
                 .stream()
@@ -256,55 +244,86 @@ public class SubmissionService implements SubmissionApi {
                 .findFirst()
                 .orElse(null);
 
-        if (correctOption == null)
+        if (correctOption == null) {
+            log.info("  No correct option found for question: {}", question.getId());
             return 0;
+        }
 
         MultipleChoiceAnswer mcAnswer = (MultipleChoiceAnswer) answer.getAnswer();
-        return mcAnswer != null && mcAnswer.verifyAnswer(correctOption.getId()) ? question.getPoint().intValue() : 0;
+        double points = mcAnswer != null && mcAnswer.verifyAnswer(correctOption.getId()) ? question.getPoint().doubleValue() : 0;
+        log.info("  Student answer: {} | Correct answer: {} | Correct: {} | Total points: {}", 
+                mcAnswer != null ? mcAnswer.getId() : "null", correctOption.getId(), 
+                mcAnswer != null && mcAnswer.verifyAnswer(correctOption.getId()), points);
+        return points;
     }
 
-    private int gradeFillInBlank(Question question, AnswerData answer) {
+    private double gradeFillInBlank(Question question, AnswerData answer) {
         FillInBlankData fillInBlankData = (FillInBlankData) question.getData();
         List<BlankSegment> blankSegments = fillInBlankData.getSegments()
                 .stream()
                 .filter(s -> s.getType() == BlankSegment.SegmentType.BLANK)
                 .toList();
 
-        if (blankSegments.isEmpty())
+        if (blankSegments.isEmpty()) {
+            log.info("  No blank segments found for question: {}", question.getId());
             return 0;
+        }
 
         FillInBlankAnswer fillAnswer = (FillInBlankAnswer) answer.getAnswer();
-        if (fillAnswer == null || fillAnswer.getBlankAnswers() == null)
+        if (fillAnswer == null || fillAnswer.getBlankAnswers() == null) {
+            log.info("  No answer provided for question: {}", question.getId());
             return 0;
+        }
 
-        int totalPoint = question.getPoint().intValue();
-        int pointPerBlank = totalPoint / blankSegments.size();
+        double totalPoint = question.getPoint().doubleValue();
+        double pointPerBlank = totalPoint / blankSegments.size();
 
-        return blankSegments.stream().mapToInt(segment -> {
+        log.info("  Total points: {} | Points per blank: {} | Total blanks: {}", 
+                totalPoint, pointPerBlank, blankSegments.size());
+
+        double totalScore = blankSegments.stream().mapToDouble(segment -> {
             String studentAnswer = fillAnswer.getBlankAnswers().get(segment.getId());
-            return studentAnswer != null && segment.getAcceptableAnswers().contains(studentAnswer) ? pointPerBlank : 0;
+            boolean isCorrect = studentAnswer != null && segment.getAcceptableAnswers().contains(studentAnswer);
+            double points = isCorrect ? pointPerBlank : 0;
+            
+            log.info("    Segment: {} | Student: '{}' | Acceptable: {} | Correct: {} | Points: {}",
+                    segment.getId(), studentAnswer, segment.getAcceptableAnswers(), isCorrect, points);
+            
+            return points;
         }).sum();
+        
+        log.info("  Fill-In-Blank total score: {}", totalScore);
+        return totalScore;
     }
 
-    private int gradeMatching(Question question, AnswerData answer) {
+    private double gradeMatching(Question question, AnswerData answer) {
         MatchingData matchingData = (MatchingData) question.getData();
         List<MatchingPair> pairs = matchingData.getPairs();
 
-        if (pairs == null || pairs.isEmpty())
+        if (pairs == null || pairs.isEmpty()) {
+            log.info("  No matching pairs found for question: {}", question.getId());
             return 0;
+        }
 
         MatchingAnswer matchAnswer = (MatchingAnswer) answer.getAnswer();
-        if (matchAnswer == null)
+        if (matchAnswer == null) {
+            log.info("  No answer provided for question: {}", question.getId());
             return 0;
+        }
 
         Map<String, String> studentPairs = matchAnswer.getMatchedPairs();
-        if (studentPairs == null || studentPairs.isEmpty())
+        if (studentPairs == null || studentPairs.isEmpty()) {
+            log.info("  Student matched pairs is empty for question: {}", question.getId());
             return 0;
+        }
 
-        int totalPoint = question.getPoint().intValue();
-        int pointPerPair = totalPoint / pairs.size();
+        double totalPoint = question.getPoint().doubleValue();
+        double pointPerPair = totalPoint / pairs.size();
 
-        return pairs.stream().mapToInt(pair -> {
+        log.info("  Total points: {} | Points per pair: {} | Total pairs: {}", 
+                totalPoint, pointPerPair, pairs.size());
+
+        double totalScore = pairs.stream().mapToDouble(pair -> {
             String leftKey = pair.getLeft() != null && !pair.getLeft().isBlank()
                     ? pair.getLeft()
                     : pair.getLeftImageUrl();
@@ -313,8 +332,17 @@ public class SubmissionService implements SubmissionApi {
                     : pair.getRightImageUrl();
 
             String studentValue = studentPairs.get(leftKey);
-            return studentValue != null && studentValue.equals(rightValue) ? pointPerPair : 0;
+            boolean isCorrect = studentValue != null && studentValue.equals(rightValue);
+            double points = isCorrect ? pointPerPair : 0;
+            
+            log.info("    Left: {} | Expected: {} | Student: {} | Correct: {} | Points: {}",
+                    leftKey, rightValue, studentValue, isCorrect, points);
+            
+            return points;
         }).sum();
+        
+        log.info("  Matching total score: {}", totalScore);
+        return totalScore;
     }
 
     // New methods for assignment feature alignment
@@ -322,17 +350,13 @@ public class SubmissionService implements SubmissionApi {
     @Override
     public List<SubmissionResponseDto> getSubmissionsByAssignmentId(String assignmentId) {
         List<Submission> submissions = submissionRepository.findByAssignmentId(assignmentId);
-        return enrichSubmissionDtoList(submissions.stream()
-                .map(submissionMapper::toDto)
-                .collect(Collectors.toList()));
+        return enrichSubmissionDtoList(submissions.stream().map(submissionMapper::toDto).collect(Collectors.toList()));
     }
 
     @Override
     public List<SubmissionResponseDto> getSubmissionsByAssignmentIdAndStudentId(String assignmentId, String studentId) {
         List<Submission> submissions = submissionRepository.findByAssignmentIdAndStudentId(assignmentId, studentId);
-        return enrichSubmissionDtoList(submissions.stream()
-                .map(submissionMapper::toDto)
-                .collect(Collectors.toList()));
+        return enrichSubmissionDtoList(submissions.stream().map(submissionMapper::toDto).collect(Collectors.toList()));
     }
 
     @Override
@@ -358,17 +382,13 @@ public class SubmissionService implements SubmissionApi {
 
             if (assignment == null) {
                 errors.add("Assignment not found");
-                return SubmissionValidationResponse.builder()
-                        .valid(false)
-                        .errors(errors)
-                        .warnings(warnings)
-                        .build();
+                return SubmissionValidationResponse.builder().valid(false).errors(errors).warnings(warnings).build();
             }
 
             // Check max submissions limit
             if (assignment.getMaxSubmissions() != null && assignment.getMaxSubmissions() > 0) {
-                long submissionCount = submissionRepository.countByAssignmentIdAndStudentId(
-                        assignmentId, request.getStudentId());
+                long submissionCount = submissionRepository.countByAssignmentIdAndStudentId(assignmentId,
+                        request.getStudentId());
                 if (submissionCount >= assignment.getMaxSubmissions()) {
                     errors.add("Maximum submission limit reached (" + assignment.getMaxSubmissions() + ")");
                 }
@@ -385,16 +405,14 @@ public class SubmissionService implements SubmissionApi {
 
             // Check if all required questions are answered
             if (assignment.getQuestions() != null && request.getAnswers() != null) {
-                Map<String, Boolean> answeredMap = request.getAnswers().stream()
-                        .collect(Collectors.toMap(
-                                a -> a.getId(),
-                                a -> a.getAnswer() != null,
-                                (a, b) -> a || b
-                        ));
+                Map<String, Boolean> answeredMap = request.getAnswers()
+                        .stream()
+                        .collect(Collectors.toMap(a -> a.getId(), a -> a.getAnswer() != null, (a, b) -> a || b));
 
                 for (Question q : assignment.getQuestions()) {
                     if (!answeredMap.getOrDefault(q.getId(), false)) {
-                        warnings.add("Question '" + (q.getTitle() != null ? q.getTitle() : q.getId()) + "' is not answered");
+                        warnings.add(
+                                "Question '" + (q.getTitle() != null ? q.getTitle() : q.getId()) + "' is not answered");
                     }
                 }
             }
@@ -404,11 +422,7 @@ public class SubmissionService implements SubmissionApi {
             errors.add("Validation error: " + e.getMessage());
         }
 
-        return SubmissionValidationResponse.builder()
-                .valid(errors.isEmpty())
-                .errors(errors)
-                .warnings(warnings)
-                .build();
+        return SubmissionValidationResponse.builder().valid(errors.isEmpty()).errors(errors).warnings(warnings).build();
     }
 
     // Helper methods
@@ -522,20 +536,24 @@ public class SubmissionService implements SubmissionApi {
                 .filter(s -> "graded".equals(s.getStatus()) && s.getScore() != null)
                 .collect(Collectors.toList());
 
-        Double averageScore = gradedSubmissions.isEmpty() ? 0.0 :
-                gradedSubmissions.stream().mapToInt(Submission::getScore).average().orElse(0.0);
+        Double averageScore = gradedSubmissions.isEmpty()
+                ? 0.0
+                : gradedSubmissions.stream().mapToDouble(Submission::getScore).average().orElse(0.0);
 
-        Double highestScore = gradedSubmissions.isEmpty() ? 0.0 :
-                (double) gradedSubmissions.stream().mapToInt(Submission::getScore).max().orElse(0);
-
-        Double lowestScore = gradedSubmissions.isEmpty() ? 0.0 :
-                (double) gradedSubmissions.stream().mapToInt(Submission::getScore).min().orElse(0);
+        Double highestScore = gradedSubmissions.isEmpty()
+                ? 0.0
+                : gradedSubmissions.stream().mapToDouble(Submission::getScore).max().orElse(0.0);
+        Double lowestScore = gradedSubmissions.isEmpty()
+                ? 0.0
+                : gradedSubmissions.stream().mapToDouble(Submission::getScore).min().orElse(0.0);
 
         // Calculate score distribution
         Map<String, Long> scoreDistribution = new HashMap<>();
         scoreDistribution.put("90-100", gradedSubmissions.stream().filter(s -> s.getScore() >= 90).count());
-        scoreDistribution.put("80-89", gradedSubmissions.stream().filter(s -> s.getScore() >= 80 && s.getScore() < 90).count());
-        scoreDistribution.put("70-79", gradedSubmissions.stream().filter(s -> s.getScore() >= 70 && s.getScore() < 80).count());
+        scoreDistribution.put("80-89",
+                gradedSubmissions.stream().filter(s -> s.getScore() >= 80 && s.getScore() < 90).count());
+        scoreDistribution.put("70-79",
+                gradedSubmissions.stream().filter(s -> s.getScore() >= 70 && s.getScore() < 80).count());
         scoreDistribution.put("below-70", gradedSubmissions.stream().filter(s -> s.getScore() < 70).count());
 
         return SubmissionStatisticsDto.builder()

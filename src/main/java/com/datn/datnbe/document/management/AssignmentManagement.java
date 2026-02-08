@@ -145,33 +145,6 @@ public class AssignmentManagement implements AssignmentApi {
             throw new AppException(ErrorCode.FORBIDDEN, "You don't have permission to update this assignment");
         }
 
-        if (request.getMaxSubmissions() != null) {
-            assignment.setMaxSubmissions(request.getMaxSubmissions());
-        }
-        if (request.getAllowRetake() != null) {
-            assignment.setAllowRetake(request.getAllowRetake());
-        }
-        if (request.getShuffleQuestions() != null) {
-            assignment.setShuffleQuestions(request.getShuffleQuestions());
-        }
-        if (request.getShowCorrectAnswers() != null) {
-            assignment.setShowCorrectAnswers(request.getShowCorrectAnswers());
-        }
-        if (request.getShowScoreImmediately() != null) {
-            assignment.setShowScoreImmediately(request.getShowScoreImmediately());
-        }
-        if (request.getPassingScore() != null) {
-            assignment.setPassingScore(request.getPassingScore());
-        }
-        if (request.getTimeLimit() != null) {
-            assignment.setTimeLimit(request.getTimeLimit());
-        }
-        if (request.getAvailableFrom() != null) {
-            assignment.setAvailableFrom(request.getAvailableFrom());
-        }
-        if (request.getAvailableUntil() != null) {
-            assignment.setAvailableUntil(request.getAvailableUntil());
-        }
         if (request.getTopics() != null) {
             assignment.setTopics(request.getTopics());
         }

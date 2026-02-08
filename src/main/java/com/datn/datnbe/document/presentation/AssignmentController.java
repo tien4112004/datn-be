@@ -78,8 +78,7 @@ public class AssignmentController {
 
     @PutMapping("/{id}/settings")
     @RequireDocumentPermission(scopes = {"edit"})
-    public ResponseEntity<AppResponseDto<AssignmentResponse>> updateAssignmentSettings(
-            @PathVariable String id,
+    public ResponseEntity<AppResponseDto<AssignmentResponse>> updateAssignmentSettings(@PathVariable String id,
             @RequestBody AssignmentSettingsUpdateRequest request) {
         return ResponseEntity.ok(AppResponseDto.success(assignmentApi.updateAssignmentSettings(id, request)));
     }

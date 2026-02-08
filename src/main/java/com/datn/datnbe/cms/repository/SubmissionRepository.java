@@ -23,9 +23,8 @@ public interface SubmissionRepository extends JpaRepository<Submission, String> 
 
     List<Submission> findByAssignmentIdAndStudentId(String assignmentId, String studentId);
 
-    @Query("SELECT s FROM Submission s WHERE s.postId = :postId " +
-           "AND (:studentId IS NULL OR s.studentId = :studentId) " +
-           "AND (:status IS NULL OR s.status = :status)")
+    @Query("SELECT s FROM Submission s WHERE s.postId = :postId "
+            + "AND (:studentId IS NULL OR s.studentId = :studentId) " + "AND (:status IS NULL OR s.status = :status)")
     List<Submission> findByPostIdWithFilters(String postId, String studentId, String status);
 
     @Query("SELECT COUNT(s) FROM Submission s WHERE s.assignmentId = :assignmentId AND s.status = :status")

@@ -30,9 +30,6 @@ public class Submission {
     @Column(name = "student_id", nullable = false, length = 36)
     String studentId;
 
-    @Column(name = "point")
-    Integer point;
-
     @Column(name = "post_id", nullable = false, length = 36)
     String postId;
 
@@ -68,11 +65,7 @@ public class Submission {
     LocalDateTime submittedAt;
 
     @Column(name = "score")
-    Integer score;
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "grades", columnDefinition = "jsonb")
-    List<QuestionGrade> grades;
+    Double score;
 
     @Column(name = "feedback", columnDefinition = "TEXT")
     String feedback;

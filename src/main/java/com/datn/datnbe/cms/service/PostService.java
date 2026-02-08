@@ -19,6 +19,7 @@ import com.datn.datnbe.cms.repository.AssignmentPostRepository;
 import com.datn.datnbe.cms.repository.PostLinkedResourceRepository;
 import com.datn.datnbe.cms.repository.PostRepository;
 import com.datn.datnbe.document.entity.Assignment;
+import com.datn.datnbe.document.mapper.AssignmentMapper;
 import com.datn.datnbe.document.repository.AssignmentRepository;
 import com.datn.datnbe.document.dto.response.AssignmentResponse;
 import com.datn.datnbe.sharedkernel.notification.dto.NotificationRequest;
@@ -65,6 +66,7 @@ public class PostService implements PostApi {
     private final StudentApi studentApi;
     private final AssignmentPostRepository assignmentPostRepository;
     private final AssignmentRepository assignmentRepository;
+    private final AssignmentMapper assignmentMapper;
     private final ResourcePermissionApi resourcePermissionApi;
 
     @Override
@@ -122,14 +124,18 @@ public class PostService implements PostApi {
                                 .name(savedClone.getTitle())
                                 .resourceType("assignment")
                                 .build();
-                        resourcePermissionApi.registerResource(resourceRequest, securityContextUtils.getCurrentUserId());
+                        resourcePermissionApi.registerResource(resourceRequest,
+                                securityContextUtils.getCurrentUserId());
                         log.info("Registered cloned assignment {} with resource permissions", savedClone.getId());
                     } catch (Exception e) {
-                        log.warn("Failed to register cloned assignment {} with resource permissions", savedClone.getId(), e);
+                        log.warn("Failed to register cloned assignment {} with resource permissions",
+                                savedClone.getId(),
+                                e);
                     }
 
                     log.info("Cloned assignment {} from assignments table to assignment_post {} for post",
-                            request.getAssignmentId(), savedClone.getId());
+                            request.getAssignmentId(),
+                            savedClone.getId());
                 } else {
                     // Assignment not found, use the original ID (might be a direct reference)
                     post.setAssignmentId(request.getAssignmentId());
@@ -374,6 +380,10 @@ public class PostService implements PostApi {
     @Override
     public AssignmentResponse getAssignmentByPostId(String postId) {
         log.info("get assignment of post: {}", postId);
-        return postRepository.getAssignmentByPostId(postId);
+        AssignmentPost assignmentPost = postRepository.getAssignmentByPostId(postId);
+        if (assignmentPost == null) {
+            throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Assignment not found");
+        }
+        return assignmentMapper.toDto(assignmentPost);
     }
 }
