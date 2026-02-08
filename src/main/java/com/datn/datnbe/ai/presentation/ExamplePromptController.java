@@ -22,7 +22,9 @@ public class ExamplePromptController {
 
     @GetMapping
     public ResponseEntity<AppResponseDto<List<ExamplePrompt>>> getExamplePrompts(@RequestParam ExamplePromptType type,
-            @RequestParam(required = false, defaultValue = "vi") String language) {
-        return ResponseEntity.ok(AppResponseDto.success(examplePromptManagement.getExamplePrompts(type, language)));
+            @RequestParam(required = false, defaultValue = "vi") String language,
+            @RequestParam(required = false, defaultValue = "5") int count) {
+        return ResponseEntity
+                .ok(AppResponseDto.success(examplePromptManagement.getExamplePrompts(type, language, count)));
     }
 }

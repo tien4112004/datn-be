@@ -16,11 +16,8 @@ public class ExamplePromptManagement {
 
     private final ExamplePromptRepository examplePromptRepository;
 
-    public List<ExamplePrompt> getExamplePrompts(ExamplePromptType type, String language) {
+    public List<ExamplePrompt> getExamplePrompts(ExamplePromptType type, String language, int count) {
         String lang = (language != null && !language.isEmpty()) ? language : "vi";
-        // Fallback or exact match? For now exact match on "vi" or "en".
-        // If language passed is something else, maybe fallback to "vi"?
-        // Let's implement simple query for now.
-        return examplePromptRepository.findByTypeAndLanguage(type, lang);
+        return examplePromptRepository.findRandomByTypeAndLanguage(type.name(), lang, count);
     }
 }
