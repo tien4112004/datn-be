@@ -43,6 +43,7 @@ public abstract class QuestionEntityMapper {
     }
 
     @Mapping(target = "data", ignore = true)
+    @Mapping(target = "context", ignore = true)
     public abstract QuestionResponseDto mapToResponseDto(QuestionBankItem entity);
 
     public QuestionResponseDto toResponseDto(QuestionBankItem entity) {

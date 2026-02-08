@@ -55,4 +55,8 @@ public class Assignment {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "questions", columnDefinition = "jsonb")
     List<Question> questions;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "contexts", columnDefinition = "jsonb")
+    List<AssignmentContext> contexts;
 }

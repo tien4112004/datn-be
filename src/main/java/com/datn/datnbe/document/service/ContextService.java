@@ -73,7 +73,8 @@ public class ContextService {
         }
 
         String sortBy = request.getSortBy() != null ? request.getSortBy() : "createdAt";
-        Pageable pageable = PageRequest.of(pageIndex, request.getPageSize(), direction, sortBy);
+        Sort sort = Sort.by(new Sort.Order(direction, sortBy), new Sort.Order(Sort.Direction.ASC, "id"));
+        Pageable pageable = PageRequest.of(pageIndex, request.getPageSize(), sort);
 
         Specification<Context> spec = buildSpecification(request, ownerIdFilter);
         Page<Context> contextPage = contextRepository.findAll(spec, pageable);
