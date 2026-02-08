@@ -10,7 +10,6 @@ import java.util.List;
 /**
  * Represents a topic dimension in the exam matrix.
  * Topics serve as organizational containers for subtopics.
- * Note: Topics do not have IDs - subtopics are the primary dimension with IDs.
  */
 @Data
 @Builder
@@ -19,8 +18,13 @@ import java.util.List;
 public class DimensionTopicDto {
 
     /**
+     * Numeric identifier for the topic (e.g., "1", "2", "3").
+     * Based on the topic's position in the array.
+     */
+    private String id;
+
+    /**
      * Display name of the topic (e.g., "Algebra", "Geometry").
-     * No ID needed - topics are organizational containers only.
      */
     private String name;
 

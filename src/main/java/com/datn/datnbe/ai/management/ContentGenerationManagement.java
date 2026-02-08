@@ -12,6 +12,7 @@ import com.datn.datnbe.ai.utils.MappingParamsUtils;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.document.entity.Chapter;
+import com.datn.datnbe.document.exam.dto.DimensionTopicDto;
 import com.datn.datnbe.document.exam.dto.ExamMatrixDto;
 import com.datn.datnbe.document.exam.dto.request.GenerateMatrixRequest;
 import com.datn.datnbe.document.exam.dto.request.GenerateQuestionsFromTopicRequest;
@@ -233,6 +234,15 @@ public class ContentGenerationManagement implements ContentGenerationApi {
             headers.set("X-Trace-ID", traceId);
             ExamMatrixDto result = aiApiClient
                     .post(EXAM_MATRIX_API_ENDPOINT, requestWithChapters, ExamMatrixDto.class, headers);
+
+            // Add numeric IDs to topics (backend processing)
+            if (result.getDimensions() != null && result.getDimensions().getTopics() != null) {
+                List<DimensionTopicDto> topics = result.getDimensions().getTopics();
+                for (int i = 0; i < topics.size(); i++) {
+                    topics.get(i).setId(String.valueOf(i + 1));
+                }
+            }
+
             log.info("Exam matrix generation completed successfully");
             return result;
         } catch (Exception e) {
@@ -256,14 +266,18 @@ public class ContentGenerationManagement implements ContentGenerationApi {
         if (chapters.isEmpty()) {
             log.warn("No chapters found for grade: {}, subject: {}. Using fallback.", grade, subject);
             // Fallback to generic chapters if none found
-            return Arrays
-                    .asList("Chương 1: Kiến thức cơ bản", "Chương 2: Kiến thức nâng cao", "Chương 3: Ứng dụng thực tế");
+            return Arrays.asList("fallback-1|Chương 1: Kiến thức cơ bản",
+                    "fallback-2|Chương 2: Kiến thức nâng cao",
+                    "fallback-3|Chương 3: Ứng dụng thực tế");
         }
 
-        List<String> chapterNames = chapters.stream().map(Chapter::getName).collect(Collectors.toList());
+        // Return chapter data formatted as "id|name" for AI worker to parse
+        List<String> chapterData = chapters.stream()
+                .map(ch -> ch.getId() + "|" + ch.getName())
+                .collect(Collectors.toList());
 
-        log.info("Found {} chapters for grade: {}, subject: {}", chapterNames.size(), grade, subject);
-        return chapterNames;
+        log.info("Found {} chapters for grade: {}, subject: {}", chapterData.size(), grade, subject);
+        return chapterData;
     }
 
     @Override
