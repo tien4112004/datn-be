@@ -11,9 +11,11 @@ import com.datn.datnbe.ai.dto.response.AiWokerResponse;
 import com.datn.datnbe.ai.utils.MappingParamsUtils;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
+import com.datn.datnbe.document.entity.Chapter;
 import com.datn.datnbe.document.exam.dto.ExamMatrixDto;
 import com.datn.datnbe.document.exam.dto.request.GenerateMatrixRequest;
 import com.datn.datnbe.document.exam.dto.request.GenerateQuestionsFromTopicRequest;
+import com.datn.datnbe.document.repository.ChapterRepository;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +41,7 @@ import java.util.stream.Collectors;
 public class ContentGenerationManagement implements ContentGenerationApi {
     ModelSelectionApi modelSelectionApi;
     AIApiClient aiApiClient;
+    ChapterRepository chapterRepository;
 
     @Value("${ai.api.outline-endpoint}")
     @NonFinal
@@ -193,24 +197,73 @@ public class ContentGenerationManagement implements ContentGenerationApi {
 
     @Override
     public ExamMatrixDto generateExamMatrix(GenerateMatrixRequest request, String traceId) {
-        // TODO: select list topics from db
-        log.info("Starting exam matrix generation for topics: {}", request.getTopics());
+        log.info("Starting exam matrix generation for grade: {}, subject: {}",
+                request.getGrade(),
+                request.getSubject());
+
+        // TODO: Replace this mock implementation with actual chapter fetching from database
+        // Query: SELECT chapter_name FROM chapters WHERE grade = ? AND subject = ?
+        List<String> chapters = fetchChaptersFromDatabase(request.getGrade(), request.getSubject());
+
+        // Create a new request with chapters included
+        GenerateMatrixRequest requestWithChapters = GenerateMatrixRequest.builder()
+                .name(request.getName())
+                .chapters(chapters)
+                .grade(request.getGrade())
+                .subject(request.getSubject())
+                .totalQuestions(request.getTotalQuestions())
+                .totalPoints(request.getTotalPoints())
+                .difficulties(request.getDifficulties())
+                .questionTypes(request.getQuestionTypes())
+                .additionalRequirements(request.getAdditionalRequirements())
+                .language(request.getLanguage())
+                .provider(request.getProvider())
+                .model(request.getModel())
+                .build();
 
         if (!modelSelectionApi.isModelEnabled(request.getModel())) {
             throw new AppException(ErrorCode.MODEL_NOT_ENABLED);
         }
 
-        log.info("Calling AI to generate exam matrix via: {}", EXAM_MATRIX_API_ENDPOINT);
+        log.info("Calling AI to generate exam matrix via: {} with {} chapters",
+                EXAM_MATRIX_API_ENDPOINT,
+                chapters.size());
         try {
             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
             headers.set("X-Trace-ID", traceId);
-            ExamMatrixDto result = aiApiClient.post(EXAM_MATRIX_API_ENDPOINT, request, ExamMatrixDto.class, headers);
+            ExamMatrixDto result = aiApiClient
+                    .post(EXAM_MATRIX_API_ENDPOINT, requestWithChapters, ExamMatrixDto.class, headers);
             log.info("Exam matrix generation completed successfully");
             return result;
         } catch (Exception e) {
             log.error("Error during exam matrix generation", e);
             throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
         }
+    }
+
+    /**
+     * Fetch chapters from database based on grade and subject.
+     *
+     * @param grade Grade level
+     * @param subject Subject code (T, TV, TA)
+     * @return List of chapter names
+     */
+    private List<String> fetchChaptersFromDatabase(String grade, String subject) {
+        log.info("Fetching chapters from database for grade: {}, subject: {}", grade, subject);
+
+        List<Chapter> chapters = chapterRepository.findAllByGradeAndSubject(grade, subject);
+
+        if (chapters.isEmpty()) {
+            log.warn("No chapters found for grade: {}, subject: {}. Using fallback.", grade, subject);
+            // Fallback to generic chapters if none found
+            return Arrays
+                    .asList("Chương 1: Kiến thức cơ bản", "Chương 2: Kiến thức nâng cao", "Chương 3: Ứng dụng thực tế");
+        }
+
+        List<String> chapterNames = chapters.stream().map(Chapter::getName).collect(Collectors.toList());
+
+        log.info("Found {} chapters for grade: {}, subject: {}", chapterNames.size(), grade, subject);
+        return chapterNames;
     }
 
     @Override

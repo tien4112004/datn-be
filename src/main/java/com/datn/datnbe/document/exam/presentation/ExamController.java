@@ -82,7 +82,10 @@ public class ExamController {
     public ResponseEntity<AppResponseDto<ExamMatrixDto>> generateMatrix(
             @Valid @RequestBody GenerateMatrixRequest request) {
         String teacherId = securityContextUtils.getCurrentUserId();
-        log.info("Generate matrix request from teacher: {} for topics: {}", teacherId, request.getTopics());
+        log.info("Generate matrix request from teacher: {} for grade: {}, subject: {}",
+                teacherId,
+                request.getGrade(),
+                request.getSubject());
 
         ExamMatrixDto matrix = examApi.generateMatrix(request, teacherId);
         return ResponseEntity.ok(AppResponseDto.success(matrix));

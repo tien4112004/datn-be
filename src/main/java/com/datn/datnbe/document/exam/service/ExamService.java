@@ -39,7 +39,10 @@ public class ExamService implements ExamApi {
 
     @Override
     public ExamMatrixDto generateMatrix(GenerateMatrixRequest request, String teacherId) {
-        log.info("Generating exam matrix for topics: {} by teacher: {}", request.getTopics(), teacherId);
+        log.info("Generating exam matrix for grade: {}, subject: {} by teacher: {}",
+                request.getGrade(),
+                request.getSubject(),
+                teacherId);
         String matrixId = UUID.randomUUID().toString();
         ExamMatrixDto matrixDto = contentGenerationApi.generateExamMatrix(request, matrixId);
         extractAndSaveTokenUsage(matrixId, request, "matrix", teacherId);
