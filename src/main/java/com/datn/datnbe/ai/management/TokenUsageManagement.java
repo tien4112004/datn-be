@@ -94,6 +94,10 @@ public class TokenUsageManagement implements TokenUsageApi {
     @Override
     public List<TokenUsageStatsDto> getTokenUsageByRequestType(String userId) {
         List<TokenUsageStatsDto> results = tokenUsageRepo.getTokenUsageByRequestType(userId);
+        results.forEach(dto -> {
+            dto.setRequestType(dto.getModel());
+            dto.setModel(null);
+        });
         log.debug("Token usage by request type for user {}: {} types found", userId, results.size());
         return results;
     }
