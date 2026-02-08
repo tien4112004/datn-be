@@ -22,6 +22,7 @@ public class AssignmentResponse {
     String ownerId;
     String subject;
     private String grade;
+    private List<com.datn.datnbe.document.entity.AssignmentContext> contexts;
     private List<Question> questions;
     private LocalDateTime createdAt;
 

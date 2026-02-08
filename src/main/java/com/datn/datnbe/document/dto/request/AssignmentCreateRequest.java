@@ -11,5 +11,6 @@ public class AssignmentCreateRequest {
     private String subject;
     private String grade;
     private List<QuestionItemRequest> questions;
+    private List<com.datn.datnbe.document.entity.AssignmentContext> contexts;
 
 }
