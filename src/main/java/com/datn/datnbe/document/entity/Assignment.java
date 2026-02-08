@@ -55,4 +55,12 @@ public class Assignment {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "questions", columnDefinition = "jsonb")
     List<Question> questions;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "topics", columnDefinition = "jsonb")
+    List<AssignmentTopic> topics;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "matrix_cells", columnDefinition = "jsonb")
+    List<AssessmentMatrixCell> matrixCells;
 }

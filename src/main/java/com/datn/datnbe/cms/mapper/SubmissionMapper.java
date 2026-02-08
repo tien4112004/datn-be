@@ -17,7 +17,6 @@ public class SubmissionMapper {
             return null;
         return SubmissionResponseDto.builder()
                 .id(s.getId())
-                .lessonId(s.getLessonId())
                 .studentId(s.getStudentId())
                 .content(s.getContent())
                 .mediaUrl(s.getMediaUrl())
@@ -27,6 +26,15 @@ public class SubmissionMapper {
                 .questions(s.getQuestions())
                 .createdAt(s.getCreatedAt())
                 .updatedAt(s.getUpdatedAt())
+                // New fields
+                .assignmentId(s.getAssignmentId())
+                .score(s.getScore())
+                .maxScore(s.getMaxScore())
+                .grades(s.getGrades())
+                .feedback(s.getFeedback())
+                .gradedAt(s.getGradedAt())
+                .submittedAt(s.getSubmittedAt())
+                // student and gradedByUser will be enriched by service
                 .build();
     }
 
