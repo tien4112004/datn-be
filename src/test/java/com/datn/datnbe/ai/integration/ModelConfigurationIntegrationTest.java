@@ -235,7 +235,7 @@ class ModelConfigurationIntegrationTest extends BaseIntegrationTest {
 
         // When - Set textModel2 as default (this logic is now in Service, but we can verify Repo behavior directly if we invoke custom query)
         // Since disableDefaultModelsExcept IS in the repo, we can test it.
-        modelConfigurationRepo.disableDefaultModelsExcept(ModelType.TEXT.name(), savedTextModel2.getModelId());
+        modelConfigurationRepo.disableDefaultModelsExcept(ModelType.TEXT, savedTextModel2.getModelId());
         savedTextModel2.setDefault(true);
         modelConfigurationRepo.save(savedTextModel2);
 
