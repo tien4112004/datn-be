@@ -14,7 +14,6 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SubmissionCreateRequest {
-    private String studentId;
     private String postId;
     private List<AnswerDataDto> questions;
 }

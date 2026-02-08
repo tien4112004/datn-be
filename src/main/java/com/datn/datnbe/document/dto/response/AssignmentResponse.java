@@ -8,6 +8,8 @@ import com.datn.datnbe.document.entity.Question;
 import com.datn.datnbe.document.entity.AssignmentMatrix;
 import lombok.Builder;
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
@@ -18,6 +20,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class AssignmentResponse {
     String id;
     String title;
@@ -34,4 +37,12 @@ public class AssignmentResponse {
     LocalDateTime updatedAt;
     List<AssignmentTopic> topics;
     List<AssessmentMatrixCell> matrixCells;
+    Integer maxSubmissions;
+    Boolean allowRetake;
+    Boolean shuffleQuestions;
+    Boolean showCorrectAnswers;
+    Boolean showScoreImmediately;
+    Double passingScore;
+    LocalDateTime availableFrom;
+    LocalDateTime availableUntil;
 }

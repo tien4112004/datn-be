@@ -74,24 +74,20 @@ public class SubmissionController {
     }
 
     @GetMapping("/posts/{postId}/submissions/statistics")
-    public ResponseEntity<AppResponseDto<SubmissionStatisticsDto>> getPostStatistics(
-            @PathVariable String postId) {
-        return ResponseEntity.ok(AppResponseDto.success(
-                submissionApi.getSubmissionStatistics(postId)));
+    public ResponseEntity<AppResponseDto<SubmissionStatisticsDto>> getPostStatistics(@PathVariable String postId) {
+        return ResponseEntity.ok(AppResponseDto.success(submissionApi.getSubmissionStatistics(postId)));
     }
 
     @GetMapping("/assignments/{assignmentId}/submissions/statistics")
     public ResponseEntity<AppResponseDto<SubmissionStatisticsDto>> getAssignmentStatistics(
             @PathVariable String assignmentId) {
-        return ResponseEntity.ok(AppResponseDto.success(
-                submissionApi.getAssignmentStatistics(assignmentId)));
+        return ResponseEntity.ok(AppResponseDto.success(submissionApi.getAssignmentStatistics(assignmentId)));
     }
 
     @PostMapping("/assignments/{assignmentId}/validate-submission")
     public ResponseEntity<AppResponseDto<SubmissionValidationResponse>> validateSubmission(
             @PathVariable String assignmentId,
             @RequestBody SubmissionValidationRequest request) {
-        return ResponseEntity.ok(AppResponseDto.success(
-                submissionApi.validateSubmission(assignmentId, request)));
+        return ResponseEntity.ok(AppResponseDto.success(submissionApi.validateSubmission(assignmentId, request)));
     }
 }
