@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
@@ -64,7 +64,7 @@ public class SlidesIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private IdempotencyRepository idempotencyRepository;
 
-    @MockBean(name = "resourcePermissionManagement")
+    @MockitoBean(name = "resourcePermissionManagement")
     private ResourcePermissionApi resourcePermissionApi;
 
     private MockMvc mockMvc;
