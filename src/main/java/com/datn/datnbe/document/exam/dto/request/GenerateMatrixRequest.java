@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,15 +28,14 @@ public class GenerateMatrixRequest {
     @NotBlank(message = "Name is required")
     private String name;
 
-    @Schema(description = "List of topic names to include in the matrix", example = "[\"Algebra\", \"Geometry\", \"Calculus\"]", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotEmpty(message = "At least one topic is required")
-    private List<String> topics;
+    @Schema(description = "List of curriculum chapters (automatically populated by backend, not provided by user)", hidden = true, example = "[\"Chapter 1: Numbers\", \"Chapter 2: Geometry\"]")
+    private List<String> chapters;
 
     @Schema(description = "Grade level for the exam", example = "Grade 10", requiredMode = Schema.RequiredMode.REQUIRED)
-    @JsonProperty("gradeLevel")
+    @JsonProperty("grade")
     @JsonAlias("grade_level")
     @NotBlank(message = "Grade level is required")
-    private String gradeLevel;
+    private String grade;
 
     @Schema(description = "Subject for the exam (T, TV, TA)", example = "T", requiredMode = Schema.RequiredMode.REQUIRED)
     @JsonProperty("subject")
@@ -73,6 +71,11 @@ public class GenerateMatrixRequest {
     @JsonProperty("additionalRequirements")
     @JsonAlias("additional_requirements")
     private String additionalRequirements;
+
+    @Schema(description = "Language for AI responses (vi for Vietnamese, en for English)", example = "vi", defaultValue = "vi", allowableValues = {
+            "vi", "en"})
+    @Builder.Default
+    private String language = "vi";
 
     @Schema(description = "AI provider to use", example = "google", defaultValue = "google", allowableValues = {
             "google", "openai", "openrouter"})
