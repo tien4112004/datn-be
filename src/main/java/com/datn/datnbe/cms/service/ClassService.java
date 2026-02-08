@@ -3,14 +3,17 @@ package com.datn.datnbe.cms.service;
 import com.datn.datnbe.auth.dto.response.UserMinimalInfoDto;
 import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.cms.api.ClassApi;
+import com.datn.datnbe.cms.dto.LinkedResourceDto;
 import com.datn.datnbe.cms.dto.request.ClassCollectionRequest;
 import com.datn.datnbe.cms.dto.request.ClassCreateRequest;
 import com.datn.datnbe.cms.dto.request.ClassUpdateRequest;
 import com.datn.datnbe.cms.dto.response.ClassListResponseDto;
 import com.datn.datnbe.cms.dto.response.ClassResponseDto;
 import com.datn.datnbe.cms.entity.ClassEntity;
+import com.datn.datnbe.cms.entity.ClassResourcePermission;
 import com.datn.datnbe.cms.mapper.ClassEntityMapper;
 import com.datn.datnbe.cms.repository.ClassRepository;
+import com.datn.datnbe.cms.repository.ClassResourcePermissionRepository;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
@@ -33,9 +36,11 @@ import java.util.List;
 public class ClassService implements ClassApi {
 
     private final ClassRepository classRepository;
+    private final ClassResourcePermissionRepository classResourcePermissionRepository;
     private final ClassEntityMapper classEntityMapper;
     private final SecurityContextUtils securityContextUtils;
     private final UserProfileApi userProfileApi;
+    private final LinkedResourceEnricher linkedResourceEnricher;
 
     @Override
     @Transactional
@@ -133,6 +138,26 @@ public class ClassService implements ClassApi {
 
         classRepository.delete(entity);
         log.info("Successfully deleted class with id: {}", id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LinkedResourceDto> getClassResources(String classId) {
+        log.info("Fetching resources for class with id: {}", classId);
+
+        List<ClassResourcePermission> permissions = classResourcePermissionRepository.findByClassId(classId);
+
+        List<LinkedResourceDto> resources = permissions.stream()
+                .map(p -> LinkedResourceDto.builder()
+                        .type(p.getResourceType())
+                        .id(p.getResourceId())
+                        .permissionLevel(p.getPermissionLevel())
+                        .build())
+                .toList();
+
+        linkedResourceEnricher.enrichLinkedResources(resources);
+
+        return resources;
     }
 
     private void populateTeacherInfo(ClassResponseDto dto, String ownerId) {

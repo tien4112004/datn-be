@@ -2,6 +2,7 @@ package com.datn.datnbe.cms.presentation;
 
 import com.datn.datnbe.cms.api.ClassApi;
 import com.datn.datnbe.cms.api.SeatingLayoutApi;
+import com.datn.datnbe.cms.dto.LinkedResourceDto;
 import com.datn.datnbe.cms.dto.request.ClassCollectionRequest;
 import com.datn.datnbe.cms.dto.request.ClassCreateRequest;
 import com.datn.datnbe.cms.dto.request.ClassUpdateRequest;
@@ -89,6 +90,13 @@ public class ClassController {
         classApi.deleteClass(classId);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{classId}/resources")
+    public ResponseEntity<AppResponseDto<List<LinkedResourceDto>>> getClassResources(@PathVariable String classId) {
+        log.debug("GET /api/classes/{}/resources", classId);
+
+        return ResponseEntity.ok(AppResponseDto.success(classApi.getClassResources(classId)));
     }
 
     // ============== Seating Chart Endpoints ==============
