@@ -3,9 +3,9 @@ package com.datn.datnbe.ai.api;
 import com.datn.datnbe.ai.dto.request.MindmapPromptRequest;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
-import com.datn.datnbe.document.exam.dto.ExamMatrixDto;
-import com.datn.datnbe.document.exam.dto.request.GenerateMatrixRequest;
-import com.datn.datnbe.document.exam.dto.request.GenerateQuestionsFromTopicRequest;
+import com.datn.datnbe.document.dto.ExamMatrixDto;
+import com.datn.datnbe.document.dto.request.GenerateMatrixRequest;
+import com.datn.datnbe.document.dto.request.GenerateQuestionsFromTopicRequest;
 
 import reactor.core.publisher.Flux;
 

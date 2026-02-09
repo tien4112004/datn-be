@@ -3,7 +3,7 @@ package com.datn.datnbe.ai.management;
 import com.datn.datnbe.ai.api.ContentGenerationApi;
 import com.datn.datnbe.ai.api.ModelSelectionApi;
 import com.datn.datnbe.ai.apiclient.AIApiClient;
-import com.datn.datnbe.ai.dto.request.AIWorkerGenerateQuestionsRequest;
+import com.datn.datnbe.ai.dto.request.AIGatewayGenerateQuestionsRequest;
 import com.datn.datnbe.ai.dto.request.MindmapPromptRequest;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
@@ -12,10 +12,10 @@ import com.datn.datnbe.ai.utils.MappingParamsUtils;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.document.entity.Chapter;
-import com.datn.datnbe.document.exam.dto.DimensionTopicDto;
-import com.datn.datnbe.document.exam.dto.ExamMatrixDto;
-import com.datn.datnbe.document.exam.dto.request.GenerateMatrixRequest;
-import com.datn.datnbe.document.exam.dto.request.GenerateQuestionsFromTopicRequest;
+import com.datn.datnbe.document.dto.DimensionTopicDto;
+import com.datn.datnbe.document.dto.ExamMatrixDto;
+import com.datn.datnbe.document.dto.request.GenerateMatrixRequest;
+import com.datn.datnbe.document.dto.request.GenerateQuestionsFromTopicRequest;
 import com.datn.datnbe.document.repository.ChapterRepository;
 
 import lombok.AccessLevel;
@@ -216,7 +216,7 @@ public class ContentGenerationManagement implements ContentGenerationApi {
                 .totalPoints(request.getTotalPoints())
                 .difficulties(request.getDifficulties())
                 .questionTypes(request.getQuestionTypes())
-                .additionalRequirements(request.getAdditionalRequirements())
+                .prompt(request.getPrompt())
                 .language(request.getLanguage())
                 .provider(request.getProvider())
                 .model(request.getModel())
@@ -295,13 +295,13 @@ public class ContentGenerationManagement implements ContentGenerationApi {
         request.getQuestionsPerDifficulty()
                 .forEach((difficulty, count) -> difficultyMap.put(difficulty.toUpperCase(), count));
 
-        AIWorkerGenerateQuestionsRequest aiRequest = AIWorkerGenerateQuestionsRequest.builder()
+        AIGatewayGenerateQuestionsRequest aiRequest = AIGatewayGenerateQuestionsRequest.builder()
                 .topic(request.getTopic())
                 .grade(request.getGrade())
                 .subject(request.getSubject())
                 .questionsPerDifficulty(difficultyMap)
                 .questionTypes(questionTypesList)
-                .additionalRequirements(request.getAdditionalRequirements())
+                .prompt(request.getPrompt())
                 .provider(request.getProvider() != null ? request.getProvider() : "google")
                 .model(request.getModel() != null ? request.getModel() : "gemini-2.5-flash-lite")
                 .build();

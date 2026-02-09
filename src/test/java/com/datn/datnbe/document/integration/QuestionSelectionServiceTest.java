@@ -3,14 +3,14 @@ package com.datn.datnbe.document.integration;
 // import com.datn.datnbe.document.entity.QuestionBankItem;
 // import com.datn.datnbe.document.entity.questiondata.Difficulty;
 // import com.datn.datnbe.document.entity.questiondata.QuestionType;
-// import com.datn.datnbe.document.exam.dto.DimensionTopicDto;
-// import com.datn.datnbe.document.exam.dto.ExamMatrixDto;
-// import com.datn.datnbe.document.exam.dto.MatrixDimensionsDto;
-// import com.datn.datnbe.document.exam.dto.request.GenerateExamFromMatrixRequest;
-// import com.datn.datnbe.document.exam.dto.response.ExamDraftDto;
-// import com.datn.datnbe.document.exam.enums.MissingQuestionStrategy;
-// import com.datn.datnbe.document.exam.repository.ExamQuestionRepository;
-// import com.datn.datnbe.document.exam.service.QuestionSelectionService;
+// import com.datn.datnbe.document.dto.DimensionTopicDto;
+// import com.datn.datnbe.document.dto.ExamMatrixDto;
+// import com.datn.datnbe.document.dto.MatrixDimensionsDto;
+// import com.datn.datnbe.document.dto.request.GenerateExamFromMatrixRequest;
+// import com.datn.datnbe.document.dto.response.ExamDraftDto;
+// import com.datn.datnbe.document.enums.MissingQuestionStrategy;
+// import com.datn.datnbe.document.repository.ExamQuestionRepository;
+// import com.datn.datnbe.document.service.QuestionSelectionService;
 // import com.datn.datnbe.testcontainers.BaseIntegrationTest;
 // import org.junit.jupiter.api.BeforeEach;
 // import org.junit.jupiter.api.Test;
@@ -136,7 +136,7 @@ package com.datn.datnbe.document.integration;
 
 //     private ExamMatrixDto createSimpleMatrix(String topic, String diff, String type, int count, double points) {
 //         // Create Metadata
-//         com.datn.datnbe.document.exam.dto.MatrixMetadataDto metadata = new com.datn.datnbe.document.exam.dto.MatrixMetadataDto();
+//         com.datn.datnbe.document.dto.MatrixMetadataDto metadata = new com.datn.datnbe.document.dto.MatrixMetadataDto();
 //         metadata.setSubject("T");
 //         metadata.setGrade("3");
 
