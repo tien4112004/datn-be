@@ -92,15 +92,15 @@ public abstract class QuestionEntityMapper {
             try {
                 String textContent = (String) data;
                 FillInBlankData fillInBlankData = FillInBlankParser.parse(textContent);
-                log.info("Successfully parsed FillInBlankData from string, segments count: {}", 
-                    fillInBlankData.getSegments().size());
+                log.info("Successfully parsed FillInBlankData from string, segments count: {}",
+                        fillInBlankData.getSegments().size());
                 return fillInBlankData;
             } catch (Exception e) {
                 log.error("Failed to parse FillInBlankData from string: {}", e.getMessage(), e);
                 return data;
             }
         }
-        
+
         return data;
     }
 

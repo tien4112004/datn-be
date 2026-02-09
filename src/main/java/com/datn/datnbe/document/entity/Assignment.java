@@ -59,4 +59,8 @@ public class Assignment {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "contexts", columnDefinition = "jsonb")
     List<AssignmentContext> contexts;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "matrix", columnDefinition = "jsonb")
+    AssignmentMatrix matrix;
 }

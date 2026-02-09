@@ -60,11 +60,8 @@ public class FillInBlankParser {
         }
 
         log.info("Parsed {} segments from input text", segments.size());
-        
-        return FillInBlankData.builder()
-                .segments(segments)
-                .caseSensitive(false)
-                .build();
+
+        return FillInBlankData.builder().segments(segments).caseSensitive(false).build();
     }
 
     private static List<String> parseAnswers(String answerString) {
