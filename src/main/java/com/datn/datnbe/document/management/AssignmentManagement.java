@@ -150,6 +150,7 @@ public class AssignmentManagement implements AssignmentApi {
                         .chapter(item.getChapter())
                         .subject(item.getSubject())
                         .contextId(item.getContextId())
+                        .topicId(item.getTopicId())
                         .data(item.getData())
                         .point(item.getPoint())
                         .build())
