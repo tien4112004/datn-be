@@ -60,7 +60,7 @@ public class SubmissionService implements SubmissionApi {
         Submission submission = submissionMapper.toEntity(request, postId);
 
         // Set student ID from authenticated user
-        String currentUserId = securityContextUtils.getCurrentUserId();
+        String currentUserId = securityContextUtils.getCurrentUserProfileId();
         submission.setStudentId(currentUserId);
 
         // Fetch post to extract assignment ID
@@ -106,11 +106,14 @@ public class SubmissionService implements SubmissionApi {
         Submission s = submissionRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Submission not found"));
 
-        String currentUser = securityContextUtils.getCurrentUserId();
+        String currentUser = securityContextUtils.getCurrentUserProfileId();
+        String currentKeycloakUser = securityContextUtils.getCurrentUserProfileId();
 
         PostResponseDto post = postApi.getPostById(s.getPostId());
 
-        if (currentUser.equals(post.getAuthorId()) || currentUser.equals(s.getStudentId())) {
+        // Fallback for older submissions that only have studentId as keycloakId
+        if (currentUser.equals(post.getAuthorId()) || currentUser.equals(s.getStudentId())
+                || currentKeycloakUser.equals(s.getStudentId())) {
             return enrichSubmissionDto(submissionMapper.toDto(s));
         }
 
@@ -131,9 +134,10 @@ public class SubmissionService implements SubmissionApi {
 
         // Verify teacher is the author of the assignment
         PostResponseDto post = postApi.getPostById(submission.getPostId());
-        String currentUser = securityContextUtils.getCurrentUserId();
+        String currentUser = securityContextUtils.getCurrentUserProfileId();
+        String currentKeycloakUser = securityContextUtils.getCurrentUserProfileId();
 
-        if (!currentUser.equals(post.getAuthorId())) {
+        if (!currentUser.equals(post.getAuthorId()) || !currentKeycloakUser.equals(post.getAuthorId())) {
             throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, "You don't have permission to grade this submission");
         }
 
@@ -250,10 +254,14 @@ public class SubmissionService implements SubmissionApi {
         }
 
         MultipleChoiceAnswer mcAnswer = (MultipleChoiceAnswer) answer.getAnswer();
-        double points = mcAnswer != null && mcAnswer.verifyAnswer(correctOption.getId()) ? question.getPoint().doubleValue() : 0;
-        log.info("  Student answer: {} | Correct answer: {} | Correct: {} | Total points: {}", 
-                mcAnswer != null ? mcAnswer.getId() : "null", correctOption.getId(), 
-                mcAnswer != null && mcAnswer.verifyAnswer(correctOption.getId()), points);
+        double points = mcAnswer != null && mcAnswer.verifyAnswer(correctOption.getId())
+                ? question.getPoint().doubleValue()
+                : 0;
+        log.info("  Student answer: {} | Correct answer: {} | Correct: {} | Total points: {}",
+                mcAnswer != null ? mcAnswer.getId() : "null",
+                correctOption.getId(),
+                mcAnswer != null && mcAnswer.verifyAnswer(correctOption.getId()),
+                points);
         return points;
     }
 
@@ -278,20 +286,26 @@ public class SubmissionService implements SubmissionApi {
         double totalPoint = question.getPoint().doubleValue();
         double pointPerBlank = totalPoint / blankSegments.size();
 
-        log.info("  Total points: {} | Points per blank: {} | Total blanks: {}", 
-                totalPoint, pointPerBlank, blankSegments.size());
+        log.info("  Total points: {} | Points per blank: {} | Total blanks: {}",
+                totalPoint,
+                pointPerBlank,
+                blankSegments.size());
 
         double totalScore = blankSegments.stream().mapToDouble(segment -> {
             String studentAnswer = fillAnswer.getBlankAnswers().get(segment.getId());
             boolean isCorrect = studentAnswer != null && segment.getAcceptableAnswers().contains(studentAnswer);
             double points = isCorrect ? pointPerBlank : 0;
-            
+
             log.info("    Segment: {} | Student: '{}' | Acceptable: {} | Correct: {} | Points: {}",
-                    segment.getId(), studentAnswer, segment.getAcceptableAnswers(), isCorrect, points);
-            
+                    segment.getId(),
+                    studentAnswer,
+                    segment.getAcceptableAnswers(),
+                    isCorrect,
+                    points);
+
             return points;
         }).sum();
-        
+
         log.info("  Fill-In-Blank total score: {}", totalScore);
         return totalScore;
     }
@@ -320,8 +334,7 @@ public class SubmissionService implements SubmissionApi {
         double totalPoint = question.getPoint().doubleValue();
         double pointPerPair = totalPoint / pairs.size();
 
-        log.info("  Total points: {} | Points per pair: {} | Total pairs: {}", 
-                totalPoint, pointPerPair, pairs.size());
+        log.info("  Total points: {} | Points per pair: {} | Total pairs: {}", totalPoint, pointPerPair, pairs.size());
 
         double totalScore = pairs.stream().mapToDouble(pair -> {
             String leftKey = pair.getLeft() != null && !pair.getLeft().isBlank()
@@ -334,13 +347,17 @@ public class SubmissionService implements SubmissionApi {
             String studentValue = studentPairs.get(leftKey);
             boolean isCorrect = studentValue != null && studentValue.equals(rightValue);
             double points = isCorrect ? pointPerPair : 0;
-            
+
             log.info("    Left: {} | Expected: {} | Student: {} | Correct: {} | Points: {}",
-                    leftKey, rightValue, studentValue, isCorrect, points);
-            
+                    leftKey,
+                    rightValue,
+                    studentValue,
+                    isCorrect,
+                    points);
+
             return points;
         }).sum();
-        
+
         log.info("  Matching total score: {}", totalScore);
         return totalScore;
     }

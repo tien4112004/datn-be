@@ -57,13 +57,13 @@ public class SubmissionMapper {
         return dtoList.stream().map(dto -> {
             AnswerData data = new AnswerData();
             data.setId(dto.getId());
-            
+
             // Infer answer type from answer object và set type field
             Object answerObj = dto.getAnswer();
             if (answerObj instanceof Map) {
                 Map<String, Object> answerMap = (Map<String, Object>) answerObj;
                 String typeStr = (String) answerMap.get("type");
-                
+
                 if ("FILL_IN_BLANK".equals(typeStr)) {
                     FillInBlankAnswer fillAnswer = objectMapper.convertValue(answerObj, FillInBlankAnswer.class);
                     fillAnswer.setType(AnswerType.FILL_IN_BLANK);
@@ -82,7 +82,7 @@ public class SubmissionMapper {
             } else {
                 data.setAnswer(answerObj);
             }
-            
+
             return data;
         }).collect(Collectors.toList());
     }
