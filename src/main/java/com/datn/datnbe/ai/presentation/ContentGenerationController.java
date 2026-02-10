@@ -70,7 +70,6 @@ public class ContentGenerationController {
                 .delayElements(Duration.ofMillis(OUTLINE_DELAY))
                 .doOnNext(chunk -> {
                     result.append(chunk);
-                    log.info("Received outline chunk: {}", chunk);
                 })
                 .doOnError(err -> log.error("Error generating outline", err))
                 .doFinally(signalType -> {

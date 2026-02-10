@@ -43,7 +43,7 @@ public class RustfsStorageService {
             log.error("Failed to upload file to rustfs: {}", e.getMessage(), e);
             throw new AppException(ErrorCode.FILE_UPLOAD_ERROR, "Failed to upload file");
         } catch (Exception e) {
-            log.error("Failed to upload file to rustfs: {}", e.getMessage(), e);
+            log.error("Failed to upload file to rustfs (non-IO error): {}", e.getMessage(), e);
             throw new AppException(ErrorCode.FILE_UPLOAD_ERROR, "Failed to upload file");
         }
     }
