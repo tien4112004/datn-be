@@ -25,16 +25,7 @@ public class PaymentController {
     public ResponseEntity<UserCoinDTO> getUserCoin(@PathVariable String userId) {
         return ResponseEntity.ok(paymentApi.getUserCoin(userId));
     }
-
-    @PostMapping("/{userId}/coins/subtract")
-    public ResponseEntity<UserCoinDTO> subtractCoin(
-            @PathVariable String userId,
-            @RequestParam Long amount,
-            @RequestParam String source
-    ) {
-        return ResponseEntity.ok(paymentApi.subtractCoin(userId, amount, source));
-    }
-
+    
     @GetMapping("/{userId}/history")
     public ResponseEntity<PaginatedResponseDto<CoinUsageTransactionDTO>> getCoinHistory(
             @PathVariable String userId,

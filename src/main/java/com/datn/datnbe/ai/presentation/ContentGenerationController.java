@@ -60,7 +60,7 @@ public class ContentGenerationController {
         log.info("Received outline generation request: {}", request);
 
         // Capture userId BEFORE entering reactive pipeline (on the request thread)
-        String userId = securityContextUtils.getCurrentUserId();
+        String userId = securityContextUtils.getCurrentUserProfileId();
         // Generate traceId for this request to track in Phoenix
         String traceId = java.util.UUID.randomUUID().toString();
         StringBuilder result = new StringBuilder();
@@ -302,7 +302,7 @@ public class ContentGenerationController {
             MindmapGenerateResponseDto mindmapDto = mapper.treeToValue(dataNode, MindmapGenerateResponseDto.class);
 
             // Extract and save token usage asynchronously AFTER response is sent
-            recordTokenUsageAsync(securityContextUtils.getCurrentUserId(),
+            recordTokenUsageAsync(securityContextUtils.getCurrentUserProfileId(),
                     "mindmap",
                     traceId,
                     mapper.writeValueAsString(request),

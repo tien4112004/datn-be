@@ -11,6 +11,8 @@ import com.datn.datnbe.payment.repository.UserCoinRepository;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class PaymentService implements PaymentApi {
 
     private final UserCoinRepository userCoinRepository;
@@ -74,6 +77,7 @@ public class PaymentService implements PaymentApi {
                 .amount(amount)
                 .build();
         transactionRepository.save(transaction);
+        log.info("Created coin usage transaction for user: {}, {} {} coins", transaction.getUserId(), transaction.getType(), transaction.getAmount());
 
         return mapper.toUserCoinDTO(userCoin);
     }

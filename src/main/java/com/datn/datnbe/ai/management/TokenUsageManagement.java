@@ -39,6 +39,7 @@ public class TokenUsageManagement implements TokenUsageApi {
             return;
         }
         tokenUsageRepo.saveTokenUsage(tokenUsage);
+        paymentApi.subtractCoin(tokenUsage.getUserId(), tokenUsage.getCalculatedPrice(), tokenUsage.getRequest());
     }
 
     @Override
