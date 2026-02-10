@@ -21,7 +21,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AppException.class)
     public ResponseEntity<AppResponseDto<Object>> handleAppException(AppException ex) {
         int statusCode = ex.getStatusCode();
-        
+
         // Don't log errors for 403 (Forbidden) and 404 (Not Found)
         if (statusCode == HttpStatus.FORBIDDEN.value() || statusCode == HttpStatus.NOT_FOUND.value()) {
             log.debug("Client error - Status: {}", statusCode);

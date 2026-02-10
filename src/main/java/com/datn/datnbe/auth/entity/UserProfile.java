@@ -6,7 +6,6 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
-
 import java.util.Date;
 
 @Entity

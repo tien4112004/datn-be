@@ -92,6 +92,8 @@ server:
       force: true
 
 app:
+  coin:
+    initial: ${INITIAL_COIN_VALUE:100}
   firebase:
       config-path: ${FIREBASE_CONFIG_PATH:classpath:firebase-service-account.json}
   cors:

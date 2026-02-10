@@ -1,6 +1,5 @@
 package com.datn.datnbe.student.entity;
 
-
 import java.util.Date;
 import java.util.UUID;
 

@@ -693,7 +693,7 @@ public class MindmapIntegrationTest extends BaseIntegrationTest {
                     .description("Desc " + i)
                     .nodes(List.of())
                     .edges(List.of())
-                    .createdAt(Date.from(Instant.now().minusSeconds((long)(25 - i) * 86400)))
+                    .createdAt(Date.from(Instant.now().minusSeconds((long) (25 - i) * 86400)))
                     .build();
             repository.save(m);
         }

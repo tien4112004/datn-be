@@ -9,7 +9,6 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-
 import java.util.Date;
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -507,7 +507,7 @@ class GetMindmapTest {
         List<Mindmap> mindmaps = new ArrayList<>();
         Instant nowInstant = Instant.now();
         for (int i = 0; i < count; i++) {
-            Date createdDate = Date.from(nowInstant.minusSeconds((long)(count - i) * 86400));
+            Date createdDate = Date.from(nowInstant.minusSeconds((long) (count - i) * 86400));
             mindmaps.add(Mindmap.builder()
                     .id("id-" + i)
                     .title("Title " + i)

@@ -25,14 +25,12 @@ public class PaymentController {
     public ResponseEntity<UserCoinDTO> getUserCoin(@PathVariable String userId) {
         return ResponseEntity.ok(paymentApi.getUserCoin(userId));
     }
-    
+
     @GetMapping("/{userId}/history")
-    public ResponseEntity<PaginatedResponseDto<CoinUsageTransactionDTO>> getCoinHistory(
-            @PathVariable String userId,
+    public ResponseEntity<PaginatedResponseDto<CoinUsageTransactionDTO>> getCoinHistory(@PathVariable String userId,
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String source,
-            @PageableDefault(size = 20, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
-    ) {
+            @PageableDefault(size = 20, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(paymentApi.getCoinHistory(userId, type, source, pageable));
     }
 }

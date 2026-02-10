@@ -1,6 +1,5 @@
 package com.datn.datnbe.student.utils;
 
-
 import java.util.Date;
 import java.text.SimpleDateFormat;
 import java.util.Random;

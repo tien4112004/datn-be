@@ -42,10 +42,8 @@ public interface PaymentApi {
      * @param pageable pagination parameters
      * @return paginated list of coin transactions
      */
-    PaginatedResponseDto<CoinUsageTransactionDTO> getCoinHistory(
-            String userId,
+    PaginatedResponseDto<CoinUsageTransactionDTO> getCoinHistory(String userId,
             String type,
             String source,
-            Pageable pageable
-    );
+            Pageable pageable);
 }

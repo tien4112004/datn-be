@@ -31,40 +31,30 @@ public class PaymentService implements PaymentApi {
     private final CoinUsageTransactionRepository transactionRepository;
     private final PaymentMapper mapper;
 
-    @Value("${INIT_COIN_VALUE:0}")
+    @Value("${app.coin.initial:0}")
     private Long initCoinValue;
 
     @Override
     @Transactional(readOnly = true)
     public UserCoinDTO getUserCoin(String userId) {
         UserCoin userCoin = userCoinRepository.findById(userId)
-                .orElseGet(() -> UserCoin.builder()
-                        .id(userId)
-                        .coin(0L)
-                        .build());
+                .orElseGet(() -> UserCoin.builder().id(userId).coin(0L).build());
         return mapper.toUserCoinDTO(userCoin);
     }
 
     @Override
     public UserCoinDTO initializeUserCoin(String userId) {
-        UserCoin userCoin = userCoinRepository.findById(userId)
-                .orElseGet(() -> {
-                    UserCoin newUserCoin = UserCoin.builder()
-                            .id(userId)
-                            .coin(initCoinValue)
-                            .build();
-                    return userCoinRepository.save(newUserCoin);
-                });
+        UserCoin userCoin = userCoinRepository.findById(userId).orElseGet(() -> {
+            UserCoin newUserCoin = UserCoin.builder().id(userId).coin(initCoinValue).build();
+            return userCoinRepository.save(newUserCoin);
+        });
         return mapper.toUserCoinDTO(userCoin);
     }
 
     @Override
     public UserCoinDTO subtractCoin(String userId, Long amount, String source) {
         UserCoin userCoin = userCoinRepository.findById(userId)
-                .orElseGet(() -> UserCoin.builder()
-                        .id(userId)
-                        .coin(0L)
-                        .build());
+                .orElseGet(() -> UserCoin.builder().id(userId).coin(0L).build());
 
         userCoin.setCoin(userCoin.getCoin() - amount);
         userCoinRepository.save(userCoin);
@@ -77,19 +67,20 @@ public class PaymentService implements PaymentApi {
                 .amount(amount)
                 .build();
         transactionRepository.save(transaction);
-        log.info("Created coin usage transaction for user: {}, {} {} coins", transaction.getUserId(), transaction.getType(), transaction.getAmount());
+        log.info("Created coin usage transaction for user: {}, {} {} coins",
+                transaction.getUserId(),
+                transaction.getType(),
+                transaction.getAmount());
 
         return mapper.toUserCoinDTO(userCoin);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PaginatedResponseDto<CoinUsageTransactionDTO> getCoinHistory(
-            String userId,
+    public PaginatedResponseDto<CoinUsageTransactionDTO> getCoinHistory(String userId,
             String type,
             String source,
-            Pageable pageable
-    ) {
+            Pageable pageable) {
         List<CoinUsageTransaction> allTransactions = transactionRepository.findByUserIdOrderByCreatedAtDesc(userId);
 
         // Apply filters
@@ -114,9 +105,6 @@ public class PaymentService implements PaymentApi {
                 .totalPages((filteredTransactions.size() + pageable.getPageSize() - 1) / pageable.getPageSize())
                 .build();
 
-        return PaginatedResponseDto.<CoinUsageTransactionDTO>builder()
-                .data(pageContent)
-                .pagination(pagination)
-                .build();
+        return PaginatedResponseDto.<CoinUsageTransactionDTO>builder().data(pageContent).pagination(pagination).build();
     }
 }

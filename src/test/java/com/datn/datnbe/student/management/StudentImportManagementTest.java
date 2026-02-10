@@ -86,7 +86,8 @@ class StudentImportManagementTest {
 
             Student student = Student.builder()
                     .userId("user_001")
-                    .enrollmentDate(Date.from(LocalDate.of(2024, 1, 15).atStartOfDay(ZoneId.systemDefault()).toInstant()))
+                    .enrollmentDate(
+                            Date.from(LocalDate.of(2024, 1, 15).atStartOfDay(ZoneId.systemDefault()).toInstant()))
                     .address("123 Main St")
                     .parentContactEmail("parent@example.com")
                     .build();
