@@ -21,7 +21,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
+import java.util.Date;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +51,11 @@ class SlideThemeApiTest {
 
     @BeforeEach
     void setUp() {
-        LocalDateTime now = LocalDateTime.now();
+        Date now = new Date();
+        Instant nowInstant = Instant.now();
+        Date fiveDaysAgo = Date.from(nowInstant.minusSeconds(432000));
+        Date oneDayAgo = Date.from(nowInstant.minusSeconds(86400));
+        Date threeDaysAgo = Date.from(nowInstant.minusSeconds(259200));
 
         Map<String, Object> theme1Data = new HashMap<>();
         theme1Data.put("backgroundColor", "#0066cc");
@@ -65,15 +70,15 @@ class SlideThemeApiTest {
         SlideThemeResponseDto theme1 = SlideThemeResponseDto.builder()
                 .id("theme-1")
                 .name("Professional Blue")
-                .createdAt(now.minusDays(5))
-                .updatedAt(now.minusDays(1))
+                .createdAt(fiveDaysAgo)
+                .updatedAt(oneDayAgo)
                 .additionalProperties(theme1Data)
                 .build();
 
         SlideThemeResponseDto theme2 = SlideThemeResponseDto.builder()
                 .id("theme-2")
                 .name("Vibrant Orange")
-                .createdAt(now.minusDays(3))
+                .createdAt(threeDaysAgo)
                 .updatedAt(now)
                 .additionalProperties(theme2Data)
                 .build();
@@ -190,8 +195,8 @@ class SlideThemeApiTest {
         SlideThemeResponseDto response = SlideThemeResponseDto.builder()
                 .id("new-theme")
                 .name("New Theme")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(new Date())
+                .updatedAt(new Date())
                 .additionalProperties(Map.of("backgroundColor", "#ffffff"))
                 .build();
 
@@ -239,8 +244,8 @@ class SlideThemeApiTest {
         SlideThemeResponseDto response = SlideThemeResponseDto.builder()
                 .id("theme-1")
                 .name("Updated Theme Name")
-                .createdAt(LocalDateTime.now().minusDays(5))
-                .updatedAt(LocalDateTime.now())
+                .createdAt(Date.from(Instant.now().minusSeconds(432000)))
+                .updatedAt(new Date())
                 .additionalProperties(Map.of("backgroundColor", "#000000"))
                 .build();
 

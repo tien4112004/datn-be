@@ -1,6 +1,6 @@
 package com.datn.datnbe.sharedkernel.event;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,13 +10,13 @@ import lombok.Setter;
 public abstract class BaseEvent {
 
     private String eventId;
-    private LocalDateTime timestamp;
+    private Date timestamp;
     private String eventType;
     private String source;
 
     protected BaseEvent(String eventType, String source) {
         this.eventType = eventType;
         this.source = source;
-        this.timestamp = LocalDateTime.now();
+        this.timestamp = new Date();
     }
 }

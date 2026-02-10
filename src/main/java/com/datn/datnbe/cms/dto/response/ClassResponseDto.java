@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Data
 @Builder
@@ -24,6 +24,6 @@ public class ClassResponseDto {
     Boolean isActive;
     UserMinimalInfoDto teacher;
     SeatingLayoutResponseDto layout;
-    LocalDateTime createdAt;
-    LocalDateTime updatedAt;
+    Date createdAt;
+    Date updatedAt;
 }

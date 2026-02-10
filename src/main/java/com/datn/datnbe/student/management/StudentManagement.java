@@ -93,7 +93,7 @@ public class StudentManagement implements StudentApi {
         // Phase 2: Create student entity linked to the user
         Student student = Student.builder()
                 .userId(userId)
-                .enrollmentDate(java.time.LocalDate.now())
+                .enrollmentDate(new java.util.Date())
                 .address(request.getAddress())
                 .parentContactEmail(request.getParentContactEmail())
                 .gender(request.getGender())

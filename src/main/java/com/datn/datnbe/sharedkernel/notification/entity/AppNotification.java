@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Entity
 @Table(name = "app_notifications", indexes = {@Index(name = "idx_notification_user_id", columnList = "user_id"),
@@ -44,5 +44,5 @@ public class AppNotification {
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Date createdAt;
 }

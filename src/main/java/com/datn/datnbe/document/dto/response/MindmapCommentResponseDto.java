@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,8 +25,8 @@ public class MindmapCommentResponseDto {
     @Builder.Default
     List<String> mentionedUsers = new ArrayList<>();
 
-    LocalDateTime createdAt;
-    LocalDateTime updatedAt;
+    Date createdAt;
+    Date updatedAt;
 
     // Enriched user data
     String userName;

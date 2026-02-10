@@ -8,7 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,8 +22,8 @@ public class SlideTemplateResponseDto {
     private String id;
     private String name;
     private String layout;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Date createdAt;
+    private Date updatedAt;
 
     @Builder.Default
     private Map<String, Object> additionalProperties = new HashMap<>();

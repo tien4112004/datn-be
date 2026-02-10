@@ -10,7 +10,7 @@ import org.hibernate.type.SqlTypes;
 
 import com.datn.datnbe.cms.entity.answerData.AnswerData;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -56,13 +56,13 @@ public class Submission {
     String gradedBy;
 
     @Column(name = "graded_at")
-    LocalDateTime gradedAt;
+    Date gradedAt;
 
     @Column(name = "max_score")
     Integer maxScore;
 
     @Column(name = "submitted_at")
-    LocalDateTime submittedAt;
+    Date submittedAt;
 
     @Column(name = "score")
     Double score;
@@ -72,9 +72,9 @@ public class Submission {
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
-    LocalDateTime createdAt;
+    Date createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at")
-    LocalDateTime updatedAt;
+    Date updatedAt;
 }

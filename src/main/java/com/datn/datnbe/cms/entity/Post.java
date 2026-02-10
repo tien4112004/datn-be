@@ -6,7 +6,7 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,7 +52,7 @@ public class Post {
     String assignmentId;
 
     @Column(name = "due_date")
-    LocalDateTime dueDate;
+    Date dueDate;
 
     @Column(name = "is_pinned")
     Boolean isPinned;
@@ -65,9 +65,9 @@ public class Post {
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
-    LocalDateTime createdAt;
+    Date createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at")
-    LocalDateTime updatedAt;
+    Date updatedAt;
 }

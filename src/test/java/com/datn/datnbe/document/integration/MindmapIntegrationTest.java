@@ -8,6 +8,7 @@ import com.datn.datnbe.document.dto.request.MindmapCreateRequest;
 import com.datn.datnbe.document.dto.request.MindmapUpdateTitleAndDescriptionRequest;
 import com.datn.datnbe.document.dto.response.MindmapCreateResponseDto;
 import com.datn.datnbe.document.dto.response.MindmapDto;
+import java.time.Instant;
 import com.datn.datnbe.document.dto.response.MindmapListResponseDto;
 import com.datn.datnbe.document.entity.Mindmap;
 import com.datn.datnbe.document.entity.valueobject.MindmapEdge;
@@ -31,7 +32,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -377,7 +378,7 @@ public class MindmapIntegrationTest extends BaseIntegrationTest {
         // Assert - Verify timestamp updated in database
         Mindmap updated = repository.findById(id).orElseThrow();
         // Allow small time difference due to database precision and test execution timing
-        assertThat(updated.getUpdatedAt()).isAfterOrEqualTo(original.getUpdatedAt().withNano(0));
+        assertThat(updated.getUpdatedAt().getTime()).isGreaterThanOrEqualTo(original.getUpdatedAt().getTime());
         assertThat(updated.getCreatedAt()).isEqualTo(original.getCreatedAt());
     }
 
@@ -662,18 +663,18 @@ public class MindmapIntegrationTest extends BaseIntegrationTest {
                 .description("Original Desc")
                 .nodes(List.of())
                 .edges(List.of())
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(new Date())
+                .updatedAt(new Date())
                 .build();
 
         Mindmap saved = repository.save(original);
         String originalId = saved.getId();
-        LocalDateTime originalCreatedAt = saved.getCreatedAt();
+        Date originalCreatedAt = saved.getCreatedAt();
 
         // Act - Update the mindmap
         saved.setTitle("Updated Title");
         saved.setDescription("Updated Description");
-        saved.setUpdatedAt(LocalDateTime.now());
+        saved.setUpdatedAt(new Date());
         Mindmap updated = repository.save(saved);
 
         // Assert
@@ -692,7 +693,7 @@ public class MindmapIntegrationTest extends BaseIntegrationTest {
                     .description("Desc " + i)
                     .nodes(List.of())
                     .edges(List.of())
-                    .createdAt(LocalDateTime.now().minusDays(25 - i))
+                    .createdAt(Date.from(Instant.now().minusSeconds((long)(25 - i) * 86400)))
                     .build();
             repository.save(m);
         }
@@ -713,20 +714,23 @@ public class MindmapIntegrationTest extends BaseIntegrationTest {
     @Test
     void repository_findAll_withSort_returnsOrderedResults() {
         // Arrange
-        LocalDateTime now = LocalDateTime.now();
+        Date now = new Date();
+        Instant nowInstant = Instant.now();
+        Date twoDaysAgo = Date.from(nowInstant.minusSeconds(172800));
+        Date oneDayAgo = Date.from(nowInstant.minusSeconds(86400));
         Mindmap m1 = Mindmap.builder()
                 .title("First")
                 .description("")
                 .nodes(List.of())
                 .edges(List.of())
-                .createdAt(now.minusDays(2))
+                .createdAt(twoDaysAgo)
                 .build();
         Mindmap m2 = Mindmap.builder()
                 .title("Second")
                 .description("")
                 .nodes(List.of())
                 .edges(List.of())
-                .createdAt(now.minusDays(1))
+                .createdAt(oneDayAgo)
                 .build();
         Mindmap m3 = Mindmap.builder()
                 .title("Third")

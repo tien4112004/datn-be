@@ -4,7 +4,7 @@ import com.datn.datnbe.document.dto.SlideDto;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -26,8 +26,8 @@ public class PresentationDto {
     @Builder.Default
     private Map<String, Object> metadata = new java.util.HashMap<>();
     private List<SlideDto> slides;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Date createdAt;
+    private Date updatedAt;
     private boolean isParsed;
 
     @JsonAnySetter

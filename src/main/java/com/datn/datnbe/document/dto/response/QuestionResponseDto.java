@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Data
 @NoArgsConstructor
@@ -40,7 +40,7 @@ public class QuestionResponseDto {
 
     ContextResponse context;
 
-    LocalDateTime createdAt;
+    Date createdAt;
 
-    LocalDateTime updatedAt;
+    Date updatedAt;
 }

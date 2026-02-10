@@ -3,7 +3,7 @@ package com.datn.datnbe.cms.dto.response;
 import com.datn.datnbe.cms.enums.LessonStatus;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Data
 public class LessonResponseDto {
@@ -18,6 +18,6 @@ public class LessonResponseDto {
     private String notes;
     private String learningObjectives;
     private String ownerId;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Date createdAt;
+    private Date updatedAt;
 }

@@ -7,6 +7,7 @@ import com.datn.datnbe.document.entity.Mindmap;
 import com.datn.datnbe.document.mapper.MindmapEntityMapper;
 import com.datn.datnbe.document.repository.MindmapRepository;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
+import java.time.Instant;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,7 +27,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -94,8 +95,8 @@ class GetMindmapTest {
                 .id("1")
                 .title("t")
                 .description("d")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(new Date())
+                .updatedAt(new Date())
                 .build();
 
         PageImpl<Mindmap> page = new PageImpl<>(List.of(entity),
@@ -274,8 +275,8 @@ class GetMindmapTest {
                 .id("single")
                 .title("Single Mindmap")
                 .description("desc")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(new Date())
+                .updatedAt(new Date())
                 .build();
 
         PageImpl<Mindmap> page = new PageImpl<>(List.of(entity), PageRequest.of(0, 10), 1);
@@ -397,8 +398,8 @@ class GetMindmapTest {
                 .id("single")
                 .title("Single Mindmap")
                 .description("desc")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(new Date())
+                .updatedAt(new Date())
                 .build();
 
         PageImpl<Mindmap> page = new PageImpl<>(List.of(entity), PageRequest.of(0, 10), 1);
@@ -504,13 +505,15 @@ class GetMindmapTest {
 
     private List<Mindmap> createMindmapList(int count) {
         List<Mindmap> mindmaps = new ArrayList<>();
+        Instant nowInstant = Instant.now();
         for (int i = 0; i < count; i++) {
+            Date createdDate = Date.from(nowInstant.minusSeconds((long)(count - i) * 86400));
             mindmaps.add(Mindmap.builder()
                     .id("id-" + i)
                     .title("Title " + i)
                     .description("Description " + i)
-                    .createdAt(LocalDateTime.now().minusDays(count - i))
-                    .updatedAt(LocalDateTime.now())
+                    .createdAt(createdDate)
+                    .updatedAt(new Date())
                     .build());
         }
         return mindmaps;

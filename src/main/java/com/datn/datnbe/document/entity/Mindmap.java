@@ -8,7 +8,7 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,10 +42,10 @@ public class Mindmap {
     List<MindmapEdge> edges;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    LocalDateTime createdAt;
+    Date createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    LocalDateTime updatedAt;
+    Date updatedAt;
 
     @Column(name = "thumbnail", columnDefinition = "TEXT", nullable = true)
     String thumbnail;
@@ -57,12 +57,12 @@ public class Mindmap {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = new Date();
         updatedAt = createdAt;
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = new Date();
     }
 }

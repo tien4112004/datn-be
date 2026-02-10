@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -32,9 +32,9 @@ public class AssignmentResponse {
     List<AssignmentContext> contexts;
     List<Question> questions;
     AssignmentMatrix matrix;
-    LocalDateTime createdAt;
+    Date createdAt;
 
-    LocalDateTime updatedAt;
+    Date updatedAt;
     List<AssignmentTopic> topics;
     List<AssessmentMatrixCell> matrixCells;
     Integer maxSubmissions;
@@ -43,6 +43,6 @@ public class AssignmentResponse {
     Boolean showCorrectAnswers;
     Boolean showScoreImmediately;
     Double passingScore;
-    LocalDateTime availableFrom;
-    LocalDateTime availableUntil;
+    Date availableFrom;
+    Date availableUntil;
 }

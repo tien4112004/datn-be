@@ -4,7 +4,7 @@ import com.datn.datnbe.sharedkernel.notification.entity.AppNotification;
 import com.datn.datnbe.sharedkernel.notification.enums.NotificationType;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Data
 @Builder
@@ -17,7 +17,7 @@ public class AppNotificationDto {
     private NotificationType type;
     private String referenceId;
     private Boolean isRead;
-    private LocalDateTime createdAt;
+    private Date createdAt;
 
     public static AppNotificationDto fromEntity(AppNotification entity) {
         return AppNotificationDto.builder()

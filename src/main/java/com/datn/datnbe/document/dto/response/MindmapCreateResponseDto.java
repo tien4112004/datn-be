@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,7 +19,7 @@ public class MindmapCreateResponseDto {
     private String title;
     private String description;
     //    private String ownerId;
-    private LocalDateTime createdAt;
+    private Date createdAt;
 
     @Builder.Default
     Map<String, Object> extraFields = new HashMap<>();

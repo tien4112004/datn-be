@@ -1,7 +1,7 @@
 package com.datn.datnbe.student.dto.response;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+
+import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -28,14 +28,14 @@ public class StudentResponseDto {
 
     String id;
     String userId;
-    LocalDate enrollmentDate;
+    Date enrollmentDate;
     String address;
     String gender;
     String parentName;
     String parentPhone;
     String parentContactEmail;
-    LocalDateTime createdAt;
-    LocalDateTime updatedAt;
+    Date createdAt;
+    Date updatedAt;
 
     // Credentials (only populated during create operations)
     String username;

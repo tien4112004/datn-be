@@ -1,7 +1,8 @@
 package com.datn.datnbe.student.utils;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+
+import java.util.Date;
+import java.text.SimpleDateFormat;
 import java.util.Random;
 import java.text.Normalizer;
 import com.datn.datnbe.student.repository.StudentRepository;
@@ -11,7 +12,7 @@ public final class StudentCredentialGenerator {
     private StudentCredentialGenerator() {
     }
 
-    public static String generateUsername(String fullName, LocalDate dateOfBirth, StudentRepository studentRepository) {
+    public static String generateUsername(String fullName, Date dateOfBirth, StudentRepository studentRepository) {
         if (fullName == null || fullName.isBlank()) {
             throw new IllegalArgumentException("Full name cannot be null or blank");
         }
@@ -25,7 +26,8 @@ public final class StudentCredentialGenerator {
 
         String dobPart = "nodob";
         if (dateOfBirth != null) {
-            dobPart = dateOfBirth.format(DateTimeFormatter.ofPattern("ddMMyy"));
+            SimpleDateFormat sdf = new SimpleDateFormat("ddMMyy");
+            dobPart = sdf.format(dateOfBirth);
         }
 
         String baseUsername = String.format("%s%s", base, dobPart);

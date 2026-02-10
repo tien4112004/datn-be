@@ -15,7 +15,8 @@ import com.datn.datnbe.document.management.validation.PresentationValidation;
 import com.datn.datnbe.document.mapper.PresentationEntityMapper;
 import com.datn.datnbe.document.repository.PresentationRepository;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
-import java.time.LocalDateTime;
+import java.util.Date;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
@@ -88,33 +89,36 @@ class GetAllPresentationsTest {
         when(resourcePermissionApi.getAllResourceByTypeOfOwner(anyString(), eq("presentation")))
                 .thenReturn(Arrays.asList("presentation-1", "presentation-2"));
 
-        LocalDateTime now = LocalDateTime.now();
+        Date now = new Date();
+        Instant nowInstant = Instant.now();
+        Date twoHoursAgo = Date.from(nowInstant.minusSeconds(7200));
+        Date oneHourAgo = Date.from(nowInstant.minusSeconds(3600));
 
         presentation1 = Presentation.builder()
                 .id("presentation-1")
                 .title("First Presentation")
-                .createdAt(now.minusHours(2))
-                .updatedAt(now.minusHours(1))
+                .createdAt(twoHoursAgo)
+                .updatedAt(oneHourAgo)
                 .build();
 
         presentation2 = Presentation.builder()
                 .id("presentation-2")
                 .title("Second Presentation")
-                .createdAt(now.minusHours(1))
+                .createdAt(oneHourAgo)
                 .updatedAt(now)
                 .build();
 
         responseDto1 = PresentationListResponseDto.builder()
                 .id("presentation-1")
                 .title("First Presentation")
-                .createdAt(now.minusHours(2))
-                .updatedAt(now.minusHours(1))
+                .createdAt(twoHoursAgo)
+                .updatedAt(oneHourAgo)
                 .build();
 
         responseDto2 = PresentationListResponseDto.builder()
                 .id("presentation-2")
                 .title("Second Presentation")
-                .createdAt(now.minusHours(1))
+                .createdAt(oneHourAgo)
                 .updatedAt(now)
                 .build();
     }

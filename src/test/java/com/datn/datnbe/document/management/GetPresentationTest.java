@@ -1,6 +1,6 @@
 package com.datn.datnbe.document.management;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -119,7 +119,7 @@ class GetPresentationTest {
     void getPresentation_WithExistingId_ShouldReturnPresentation() {
         // Given
         String presentationId = "68d1f7cb4828f3a0d4a432ec";
-        LocalDateTime createdAt = LocalDateTime.now();
+        Date createdAt = new Date();
 
         Presentation presentation = Presentation.builder()
                 .id(presentationId)
@@ -157,7 +157,7 @@ class GetPresentationTest {
     void getPresentation_WithPresentationContainingSlides_ShouldReturnCompleteDto() {
         // Given
         String presentationId = "68d1f7cb4828f3a0d4a432ec";
-        LocalDateTime createdAt = LocalDateTime.now();
+        Date createdAt = new Date();
 
         Slide slideEntity = Slide.builder().id("slide-1").build();
 
@@ -206,7 +206,7 @@ class GetPresentationTest {
     void getPresentation_WithPresentationWithoutSlides_ShouldReturnDto() {
         // Given
         String presentationId = "68d1f7cb4828f3a0d4a432ec";
-        LocalDateTime createdAt = LocalDateTime.now();
+        Date createdAt = new Date();
 
         Presentation presentation = Presentation.builder()
                 .id(presentationId)
@@ -232,7 +232,7 @@ class GetPresentationTest {
     void getPresentation_WithMultipleSlides_ShouldReturnAllSlides() {
         // Given
         String presentationId = "68d1f7cb4828f3a0d4a432ec";
-        LocalDateTime createdAt = LocalDateTime.now();
+        Date createdAt = new Date();
 
         Slide slideEntity1 = Slide.builder().id("slide-1").build();
         Slide slideEntity2 = Slide.builder().id("slide-2").build();

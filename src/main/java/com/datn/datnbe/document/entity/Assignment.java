@@ -9,7 +9,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -46,11 +46,11 @@ public class Assignment {
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
-    LocalDateTime createdAt;
+    Date createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at")
-    LocalDateTime updatedAt;
+    Date updatedAt;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "questions", columnDefinition = "jsonb")
@@ -86,10 +86,10 @@ public class Assignment {
     Integer timeLimit;
 
     @Column(name = "available_from")
-    LocalDateTime availableFrom;
+    Date availableFrom;
 
     @Column(name = "available_until")
-    LocalDateTime availableUntil;
+    Date availableUntil;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "topics", columnDefinition = "jsonb")

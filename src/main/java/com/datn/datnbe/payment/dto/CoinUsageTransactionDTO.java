@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Getter
 @Setter
@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class CoinUsageTransactionDTO {
     private String id;
     private String userId;
-    private LocalDateTime createdAt;
+    private Date createdAt;
     private String type;
     private String source;
     private Long amount;

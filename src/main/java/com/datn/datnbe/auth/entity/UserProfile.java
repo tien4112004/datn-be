@@ -6,8 +6,8 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+
+import java.util.Date;
 
 @Entity
 @Getter
@@ -39,7 +39,7 @@ public class UserProfile {
     String email;
 
     @Column(name = "date_of_birth")
-    LocalDate dateOfBirth;
+    Date dateOfBirth;
 
     @Column(name = "phone_number")
     String phoneNumber;
@@ -51,13 +51,13 @@ public class UserProfile {
     Long avatarMediaId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    LocalDateTime createdAt;
+    Date createdAt;
 
     @Column(name = "updated_at")
-    LocalDateTime updatedAt;
+    Date updatedAt;
 
     @Column(name = "deleted_at")
-    LocalDateTime deletedAt;
+    Date deletedAt;
 
     @Builder.Default
     @Column(name = "role")
@@ -65,12 +65,12 @@ public class UserProfile {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        createdAt = new Date();
+        updatedAt = new Date();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = new Date();
     }
 }

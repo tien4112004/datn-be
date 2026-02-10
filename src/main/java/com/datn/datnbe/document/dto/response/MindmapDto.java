@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.Valid;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,8 +30,8 @@ public class MindmapDto {
     @Valid
     private List<MindmapEdgeDto> edges;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Date createdAt;
+    private Date updatedAt;
 
     @Builder.Default
     Map<String, Object> extraFields = new HashMap<>();

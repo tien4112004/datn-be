@@ -1,6 +1,7 @@
 package com.datn.datnbe.ai.management;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.util.Date;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,7 +41,7 @@ class AIResultManagementTest {
     private AIResult mockAIResult;
     private String testPresentationId;
     private String testAIResultContent;
-    private LocalDateTime testCreatedAt;
+    private Date testCreatedAt;
 
     @BeforeEach
     void setUp() {
@@ -49,7 +50,7 @@ class AIResultManagementTest {
         // Setup test data
         testPresentationId = "presentation-123";
         testAIResultContent = "Test AI generated content for slides";
-        testCreatedAt = LocalDateTime.of(2025, 9, 9, 10, 30, 0);
+        testCreatedAt = Date.from(Instant.parse("2025-09-09T10:30:00Z"));
 
         mockAIResult = AIResult.builder()
                 .id(1)

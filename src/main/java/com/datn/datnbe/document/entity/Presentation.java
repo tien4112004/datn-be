@@ -9,8 +9,8 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,10 +41,10 @@ public class Presentation {
     List<Slide> slides = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    LocalDateTime createdAt;
+    Date createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    LocalDateTime updatedAt;
+    Date updatedAt;
 
     @Column(name = "is_parsed")
     Boolean isParsed;
@@ -55,12 +55,12 @@ public class Presentation {
     Map<String, Object> metadata = new HashMap<>();
 
     @Column(name = "deleted_at")
-    LocalDate deletedAt;
+    Date deletedAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        createdAt = new Date();
+        updatedAt = new Date();
         if (slides == null) {
             slides = new ArrayList<>();
         }
@@ -71,7 +71,7 @@ public class Presentation {
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = new Date();
     }
 
     @JsonAnySetter

@@ -1,6 +1,6 @@
 package com.datn.datnbe.auth.entity;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -65,5 +65,5 @@ public class DocumentResourceMapping {
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    LocalDateTime createdAt;
+    Date createdAt;
 }

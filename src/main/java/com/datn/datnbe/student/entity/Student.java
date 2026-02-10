@@ -1,7 +1,7 @@
 package com.datn.datnbe.student.entity;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+
+import java.util.Date;
 import java.util.UUID;
 
 import org.springframework.data.annotation.CreatedDate;
@@ -41,7 +41,7 @@ public class Student {
     String userId;
 
     @Column(name = "enrollment_date")
-    LocalDate enrollmentDate;
+    Date enrollmentDate;
 
     @Column(name = "address", length = 255)
     String address;
@@ -51,11 +51,11 @@ public class Student {
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
-    LocalDateTime createdAt;
+    Date createdAt;
 
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
-    LocalDateTime updatedAt;
+    Date updatedAt;
 
     @Column(name = "gender", length = 10)
     String gender;

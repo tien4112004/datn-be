@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Data
 @NoArgsConstructor
@@ -24,9 +24,9 @@ public class PublishRequestResponseDto {
 
     String status;
 
-    LocalDateTime createdAt;
+    Date createdAt;
 
-    LocalDateTime updatedAt;
+    Date updatedAt;
 
     QuestionResponseDto question;
 }

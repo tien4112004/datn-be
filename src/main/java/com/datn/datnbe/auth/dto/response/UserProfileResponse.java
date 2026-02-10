@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+
+import java.util.Date;
 
 @Data
 @Builder
@@ -25,17 +25,17 @@ public class UserProfileResponse {
     String lastName;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
-    LocalDate dateOfBirth;
+    Date dateOfBirth;
 
     String phoneNumber;
 
     String avatarUrl;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    LocalDateTime createdAt;
+    Date createdAt;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    LocalDateTime updatedAt;
+    Date updatedAt;
 
     String username;
 

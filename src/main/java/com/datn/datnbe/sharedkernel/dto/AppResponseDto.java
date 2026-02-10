@@ -8,7 +8,7 @@ import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 
-import java.time.LocalDate;
+import java.util.Date;
 
 @Data
 @Builder(toBuilder = true)
@@ -20,7 +20,7 @@ public class AppResponseDto<T> {
     @Builder.Default
     int code = HttpStatus.OK.value();
     @Builder.Default
-    LocalDate timestamp = LocalDate.now();
+    Date timestamp = new Date();
 
     T data;
     String message;
