@@ -106,6 +106,12 @@ public class SubmissionService implements SubmissionApi {
         Submission s = submissionRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Submission not found"));
 
+        var enrichedSubmission = enrichSubmissionDto(submissionMapper.toDto(s));
+
+        if (securityContextUtils.hasRole("teacher")) {
+            return enrichedSubmission;
+        }
+
         String currentUser = securityContextUtils.getCurrentUserProfileId();
         String currentKeycloakUser = securityContextUtils.getCurrentUserProfileId();
 
@@ -114,7 +120,7 @@ public class SubmissionService implements SubmissionApi {
         // Fallback for older submissions that only have studentId as keycloakId
         if (currentUser.equals(post.getAuthorId()) || currentUser.equals(s.getStudentId())
                 || currentKeycloakUser.equals(s.getStudentId())) {
-            return enrichSubmissionDto(submissionMapper.toDto(s));
+            return enrichedSubmission;
         }
 
         throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Submission not found");
@@ -134,10 +140,8 @@ public class SubmissionService implements SubmissionApi {
 
         // Verify teacher is the author of the assignment
         PostResponseDto post = postApi.getPostById(submission.getPostId());
-        String currentUser = securityContextUtils.getCurrentUserProfileId();
-        String currentKeycloakUser = securityContextUtils.getCurrentUserProfileId();
 
-        if (!currentUser.equals(post.getAuthorId()) || !currentKeycloakUser.equals(post.getAuthorId())) {
+        if (!securityContextUtils.hasRole("teacher")) {
             throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, "You don't have permission to grade this submission");
         }
 
@@ -169,7 +173,7 @@ public class SubmissionService implements SubmissionApi {
             }
 
             // Set grading metadata
-            submission.setGradedBy(currentUser);
+            submission.setGradedBy(securityContextUtils.getCurrentUserProfileId());
             submission.setGradedAt(LocalDateTime.now());
             submission.setStatus("graded");
 
@@ -566,12 +570,20 @@ public class SubmissionService implements SubmissionApi {
 
         // Calculate score distribution
         Map<String, Long> scoreDistribution = new HashMap<>();
-        scoreDistribution.put("90-100", gradedSubmissions.stream().filter(s -> s.getScore() >= 90).count());
+        scoreDistribution.put("90-100",
+                gradedSubmissions.stream().filter(s -> scorePercentage(s.getScore(), s.getMaxScore()) >= 0.9).count());
         scoreDistribution.put("80-89",
-                gradedSubmissions.stream().filter(s -> s.getScore() >= 80 && s.getScore() < 90).count());
+                gradedSubmissions.stream()
+                        .filter(s -> scorePercentage(s.getScore(), s.getMaxScore()) >= 0.8
+                                && scorePercentage(s.getScore(), s.getMaxScore()) < 0.9)
+                        .count());
         scoreDistribution.put("70-79",
-                gradedSubmissions.stream().filter(s -> s.getScore() >= 70 && s.getScore() < 80).count());
-        scoreDistribution.put("below-70", gradedSubmissions.stream().filter(s -> s.getScore() < 70).count());
+                gradedSubmissions.stream()
+                        .filter(s -> scorePercentage(s.getScore(), s.getMaxScore()) >= 0.7
+                                && scorePercentage(s.getScore(), s.getMaxScore()) < 0.8)
+                        .count());
+        scoreDistribution.put("below-70",
+                gradedSubmissions.stream().filter(s -> scorePercentage(s.getScore(), s.getMaxScore()) < 0.7).count());
 
         return SubmissionStatisticsDto.builder()
                 .totalSubmissions(totalSubmissions)
@@ -583,5 +595,9 @@ public class SubmissionService implements SubmissionApi {
                 .highestScore(highestScore)
                 .lowestScore(lowestScore)
                 .build();
+    }
+
+    private double scorePercentage(double score, double maxScore) {
+        return score / maxScore;
     }
 }

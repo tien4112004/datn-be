@@ -91,4 +91,11 @@ public class SecurityContextUtils {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication != null && authentication.isAuthenticated();
     }
+
+    public boolean hasRole(String role) {
+        String keycloakUserId = getCurrentUserId();
+        UserProfile userProfile = userProfileRepo.findByKeycloakUserId(keycloakUserId)
+                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED, "User is not authenticated"));
+        return userProfile.getRole().equalsIgnoreCase(role);
+    }
 }
