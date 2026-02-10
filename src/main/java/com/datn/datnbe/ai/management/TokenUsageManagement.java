@@ -6,6 +6,8 @@ import com.datn.datnbe.ai.dto.response.TokenUsageAggregatedDto;
 import com.datn.datnbe.ai.entity.TokenUsage;
 import com.datn.datnbe.ai.repository.impl.jpa.TokenUsageJPARepo;
 import com.datn.datnbe.ai.repository.interfaces.TokenUsageRepo;
+import com.datn.datnbe.payment.api.PaymentApi;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -20,6 +22,7 @@ import java.util.List;
 public class TokenUsageManagement implements TokenUsageApi {
     TokenUsageRepo tokenUsageRepo;
     TokenUsageJPARepo tokenUsageJPARepo;
+    PaymentApi paymentApi;
 
     @Override
     public void recordTokenUsage(TokenUsage tokenUsage) {
@@ -31,6 +34,8 @@ public class TokenUsageManagement implements TokenUsageApi {
                     tokenUsage.getOutputTokens(),
                     tokenUsage.getActualPrice(),
                     tokenUsage.getCalculatedPrice());
+
+            paymentApi.subtractCoin(tokenUsage.getUserId(), tokenUsage.getCalculatedPrice(), tokenUsage.getRequest());
             return;
         }
         tokenUsageRepo.saveTokenUsage(tokenUsage);
