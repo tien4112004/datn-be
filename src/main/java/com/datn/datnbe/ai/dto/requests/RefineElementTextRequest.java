@@ -6,6 +6,8 @@ import lombok.Data;
 public class RefineElementTextRequest {
     private String slideId;
     private String elementId;
-    private String currentText; // Plain text from frontend
+    private String currentText;
     private String instruction;
+    private Object slideSchema;
+    private String slideType;
 }

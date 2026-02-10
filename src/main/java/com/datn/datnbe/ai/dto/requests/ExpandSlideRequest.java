@@ -5,6 +5,6 @@ import java.util.Map;
 
 @Data
 public class ExpandSlideRequest {
-    private Map<String, Object> currentSlide;
+    private Map<String, Object> currentSchema;
     private Integer count;
 }

@@ -24,11 +24,6 @@ public class AIModificationController {
         return ResponseEntity.ok(modificationService.transformLayout(request));
     }
 
-    @PostMapping("/generate-image")
-    public ResponseEntity<AIModificationResponse> generateImage(@RequestBody GenerateImageRequest request) {
-        return ResponseEntity.ok(modificationService.generateImage(request));
-    }
-
     @PostMapping("/expand-slide")
     public ResponseEntity<AIModificationResponse> expandSlide(@RequestBody ExpandSlideRequest request) {
         return ResponseEntity.ok(modificationService.expandSlide(request));

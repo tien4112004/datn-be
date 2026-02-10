@@ -17,9 +17,7 @@ public class AIModificationService {
     // These endpoints must match the AI Worker's router
     private static final String WORKER_REFINE_ENDPOINT = "/api/modification/refine";
     private static final String WORKER_LAYOUT_ENDPOINT = "/api/modification/layout";
-    private static final String WORKER_IMAGE_ENDPOINT = "/api/modification/image";
     private static final String WORKER_EXPAND_ENDPOINT = "/api/modification/expand";
-    private static final String WORKER_THEME_ENDPOINT = "/api/modification/theme";
     private static final String WORKER_REFINE_TEXT_ENDPOINT = "/api/modification/refine-text";
     private static final String WORKER_REPLACE_IMAGE_ENDPOINT = "/api/modification/replace-image";
 
@@ -32,11 +30,6 @@ public class AIModificationService {
     public AIModificationResponse transformLayout(TransformLayoutRequest request) {
         log.info("Transforming layout to: {}", request.getTargetType());
         return aiApiClient.post(WORKER_LAYOUT_ENDPOINT, request, AIModificationResponse.class);
-    }
-
-    public AIModificationResponse generateImage(GenerateImageRequest request) {
-        log.info("Generating image with style: {}", request.getStyle());
-        return aiApiClient.post(WORKER_IMAGE_ENDPOINT, request, AIModificationResponse.class);
     }
 
     public AIModificationResponse expandSlide(ExpandSlideRequest request) {
