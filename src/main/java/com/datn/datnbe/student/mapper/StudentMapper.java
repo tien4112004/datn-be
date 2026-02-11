@@ -56,7 +56,7 @@ public class StudentMapper {
 
         return Student.builder()
                 .userId(csvRow.getUserId())
-                .enrollmentDate(java.time.LocalDate.now())
+                .enrollmentDate(new java.util.Date())
                 .address(csvRow.getAddress())
                 .parentContactEmail(csvRow.getParentContactEmail())
                 .build();

@@ -219,14 +219,14 @@ public class KeycloakAuthorizationService {
                     e.getStatusCode(),
                     e.getResponseBodyAsString());
             if (e.getStatusCode() == HttpStatus.FORBIDDEN || e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
-                log.info("User does not have access to resource: {}", resourceId);
+                log.debug("User does not have access to resource: {}", resourceId);
                 return List.of();
             }
 
             log.error("Failed to check permissions: {}", e.getMessage());
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR, "Failed to check permissions: " + e.getMessage());
         } catch (AppException e) {
-            log.error("Failed to check permissions: {}", e.getMessage());
+            log.debug("Failed to check permissions (AppException): {}", e.getMessage());
             // If it's a Keycloak evaluation error (wrapped from RestClientException),
             // return empty permissions instead of throwing to fail gracefully
             if (e.getMessage() != null && e.getMessage().contains("Failed to evaluate permissions in Keycloak")) {

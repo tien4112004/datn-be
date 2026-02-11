@@ -199,7 +199,7 @@ public class PresentationControllerIntegrationTest {
     //	void getAllPresentations_WithExistingPresentations_ShouldReturnAllPresentations() throws
     // Exception {
     //		// Given - Create test data
-    //		LocalDateTime now = LocalDateTime.now();
+    //		Date now = new Date();
     //		Presentation presentation1 = Presentation.builder()
     //				.title("Integration Test Presentation 1")
     //				.slides(Collections.emptyList())
@@ -247,7 +247,7 @@ public class PresentationControllerIntegrationTest {
     //	void getPresentationsCollection_WithDefaultParameters_ShouldReturnPaginatedResults() throws
     // Exception {
     //		// Given - Create multiple presentations
-    //		LocalDateTime now = LocalDateTime.now();
+    //		Date now = new Date();
     //		for (int i = 1; i <= 5; i++) {
     //			Presentation presentation = Presentation.builder()
     //					.title("Test Presentation " + i)
@@ -279,7 +279,7 @@ public class PresentationControllerIntegrationTest {
     //	void getPresentationsCollection_WithPaginationParameters_ShouldReturnCorrectPage() throws
     // Exception {
     //		// Given - Create test data
-    //		LocalDateTime now = LocalDateTime.now();
+    //		Date now = new Date();
     //		for (int i = 1; i <= 15; i++) {
     //			Presentation presentation = Presentation.builder()
     //					.title("Paginated Presentation " + i)
@@ -321,7 +321,7 @@ public class PresentationControllerIntegrationTest {
     //	void getPresentationsCollection_WithFilterParameter_ShouldReturnFilteredResults() throws
     // Exception {
     //		// Given - Create test data with different titles
-    //		LocalDateTime now = LocalDateTime.now();
+    //		Date now = new Date();
     //		Presentation matchingPresentation1 = Presentation.builder()
     //				.title("Important Business Presentation")
     //				.slides(Collections.emptyList())
@@ -362,7 +362,7 @@ public class PresentationControllerIntegrationTest {
     //	void getPresentationsCollection_WithCaseInsensitiveFilter_ShouldReturnResults() throws
     // Exception {
     //		// Given
-    //		LocalDateTime now = LocalDateTime.now();
+    //		Date now = new Date();
     //		Presentation presentation = Presentation.builder()
     //				.title("TEST Presentation for filtering")
     //				.slides(Collections.emptyList())
@@ -394,7 +394,7 @@ public class PresentationControllerIntegrationTest {
     //	void getPresentationsCollection_WithSortingParameter_ShouldReturnSortedResults() throws
     // Exception {
     //		// Given - Create presentations with different creation times
-    //		LocalDateTime now = LocalDateTime.now();
+    //		Date now = new Date();
     //		Presentation oldestPresentation = Presentation.builder()
     //				.title("Oldest Presentation")
     //				.slides(Collections.emptyList())
@@ -439,7 +439,7 @@ public class PresentationControllerIntegrationTest {
     //	void getPresentationsCollection_WithNoMatchingFilter_ShouldReturnEmptyResults() throws
     // Exception {
     //		// Given - Create presentations that won't match the filter
-    //		LocalDateTime now = LocalDateTime.now();
+    //		Date now = new Date();
     //		Presentation presentation = Presentation.builder()
     //				.title("Sample Presentation")
     //				.slides(Collections.emptyList())
@@ -466,7 +466,7 @@ public class PresentationControllerIntegrationTest {
     //				.content(objectMapper.writeValueAsString(request))).andExpect(status().isOk());
     //
     //		// Create additional presentations directly in DB
-    //		LocalDateTime now = LocalDateTime.now();
+    //		Date now = new Date();
     //		Presentation directPresentation = Presentation.builder()
     //				.title("Direct DB Presentation")
     //				.slides(Collections.emptyList())

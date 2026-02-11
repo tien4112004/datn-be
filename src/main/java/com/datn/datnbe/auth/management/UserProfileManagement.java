@@ -18,6 +18,7 @@ import com.datn.datnbe.auth.mapper.UserProfileMapper;
 import com.datn.datnbe.auth.repository.UserProfileRepo;
 import com.datn.datnbe.auth.service.KeycloakAuthService;
 import com.datn.datnbe.auth.validation.AvatarValidation;
+import com.datn.datnbe.payment.api.PaymentApi;
 import com.datn.datnbe.document.api.MediaStorageApi;
 import com.datn.datnbe.document.dto.response.UploadedMediaResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
@@ -42,6 +43,7 @@ public class UserProfileManagement implements UserProfileApi {
     KeycloakAuthService keycloakAuthService;
     MediaStorageApi mediaStorageApi;
     AvatarValidation avatarValidation;
+    PaymentApi paymentApi;
 
     @Override
     public PaginatedResponseDto<UserProfileResponse> getUserProfiles(UserCollectionRequest request) {
@@ -102,6 +104,7 @@ public class UserProfileManagement implements UserProfileApi {
             log.info("Successfully created user profile in database with ID: {}", savedProfile.getId());
             UserProfileResponse response = userProfileMapper.toResponseDto(savedProfile);
             response.setEmail(request.getEmail());
+            paymentApi.initializeUserCoin(savedProfile.getId());
             return response;
 
         } catch (Exception e) {
@@ -214,7 +217,7 @@ public class UserProfileManagement implements UserProfileApi {
             log.info("Successfully created user profile in database with ID: {}", savedProfile.getId());
             UserProfileResponse response = userProfileMapper.toResponseDto(savedProfile);
             response.setEmail(email);
-
+            paymentApi.initializeUserCoin(savedProfile.getId());
         } catch (Exception e) {
             log.error("Error creating user profile from Keycloak user: {}, user might be existed", e.getMessage(), e);
         }
@@ -319,6 +322,7 @@ public class UserProfileManagement implements UserProfileApi {
             log.info("Successfully created user profile in database with ID: {}", savedProfile.getId());
             UserProfileResponse response = userProfileMapper.toResponseDto(savedProfile);
             response.setUsername(request.getUsername());
+            paymentApi.initializeUserCoin(savedProfile.getId());
             return response;
 
         } catch (Exception e) {

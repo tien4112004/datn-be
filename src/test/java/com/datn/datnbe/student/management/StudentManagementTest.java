@@ -17,8 +17,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.Date;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,21 +49,22 @@ class StudentManagementTest {
     private StudentResponseDto testResponseDto;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws ParseException {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         testStudent = Student.builder()
                 .id("std_001")
                 .userId("user_001")
-                .enrollmentDate(LocalDate.of(2024, 1, 15))
+                .enrollmentDate(sdf.parse("2024-01-15"))
                 .address("123 Main St")
                 .parentContactEmail("parent@example.com")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(new Date())
+                .updatedAt(new Date())
                 .build();
 
         testResponseDto = StudentResponseDto.builder()
                 .id("std_001")
                 .userId("user_001")
-                .enrollmentDate(LocalDate.of(2024, 1, 15))
+                .enrollmentDate(sdf.parse("2024-01-15"))
                 .address("123 Main St")
                 .parentContactEmail("parent@example.com")
                 .build();

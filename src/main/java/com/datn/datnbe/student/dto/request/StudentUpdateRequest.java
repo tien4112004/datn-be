@@ -1,6 +1,6 @@
 package com.datn.datnbe.student.dto.request;
 
-import java.time.LocalDate;
+import java.util.Date;
 
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
@@ -25,7 +25,7 @@ import lombok.experimental.FieldDefaults;
 public class StudentUpdateRequest {
 
     @Past(message = "Date of birth must be in the past")
-    LocalDate dateOfBirth;
+    Date dateOfBirth;
 
     String phoneNumber;
 

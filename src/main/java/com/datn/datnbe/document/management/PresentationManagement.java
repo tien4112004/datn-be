@@ -272,7 +272,7 @@ public class PresentationManagement implements PresentationApi {
         Optional<Presentation> presentationOpt = presentationRepository.findById(id);
         validation.validatePresentationExists(presentationOpt, id);
         Presentation presentation = presentationOpt.get();
-        presentation.setDeletedAt(java.time.LocalDate.now());
+        presentation.setDeletedAt(new java.util.Date());
         presentationRepository.save(presentation);
 
         // Clean up document visit records

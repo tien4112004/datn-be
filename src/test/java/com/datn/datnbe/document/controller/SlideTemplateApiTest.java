@@ -21,7 +21,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
+import java.util.Date;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +51,12 @@ class SlideTemplateApiTest {
 
     @BeforeEach
     void setUp() {
-        LocalDateTime now = LocalDateTime.now();
+        Date now = new Date();
+        Instant nowInstant = Instant.now();
+        Date tenDaysAgo = Date.from(nowInstant.minusSeconds(864000));
+        Date twoDaysAgo = Date.from(nowInstant.minusSeconds(172800));
+        Date sevenDaysAgo = Date.from(nowInstant.minusSeconds(604800));
+        Date threeHoursAgo = Date.from(nowInstant.minusSeconds(10800));
 
         Map<String, Object> template1Data = new HashMap<>();
         template1Data.put("config", Map.of("imageRatio", 16));
@@ -64,8 +70,8 @@ class SlideTemplateApiTest {
                 .id("template-1")
                 .name("Business Presentation")
                 .layout("labeledList")
-                .createdAt(now.minusDays(10))
-                .updatedAt(now.minusDays(2))
+                .createdAt(tenDaysAgo)
+                .updatedAt(twoDaysAgo)
                 .additionalProperties(template1Data)
                 .build();
 
@@ -73,8 +79,8 @@ class SlideTemplateApiTest {
                 .id("template-2")
                 .name("Creative Layout")
                 .layout("grid")
-                .createdAt(now.minusDays(7))
-                .updatedAt(now.minusHours(3))
+                .createdAt(sevenDaysAgo)
+                .updatedAt(threeHoursAgo)
                 .additionalProperties(template2Data)
                 .build();
 
@@ -213,8 +219,8 @@ class SlideTemplateApiTest {
                 .id("new-template")
                 .name("New Template")
                 .layout("grid")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(new Date())
+                .updatedAt(new Date())
                 .additionalProperties(Map.of("config", Map.of("imageRatio", 16)))
                 .build();
 
@@ -267,8 +273,8 @@ class SlideTemplateApiTest {
                 .id("template-1")
                 .name("Updated Template Name")
                 .layout("newLayout")
-                .createdAt(LocalDateTime.now().minusDays(10))
-                .updatedAt(LocalDateTime.now())
+                .createdAt(Date.from(Instant.now().minusSeconds(864000)))
+                .updatedAt(new Date())
                 .additionalProperties(Map.of("config", Map.of("imageRatio", 9)))
                 .build();
 

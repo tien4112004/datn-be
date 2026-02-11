@@ -1,6 +1,6 @@
 package com.datn.datnbe.student.dto.request;
 
-import java.time.LocalDate;
+import java.util.Date;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -28,7 +28,7 @@ public class StudentCreateRequest {
     @NotBlank(message = "Full name is required")
     String fullName;
 
-    LocalDate dateOfBirth;
+    Date dateOfBirth;
 
     @Pattern(regexp = "(?i)Male|Female", message = "Gender must be either 'Male' or 'Female'")
     String gender;

@@ -14,19 +14,19 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-@Mapper(componentModel = "spring", imports = {LocalDateTime.class,
+@Mapper(componentModel = "spring", imports = {Date.class,
         UUID.class}, nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface MindmapEntityMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "title", expression = "java((request.getTitle() == null || request.getTitle().isEmpty()) ? \"Untitled Presentation\" : request.getTitle())")
     @Mapping(target = "description", expression = "java(request.getDescription())")
-    @Mapping(target = "createdAt", expression = "java(LocalDateTime.now())")
-    @Mapping(target = "updatedAt", expression = "java(LocalDateTime.now())")
+    @Mapping(target = "createdAt", expression = "java(new Date())")
+    @Mapping(target = "updatedAt", expression = "java(new Date())")
     @Mapping(target = "nodes", source = "nodes")
     @Mapping(target = "edges", source = "edges")
     @Mapping(target = "extraFields", source = "extraFields")

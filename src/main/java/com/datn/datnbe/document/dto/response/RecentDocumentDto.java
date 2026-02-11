@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Data
 @Builder
@@ -19,5 +19,5 @@ public class RecentDocumentDto {
     private String documentType;
     private String title;
     private String thumbnail;
-    private LocalDateTime lastVisited;
+    private Date lastVisited;
 }

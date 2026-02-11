@@ -27,7 +27,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -87,7 +87,7 @@ class ImageManagementTest {
         // Mock ResourcePermissionApi
         when(resourcePermissionApi.getAllResourceByTypeOfOwner(anyString(), eq("image"))).thenReturn(List.of("1", "2"));
 
-        LocalDateTime now = LocalDateTime.now();
+        Date now = new Date();
 
         testMedia1 = Media.builder()
                 .id(1L)

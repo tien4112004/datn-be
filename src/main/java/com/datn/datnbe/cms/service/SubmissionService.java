@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -85,7 +85,7 @@ public class SubmissionService implements SubmissionApi {
         }
 
         // Set submitted timestamp
-        submission.setSubmittedAt(LocalDateTime.now());
+        submission.setSubmittedAt(new Date());
         submission.setStatus("pending");
 
         Submission saved = submissionRepository.save(submission);
@@ -174,7 +174,7 @@ public class SubmissionService implements SubmissionApi {
 
             // Set grading metadata
             submission.setGradedBy(securityContextUtils.getCurrentUserProfileId());
-            submission.setGradedAt(LocalDateTime.now());
+            submission.setGradedAt(new Date());
             submission.setStatus("graded");
 
             submissionRepository.save(submission);
@@ -416,11 +416,11 @@ public class SubmissionService implements SubmissionApi {
             }
 
             // Check availability dates
-            LocalDateTime now = LocalDateTime.now();
-            if (assignment.getAvailableFrom() != null && now.isBefore(assignment.getAvailableFrom())) {
+            Date now = new Date();
+            if (assignment.getAvailableFrom() != null && now.before(assignment.getAvailableFrom())) {
                 errors.add("Assignment is not yet available. Available from: " + assignment.getAvailableFrom());
             }
-            if (assignment.getAvailableUntil() != null && now.isAfter(assignment.getAvailableUntil())) {
+            if (assignment.getAvailableUntil() != null && now.after(assignment.getAvailableUntil())) {
                 errors.add("Assignment submission deadline has passed: " + assignment.getAvailableUntil());
             }
 

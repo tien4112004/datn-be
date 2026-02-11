@@ -9,11 +9,11 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Mapper(componentModel = "spring", imports = {
-        LocalDateTime.class}, nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+        Date.class}, nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface MindmapCommentMapper {
 
     @Mapping(target = "id", ignore = true)

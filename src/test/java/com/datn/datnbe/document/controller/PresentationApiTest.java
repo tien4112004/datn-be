@@ -1,6 +1,6 @@
 package com.datn.datnbe.document.controller;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -242,7 +242,7 @@ class PresentationApiTest {
     @Test
     void getPresentationsCollection_WithValidRequest_ShouldReturnPaginatedResponse() throws Exception {
         // Given
-        LocalDateTime createdAt = LocalDateTime.now();
+        Date createdAt = new Date();
         PresentationListResponseDto presentation = PresentationListResponseDto.builder()
                 .id("test-id-1")
                 .title("Test Presentation")
@@ -279,7 +279,7 @@ class PresentationApiTest {
     @Test
     void getPresentationsCollection_WithFilter_ShouldReturnFilteredResults() throws Exception {
         // Given
-        LocalDateTime createdAt = LocalDateTime.now();
+        Date createdAt = new Date();
 
         PresentationListResponseDto presentation = PresentationListResponseDto.builder()
                 .id("test-id-1")
@@ -307,7 +307,7 @@ class PresentationApiTest {
     @Test
     void getPresentationsCollection_WithDefaultParameters_ShouldReturnResults() throws Exception {
         // Given
-        LocalDateTime createdAt = LocalDateTime.now();
+        Date createdAt = new Date();
         PresentationListResponseDto presentation = PresentationListResponseDto.builder()
                 .id("test-id-1")
                 .title("Default Presentation")

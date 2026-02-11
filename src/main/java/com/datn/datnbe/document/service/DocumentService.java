@@ -15,7 +15,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
@@ -43,7 +43,7 @@ public class DocumentService {
                         .documentType(metadata.getType())
                         .build());
 
-        visit.setLastVisited(LocalDateTime.now());
+        visit.setLastVisited(new Date());
         visit.setTitle(metadata.getTitle());
         visit.setThumbnail(metadata.getThumbnail());
         visitRepository.save(visit);

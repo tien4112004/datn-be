@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Getter
@@ -27,11 +27,11 @@ public class SubmissionResponseDto {
     private String assignmentId;
     private UserMinimalInfoDto student;
     private UserMinimalInfoDto gradedByUser;
-    private LocalDateTime gradedAt;
+    private Date gradedAt;
     private Double score;
     private Integer maxScore;
     private String feedback;
-    private LocalDateTime submittedAt;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Date submittedAt;
+    private Date createdAt;
+    private Date updatedAt;
 }

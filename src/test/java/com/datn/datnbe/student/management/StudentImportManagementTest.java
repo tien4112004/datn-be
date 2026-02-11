@@ -21,6 +21,8 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,7 +68,7 @@ class StudentImportManagementTest {
         void importStudentsFromCsv_withValidData_returnsSuccessWithCredentials() {
             StudentCsvRow csvRow = StudentCsvRow.builder()
                     .fullName("Nguyen Van A")
-                    .dateOfBirth(LocalDate.of(2008, 1, 15))
+                    .dateOfBirth(Date.from(LocalDate.of(2008, 1, 15).atStartOfDay(ZoneId.systemDefault()).toInstant()))
                     .gender("male")
                     .address("123 Main St")
                     .parentName("Nguyen Van X")
@@ -84,7 +86,8 @@ class StudentImportManagementTest {
 
             Student student = Student.builder()
                     .userId("user_001")
-                    .enrollmentDate(LocalDate.of(2024, 1, 15))
+                    .enrollmentDate(
+                            Date.from(LocalDate.of(2024, 1, 15).atStartOfDay(ZoneId.systemDefault()).toInstant()))
                     .address("123 Main St")
                     .parentContactEmail("parent@example.com")
                     .build();
@@ -110,13 +113,13 @@ class StudentImportManagementTest {
         void importStudentsFromCsv_withMultipleStudents_savesAllAndReturnsCredentials() {
             StudentCsvRow csvRow1 = StudentCsvRow.builder()
                     .fullName("Nguyen Van A")
-                    .dateOfBirth(LocalDate.of(2008, 1, 15))
+                    .dateOfBirth(Date.from(LocalDate.of(2008, 1, 15).atStartOfDay(ZoneId.systemDefault()).toInstant()))
                     .gender("male")
                     .classId("cls_001")
                     .build();
             StudentCsvRow csvRow2 = StudentCsvRow.builder()
                     .fullName("Tran Thi B")
-                    .dateOfBirth(LocalDate.of(2008, 5, 20))
+                    .dateOfBirth(Date.from(LocalDate.of(2008, 5, 20).atStartOfDay(ZoneId.systemDefault()).toInstant()))
                     .gender("female")
                     .classId("cls_001")
                     .build();
@@ -177,13 +180,13 @@ class StudentImportManagementTest {
         void importStudentsFromCsv_withDuplicateUserIdsInCsv_returnsFailure() {
             StudentCsvRow csvRow1 = StudentCsvRow.builder()
                     .fullName("Nguyen Van A")
-                    .dateOfBirth(LocalDate.of(2008, 1, 15))
+                    .dateOfBirth(Date.from(LocalDate.of(2008, 1, 15).atStartOfDay(ZoneId.systemDefault()).toInstant()))
                     .gender("male")
                     .classId("cls_001")
                     .build();
             StudentCsvRow csvRow2 = StudentCsvRow.builder()
                     .fullName("Tran Thi B")
-                    .dateOfBirth(LocalDate.of(2008, 5, 20))
+                    .dateOfBirth(Date.from(LocalDate.of(2008, 5, 20).atStartOfDay(ZoneId.systemDefault()).toInstant()))
                     .gender("female")
                     .classId("cls_001")
                     .build();
@@ -217,7 +220,7 @@ class StudentImportManagementTest {
         void importStudentsFromCsv_withExistingUserIdsInDb_returnsFailure() {
             StudentCsvRow csvRow = StudentCsvRow.builder()
                     .fullName("Nguyen Van A")
-                    .dateOfBirth(LocalDate.of(2008, 1, 15))
+                    .dateOfBirth(Date.from(LocalDate.of(2008, 1, 15).atStartOfDay(ZoneId.systemDefault()).toInstant()))
                     .gender("male")
                     .classId("cls_001")
                     .build();
@@ -277,7 +280,7 @@ class StudentImportManagementTest {
         void importStudentsFromCsv_withDatabaseError_returnsFailure() {
             StudentCsvRow csvRow = StudentCsvRow.builder()
                     .fullName("Nguyen Van A")
-                    .dateOfBirth(LocalDate.of(2008, 1, 15))
+                    .dateOfBirth(Date.from(LocalDate.of(2008, 1, 15).atStartOfDay(ZoneId.systemDefault()).toInstant()))
                     .gender("male")
                     .classId("cls_001")
                     .build();

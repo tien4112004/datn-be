@@ -3,7 +3,7 @@ package com.datn.datnbe.document.dto.response;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Data
 @Builder
@@ -16,6 +16,6 @@ public class MindmapListResponseDto {
     private String description;
     private String thumbnail;
     //    private String ownerId;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Date createdAt;
+    private Date updatedAt;
 }

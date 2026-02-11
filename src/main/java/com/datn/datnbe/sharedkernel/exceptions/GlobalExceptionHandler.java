@@ -20,16 +20,22 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AppException.class)
     public ResponseEntity<AppResponseDto<Object>> handleAppException(AppException ex) {
+        int statusCode = ex.getStatusCode();
+
+        // Don't log errors for 403 (Forbidden) and 404 (Not Found)
+        if (statusCode == HttpStatus.FORBIDDEN.value() || statusCode == HttpStatus.NOT_FOUND.value()) {
+            log.debug("Client error - Status: {}", statusCode);
+        }
         // Log authentication errors at debug level to reduce noise
-        if (ex.getErrorCode() == ErrorCode.AUTH_INVALID_CREDENTIALS
+        else if (ex.getErrorCode() == ErrorCode.AUTH_INVALID_CREDENTIALS
                 || ex.getErrorCode() == ErrorCode.AUTH_UNAUTHORIZED) {
-            log.debug("Authentication error: {}", ex.getMessage());
+            log.debug("Authentication error");
         } else {
             log.error("Application exception occurred: {}", ex.getMessage(), ex);
         }
 
         var response = AppResponseDto.failure(ex);
-        return ResponseEntity.status(ex.getStatusCode()).body(response);
+        return ResponseEntity.status(statusCode).body(response);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

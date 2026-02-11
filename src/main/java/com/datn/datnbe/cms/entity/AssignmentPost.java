@@ -13,7 +13,7 @@ import com.datn.datnbe.document.entity.AssessmentMatrixCell;
 import com.datn.datnbe.document.entity.AssignmentTopic;
 import com.datn.datnbe.document.entity.Question;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -50,11 +50,11 @@ public class AssignmentPost {
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
-    LocalDateTime createdAt;
+    Date createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at")
-    LocalDateTime updatedAt;
+    Date updatedAt;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "questions", columnDefinition = "jsonb")
@@ -79,10 +79,10 @@ public class AssignmentPost {
     Double passingScore;
 
     @Column(name = "available_from")
-    LocalDateTime availableFrom;
+    Date availableFrom;
 
     @Column(name = "available_until")
-    LocalDateTime availableUntil;
+    Date availableUntil;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "topics", columnDefinition = "jsonb")

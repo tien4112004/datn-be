@@ -1,6 +1,6 @@
 package com.datn.datnbe.document.presentation;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -49,7 +49,7 @@ class ImageControllerTest {
 
     @BeforeEach
     void setUp() {
-        LocalDateTime now = LocalDateTime.now();
+        Date now = new Date();
 
         testMediaDto1 = new MediaResponseDto();
         testMediaDto1.setId(1L);

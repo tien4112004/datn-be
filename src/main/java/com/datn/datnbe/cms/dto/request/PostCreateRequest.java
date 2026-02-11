@@ -5,7 +5,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -24,7 +24,7 @@ public class PostCreateRequest {
 
     private String assignmentId;
 
-    private LocalDateTime dueDate;
+    private Date dueDate;
 
     private Boolean allowComments;
 
@@ -35,6 +35,6 @@ public class PostCreateRequest {
     private Boolean showCorrectAnswers;
     private Boolean showScoreImmediately;
     private Double passingScore;
-    private LocalDateTime availableFrom;
-    private LocalDateTime availableUntil;
+    private Date availableFrom;
+    private Date availableUntil;
 }

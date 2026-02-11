@@ -3,7 +3,7 @@ package com.datn.datnbe.document.dto.response;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Data
 @Builder
@@ -19,6 +19,6 @@ public class ContextResponse {
     String author;
     Boolean fromBook;
     String ownerId;
-    LocalDateTime createdAt;
-    LocalDateTime updatedAt;
+    Date createdAt;
+    Date updatedAt;
 }

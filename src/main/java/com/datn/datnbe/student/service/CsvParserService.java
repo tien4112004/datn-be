@@ -3,9 +3,11 @@ package com.datn.datnbe.student.service;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
+
 import java.time.format.DateTimeFormatter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -149,10 +151,11 @@ public class CsvParserService {
         }
 
         // Parse dateOfBirth if provided
-        LocalDate dateOfBirth = null;
+        Date dateOfBirth = null;
         if (dateOfBirthStr != null && !dateOfBirthStr.isBlank()) {
             try {
-                dateOfBirth = LocalDate.parse(dateOfBirthStr, DATE_FORMATTER);
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                dateOfBirth = sdf.parse(dateOfBirthStr);
             } catch (Exception e) {
                 rowErrors.add("Invalid dateOfBirth format (expected YYYY-MM-DD): " + dateOfBirthStr);
             }

@@ -1,6 +1,6 @@
 package com.datn.datnbe.student.dto.request;
 
-import java.time.LocalDate;
+import java.util.Date;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -18,7 +18,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class StudentCsvRow {
     String fullName;
-    LocalDate dateOfBirth;
+    Date dateOfBirth;
     String gender;
     String parentName;
     String parentPhone;

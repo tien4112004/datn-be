@@ -5,7 +5,7 @@ import com.datn.datnbe.document.entity.AssignmentTopic;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -20,8 +20,8 @@ public class AssignmentSettingsUpdateRequest {
     Boolean showCorrectAnswers;
     Boolean showScoreImmediately;
     Double passingScore;
-    LocalDateTime availableFrom;
-    LocalDateTime availableUntil;
+    Date availableFrom;
+    Date availableUntil;
     List<AssignmentTopic> topics;
     List<AssessmentMatrixCell> matrixCells;
 }

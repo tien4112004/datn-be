@@ -1,6 +1,6 @@
 package com.datn.datnbe.ai.entity;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -25,7 +25,7 @@ public class AIResult {
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
-    LocalDateTime createdAt;
+    Date createdAt;
 
     @Column(name = "presentation_id", nullable = false)
     String presentationId;

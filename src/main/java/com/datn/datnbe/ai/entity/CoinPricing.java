@@ -8,7 +8,7 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Entity(name = "coin_pricing")
 @Getter
@@ -49,25 +49,25 @@ public class CoinPricing {
     String description;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    LocalDateTime createdAt;
+    Date createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    LocalDateTime updatedAt;
+    Date updatedAt;
 
     @Column(name = "deleted_at")
-    LocalDateTime deletedAt;
+    Date deletedAt;
 
     @PrePersist
     protected void onCreate() {
         if (id == null) {
             id = java.util.UUID.randomUUID().toString();
         }
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        createdAt = new Date();
+        updatedAt = new Date();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = new Date();
     }
 }

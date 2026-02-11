@@ -21,6 +21,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,7 +46,7 @@ public class NotificationService {
 
         userDeviceRepository.findByUserIdAndFcmToken(userId, token).ifPresentOrElse(device -> {
             log.info("Device already exists, updating timestamp");
-            device.setUpdatedAt(java.time.LocalDateTime.now());
+            device.setUpdatedAt(new Date());
             userDeviceRepository.save(device);
         }, () -> {
             log.info("Creating new device registration");

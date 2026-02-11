@@ -8,7 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -27,10 +27,10 @@ public class PostResponseDto {
     private List<LinkedResourceDto> linkedResources;
     private String linkedLessonId;
     private String assignmentId;
-    private LocalDateTime dueDate;
+    private Date dueDate;
     private Boolean isPinned;
     private Boolean allowComments;
     private Integer commentCount;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Date createdAt;
+    private Date updatedAt;
 }

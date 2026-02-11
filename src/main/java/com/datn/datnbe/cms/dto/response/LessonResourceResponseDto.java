@@ -3,7 +3,7 @@ package com.datn.datnbe.cms.dto.response;
 import com.datn.datnbe.cms.enums.LessonResourceType;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Data
 public class LessonResourceResponseDto {
@@ -17,5 +17,5 @@ public class LessonResourceResponseDto {
     private Boolean isRequired;
     private Boolean isPrepared;
     private String uploadedBy;
-    private LocalDateTime createdAt;
+    private Date createdAt;
 }
