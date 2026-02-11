@@ -91,4 +91,7 @@ public class AssignmentPost {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "matrix_cells", columnDefinition = "jsonb")
     List<AssessmentMatrixCell> matrixCells;
+
+    @Column(name = "source")
+    String source;
 }

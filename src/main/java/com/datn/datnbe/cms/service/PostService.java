@@ -111,6 +111,7 @@ public class PostService implements PostApi {
                             .availableUntil(request.getAvailableUntil())
                             .topics(originalAssignment.getTopics())
                             .matrixCells(originalAssignment.getMatrixCells())
+                            .source(originalAssignment.getId())
                             .build();
 
                     // Save to assignment_post table
