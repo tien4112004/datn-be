@@ -1,6 +1,5 @@
 package com.datn.datnbe.document.entity.questiondata;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -15,16 +14,9 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class MatchingPair {
-
-    @JsonProperty("id")
-    String pairId;
+    String id;
     String left;
-
-    @JsonProperty("leftImageUrl")
     String leftImageUrl;
-
     String right;
-
-    @JsonProperty("rightImageUrl")
     String rightImageUrl;
 }

@@ -306,7 +306,6 @@ public class ContentGenerationManagement implements ContentGenerationApi {
                 .model(request.getModel() != null ? request.getModel() : "gemini-2.5-flash-lite")
                 .build();
 
-        // Make synchronous call to GenAI-Gateway - return raw JSON string
         log.info("Calling GenAI-Gateway at endpoint: {}", QUESTIONS_API_ENDPOINT);
         try {
             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
