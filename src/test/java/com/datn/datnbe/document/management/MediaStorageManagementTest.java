@@ -129,8 +129,8 @@ class MediaStorageManagementTest {
     }
 
     @Test
-    @DisplayName("Should handle R2 storage service failure during upload")
-    void upload_R2StorageServiceFails_ShouldThrowAppException() {
+    @DisplayName("Should handle storage service failure during upload")
+    void upload_StorageServiceFails_ShouldThrowAppException() {
         // Given
         String originalFilename = "test-image.jpg";
         String contentType = "image/jpeg";
@@ -274,8 +274,8 @@ class MediaStorageManagementTest {
     }
 
     @Test
-    @DisplayName("Should handle R2 storage service failure during delete")
-    void deleteMedia_R2StorageServiceFails_ShouldThrowAppException() {
+    @DisplayName("Should handle storage service failure during delete")
+    void deleteMedia_StorageServiceFails_ShouldThrowAppException() {
         // Given
         Long mediaId = 1L;
         AppException storageException = new AppException(ErrorCode.FILE_UPLOAD_ERROR, "Failed to delete file");
@@ -316,14 +316,14 @@ class MediaStorageManagementTest {
     }
 
     @Test
-    @DisplayName("Should delete media even if R2 delete partially fails but continues")
-    void deleteMedia_PartialR2Failure_ShouldCompleteOperation() {
+    @DisplayName("Should delete media even if storage delete partially fails but continues")
+    void deleteMedia_PartialStorageFailure_ShouldCompleteOperation() {
         // Given
         Long mediaId = 1L;
 
         when(mediaRepository.findById(mediaId)).thenReturn(Optional.of(testMedia));
 
-        // R2 delete succeeds (no exception thrown)
+        // Storage delete succeeds (no exception thrown)
         doNothing().when(rustfsStorageService).deleteFile(testMedia.getStorageKey());
         doNothing().when(mediaRepository).delete(testMedia);
         doNothing().when(documentVisitService).deleteDocumentVisits(anyString());

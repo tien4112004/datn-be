@@ -1,6 +1,5 @@
 package com.datn.datnbe.auth.management;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,23 +18,17 @@ import com.datn.datnbe.auth.mapper.UserProfileMapper;
 import com.datn.datnbe.auth.repository.UserProfileRepo;
 import com.datn.datnbe.auth.service.KeycloakAuthService;
 import com.datn.datnbe.auth.validation.AvatarValidation;
+import com.datn.datnbe.document.api.MediaStorageApi;
+import com.datn.datnbe.document.dto.response.UploadedMediaResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
-import com.datn.datnbe.sharedkernel.service.R2StorageService;
-import com.datn.datnbe.sharedkernel.utils.MediaStorageUtils;
-import static com.datn.datnbe.sharedkernel.utils.MediaStorageUtils.buildCdnUrl;
-import static com.datn.datnbe.sharedkernel.utils.MediaStorageUtils.buildObjectKey;
-import static com.datn.datnbe.sharedkernel.utils.MediaStorageUtils.getContentType;
-import static com.datn.datnbe.sharedkernel.utils.MediaStorageUtils.getOriginalFilename;
-import static com.datn.datnbe.sharedkernel.utils.MediaStorageUtils.sanitizeFilename;
 
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -47,12 +40,8 @@ public class UserProfileManagement implements UserProfileApi {
     UserProfileRepo userProfileRepo;
     UserProfileMapper userProfileMapper;
     KeycloakAuthService keycloakAuthService;
-    R2StorageService r2StorageService;
+    MediaStorageApi mediaStorageApi;
     AvatarValidation avatarValidation;
-
-    @NonFinal
-    @Value("${rustfs.public-url}")
-    String cdnDomain;
 
     @Override
     public PaginatedResponseDto<UserProfileResponse> getUserProfiles(UserCollectionRequest request) {
@@ -231,6 +220,8 @@ public class UserProfileManagement implements UserProfileApi {
         }
     }
 
+    @Override
+    @Transactional
     public UpdateAvatarResponse updateUserAvatar(String userId, MultipartFile avatar) {
         log.info("Updating avatar for user ID: {}", userId);
 
@@ -241,42 +232,36 @@ public class UserProfileManagement implements UserProfileApi {
         UserProfile userProfile = userProfileRepo.findByIdOrKeycloakUserId(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_PROFILE_NOT_FOUND, "User profile not found"));
 
-        // Prepare file metadata
-        String originalFilename = getOriginalFilename(avatar);
-        String contentType = getContentType(avatar);
-        String sanitizedFilename = sanitizeFilename(originalFilename);
+        // Upload via media storage API (creates Media record automatically)
+        UploadedMediaResponseDto uploadedMedia = mediaStorageApi.upload(avatar, userId);
 
-        // Build storage key for avatars folder
-        String storageKey = buildObjectKey("avatars", sanitizedFilename);
+        String newAvatarUrl = uploadedMedia.getCdnUrl();
+        Long newMediaId = uploadedMedia.getId();
 
-        // Upload to R2 storage
-        String uploadedKey = r2StorageService.uploadFile(avatar, storageKey, contentType);
-        log.info("Successfully uploaded avatar to R2 with key: {}", uploadedKey);
+        log.info("Successfully uploaded avatar to media storage with ID: {}", newMediaId);
 
-        // Build CDN URL
-        String avatarUrl = buildCdnUrl(uploadedKey, cdnDomain);
-
-        // Delete old avatar from R2 if exists
-        if (userProfile.getAvatarUrl() != null && !userProfile.getAvatarUrl().isEmpty()) {
+        // Delete old avatar if exists
+        if (userProfile.getAvatarMediaId() != null) {
             try {
-                String oldKey = MediaStorageUtils.extractStorageKeyFromUrl(userProfile.getAvatarUrl(), cdnDomain);
-                r2StorageService.deleteFile(oldKey);
-                log.info("Successfully deleted old avatar with key: {}", oldKey);
+                mediaStorageApi.deleteMedia(userProfile.getAvatarMediaId());
+                log.info("Successfully deleted old avatar with media ID: {}", userProfile.getAvatarMediaId());
             } catch (Exception e) {
                 log.warn("Failed to delete old avatar, continuing with update: {}", e.getMessage());
             }
         }
 
-        // Update user profile with new avatar URL
-        userProfile.setAvatarUrl(avatarUrl);
+        // Update user profile with new avatar URL and media ID
+        userProfile.setAvatarUrl(newAvatarUrl);
+        userProfile.setAvatarMediaId(newMediaId);
         userProfileRepo.save(userProfile);
 
         log.info("Successfully updated avatar for user ID: {}", userId);
 
-        return UpdateAvatarResponse.builder().avatarUrl(avatarUrl).build();
+        return UpdateAvatarResponse.builder().avatarUrl(newAvatarUrl).build();
     }
 
     @Override
+    @Transactional
     public void removeUserAvatar(String userId) {
         log.info("Removing avatar for user ID: {}", userId);
 
@@ -285,23 +270,23 @@ public class UserProfileManagement implements UserProfileApi {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_PROFILE_NOT_FOUND,
                         "User profile not found for user ID: " + userId));
 
-        // Delete avatar from R2 storage if exists
-        if (userProfile.getAvatarUrl() != null && !userProfile.getAvatarUrl().isEmpty()) {
+        // Delete avatar from media storage if exists
+        if (userProfile.getAvatarMediaId() != null) {
             try {
-                String storageKey = MediaStorageUtils.extractStorageKeyFromUrl(userProfile.getAvatarUrl(), cdnDomain);
-                r2StorageService.deleteFile(storageKey);
-                log.info("Successfully deleted avatar from R2 with key: {}", storageKey);
+                mediaStorageApi.deleteMedia(userProfile.getAvatarMediaId());
+                log.info("Successfully deleted avatar with media ID: {}", userProfile.getAvatarMediaId());
             } catch (Exception e) {
-                log.error("Failed to delete avatar from R2 for user ID: {}. Error: {}", userId, e.getMessage());
+                log.error("Failed to delete avatar for user ID: {}. Error: {}", userId, e.getMessage());
                 throw new AppException(ErrorCode.FILE_PROCESSING_ERROR,
                         "Failed to delete avatar from storage: " + e.getMessage());
             }
         } else {
-            log.info("No avatar to delete");
+            log.info("No avatar media ID found, skipping storage deletion");
         }
 
-        // Update user profile to remove avatar URL
+        // Update user profile to remove avatar URL and media ID
         userProfile.setAvatarUrl(null);
+        userProfile.setAvatarMediaId(null);
         userProfileRepo.save(userProfile);
 
         log.info("Successfully removed avatar for user ID: {}", userId);

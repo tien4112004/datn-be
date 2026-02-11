@@ -47,6 +47,9 @@ public class UserProfile {
     @Column(name = "avatar_url")
     String avatarUrl;
 
+    @Column(name = "avatar_media_id")
+    Long avatarMediaId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     LocalDateTime createdAt;
 
