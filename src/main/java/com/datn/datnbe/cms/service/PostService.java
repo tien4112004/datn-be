@@ -1,6 +1,8 @@
 package com.datn.datnbe.cms.service;
 
+import com.datn.datnbe.auth.api.ResourcePermissionApi;
 import com.datn.datnbe.auth.api.UserProfileApi;
+import com.datn.datnbe.auth.dto.request.ResourceRegistrationRequest;
 import com.datn.datnbe.auth.dto.response.UserMinimalInfoDto;
 import com.datn.datnbe.cms.api.PostApi;
 import com.datn.datnbe.cms.dto.LinkedResourceDto;
@@ -16,6 +18,9 @@ import com.datn.datnbe.cms.mapper.PostMapper;
 import com.datn.datnbe.cms.repository.AssignmentPostRepository;
 import com.datn.datnbe.cms.repository.PostLinkedResourceRepository;
 import com.datn.datnbe.cms.repository.PostRepository;
+import com.datn.datnbe.document.entity.Assignment;
+import com.datn.datnbe.document.mapper.AssignmentMapper;
+import com.datn.datnbe.document.repository.AssignmentRepository;
 import com.datn.datnbe.document.dto.response.AssignmentResponse;
 import com.datn.datnbe.sharedkernel.notification.dto.NotificationRequest;
 import com.datn.datnbe.sharedkernel.notification.entity.UserDevice;
@@ -60,6 +65,9 @@ public class PostService implements PostApi {
     private final UserDeviceRepository userDeviceRepository;
     private final StudentApi studentApi;
     private final AssignmentPostRepository assignmentPostRepository;
+    private final AssignmentRepository assignmentRepository;
+    private final AssignmentMapper assignmentMapper;
+    private final ResourcePermissionApi resourcePermissionApi;
 
     @Override
     @Transactional
@@ -75,9 +83,70 @@ public class PostService implements PostApi {
         post.setClassId(classId);
         post.setAuthorId(securityContextUtils.getCurrentUserId());
         post.setAllowComments(Boolean.TRUE.equals(request.getAllowComments()));
-        AssignmentPost clonePost = assignmentPostRepository.findAssignmentById(post.getId());
-        var savedAssignmentPost = assignmentPostRepository.save(clonePost);
-        post.setAssignmentId(savedAssignmentPost.getId());
+
+        // If assignmentId is provided in request, clone the assignment for this post
+        if (request.getAssignmentId() != null && !request.getAssignmentId().isEmpty()) {
+            try {
+                // Fetch original assignment from assignments table using proper repository
+                Assignment originalAssignment = assignmentRepository.findById(request.getAssignmentId()).orElse(null);
+                if (originalAssignment != null) {
+                    // Clone the assignment (create a new copy in assignment_post table)
+                    // All settings come from the request (configured in PostCreator)
+                    AssignmentPost clonedAssignment = AssignmentPost.builder()
+                            .title(originalAssignment.getTitle())
+                            .description(originalAssignment.getDescription())
+                            .duration(originalAssignment.getDuration())
+                            .ownerId(securityContextUtils.getCurrentUserId())
+                            .subject(originalAssignment.getSubject())
+                            .grade(originalAssignment.getGrade())
+                            .questions(originalAssignment.getQuestions())
+                            // Settings from request (configured when creating homework post)
+                            .maxSubmissions(request.getMaxSubmissions())
+                            .allowRetake(request.getAllowRetake())
+                            .shuffleQuestions(request.getShuffleQuestions())
+                            .showCorrectAnswers(request.getShowCorrectAnswers())
+                            .showScoreImmediately(request.getShowScoreImmediately())
+                            .passingScore(request.getPassingScore())
+                            .availableFrom(request.getAvailableFrom())
+                            .availableUntil(request.getAvailableUntil())
+                            .topics(originalAssignment.getTopics())
+                            .matrixCells(originalAssignment.getMatrixCells())
+                            .build();
+
+                    // Save to assignment_post table
+                    AssignmentPost savedClone = assignmentPostRepository.save(clonedAssignment);
+                    post.setAssignmentId(savedClone.getId());
+
+                    // Register the cloned assignment with resource permissions so teacher can access it
+                    try {
+                        ResourceRegistrationRequest resourceRequest = ResourceRegistrationRequest.builder()
+                                .id(savedClone.getId())
+                                .name(savedClone.getTitle())
+                                .resourceType("assignment")
+                                .build();
+                        resourcePermissionApi.registerResource(resourceRequest,
+                                securityContextUtils.getCurrentUserId());
+                        log.info("Registered cloned assignment {} with resource permissions", savedClone.getId());
+                    } catch (Exception e) {
+                        log.warn("Failed to register cloned assignment {} with resource permissions",
+                                savedClone.getId(),
+                                e);
+                    }
+
+                    log.info("Cloned assignment {} from assignments table to assignment_post {} for post",
+                            request.getAssignmentId(),
+                            savedClone.getId());
+                } else {
+                    // Assignment not found, use the original ID (might be a direct reference)
+                    post.setAssignmentId(request.getAssignmentId());
+                    log.warn("Assignment {} not found for cloning, using direct reference", request.getAssignmentId());
+                }
+            } catch (Exception e) {
+                log.error("Failed to clone assignment {}, using direct reference", request.getAssignmentId(), e);
+                post.setAssignmentId(request.getAssignmentId());
+            }
+        }
+
         if (post.getIsPinned() == null)
             post.setIsPinned(Boolean.FALSE);
         if (post.getCommentCount() == null)
@@ -311,6 +380,10 @@ public class PostService implements PostApi {
     @Override
     public AssignmentResponse getAssignmentByPostId(String postId) {
         log.info("get assignment of post: {}", postId);
-        return postRepository.getAssignmentByPostId(postId);
+        AssignmentPost assignmentPost = postRepository.getAssignmentByPostId(postId);
+        if (assignmentPost == null) {
+            throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Assignment not found");
+        }
+        return assignmentMapper.toDto(assignmentPost);
     }
 }

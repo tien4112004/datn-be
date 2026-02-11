@@ -9,6 +9,8 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
+import com.datn.datnbe.document.entity.AssessmentMatrixCell;
+import com.datn.datnbe.document.entity.AssignmentTopic;
 import com.datn.datnbe.document.entity.Question;
 
 import java.time.LocalDateTime;
@@ -57,4 +59,36 @@ public class AssignmentPost {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "questions", columnDefinition = "jsonb")
     List<Question> questions;
+
+    @Column(name = "max_submissions")
+    Integer maxSubmissions;
+
+    @Column(name = "allow_retake")
+    Boolean allowRetake;
+
+    @Column(name = "shuffle_questions")
+    Boolean shuffleQuestions;
+
+    @Column(name = "show_correct_answers")
+    Boolean showCorrectAnswers;
+
+    @Column(name = "show_score_immediately")
+    Boolean showScoreImmediately;
+
+    @Column(name = "passing_score")
+    Double passingScore;
+
+    @Column(name = "available_from")
+    LocalDateTime availableFrom;
+
+    @Column(name = "available_until")
+    LocalDateTime availableUntil;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "topics", columnDefinition = "jsonb")
+    List<AssignmentTopic> topics;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "matrix_cells", columnDefinition = "jsonb")
+    List<AssessmentMatrixCell> matrixCells;
 }

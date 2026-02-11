@@ -1,11 +1,9 @@
 package com.datn.datnbe.cms.entity.answerData;
 
-import com.datn.datnbe.cms.enums.AnswerType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -14,11 +12,9 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AnswerData {
     String id;
-
-    @Enumerated(EnumType.STRING)
-    AnswerType type;
 
     @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
     @JsonSubTypes({@JsonSubTypes.Type(value = OpenEndedAnswer.class, name = "OPEN_ENDED"),
@@ -26,4 +22,10 @@ public class AnswerData {
             @JsonSubTypes.Type(value = MatchingAnswer.class, name = "MATCHING"),
             @JsonSubTypes.Type(value = FillInBlankAnswer.class, name = "FILL_IN_BLANK")})
     Object answer;
+
+    Double point;
+
+    String feedback;
+
+    boolean isAutoGraded;
 }

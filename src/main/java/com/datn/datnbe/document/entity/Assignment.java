@@ -63,4 +63,39 @@ public class Assignment {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "matrix", columnDefinition = "jsonb")
     AssignmentMatrix matrix;
+
+    @Column(name = "max_submissions")
+    Integer maxSubmissions;
+
+    @Column(name = "allow_retake")
+    Boolean allowRetake;
+
+    @Column(name = "shuffle_questions")
+    Boolean shuffleQuestions;
+
+    @Column(name = "show_correct_answers")
+    Boolean showCorrectAnswers;
+
+    @Column(name = "show_score_immediately")
+    Boolean showScoreImmediately;
+
+    @Column(name = "passing_score")
+    Double passingScore;
+
+    @Column(name = "time_limit")
+    Integer timeLimit;
+
+    @Column(name = "available_from")
+    LocalDateTime availableFrom;
+
+    @Column(name = "available_until")
+    LocalDateTime availableUntil;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "topics", columnDefinition = "jsonb")
+    List<AssignmentTopic> topics;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "matrix_cells", columnDefinition = "jsonb")
+    List<AssessmentMatrixCell> matrixCells;
 }

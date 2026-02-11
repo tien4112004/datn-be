@@ -16,4 +16,28 @@ public interface SubmissionRepository extends JpaRepository<Submission, String> 
 
     @Query("SELECT s FROM Submission s WHERE (:postId IS NULL OR s.postId = :postId)")
     Page<Submission> findByPostIdPageable(String postId, Pageable pageable);
+
+    List<Submission> findByAssignmentId(String assignmentId);
+
+    Page<Submission> findByAssignmentId(String assignmentId, Pageable pageable);
+
+    List<Submission> findByAssignmentIdAndStudentId(String assignmentId, String studentId);
+
+    @Query("SELECT s FROM Submission s WHERE s.postId = :postId "
+            + "AND (:studentId IS NULL OR s.studentId = :studentId) " + "AND (:status IS NULL OR s.status = :status)")
+    List<Submission> findByPostIdWithFilters(String postId, String studentId, String status);
+
+    @Query("SELECT COUNT(s) FROM Submission s WHERE s.assignmentId = :assignmentId AND s.status = :status")
+    long countByAssignmentIdAndStatus(String assignmentId, String status);
+
+    @Query("SELECT AVG(s.score) FROM Submission s WHERE s.assignmentId = :assignmentId AND s.status = 'graded'")
+    Double getAverageScore(String assignmentId);
+
+    @Query("SELECT MAX(s.score) FROM Submission s WHERE s.assignmentId = :assignmentId AND s.status = 'graded'")
+    Double getHighestScore(String assignmentId);
+
+    @Query("SELECT MIN(s.score) FROM Submission s WHERE s.assignmentId = :assignmentId AND s.status = 'graded'")
+    Double getLowestScore(String assignmentId);
+
+    long countByAssignmentIdAndStudentId(String assignmentId, String studentId);
 }

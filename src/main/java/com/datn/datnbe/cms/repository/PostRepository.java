@@ -1,7 +1,7 @@
 package com.datn.datnbe.cms.repository;
 
 import com.datn.datnbe.cms.entity.Post;
-import com.datn.datnbe.document.dto.response.AssignmentResponse;
+import com.datn.datnbe.cms.entity.AssignmentPost;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,5 +31,5 @@ public interface PostRepository extends JpaRepository<Post, String> {
             FROM assignment_post a JOIN posts p ON a.id = p.assignment_id
             WHERE p.id = :postId
             """, nativeQuery = true)
-    AssignmentResponse getAssignmentByPostId(String postId);
+    AssignmentPost getAssignmentByPostId(String postId);
 }

@@ -27,14 +27,8 @@ public class Submission {
     @Column(name = "id", length = 36)
     String id;
 
-    @Column(name = "lesson_id", nullable = false, length = 36)
-    String lessonId;
-
     @Column(name = "student_id", nullable = false, length = 36)
     String studentId;
-
-    @Column(name = "point")
-    Integer point;
 
     @Column(name = "post_id", nullable = false, length = 36)
     String postId;
@@ -54,6 +48,27 @@ public class Submission {
 
     @Column(name = "status", length = 50)
     String status;
+
+    @Column(name = "assignment_id", length = 36)
+    String assignmentId;
+
+    @Column(name = "graded_by", length = 36)
+    String gradedBy;
+
+    @Column(name = "graded_at")
+    LocalDateTime gradedAt;
+
+    @Column(name = "max_score")
+    Integer maxScore;
+
+    @Column(name = "submitted_at")
+    LocalDateTime submittedAt;
+
+    @Column(name = "score")
+    Double score;
+
+    @Column(name = "feedback", columnDefinition = "TEXT")
+    String feedback;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

@@ -5,6 +5,7 @@ import com.datn.datnbe.auth.dto.request.ResourceRegistrationRequest;
 import com.datn.datnbe.document.api.AssignmentApi;
 import com.datn.datnbe.document.dto.DocumentMetadataDto;
 import com.datn.datnbe.document.dto.request.AssignmentCreateRequest;
+import com.datn.datnbe.document.dto.request.AssignmentSettingsUpdateRequest;
 import com.datn.datnbe.document.dto.request.AssignmentUpdateRequest;
 import com.datn.datnbe.document.dto.response.AssignmentResponse;
 import com.datn.datnbe.document.service.DocumentService;
@@ -131,6 +132,28 @@ public class AssignmentManagement implements AssignmentApi {
         Assignment assignment = assignmentRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Assignment not found"));
         assignmentRepository.delete(assignment);
+    }
+
+    @Override
+    @Transactional
+    public AssignmentResponse updateAssignmentSettings(String id, AssignmentSettingsUpdateRequest request) {
+        Assignment assignment = assignmentRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Assignment not found"));
+
+        String currentUserId = securityContextUtils.getCurrentUserId();
+        if (!currentUserId.equals(assignment.getOwnerId())) {
+            throw new AppException(ErrorCode.FORBIDDEN, "You don't have permission to update this assignment");
+        }
+
+        if (request.getTopics() != null) {
+            assignment.setTopics(request.getTopics());
+        }
+        if (request.getMatrixCells() != null) {
+            assignment.setMatrixCells(request.getMatrixCells());
+        }
+
+        Assignment saved = assignmentRepository.save(assignment);
+        return assignmentMapper.toDto(saved);
     }
 
     private List<Question> mapQuestionItems(List<QuestionItemRequest> items) {

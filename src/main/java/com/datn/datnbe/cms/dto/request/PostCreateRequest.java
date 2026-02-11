@@ -27,4 +27,14 @@ public class PostCreateRequest {
     private LocalDateTime dueDate;
 
     private Boolean allowComments;
+
+    // Assignment settings (only for Homework type posts)
+    private Integer maxSubmissions;
+    private Boolean allowRetake;
+    private Boolean shuffleQuestions;
+    private Boolean showCorrectAnswers;
+    private Boolean showScoreImmediately;
+    private Double passingScore;
+    private LocalDateTime availableFrom;
+    private LocalDateTime availableUntil;
 }

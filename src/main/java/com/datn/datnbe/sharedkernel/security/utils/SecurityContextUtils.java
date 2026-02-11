@@ -5,14 +5,20 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
+import com.datn.datnbe.auth.entity.UserProfile;
+import com.datn.datnbe.auth.repository.UserProfileRepo;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class SecurityContextUtils {
+
+    private final UserProfileRepo userProfileRepo;
 
     public String getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -38,6 +44,13 @@ public class SecurityContextUtils {
         }
 
         throw new AppException(ErrorCode.UNAUTHORIZED, "Invalid authentication principal");
+    }
+
+    public String getCurrentUserProfileId() {
+        String keycloakUserId = getCurrentUserId();
+        UserProfile userProfile = userProfileRepo.findByKeycloakUserId(keycloakUserId)
+                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED, "User is not authenticated"));
+        return userProfile.getId();
     }
 
     public String getCurrentUserToken() {
@@ -77,5 +90,12 @@ public class SecurityContextUtils {
     public boolean isAuthenticated() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication != null && authentication.isAuthenticated();
+    }
+
+    public boolean hasRole(String role) {
+        String keycloakUserId = getCurrentUserId();
+        UserProfile userProfile = userProfileRepo.findByKeycloakUserId(keycloakUserId)
+                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED, "User is not authenticated"));
+        return userProfile.getRole().equalsIgnoreCase(role);
     }
 }
