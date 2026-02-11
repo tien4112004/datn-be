@@ -221,25 +221,25 @@ public class SubmissionService implements SubmissionApi {
         answer.setAutoGraded(true);
 
         return switch (question.getType()) {
-            case MULTIPLE_CHOICE : {
+            case MULTIPLE_CHOICE: {
                 double point = gradeMultipleChoice(question, answer);
                 log.info("Question {} (MULTIPLE_CHOICE) - Points: {}", question.getId(), point);
                 answer.setPoint(point);
                 yield point;
             }
-            case FILL_IN_BLANK : {
+            case FILL_IN_BLANK: {
                 double point = gradeFillInBlank(question, answer);
                 log.info("Question {} (FILL_IN_BLANK) - Points: {}", question.getId(), point);
                 answer.setPoint(point);
                 yield point;
             }
-            case MATCHING : {
+            case MATCHING: {
                 double point = gradeMatching(question, answer);
                 log.info("Question {} (MATCHING) - Points: {}", question.getId(), point);
                 answer.setPoint(point);
                 yield point;
             }
-            default :
+            default:
                 yield 0;
         };
     }
@@ -295,7 +295,6 @@ public class SubmissionService implements SubmissionApi {
                 pointPerBlank,
                 blankSegments.size());
 
-        double totalScore = blankSegments.stream().mapToDouble(segment -> {
             String studentAnswer = fillAnswer.getBlankAnswers().get(segment.getId());
             boolean isCorrect = studentAnswer != null && segment.getAcceptableAnswers().contains(studentAnswer);
             double points = isCorrect ? pointPerBlank : 0;
@@ -309,10 +308,6 @@ public class SubmissionService implements SubmissionApi {
 
             return points;
         }).sum();
-
-        log.info("  Fill-In-Blank total score: {}", totalScore);
-        return totalScore;
-    }
 
     private double gradeMatching(Question question, AnswerData answer) {
         MatchingData matchingData = (MatchingData) question.getData();

@@ -1,13 +1,14 @@
-package com.datn.datnbe.document.entity.questiondata;
+package com.datn.datnbe.ai.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import java.util.List;
 
 /**
- * Domain entity for Multiple Choice question data.
- * Used for storage and frontend responses.
+ * AI Gateway DTO for Multiple Choice question data.
+ * Represents the raw data structure received from AI Gateway.
  */
 @Data
 @Builder
@@ -20,5 +21,6 @@ public class MultipleChoiceData {
 
     @Builder.Default
     @JsonProperty("shuffleOptions")
+    @JsonAlias({"shuffle_options", "shuffleOptions"})
     Boolean shuffleOptions = false;
 }

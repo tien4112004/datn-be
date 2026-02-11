@@ -1,10 +1,10 @@
 package com.datn.datnbe.document.entity;
 
+import com.datn.datnbe.ai.dto.response.FillInBlankData;
+import com.datn.datnbe.ai.dto.response.MatchingData;
+import com.datn.datnbe.ai.dto.response.MultipleChoiceData;
+import com.datn.datnbe.ai.dto.response.OpenEndedData;
 import com.datn.datnbe.document.entity.questiondata.Difficulty;
-import com.datn.datnbe.document.entity.questiondata.FillInBlankData;
-import com.datn.datnbe.document.entity.questiondata.MatchingData;
-import com.datn.datnbe.document.entity.questiondata.MultipleChoiceData;
-import com.datn.datnbe.document.entity.questiondata.OpenEndedData;
 import com.datn.datnbe.document.entity.questiondata.QuestionType;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -13,6 +13,10 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+/**
+ * Question entity for AI Gateway responses.
+ * This represents the raw question data received from AI before processing.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,7 +25,11 @@ import lombok.experimental.FieldDefaults;
 public class Question {
 
     String id;
+
+    @JsonProperty("type")
+    @JsonAlias({"type"})
     QuestionType type;
+
     Difficulty difficulty;
     String title;
 

@@ -11,8 +11,16 @@ import com.datn.datnbe.document.entity.Question;
 import com.datn.datnbe.document.entity.QuestionBankItem;
 import com.datn.datnbe.document.dto.request.GenerateQuestionsFromTopicRequest;
 import com.datn.datnbe.document.dto.response.GeneratedQuestionsResponse;
+import com.datn.datnbe.document.entity.questiondata.FillInBlankData;
+import com.datn.datnbe.document.entity.questiondata.MatchingData;
+import com.datn.datnbe.document.entity.questiondata.MatchingPair;
+import com.datn.datnbe.document.entity.questiondata.MultipleChoiceData;
+import com.datn.datnbe.document.entity.questiondata.MultipleChoiceOption;
+import com.datn.datnbe.document.entity.questiondata.OpenEndedData;
+import com.datn.datnbe.document.entity.questiondata.QuestionType;
 import com.datn.datnbe.document.mapper.QuestionEntityMapper;
 import com.datn.datnbe.document.repository.QuestionRepository;
+import com.datn.datnbe.document.utils.FillInBlankParser;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -71,13 +79,24 @@ public class QuestionGenerationService {
             // Log first question details for debugging
             if (!aiQuestions.isEmpty()) {
                 Question firstQ = aiQuestions.get(0);
-                log.debug("First question sample - type: {}, difficulty: {}, title: {}, data type: {}",
+                log.debug("First question sample - type: {}, difficulty: {}, title: {}, data type: {}, data value: {}",
                         firstQ.getType(),
                         firstQ.getDifficulty(),
                         firstQ.getTitle() != null
                                 ? firstQ.getTitle().substring(0, Math.min(50, firstQ.getTitle().length()))
                                 : "null",
-                        firstQ.getData() != null ? firstQ.getData().getClass().getSimpleName() : "null");
+                        firstQ.getData() != null ? firstQ.getData().getClass().getSimpleName() : "null",
+                        firstQ.getData());
+
+                // For FILL_IN_BLANK, log the data structure
+                if (QuestionType.FILL_IN_BLANK.equals(firstQ.getType())) {
+                    log.debug("FILL_IN_BLANK data details: {}", firstQ.getData());
+                    if (firstQ.getData() instanceof java.util.Map) {
+                        java.util.Map<?, ?> dataMap = (java.util.Map<?, ?>) firstQ.getData();
+                        log.debug("FILL_IN_BLANK data keys: {}", dataMap.keySet());
+                        log.debug("FILL_IN_BLANK 'data' field value: {}", dataMap.get("data"));
+                    }
+                }
             }
         } catch (Exception e) {
             log.error("Failed to parse AI response. Error: {}, Response preview: {}",
@@ -169,6 +188,9 @@ public class QuestionGenerationService {
                     aiQuestion.getGrade());
         }
 
+        // Convert and parse the data based on question type
+        Object convertedData = convertQuestionData(aiQuestion.getData(), aiQuestion.getType());
+
         return QuestionBankItem.builder()
                 // DO NOT set id - let JPA generate it
                 .type(aiQuestion.getType())
@@ -179,10 +201,162 @@ public class QuestionGenerationService {
                 .grade(aiQuestion.getGrade())
                 .chapter(topicName) // Store topic name directly as String
                 .subject(aiQuestion.getSubject())
-                .data(aiQuestion.getData())
+                .data(convertedData)
                 .ownerId(ownerId)
                 // createdAt and updatedAt are auto-generated
                 .build();
+    }
+
+    private Object convertQuestionData(Object data, QuestionType type) {
+        if (type == null) {
+            log.warn("Question type is null, cannot convert data");
+            return data;
+        }
+
+        switch (type) {
+            case FILL_IN_BLANK :
+                return convertFillInBlankData(data);
+            case MULTIPLE_CHOICE :
+                return convertMultipleChoiceData(data);
+            case MATCHING :
+                return convertMatchingData(data);
+            case OPEN_ENDED :
+                return convertOpenEndedData(data);
+            default :
+                log.warn("Unhandled question type: {}", type);
+                return data;
+        }
+    }
+
+    private Object convertFillInBlankData(Object data) {
+        try {
+            log.debug("Converting FILL_IN_BLANK data. Type: {}", data != null ? data.getClass().getName() : "null");
+
+            String textContent = null;
+            Boolean caseSensitive = false;
+
+            // Handle FillInBlankData from AI Gateway
+            if (data instanceof com.datn.datnbe.ai.dto.response.FillInBlankData) {
+                com.datn.datnbe.ai.dto.response.FillInBlankData aiData = (com.datn.datnbe.ai.dto.response.FillInBlankData) data;
+                textContent = aiData.getData();
+                caseSensitive = aiData.getCaseSensitive() != null ? aiData.getCaseSensitive() : false;
+                log.debug("Processing AI FillInBlankData. Text: {}, CaseSensitive: {}", textContent, caseSensitive);
+            } else if (data instanceof java.util.Map) {
+                // Fallback for Map format
+                @SuppressWarnings("unchecked") java.util.Map<String, Object> dataMap = (java.util.Map<String, Object>) data;
+                Object nestedData = dataMap.get("data");
+                if (nestedData instanceof String) {
+                    textContent = (String) nestedData;
+                }
+                Object caseSensitiveObj = dataMap.get("caseSensitive");
+                if (caseSensitiveObj instanceof Boolean) {
+                    caseSensitive = (Boolean) caseSensitiveObj;
+                }
+                log.debug("Processing Map format. Text: {}, CaseSensitive: {}", textContent, caseSensitive);
+            } else if (data instanceof String) {
+                // Legacy string format
+                textContent = (String) data;
+                log.debug("Processing legacy string format: {}", textContent);
+            } else {
+                log.warn("Unexpected FILL_IN_BLANK data type: {}", data != null ? data.getClass().getName() : "null");
+            }
+
+            if (textContent != null && !textContent.isBlank()) {
+                log.debug("Parsing FILL_IN_BLANK text: {}", textContent);
+                FillInBlankData fillInBlankData = FillInBlankParser.parse(textContent);
+                fillInBlankData.setCaseSensitive(caseSensitive);
+                log.info("Successfully parsed FILL_IN_BLANK, segments: {}", fillInBlankData.getSegments().size());
+                return fillInBlankData;
+            }
+
+            log.error("No valid text content in FILL_IN_BLANK data");
+            return data;
+        } catch (Exception e) {
+            log.error("Failed to parse FILL_IN_BLANK data: {}", e.getMessage(), e);
+            return data;
+        }
+    }
+
+    private Object convertMultipleChoiceData(Object data) {
+        try {
+            log.debug("Converting MULTIPLE_CHOICE data. Type: {}", data != null ? data.getClass().getName() : "null");
+
+            if (data instanceof com.datn.datnbe.ai.dto.response.MultipleChoiceData) {
+                com.datn.datnbe.ai.dto.response.MultipleChoiceData aiData = (com.datn.datnbe.ai.dto.response.MultipleChoiceData) data;
+                List<MultipleChoiceOption> options = aiData.getOptions()
+                        .stream()
+                        .map(aiOption -> MultipleChoiceOption.builder()
+                                .optionId(java.util.UUID.randomUUID().toString())
+                                .text(aiOption.getText())
+                                .imageUrl(aiOption.getImageUrl())
+                                .isCorrect(aiOption.getIsCorrect())
+                                .build())
+                        .collect(java.util.stream.Collectors.toList());
+
+                return MultipleChoiceData.builder()
+                        .options(options)
+                        .shuffleOptions(aiData.getShuffleOptions() != null ? aiData.getShuffleOptions() : false)
+                        .build();
+            }
+
+            log.warn("MULTIPLE_CHOICE data is not AI MultipleChoiceData: {}",
+                    data != null ? data.getClass().getName() : "null");
+            return data;
+        } catch (Exception e) {
+            log.error("Failed to convert MULTIPLE_CHOICE data: {}", e.getMessage(), e);
+            return data;
+        }
+    }
+
+    private Object convertMatchingData(Object data) {
+        try {
+            log.debug("Converting MATCHING data. Type: {}", data != null ? data.getClass().getName() : "null");
+
+            if (data instanceof com.datn.datnbe.ai.dto.response.MatchingData) {
+                com.datn.datnbe.ai.dto.response.MatchingData aiData = (com.datn.datnbe.ai.dto.response.MatchingData) data;
+                List<MatchingPair> pairs = aiData.getPairs()
+                        .stream()
+                        .map(aiPair -> MatchingPair.builder()
+                                .pairId(java.util.UUID.randomUUID().toString())
+                                .left(aiPair.getLeft())
+                                .leftImageUrl(aiPair.getLeftImageUrl())
+                                .right(aiPair.getRight())
+                                .rightImageUrl(aiPair.getRightImageUrl())
+                                .build())
+                        .collect(java.util.stream.Collectors.toList());
+
+                return MatchingData.builder()
+                        .pairs(pairs)
+                        .shufflePairs(aiData.getShufflePairs() != null ? aiData.getShufflePairs() : false)
+                        .build();
+            }
+
+            log.warn("MATCHING data is not AI MatchingData: {}", data != null ? data.getClass().getName() : "null");
+            return data;
+        } catch (Exception e) {
+            log.error("Failed to convert MATCHING data: {}", e.getMessage(), e);
+            return data;
+        }
+    }
+
+    private Object convertOpenEndedData(Object data) {
+        try {
+            log.debug("Converting OPEN_ENDED data. Type: {}", data != null ? data.getClass().getName() : "null");
+
+            if (data instanceof com.datn.datnbe.ai.dto.response.OpenEndedData) {
+                com.datn.datnbe.ai.dto.response.OpenEndedData aiData = (com.datn.datnbe.ai.dto.response.OpenEndedData) data;
+                return OpenEndedData.builder()
+                        .expectedAnswer(aiData.getExpectedAnswer())
+                        .maxLength(aiData.getMaxLength())
+                        .build();
+            }
+
+            log.warn("OPEN_ENDED data is not AI OpenEndedData: {}", data != null ? data.getClass().getName() : "null");
+            return data;
+        } catch (Exception e) {
+            log.error("Failed to convert OPEN_ENDED data: {}", e.getMessage(), e);
+            return data;
+        }
     }
 
     @Async

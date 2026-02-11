@@ -15,7 +15,8 @@ import java.util.UUID;
 public class BlankSegment {
 
     @Builder.Default
-    String id = UUID.randomUUID().toString();
+    @JsonProperty("id")
+    String segmentId = UUID.randomUUID().toString();
     SegmentType type;
     String content;
 
