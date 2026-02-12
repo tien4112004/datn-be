@@ -2,6 +2,7 @@ package com.datn.datnbe.student.api;
 
 import com.datn.datnbe.student.dto.request.StudentCreateRequest;
 import com.datn.datnbe.student.dto.request.StudentUpdateRequest;
+import com.datn.datnbe.sharedkernel.dto.students.ClassEnrollmentDto;
 import com.datn.datnbe.student.dto.response.StudentResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import org.springframework.data.domain.Pageable;
@@ -79,4 +80,45 @@ public interface StudentApi {
     List<String> getEnrolledStudentKeycloakUserIds(String classId);
 
     List<StudentResponseDto> getStudentsByClassId(String classId);
+
+    /**
+     * Gets all enrollments for a specific class.
+     *
+     * @param classId the class ID
+     * @return list of enrollment DTOs
+     */
+    List<ClassEnrollmentDto> getEnrollmentsByClassId(String classId);
+
+    /**
+     * Gets all enrollments for a specific user (by their Keycloak user ID).
+     *
+     * @param userId the Keycloak user ID
+     * @return list of enrollment DTOs
+     */
+    List<ClassEnrollmentDto> getEnrollmentsByUserId(String userId);
+
+    /**
+     * Gets the count of active enrollments in a class.
+     *
+     * @param classId the class ID
+     * @return count of active enrollments
+     */
+    long getActiveEnrollmentCount(String classId);
+
+    /**
+     * Gets the total count of enrollments in a class (all statuses).
+     *
+     * @param classId the class ID
+     * @return total count of enrollments
+     */
+    long getTotalEnrollmentCount(String classId);
+
+    /**
+     * Checks if a user is enrolled in a class.
+     *
+     * @param classId the class ID
+     * @param userId the Keycloak user ID
+     * @return true if the user is enrolled, false otherwise
+     */
+    boolean isUserEnrolledInClass(String classId, String userId);
 }

@@ -4,6 +4,7 @@ import com.datn.datnbe.auth.dto.request.SignupRequest;
 import com.datn.datnbe.auth.dto.request.UserCollectionRequest;
 import com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest;
 import com.datn.datnbe.auth.dto.response.UpdateAvatarResponse;
+import com.datn.datnbe.auth.dto.response.UserMinimalInfoDto;
 import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import org.springframework.web.multipart.MultipartFile;
@@ -84,7 +85,7 @@ public interface UserProfileApi {
      * @param userId the user ID or Keycloak user ID
      * @return UserMinimalInfoDto containing minimal user information, or null if not found
      */
-    com.datn.datnbe.auth.dto.response.UserMinimalInfoDto getUserMinimalInfo(String userId);
+    UserMinimalInfoDto getUserMinimalInfo(String userId);
 
     /**
      * Updates the password of a user profile.
@@ -101,4 +102,6 @@ public interface UserProfileApi {
      * @return the Keycloak user ID, or null if not found
      */
     String getKeycloakUserIdByUserId(String userId);
+
+    String getUSerProfileIdByKeycloakUserId(String keycloakUserId);
 }

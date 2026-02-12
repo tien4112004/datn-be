@@ -22,6 +22,7 @@ import com.datn.datnbe.sharedkernel.exceptions.ResourceNotFoundException;
 import com.datn.datnbe.student.api.StudentApi;
 import com.datn.datnbe.student.dto.request.StudentCreateRequest;
 import com.datn.datnbe.student.dto.request.StudentUpdateRequest;
+import com.datn.datnbe.sharedkernel.dto.students.ClassEnrollmentDto;
 import com.datn.datnbe.student.dto.response.StudentResponseDto;
 import com.datn.datnbe.student.entity.ClassEnrollment;
 import com.datn.datnbe.student.entity.Student;
@@ -362,5 +363,101 @@ public class StudentManagement implements StudentApi {
     @Override
     public List<StudentResponseDto> getStudentsByClassId(String classId) {
         return studentRepository.findByClassId(classId).stream().map(studentEntityMapper::toResponseDto).toList();
+    }
+
+    @Override
+    public List<ClassEnrollmentDto> getEnrollmentsByClassId(String classId) {
+        log.debug("Getting enrollments for class ID: {}", classId);
+        return classEnrollmentRepository.findByClassId(classId)
+                .stream()
+                .map(this::toEnrollmentDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ClassEnrollmentDto> getEnrollmentsByUserId(String userId) {
+        log.debug("Getting enrollments for user ID: {}", userId);
+
+        // Find the student entity for this userId
+        Optional<Student> studentOpt = studentRepository.findAll()
+                .stream()
+                .filter(s -> userId.equals(s.getUserId()))
+                .findFirst();
+
+        if (studentOpt.isEmpty()) {
+            return List.of();
+        }
+
+        String studentId = studentOpt.get().getId();
+        return classEnrollmentRepository.findAll()
+                .stream()
+                .filter(e -> studentId.equals(e.getStudentId()))
+                .map(this::toEnrollmentDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public long getActiveEnrollmentCount(String classId) {
+        log.debug("Getting active enrollment count for class ID: {}", classId);
+        return classEnrollmentRepository.findByClassId(classId)
+                .stream()
+                .filter(e -> EnrollmentStatus.ACTIVE.equals(e.getStatus()))
+                .count();
+    }
+
+    @Override
+    public long getTotalEnrollmentCount(String classId) {
+        log.debug("Getting total enrollment count for class ID: {}", classId);
+        return classEnrollmentRepository.findByClassId(classId).size();
+    }
+
+    @Override
+    public boolean isUserEnrolledInClass(String classId, String userId) {
+        log.debug("Checking if user {} is enrolled in class {}", userId, classId);
+
+        // Find the student entity for this userId
+        Optional<Student> studentOpt = studentRepository.findAll()
+                .stream()
+                .filter(s -> userId.equals(s.getUserId()))
+                .findFirst();
+
+        return studentOpt
+                .filter(student -> classEnrollmentRepository.existsByClassIdAndStudentId(classId, student.getId()))
+                .isPresent();
+
+    }
+
+    /**
+     * Converts ClassEnrollment entity to DTO, enriching with user ID.
+     */
+    private ClassEnrollmentDto toEnrollmentDto(ClassEnrollment enrollment) {
+        String userId = null;
+        try {
+            Student student = studentRepository.findById(enrollment.getStudentId()).orElse(null);
+            if (student != null) {
+                userId = student.getUserId();
+                log.debug("Mapped enrollment {} (studentId={}) to userId={}",
+                        enrollment.getId(),
+                        enrollment.getStudentId(),
+                        userId);
+            } else {
+                log.warn("Student not found for enrollment {} with studentId={}",
+                        enrollment.getId(),
+                        enrollment.getStudentId());
+            }
+        } catch (Exception e) {
+            log.error("Failed to fetch student for enrollment {}: {}", enrollment.getId(), e.getMessage(), e);
+        }
+
+        return ClassEnrollmentDto.builder()
+                .enrollmentId(enrollment.getId())
+                .classId(enrollment.getClassId())
+                .studentId(enrollment.getStudentId())
+                .userId(userId)
+                .status(enrollment.getStatus() != null ? enrollment.getStatus().name() : null)
+                .enrolledAt(enrollment.getCreatedAt() != null
+                        ? enrollment.getCreatedAt().toInstant().atZone(java.time.ZoneId.systemDefault()).toInstant()
+                        : null)
+                .build();
     }
 }

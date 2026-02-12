@@ -1,12 +1,11 @@
 package com.datn.datnbe.sharedkernel.security.utils;
 
+import com.datn.datnbe.auth.api.UserProfileApi;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
-import com.datn.datnbe.auth.entity.UserProfile;
-import com.datn.datnbe.auth.repository.UserProfileRepo;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 
@@ -18,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class SecurityContextUtils {
 
-    private final UserProfileRepo userProfileRepo;
+    private final UserProfileApi userProfileApi;
 
     public String getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -48,9 +47,13 @@ public class SecurityContextUtils {
 
     public String getCurrentUserProfileId() {
         String keycloakUserId = getCurrentUserId();
-        UserProfile userProfile = userProfileRepo.findByKeycloakUserId(keycloakUserId)
-                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED, "User is not authenticated"));
-        return userProfile.getId();
+        String userProfileId = userProfileApi.getUSerProfileIdByKeycloakUserId(keycloakUserId);
+
+        if (userProfileId == null)
+            throw new AppException(ErrorCode.UNAUTHORIZED,
+                    "User profile not found for Keycloak user ID: " + keycloakUserId);
+
+        return userProfileId;
     }
 
     public String getCurrentUserToken() {
@@ -94,8 +97,13 @@ public class SecurityContextUtils {
 
     public boolean hasRole(String role) {
         String keycloakUserId = getCurrentUserId();
-        UserProfile userProfile = userProfileRepo.findByKeycloakUserId(keycloakUserId)
-                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED, "User is not authenticated"));
+        var userProfile = userProfileApi.getUserProfile(keycloakUserId);
+
+        if (userProfile == null) {
+            throw new AppException(ErrorCode.UNAUTHORIZED,
+                    "User profile not found for Keycloak user ID: " + keycloakUserId);
+        }
+
         return userProfile.getRole().equalsIgnoreCase(role);
     }
 }

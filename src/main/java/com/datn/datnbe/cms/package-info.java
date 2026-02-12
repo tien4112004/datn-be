@@ -4,6 +4,6 @@
  */
 @org.springframework.modulith.ApplicationModule(allowedDependencies = {"sharedkernel", "sharedkernel::dto",
         "sharedkernel::exceptions", "sharedkernel::config", "auth::authApi", "auth::AuthResponseDto", "auth",
-        "document::DocumentApi", "document::DocumentResponseDto"})
+        "document::DocumentApi", "document::DocumentResponseDto", "student::StudentApi"})
 
 package com.datn.datnbe.cms;
