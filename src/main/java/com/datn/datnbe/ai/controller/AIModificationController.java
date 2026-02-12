@@ -24,11 +24,6 @@ public class AIModificationController {
         return ResponseEntity.ok(modificationService.transformLayout(request));
     }
 
-    @PostMapping("/expand-slide")
-    public ResponseEntity<AIModificationResponse> expandSlide(@RequestBody ExpandSlideRequest request) {
-        return ResponseEntity.ok(modificationService.expandSlide(request));
-    }
-
     @PostMapping("/refine-element-text")
     public ResponseEntity<AIModificationResponse> refineElementText(@RequestBody RefineElementTextRequest request) {
         return ResponseEntity.ok(modificationService.refineElementText(request));
@@ -37,5 +32,10 @@ public class AIModificationController {
     @PostMapping("/replace-element-image")
     public ResponseEntity<AIModificationResponse> replaceElementImage(@RequestBody ReplaceElementImageRequest request) {
         return ResponseEntity.ok(modificationService.replaceElementImage(request));
+    }
+
+    @PostMapping("/refine-combined-text")
+    public ResponseEntity<AIModificationResponse> refineCombinedText(@RequestBody ExpandCombinedTextRequest request) {
+        return ResponseEntity.ok(modificationService.refineCombinedText(request));
     }
 }

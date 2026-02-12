@@ -7,4 +7,6 @@ import java.util.Map;
 public class TransformLayoutRequest {
     private Map<String, Object> currentSchema;
     private String targetType;
+    private String model;
+    private String provider;
 }

@@ -37,4 +37,7 @@ public class PresentationPromptRequest {
 
     @Size(max = 100, message = "Subject must not exceed 100 characters")
     String subject;
+
+    // ✅ ADD: Full presentation config with theme data from frontend
+    PresentationConfigDto presentation;
 }
