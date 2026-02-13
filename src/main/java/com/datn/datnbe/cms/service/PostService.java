@@ -100,6 +100,7 @@ public class PostService implements PostApi {
                             .subject(originalAssignment.getSubject())
                             .grade(originalAssignment.getGrade())
                             .questions(originalAssignment.getQuestions())
+                            .contexts(originalAssignment.getContexts())
                             // Settings from request (configured when creating homework post)
                             .maxSubmissions(request.getMaxSubmissions())
                             .allowRetake(request.getAllowRetake())

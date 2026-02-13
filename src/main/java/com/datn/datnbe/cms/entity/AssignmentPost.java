@@ -10,6 +10,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
 import com.datn.datnbe.document.entity.AssessmentMatrixCell;
+import com.datn.datnbe.document.entity.AssignmentContext;
 import com.datn.datnbe.document.entity.AssignmentTopic;
 import com.datn.datnbe.document.entity.Question;
 
@@ -59,6 +60,10 @@ public class AssignmentPost {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "questions", columnDefinition = "jsonb")
     List<Question> questions;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "contexts", columnDefinition = "jsonb")
+    List<AssignmentContext> contexts;
 
     @Column(name = "max_submissions")
     Integer maxSubmissions;
