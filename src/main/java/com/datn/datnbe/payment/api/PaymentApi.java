@@ -34,7 +34,8 @@ public interface PaymentApi {
     TransactionDetailsDto getTransactionByReferenceCode(String referenceCode);
 
     /**
-     * Find a transaction using the stored order invoice number (used by Sepay and PayOS orderCode)
+     * Find a transaction using the stored order invoice number (used by Sepay and
+     * PayOS orderCode)
      */
     TransactionDetailsDto getTransactionByOrderInvoiceNumber(String orderInvoiceNumber);
 }

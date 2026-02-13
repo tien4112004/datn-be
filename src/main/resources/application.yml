@@ -2,7 +2,7 @@ spring:
   profiles:
     active: default
   application:
-    name: "datn-be"
+    name: 'datn-be'
   config:
     import: optional:file:.env[.properties]
   # AI MODULE CONFIGURATION
@@ -35,14 +35,14 @@ spring:
       maximum-pool-size: 20
       minimum-idle: 5
       # Connection lifecycle (milliseconds)
-      connection-timeout: 30000      # 30 seconds - Max wait for connection from pool
-      idle-timeout: 300000           # 5 minutes - Max idle time before removal
-      max-lifetime: 1800000          # 30 minutes - Max lifetime of connection
+      connection-timeout: 30000 # 30 seconds - Max wait for connection from pool
+      idle-timeout: 300000 # 5 minutes - Max idle time before removal
+      max-lifetime: 1800000 # 30 minutes - Max lifetime of connection
       # Connection leak detection
       leak-detection-threshold: 60000 # 60 seconds - Warn if connection held > 1 min
       # Connection validation
       connection-test-query: SELECT 1
-      validation-timeout: 5000        # 5 seconds - Max time for validation query
+      validation-timeout: 5000 # 5 seconds - Max time for validation query
       # Pool behavior
       auto-commit: true
       pool-name: DatnHikariPool
@@ -97,30 +97,30 @@ app:
 
   cors:
     allowed-origins:
-      - "http://localhost:5173"
-      - "http://localhost:8080"
-      - "http://localhost:5500"
-      - "http://127.0.0.1:5500"
-      - "https://datn-fe.vercel.app"
-      - "https://api.huy-devops.site"
-      - "https://app.huy-devops.site"
+      - 'http://localhost:5173'
+      - 'http://localhost:8080'
+      - 'http://localhost:5500'
+      - 'http://127.0.0.1:5500'
+      - 'https://datn-fe.vercel.app'
+      - 'https://api.huy-devops.site'
+      - 'https://app.huy-devops.site'
     # Use allowed-origin-patterns for wildcard matching with Spring AntPathMatcher syntax
     # * matches any characters except /
     # ** matches any characters including /
     allowed-origin-patterns:
-      - "https://datn-fe-*.vercel.app"
-      - "http://localhost:*"
-      - "http://*.localhost:*"
-      - "http://127.0.0.1:*"
-      - "https://localhost:*"
-      - "https://*.huy-devops.site"
-    allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+      - 'https://datn-fe-*.vercel.app'
+      - 'http://localhost:*'
+      - 'http://*.localhost:*'
+      - 'http://127.0.0.1:*'
+      - 'https://localhost:*'
+      - 'https://*.huy-devops.site'
+    allowed-methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS'
     allow-credentials: true
     max-age: 3600
     exposed-headers: X-Presentation, permission, X-Trace-ID
   media:
     file-size-limit: 104857600 # 100MB
-    avatar-size-limit: "104857600" # 100MB
+    avatar-size-limit: '104857600' # 100MB
   api-client:
     timeout: 30000 # 30 seconds
     max-in-memory-size: 104857600 # 100MB

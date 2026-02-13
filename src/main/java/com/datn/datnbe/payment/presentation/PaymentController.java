@@ -28,8 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/payments")
-@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT,
-        RequestMethod.DELETE})
+@CrossOrigin(origins = "*", allowedHeaders = "*", methods = { RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT,
+        RequestMethod.DELETE })
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
@@ -196,7 +196,8 @@ public class PaymentController {
             }
         }
 
-        String timestamp = java.time.ZonedDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy-HH:mm:ss"));
+        String timestamp = java.time.ZonedDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy-HH:mm:ss"));
         String message = String.format("process successfully webhook - transactionid: %s, status: %s, timestamp: %s",
                 transactionId,
                 status,
@@ -216,7 +217,8 @@ public class PaymentController {
 
         paymentApi.handlePayosWebhook(webhookRequest);
 
-        // Resolve transaction via service by orderCode (we store PayOS orderCode in orderInvoiceNumber)
+        // Resolve transaction via service by orderCode (we store PayOS orderCode in
+        // orderInvoiceNumber)
         String transactionId = "unknown";
         String status = "NOT_FOUND";
         if (orderCode != null) {
@@ -231,7 +233,8 @@ public class PaymentController {
             }
         }
 
-        String timestamp = java.time.ZonedDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy-HH:mm:ss"));
+        String timestamp = java.time.ZonedDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy-HH:mm:ss"));
         String message = String.format("process successfully webhook - transactionid: %s, status: %s, timestamp: %s",
                 transactionId,
                 status,

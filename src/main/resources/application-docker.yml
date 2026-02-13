@@ -1,6 +1,6 @@
 spring:
   application:
-    name: "datn-be"
+    name: 'datn-be'
   # AI MODULE CONFIGURATION
   ai:
     model:
@@ -31,14 +31,14 @@ spring:
       maximum-pool-size: 25
       minimum-idle: 10
       # Connection lifecycle (milliseconds)
-      connection-timeout: 30000      # 30 seconds - Max wait for connection from pool
-      idle-timeout: 300000           # 5 minutes - Max idle time before removal  
-      max-lifetime: 1800000          # 30 minutes - Max lifetime of connection
+      connection-timeout: 30000 # 30 seconds - Max wait for connection from pool
+      idle-timeout: 300000 # 5 minutes - Max idle time before removal
+      max-lifetime: 1800000 # 30 minutes - Max lifetime of connection
       # Connection leak detection
       leak-detection-threshold: 60000 # 60 seconds - Warn if connection held > 1 min
       # Connection validation
       connection-test-query: SELECT 1
-      validation-timeout: 5000        # 5 seconds - Max time for validation query
+      validation-timeout: 5000 # 5 seconds - Max time for validation query
       # Pool behavior
       auto-commit: true
       pool-name: DatnDockerHikariPool
@@ -95,23 +95,23 @@ app:
   coin:
     initial: ${INITIAL_COIN_VALUE:100}
   firebase:
-      config-path: ${FIREBASE_CONFIG_PATH:classpath:firebase-service-account.json}
+    config-path: ${FIREBASE_CONFIG_PATH:classpath:firebase-service-account.json}
   cors:
     allowed-origins:
-      - "http://localhost:5173"
-      - "https://api.huy-devops.site"
+      - 'http://localhost:5173'
+      - 'https://api.huy-devops.site'
     allowed-origin-patterns:
-      - "https://*.ngrok-free.app"
-      - "https://*.ts.net:*"
-      - "http://*.ts.net:*"
-      - "http://localhost:*"
-      - "https://localhost:*"
-      - "http://*.localhost:*"
-      - "https://datn-fe-*.vercel.app" # Vercel preview deployments with any container ID
-      - "https://datn-fe.vercel.app" # Production Vercel deployment
-      - "https://*.vercel.app" # All Vercel apps (more permissive, use with caution)
-      - "https://*.huy-devops.site" # Any subdomain on huy-devops.site
-    allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+      - 'https://*.ngrok-free.app'
+      - 'https://*.ts.net:*'
+      - 'http://*.ts.net:*'
+      - 'http://localhost:*'
+      - 'https://localhost:*'
+      - 'http://*.localhost:*'
+      - 'https://datn-fe-*.vercel.app' # Vercel preview deployments with any container ID
+      - 'https://datn-fe.vercel.app' # Production Vercel deployment
+      - 'https://*.vercel.app' # All Vercel apps (more permissive, use with caution)
+      - 'https://*.huy-devops.site' # Any subdomain on huy-devops.site
+    allowed-methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS'
     allow-credentials: true
     max-age: 3600
     exposed-headers: X-Presentation, permission, X-Trace-ID
@@ -180,7 +180,7 @@ cloudflare:
 
 logging:
   level:
-    "org.springframework.data.mongodb.core.MongoTemplate": DEBUG
+    'org.springframework.data.mongodb.core.MongoTemplate': DEBUG
     com.datn.datnbe.sharedkernel.security.interceptor: DEBUG
     com.datn.datnbe.auth.config.SecurityConfig: WARN
 
