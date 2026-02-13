@@ -18,7 +18,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ExamDraftDto {
+public class AssignmentDraftDto {
 
     /**
      * Unique identifier for the draft (maps to Assignment.id).

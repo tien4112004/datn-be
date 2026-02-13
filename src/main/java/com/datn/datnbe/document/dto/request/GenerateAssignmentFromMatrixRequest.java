@@ -1,6 +1,6 @@
 package com.datn.datnbe.document.dto.request;
 
-import com.datn.datnbe.document.dto.ExamMatrixDto;
+import com.datn.datnbe.document.dto.AssignmentMatrixDto;
 import com.datn.datnbe.document.enums.MissingQuestionStrategy;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -13,14 +13,14 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 /**
- * Request to generate an exam from a matrix by selecting questions
+ * Request to generate an assignment from a matrix by selecting questions
  * from the question bank.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GenerateExamFromMatrixRequest {
+public class GenerateAssignmentFromMatrixRequest {
 
     /**
      * Reference to a saved matrix (if using saved matrix).
@@ -31,7 +31,7 @@ public class GenerateExamFromMatrixRequest {
      * Inline matrix (if not using saved matrix).
      * Either matrixId or matrix must be provided.
      */
-    private ExamMatrixDto matrix;
+    private AssignmentMatrixDto matrix;
 
     /**
      * Subject for the exam (T, TV, TA).

@@ -11,7 +11,7 @@ import org.hibernate.type.SqlTypes;
 import java.util.Date;
 
 /**
- * Entity for persisting exam matrices.
+ * Entity for persisting assignment matrices.
  * Uses the same ID as the Assignment it's attached to for easy joining.
  * The entire matrix structure is stored as JSONB.
  */
@@ -21,12 +21,12 @@ import java.util.Date;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@Table(name = "exam_matrix_templates")
-public class ExamMatrix {
+@Table(name = "assignment_matrix_templates")
+public class AssignmentMatrixEntity {
 
     /**
      * ID that matches the Assignment ID this matrix is attached to.
-     * This allows for easy JOIN between assignments and exam_matrix_templates tables.
+     * This allows for easy JOIN between assignments and assignment_matrix_templates tables.
      */
     @Id
     @Column(name = "id", length = 36)

@@ -9,7 +9,8 @@ import java.util.List;
 
 /**
  * Represents a topic dimension in the exam matrix.
- * Topics serve as organizational containers for subtopics.
+ * Topics are the first dimension in the matrix [topic][difficulty][question_type].
+ * Topics may contain subtopics for organizational purposes.
  */
 @Data
 @Builder
@@ -30,7 +31,8 @@ public class DimensionTopicDto {
 
     /**
      * List of subtopics under this topic.
-     * Subtopics have IDs and represent actual rows in the matrix.
+     * Subtopics are organizational subdivisions.
+     * Questions from any subtopic count toward the parent topic's requirements.
      */
     private List<DimensionSubtopicDto> subtopics;
 }

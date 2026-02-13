@@ -12,8 +12,9 @@ import java.util.List;
 
 /**
  * Represents the dimensions of the exam matrix.
- * The matrix is indexed as: matrix[subtopic_index][difficulty_index][question_type_index]
- * Topics serve as organizational groupings, while subtopics are the actual first dimension.
+ * The matrix is indexed as: matrix[topic_index][difficulty_index][question_type_index]
+ * Topics are the first dimension. Topics may contain subtopics for organizational purposes,
+ * but questions from any subtopic count toward the parent topic's requirements.
  */
 @Data
 @Builder
@@ -23,8 +24,9 @@ public class MatrixDimensionsDto {
 
     /**
      * List of topics with their subtopics.
-     * Topics are organizational containers; subtopics are the actual first dimension in the matrix.
-     * Matrix rows correspond to flattened subtopics across all topics.
+     * Topics are the first dimension in the matrix.
+     * Subtopics are organizational subdivisions; questions from any subtopic 
+     * count toward the parent topic's cell requirements.
      */
     private List<DimensionTopicDto> topics;
 

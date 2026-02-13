@@ -1,8 +1,8 @@
 package com.datn.datnbe.document.service;
 
 import com.datn.datnbe.document.dto.*;
-import com.datn.datnbe.document.dto.request.GenerateExamFromMatrixRequest;
-import com.datn.datnbe.document.dto.response.ExamDraftDto;
+import com.datn.datnbe.document.dto.request.GenerateAssignmentFromMatrixRequest;
+import com.datn.datnbe.document.dto.response.AssignmentDraftDto;
 import com.datn.datnbe.document.dto.response.MatrixGapDto;
 import com.datn.datnbe.document.entity.Question;
 import com.datn.datnbe.document.entity.QuestionBankItem;
@@ -37,11 +37,11 @@ public class QuestionSelectionService {
      *
      * @param request   The request containing the matrix and configuration
      * @param teacherId The ID of the teacher (for personal questions)
-     * @return ExamDraftDto containing selected questions and any gaps
+     * @return AssignmentDraftDto containing selected questions and any gaps
      */
     @Transactional(readOnly = true)
-    public ExamDraftDto selectQuestionsForMatrix(GenerateExamFromMatrixRequest request, String teacherId) {
-        ExamMatrixDto matrix = request.getMatrix();
+    public AssignmentDraftDto selectQuestionsForMatrix(GenerateAssignmentFromMatrixRequest request, String teacherId) {
+        AssignmentMatrixDto matrix = request.getMatrix();
         MatrixDimensionsDto dimensions = matrix.getDimensions();
         MatrixMetadataDto metadata = matrix.getMetadata();
 
@@ -59,8 +59,9 @@ public class QuestionSelectionService {
                 subject,
                 grade);
         for (SelectionCriteria criteria : criteriaList) {
-            log.info("  → Criteria: topic='{}', difficulty='{}' ({}), type='{}' ({}), count={}, points={}",
+            log.info("  → Criteria: topic='{}', subtopics={}, difficulty='{}' ({}), type='{}' ({}), count={}, points={}",
                     criteria.topicName,
+                    criteria.subtopicNames,
                     criteria.difficultyStr,
                     criteria.difficulty,
                     criteria.questionTypeStr,
@@ -70,7 +71,7 @@ public class QuestionSelectionService {
         }
 
         if (criteriaList.isEmpty()) {
-            return ExamDraftDto.builder()
+            return AssignmentDraftDto.builder()
                     .id(UUID.randomUUID().toString())
                     .title(request.getTitle())
                     .description(request.getDescription())
@@ -131,7 +132,7 @@ public class QuestionSelectionService {
         // Calculate totals
         double totalPoints = questions.stream().mapToDouble(q -> q.getPoint() != null ? q.getPoint() : 0).sum();
 
-        return ExamDraftDto.builder()
+        return AssignmentDraftDto.builder()
                 .id(UUID.randomUUID().toString())
                 .title(request.getTitle())
                 .description(request.getDescription())
@@ -148,8 +149,10 @@ public class QuestionSelectionService {
 
     /**
      * Build selection criteria from the matrix.
+     * Matrix schema: [topic][difficulty][question_type]
+     * Questions from any subtopic within a topic count toward the topic's requirements.
      */
-    private List<SelectionCriteria> buildSelectionCriteria(ExamMatrixDto matrix, MatrixDimensionsDto dimensions) {
+    private List<SelectionCriteria> buildSelectionCriteria(AssignmentMatrixDto matrix, MatrixDimensionsDto dimensions) {
         List<SelectionCriteria> criteriaList = new ArrayList<>();
 
         List<DimensionTopicDto> topics = dimensions.getTopics();
@@ -166,63 +169,77 @@ public class QuestionSelectionService {
 
         for (int topicIdx = 0; topicIdx < topics.size(); topicIdx++) {
             DimensionTopicDto topic = topics.get(topicIdx);
+            
+            // Collect all subtopic names for this topic
+            List<String> subtopicNames = topic.getSubtopics() != null 
+                ? topic.getSubtopics().stream().map(DimensionSubtopicDto::getName).toList()
+                : List.of();
+            
             List<List<String>> difficultyRows = matrix.getMatrix().get(topicIdx);
 
-            if (difficultyRows.size() != difficulties.size()) {
-                log.warn("Matrix dimension mismatch for topic '{}': expected {} difficulty rows, found {}",
-                        topic.getName(),
-                        difficulties.size(),
-                        difficultyRows.size());
-            }
-
-            for (int diffIdx = 0; diffIdx < difficulties.size(); diffIdx++) {
-                String difficulty = difficulties.get(diffIdx);
-                List<String> questionTypeCells = difficultyRows.get(diffIdx);
-
-                if (questionTypeCells.size() != questionTypes.size()) {
-                    log.warn(
-                            "Matrix dimension mismatch for topic '{}', difficulty '{}': expected {} question type cells, found {}",
+                if (difficultyRows.size() != difficulties.size()) {
+                    log.warn("Matrix dimension mismatch for topic '{}': expected {} difficulty rows, found {}",
                             topic.getName(),
-                            difficulty,
-                            questionTypes.size(),
-                            questionTypeCells.size());
+                            difficulties.size(),
+                            difficultyRows.size());
                 }
 
-                for (int qtypeIdx = 0; qtypeIdx < questionTypes.size(); qtypeIdx++) {
-                    String cell = questionTypeCells.get(qtypeIdx);
-                    String questionType = questionTypes.get(qtypeIdx);
+                for (int diffIdx = 0; diffIdx < difficulties.size(); diffIdx++) {
+                    String difficulty = difficulties.get(diffIdx);
+                    List<String> questionTypeCells = difficultyRows.get(diffIdx);
 
-                    // cell format: "count:points"
-                    int count = 0;
-                    double points = 0.0;
-                    if (cell != null && cell.contains(":")) {
-                        String[] parts = cell.split(":");
-                        count = Integer.parseInt(parts[0]);
-                        points = parts.length > 1 ? Double.parseDouble(parts[1]) : 0.0;
-                    }
-
-                    if (count > 0) {
-                        Difficulty mappedDifficulty = Difficulty.valueOf(difficulty.toUpperCase());
-                        QuestionType mappedType = parseQuestionType(questionType);
-
-                        if (mappedType == null) {
-                            log.warn("Skipping cell due to invalid question type '{}' for topic='{}', difficulty='{}'",
-                                    questionType,
-                                    topic.getName(),
-                                    difficulty);
-                            continue;
-                        }
-
-                        criteriaList.add(new SelectionCriteria(topic.getName(), difficulty, questionType,
-                                mappedDifficulty, mappedType, count, points));
-                    } else {
-                        log.debug("Skipping cell with count=0 for topic='{}', difficulty='{}', type='{}'",
+                    if (questionTypeCells.size() != questionTypes.size()) {
+                        log.warn(
+                                "Matrix dimension mismatch for topic '{}', difficulty '{}': expected {} question type cells, found {}",
                                 topic.getName(),
                                 difficulty,
-                                questionType);
+                                questionTypes.size(),
+                                questionTypeCells.size());
+                    }
+
+                    for (int qtypeIdx = 0; qtypeIdx < questionTypes.size(); qtypeIdx++) {
+                        String cell = questionTypeCells.get(qtypeIdx);
+                        String questionType = questionTypes.get(qtypeIdx);
+
+                        // cell format: "count:points"
+                        int count = 0;
+                        double points = 0.0;
+                        if (cell != null && cell.contains(":")) {
+                            String[] parts = cell.split(":");
+                            count = Integer.parseInt(parts[0]);
+                            points = parts.length > 1 ? Double.parseDouble(parts[1]) : 0.0;
+                        }
+
+                        if (count > 0) {
+                            Difficulty mappedDifficulty = Difficulty.valueOf(difficulty.toUpperCase());
+                            QuestionType mappedType = parseQuestionType(questionType);
+
+                            if (mappedType == null) {
+                                log.warn("Skipping cell due to invalid question type '{}' for topic='{}', difficulty='{}'",
+                                        questionType,
+                                        topic.getName(),
+                                        difficulty);
+                                continue;
+                            }
+
+                            // Store criteria with parent topic and all its subtopics for flexible matching
+                            criteriaList.add(new SelectionCriteria(
+                                    topic.getName(), 
+                                    subtopicNames,
+                                    difficulty, 
+                                    questionType,
+                                    mappedDifficulty, 
+                                    mappedType, 
+                                    count, 
+                                    points));
+                        } else {
+                            log.debug("Skipping cell with count=0 for topic='{}', difficulty='{}', type='{}'",
+                                    topic.getName(),
+                                    difficulty,
+                                    questionType);
+                        }
                     }
                 }
-            }
         }
 
         return criteriaList;
@@ -281,14 +298,29 @@ public class QuestionSelectionService {
                 whereConditions.append(" OR ");
             }
 
-            String topicParam = "topic_" + i;
             String difficultyParam = "difficulty_" + i;
             String typeParam = "type_" + i;
             String countParam = "count_" + i;
 
-            whereConditions.append("(LOWER(chapter) = LOWER(:")
-                    .append(topicParam)
-                    .append(")")
+            // Build IN clause for subtopics (questions can match any subtopic in the topic)
+            StringBuilder subtopicCondition = new StringBuilder("(");
+            if (criteria.subtopicNames != null && !criteria.subtopicNames.isEmpty()) {
+                subtopicCondition.append("LOWER(chapter) IN (");
+                for (int j = 0; j < criteria.subtopicNames.size(); j++) {
+                    String subtopicParam = "subtopic_" + i + "_" + j;
+                    if (j > 0) subtopicCondition.append(", ");
+                    subtopicCondition.append("LOWER(:").append(subtopicParam).append(")");
+                    parameters.put(subtopicParam, criteria.subtopicNames.get(j));
+                }
+                subtopicCondition.append(")");
+            } else {
+                // Fallback to topic name if no subtopics
+                String topicParam = "topic_" + i;
+                subtopicCondition.append("LOWER(chapter) = LOWER(:").append(topicParam).append(")");
+                parameters.put(topicParam, criteria.topicName);
+            }
+
+            whereConditions.append(subtopicCondition)
                     .append(" AND UPPER(difficulty) = UPPER(:")
                     .append(difficultyParam)
                     .append(") AND UPPER(type) = UPPER(:")
@@ -297,9 +329,8 @@ public class QuestionSelectionService {
                     .append(countParam)
                     .append(")");
 
-            parameters.put(topicParam, criteria.topicName);
-            parameters.put(difficultyParam, criteria.difficulty.name()); // Convert enum to string
-            parameters.put(typeParam, criteria.questionType.name()); // Convert enum to string
+            parameters.put(difficultyParam, criteria.difficulty.name());
+            parameters.put(typeParam, criteria.questionType.name());
             parameters.put(countParam, criteria.requiredCount);
         }
 
@@ -382,11 +413,24 @@ public class QuestionSelectionService {
 
     /**
      * Check if a question matches the criteria.
-     * Uses case-insensitive comparison for topic names.
+     * Now checks if question chapter matches ANY subtopic within the topic (case-insensitive).
      */
     private boolean matchesCriteria(QuestionBankItem question, SelectionCriteria criteria) {
-        return question.getChapter() != null && question.getChapter().equalsIgnoreCase(criteria.topicName)
-                && question.getDifficulty() == criteria.difficulty && question.getType() == criteria.questionType;
+        if (question.getChapter() == null) return false;
+        
+        boolean chapterMatches = false;
+        if (criteria.subtopicNames != null && !criteria.subtopicNames.isEmpty()) {
+            // Check if question chapter matches any subtopic
+            chapterMatches = criteria.subtopicNames.stream()
+                    .anyMatch(subtopic -> question.getChapter().equalsIgnoreCase(subtopic));
+        } else {
+            // Fallback to topic name matching
+            chapterMatches = question.getChapter().equalsIgnoreCase(criteria.topicName);
+        }
+        
+        return chapterMatches 
+                && question.getDifficulty() == criteria.difficulty 
+                && question.getType() == criteria.questionType;
     }
 
     /**
@@ -438,8 +482,16 @@ public class QuestionSelectionService {
 
     /**
      * Internal record to hold selection criteria.
+     * Now includes all subtopic names to allow matching questions from any subtopic within a topic.
      */
-    private record SelectionCriteria(String topicName, String difficultyStr, String questionTypeStr,
-            Difficulty difficulty, QuestionType questionType, int requiredCount, double pointsPerCell) {
+    private record SelectionCriteria(
+            String topicName,
+            List<String> subtopicNames,
+            String difficultyStr, 
+            String questionTypeStr,
+            Difficulty difficulty, 
+            QuestionType questionType, 
+            int requiredCount, 
+            double pointsPerCell) {
     }
 }

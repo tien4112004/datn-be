@@ -7,7 +7,8 @@ import lombok.NoArgsConstructor;
 
 /**
  * Represents a subtopic within a topic dimension in the exam matrix.
- * Subtopics are the actual rows in the matrix, while topics serve as organizational containers.
+ * Subtopics are organizational subdivisions of topics.
+ * Questions from any subtopic count toward the parent topic's matrix cell requirements.
  */
 @Data
 @Builder

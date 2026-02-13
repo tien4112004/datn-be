@@ -77,10 +77,9 @@ public class SecurityConfig {
                                 "/api/slide-templates",
                                 "/api/slide-templates/**",
                                 "/api/students/import",
-                                "/api/exams/generate-matrix",
-                                "/api/exams/generate-matrix/**",
-                                "/api/exams/generate-matrix",
-                                "/api/exams/generate-from-matrix",
+                                "/api/assignments/generate-matrix",
+                                "/api/assignments/generate-matrix/**",
+                                "/api/assignments/generate-from-matrix",
                                 "/api/question-bank/**")
                         .permitAll()
                         .requestMatchers(HttpMethod.PUT,

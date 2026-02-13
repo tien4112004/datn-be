@@ -8,16 +8,17 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 /**
- * Represents the exam matrix structure.
+ * Represents the assignment matrix structure.
  *
  * Matrix is indexed as: matrix[topic_index][difficulty_index][question_type_index]
  * Each cell is "count:points" string format for that combination.
+ * Questions from any subtopic within a topic count toward the topic's cell requirements.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ExamMatrixDto {
+public class AssignmentMatrixDto {
 
     /**
      * Matrix metadata (id, name, createdAt).

@@ -13,7 +13,7 @@ import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.document.entity.Chapter;
 import com.datn.datnbe.document.dto.DimensionTopicDto;
-import com.datn.datnbe.document.dto.ExamMatrixDto;
+import com.datn.datnbe.document.dto.AssignmentMatrixDto;
 import com.datn.datnbe.document.dto.request.GenerateMatrixRequest;
 import com.datn.datnbe.document.dto.request.GenerateQuestionsFromTopicRequest;
 import com.datn.datnbe.document.repository.ChapterRepository;
@@ -197,7 +197,7 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     }
 
     @Override
-    public ExamMatrixDto generateExamMatrix(GenerateMatrixRequest request, String traceId) {
+    public AssignmentMatrixDto generateAssignmentMatrix(GenerateMatrixRequest request, String traceId) {
         log.info("Starting exam matrix generation for grade: {}, subject: {}",
                 request.getGrade(),
                 request.getSubject());
@@ -232,8 +232,8 @@ public class ContentGenerationManagement implements ContentGenerationApi {
         try {
             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
             headers.set("X-Trace-ID", traceId);
-            ExamMatrixDto result = aiApiClient
-                    .post(EXAM_MATRIX_API_ENDPOINT, requestWithChapters, ExamMatrixDto.class, headers);
+            AssignmentMatrixDto result = aiApiClient
+                    .post(EXAM_MATRIX_API_ENDPOINT, requestWithChapters, AssignmentMatrixDto.class, headers);
 
             // Add numeric IDs to topics (backend processing)
             if (result.getDimensions() != null && result.getDimensions().getTopics() != null) {
