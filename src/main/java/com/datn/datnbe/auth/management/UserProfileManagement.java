@@ -1,5 +1,6 @@
 package com.datn.datnbe.auth.management;
 
+import com.datn.datnbe.auth.dto.response.UserMinimalInfoDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -337,9 +338,9 @@ public class UserProfileManagement implements UserProfileApi {
     }
 
     @Override
-    public com.datn.datnbe.auth.dto.response.UserMinimalInfoDto getUserMinimalInfo(String userId) {
+    public UserMinimalInfoDto getUserMinimalInfo(String userId) {
         return userProfileRepo.findByIdOrKeycloakUserId(userId)
-                .map(userProfile -> com.datn.datnbe.auth.dto.response.UserMinimalInfoDto.builder()
+                .map(userProfile -> UserMinimalInfoDto.builder()
                         .id(userProfile.getId())
                         .firstName(userProfile.getFirstName())
                         .lastName(userProfile.getLastName())
@@ -370,5 +371,10 @@ public class UserProfileManagement implements UserProfileApi {
     @Override
     public String getKeycloakUserIdByUserId(String userId) {
         return userProfileRepo.findByIdOrKeycloakUserId(userId).map(UserProfile::getKeycloakUserId).orElse(null);
+    }
+
+    @Override
+    public String getUSerProfileIdByKeycloakUserId(String keycloakUserId) {
+        return userProfileRepo.findByIdOrKeycloakUserId(keycloakUserId).map(UserProfile::getId).orElse(null);
     }
 }
