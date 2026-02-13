@@ -195,3 +195,15 @@ phoenix:
   api-url: ${PHOENIX_API_URL:http://localhost:6006}
   api-key: ${PHOENIX_API_KEY:}
   project-id: ${PHOENIX_PROJECT_ID:}
+
+sepay:
+  merchant-id: ${SEPAY_MERCHANT_ID:SP-TEST-HT543499}
+  api-key: ${SEPAY_API_KEY:your-api-key-here}
+  secret-key: ${SEPAY_SECRET_KEY:}
+  account-name: ${SEPAY_ACCOUNT_NAME:Your Bank Account Name}
+  webhook-secret: ${SEPAY_WEBHOOK_SECRET:your-webhook-secret}
+  sandbox-url: ${SEPAY_SANDBOX_URL:https://sandbox.sepay.vn}
+  production-url: ${SEPAY_PRODUCTION_URL:https://payment.sepay.vn}
+  use-sandbox: ${SEPAY_USE_SANDBOX:true}
+  api-base-url: ${SEPAY_API_BASE_URL:https://sandbox-api.sepay.vn/api}
+  webhook-url: ${SEPAY_WEBHOOK_URL:https://your-domain.com/api/payments/notify/sepay}

@@ -11,7 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserCoinDTO {
+public class UserCoinDto {
     private String id;
     private Long coin;
 }

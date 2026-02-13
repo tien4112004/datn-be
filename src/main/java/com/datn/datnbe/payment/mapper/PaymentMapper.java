@@ -1,18 +1,18 @@
 package com.datn.datnbe.payment.mapper;
 
-import com.datn.datnbe.payment.dto.CoinUsageTransactionDTO;
-import com.datn.datnbe.payment.dto.UserCoinDTO;
+import com.datn.datnbe.payment.dto.CoinUsageTransactionDto;
+import com.datn.datnbe.payment.dto.UserCoinDto;
 import com.datn.datnbe.payment.entity.CoinUsageTransaction;
 import com.datn.datnbe.payment.entity.UserCoin;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface PaymentMapper {
-    UserCoinDTO toUserCoinDTO(UserCoin userCoin);
+    UserCoinDto toUserCoinDTO(UserCoin userCoin);
 
-    UserCoin toUserCoinEntity(UserCoinDTO userCoinDTO);
+    UserCoin toUserCoinEntity(UserCoinDto userCoinDTO);
 
-    CoinUsageTransactionDTO toCoinUsageTransactionDTO(CoinUsageTransaction transaction);
+    CoinUsageTransactionDto toCoinUsageTransactionDTO(CoinUsageTransaction transaction);
 
-    CoinUsageTransaction toCoinUsageTransactionEntity(CoinUsageTransactionDTO dto);
+    CoinUsageTransaction toCoinUsageTransactionEntity(CoinUsageTransactionDto dto);
 }
