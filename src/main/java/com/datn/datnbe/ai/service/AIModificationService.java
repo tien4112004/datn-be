@@ -80,9 +80,10 @@ public class AIModificationService {
             imageRequest.setModel("gemini-2.5-flash-image");  // Hardcoded for image generation
             imageRequest.setProvider("google");
             imageRequest.setNumberOfImages(1);
-            imageRequest.setAspectRatio("16:9");
+            imageRequest.setAspectRatio("1:1");
             imageRequest.setSafetyFilterLevel("block_few");
             imageRequest.setPersonGeneration("allow_all");
+            imageRequest.setNegativePrompt("text, watermark");
 
             // Step 3: Call ai-worker generic image generation endpoint (lightweight)
             ImageGenerateResponse workerResponse = aiApiClient
