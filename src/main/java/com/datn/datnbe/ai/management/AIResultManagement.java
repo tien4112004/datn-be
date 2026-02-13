@@ -4,7 +4,7 @@ import com.datn.datnbe.ai.api.AIResultApi;
 import com.datn.datnbe.ai.dto.response.AIResultResponseDto;
 import com.datn.datnbe.ai.entity.AIResult;
 import com.datn.datnbe.ai.mapper.AIResultMapper;
-import com.datn.datnbe.ai.repository.interfaces.AIResultRepo;
+import com.datn.datnbe.ai.repository.AIResultRepository;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import lombok.AccessLevel;
@@ -20,7 +20,7 @@ import java.util.Optional;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 public class AIResultManagement implements AIResultApi {
-    AIResultRepo aiResultRepo;
+    AIResultRepository aiResultRepo;
     AIResultMapper aiResultMapper;
 
     @Override

@@ -7,8 +7,8 @@ import com.datn.datnbe.ai.dto.response.CoinPricingResponseDto;
 import com.datn.datnbe.ai.entity.CoinPricing;
 import com.datn.datnbe.ai.entity.ModelConfigurationEntity;
 import com.datn.datnbe.ai.enums.ResourceType;
-import com.datn.datnbe.ai.repository.CoinPricingRepo;
-import com.datn.datnbe.ai.repository.interfaces.ModelConfigurationRepo;
+import com.datn.datnbe.ai.repository.CoinPricingRepository;
+import com.datn.datnbe.ai.repository.ModelConfigurationRepository;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import jakarta.transaction.Transactional;
@@ -26,8 +26,8 @@ import java.util.Objects;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class CoinPricingManagement implements CoinPricingApi {
 
-    CoinPricingRepo coinPricingRepo;
-    ModelConfigurationRepo modelConfigurationRepo;
+    CoinPricingRepository coinPricingRepo;
+    ModelConfigurationRepository modelConfigurationRepo;
 
     @Override
     public List<CoinPricingResponseDto> getAllPricing(ResourceType resourceType) {
@@ -68,10 +68,8 @@ public class CoinPricingManagement implements CoinPricingApi {
         // Look up the model if modelId is provided
         ModelConfigurationEntity model = null;
         if (request.getModelId() != null) {
-            model = modelConfigurationRepo.getModelById(request.getModelId());
-            if (model == null) {
-                throw new AppException(ErrorCode.MODEL_NOT_FOUND);
-            }
+            model = modelConfigurationRepo.findById(request.getModelId())
+                    .orElseThrow(() -> new AppException(ErrorCode.MODEL_NOT_FOUND));
         }
 
         CoinPricing pricing = CoinPricing.builder()

@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -58,7 +58,7 @@ public class MindmapIntegrationTest extends BaseIntegrationTest {
     @Autowired
     MindmapRepository repository;
 
-    @MockBean
+    @MockitoBean
     ResourcePermissionApi resourcePermissionApi;
 
     @BeforeEach

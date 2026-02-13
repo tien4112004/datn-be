@@ -23,7 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.datn.datnbe.ai.dto.response.AIResultResponseDto;
 import com.datn.datnbe.ai.entity.AIResult;
 import com.datn.datnbe.ai.mapper.AIResultMapper;
-import com.datn.datnbe.ai.repository.interfaces.AIResultRepo;
+import com.datn.datnbe.ai.repository.AIResultRepository;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 
@@ -31,7 +31,7 @@ import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 class AIResultManagementTest {
 
     @Mock
-    private AIResultRepo aiResultRepo;
+    private AIResultRepository aiResultRepo;
 
     @Mock
     private AIResultMapper aiResultMapper;
