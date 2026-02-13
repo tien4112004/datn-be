@@ -1,4 +1,4 @@
-package com.datn.datnbe.ai.dto.requests;
+package com.datn.datnbe.ai.dto.request;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Data;

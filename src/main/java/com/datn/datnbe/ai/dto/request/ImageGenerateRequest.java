@@ -1,4 +1,4 @@
-package com.datn.datnbe.ai.dto.requests;
+package com.datn.datnbe.ai.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

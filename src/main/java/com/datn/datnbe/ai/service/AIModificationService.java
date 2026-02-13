@@ -1,27 +1,43 @@
 package com.datn.datnbe.ai.service;
 
+import com.datn.datnbe.ai.api.TokenUsageApi;
 import com.datn.datnbe.ai.apiclient.AIApiClient;
 import com.datn.datnbe.ai.dto.AIModificationResponse; // Use the one we created or move it
+import com.datn.datnbe.ai.dto.request.ExpandCombinedTextRequest;
+import com.datn.datnbe.ai.dto.request.ImageGenerateRequest;
 import com.datn.datnbe.ai.dto.request.ImagePromptRequest;
-import com.datn.datnbe.ai.dto.requests.*;
+import com.datn.datnbe.ai.dto.request.RefineContentRequest;
+import com.datn.datnbe.ai.dto.request.RefineElementTextRequest;
+import com.datn.datnbe.ai.dto.request.ReplaceElementImageRequest;
+import com.datn.datnbe.ai.dto.request.TransformLayoutRequest;
 import com.datn.datnbe.ai.dto.response.ImageGenerateResponse;
+import com.datn.datnbe.ai.dto.response.TokenUsageInfoDto;
+import com.datn.datnbe.ai.entity.TokenUsage;
 import com.datn.datnbe.ai.utils.MappingParamsUtils;
 import com.datn.datnbe.document.api.MediaStorageApi;
 import com.datn.datnbe.document.dto.MediaMetadataDto;
 import com.datn.datnbe.document.dto.response.UploadedMediaResponseDto;
 import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import com.datn.datnbe.sharedkernel.utils.Base64MultipartFile;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import ch.qos.logback.core.subst.Token;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.hc.client5.http.classic.methods.HttpHead;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -34,6 +50,9 @@ public class AIModificationService {
     private final AIApiClient aiApiClient;
     private final MediaStorageApi mediaStorageApi;
     private final SecurityContextUtils securityContextUtils;
+    private final PhoenixQueryService phoenixQueryService;
+    private final TokenUsageApi tokenUsageApi;
+    private final ObjectMapper objectMapper;
 
     // These endpoints must match the AI Worker's router
     private static final String AI_REFINE_ENDPOINT = "/api/modification/refine";
@@ -44,20 +63,62 @@ public class AIModificationService {
     public AIModificationResponse refineContent(RefineContentRequest request) {
         log.info("Refining content for slide: {}", request.getContext().getSlideId());
         setDefaultModelAndProvider(request);
+        String traceId = UUID.randomUUID().toString();
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Trace-ID", traceId);
         // Delegate to worker
-        return aiApiClient.post(AI_REFINE_ENDPOINT, request, AIModificationResponse.class);
+        AIModificationResponse response =  aiApiClient.post(AI_REFINE_ENDPOINT, request, AIModificationResponse.class, headers);
+        
+        String requestBody = "";
+        try {
+            // Log the request body as JSON string for tracking
+            requestBody = objectMapper.writeValueAsString(request);
+        } catch (Exception e) {
+            log.error("Failed to serialize refine content request for token usage tracking", e);
+        }
+        trackingTokenUsage(traceId, request.getModel(), request.getProvider(), "refine_content", requestBody);
+        
+        return response;
     }
 
     public AIModificationResponse transformLayout(TransformLayoutRequest request) {
         log.info("Transforming layout to: {}", request.getTargetType());
         setDefaultModelAndProvider(request);
-        return aiApiClient.post(AI_LAYOUT_ENDPOINT, request, AIModificationResponse.class);
+        String traceId = UUID.randomUUID().toString();
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Trace-ID", traceId);
+        AIModificationResponse response = aiApiClient.post(AI_LAYOUT_ENDPOINT, request, AIModificationResponse.class, headers);
+        
+        String requestBody = "";
+        try {
+            // Log the request body as JSON string for tracking
+            requestBody = objectMapper.writeValueAsString(request);
+        } catch (Exception e) {
+            log.error("Failed to serialize transform layout request for token usage tracking", e);
+        }
+        trackingTokenUsage(traceId, request.getModel(), request.getProvider(), "transform_layout", requestBody);
+        
+        return response;
     }
 
     public AIModificationResponse refineElementText(RefineElementTextRequest request) {
         log.info("Refining text for element: {}", request.getElementId());
         setDefaultModelAndProvider(request);
-        return aiApiClient.post(AI_REFINE_TEXT_ENDPOINT, request, AIModificationResponse.class);
+        String traceId = UUID.randomUUID().toString();
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Trace-ID", traceId);
+        AIModificationResponse response = aiApiClient.post(AI_REFINE_TEXT_ENDPOINT, request, AIModificationResponse.class, headers);
+        
+        String requestBody = "";
+        try {
+            // Log the request body as JSON string for tracking
+            requestBody = objectMapper.writeValueAsString(request);
+        } catch (Exception e) {
+            log.error("Failed to serialize refine element text request for token usage tracking", e);
+        }
+        trackingTokenUsage(traceId, request.getModel(), request.getProvider(), "refine_element_text", requestBody);
+        
+        return response;
     }
 
     public AIModificationResponse replaceElementImage(ReplaceElementImageRequest request) {
@@ -86,8 +147,11 @@ public class AIModificationService {
             imageRequest.setNegativePrompt("text, watermark");
 
             // Step 3: Call ai-worker generic image generation endpoint (lightweight)
+            String traceId = UUID.randomUUID().toString();
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("X-Trace-ID", traceId);
             ImageGenerateResponse workerResponse = aiApiClient
-                    .post(IMAGE_API_ENDPOINT, imageRequest, ImageGenerateResponse.class);
+                    .post(IMAGE_API_ENDPOINT, imageRequest, ImageGenerateResponse.class, headers);
 
             // Step 4: Extract base64 image data
             if (workerResponse == null || workerResponse.getImages() == null || workerResponse.getImages().isEmpty()) {
@@ -102,7 +166,7 @@ public class AIModificationService {
             MultipartFile imageFile = convertBase64DataUriToMultipartFile(base64DataUri);
 
             // Step 6: Prepare metadata for tracking
-            String ownerId = securityContextUtils.getCurrentUserId();
+            String ownerId = securityContextUtils.getCurrentUserProfileId();
             MediaMetadataDto metadata = MediaMetadataDto.builder()
                     .isGenerated(true)
                     .presentationId(request.getSlideId())
@@ -118,6 +182,16 @@ public class AIModificationService {
             // Step 8: Return CDN URL in same format
             Map<String, Object> resultData = new HashMap<>();
             resultData.put("imageUrl", uploadedMedia.getCdnUrl());
+
+            String requestBody = "";
+            try {
+                // Log the request body as JSON string for tracking
+                requestBody = objectMapper.writeValueAsString(imageRequest);
+            } catch (Exception e) {
+                log.error("Failed to serialize image generation request for token usage tracking", e);
+            }
+            trackingTokenUsage(traceId, imageRequest.getModel(), imageRequest.getProvider(), "image", requestBody);
+            
             return AIModificationResponse.success(resultData);
 
         } catch (IllegalArgumentException e) {
@@ -167,24 +241,21 @@ public class AIModificationService {
     public AIModificationResponse refineCombinedText(ExpandCombinedTextRequest request) {
         log.info("Refining combined text for slide: {}", request.getSlideId());
         setDefaultModelAndProvider(request);
-        return aiApiClient.post(AI_REFINE_COMBINED_TEXT_ENDPOINT, request, AIModificationResponse.class);
-    }
-
-    /**
-     * Build full prompt from request for metadata tracking
-     */
-    private String buildPromptFromRequest(ReplaceElementImageRequest request) {
-        StringBuilder prompt = new StringBuilder(request.getDescription());
-        if (request.getStyle() != null && !request.getStyle().isEmpty()) {
-            prompt.append(" in ").append(request.getStyle()).append(" style");
+        String traceId = UUID.randomUUID().toString();
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Trace-ID", traceId);
+        AIModificationResponse response =  aiApiClient.post(AI_REFINE_COMBINED_TEXT_ENDPOINT, request, AIModificationResponse.class, headers);
+        
+        String requestBody = "";
+        try {
+            // Log the request body as JSON string for tracking
+            requestBody = objectMapper.writeValueAsString(request);
+        } catch (Exception e) {
+            log.error("Failed to serialize refine combined text request for token usage tracking", e);
         }
-        if (request.getArtDescription() != null && !request.getArtDescription().isEmpty()) {
-            prompt.append(", ").append(request.getArtDescription());
-        }
-        if (request.getThemeDescription() != null && !request.getThemeDescription().isEmpty()) {
-            prompt.append(", ").append(request.getThemeDescription());
-        }
-        return prompt.toString();
+        trackingTokenUsage(traceId, request.getModel(), request.getProvider(), "refine_combined_text", requestBody);
+        
+        return response;
     }
 
     /**
@@ -232,6 +303,23 @@ public class AIModificationService {
             if (req.getProvider() == null) {
                 req.setProvider("google");
             }
+        }
+    }
+
+    @Async
+    private void trackingTokenUsage(String traceId, String model, String provider, String operation, String request) {
+        TokenUsageInfoDto token = phoenixQueryService.getTokenUsageFromPhoenix(traceId, operation);
+        if (token != null) {
+            TokenUsage  tokenUsage = TokenUsage.builder()
+                    .model(model)
+                    .provider(provider)
+                    .request(operation)
+                    .inputTokens(token.getInputTokens())
+                    .outputTokens(token.getOutputTokens())
+                    .tokenCount(token.getTotalTokens())
+                    .requestBody(request)
+                    .build();
+            tokenUsageApi.recordTokenUsage(tokenUsage);
         }
     }
 }

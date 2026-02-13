@@ -1,7 +1,11 @@
 package com.datn.datnbe.ai.controller;
 
 import com.datn.datnbe.ai.dto.AIModificationResponse;
-import com.datn.datnbe.ai.dto.requests.*;
+import com.datn.datnbe.ai.dto.request.ExpandCombinedTextRequest;
+import com.datn.datnbe.ai.dto.request.RefineContentRequest;
+import com.datn.datnbe.ai.dto.request.RefineElementTextRequest;
+import com.datn.datnbe.ai.dto.request.ReplaceElementImageRequest;
+import com.datn.datnbe.ai.dto.request.TransformLayoutRequest;
 import com.datn.datnbe.ai.service.AIModificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
