@@ -9,4 +9,6 @@ import java.util.Optional;
 @Repository
 public interface AIResultRepository extends JpaRepository<AIResult, Integer> {
     Optional<AIResult> findByPresentationId(String presentationId);
+
+    void deleteByPresentationId(String presentationId);
 }
