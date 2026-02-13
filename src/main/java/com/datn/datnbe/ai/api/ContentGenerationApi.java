@@ -1,8 +1,10 @@
 package com.datn.datnbe.ai.api;
 
+import com.datn.datnbe.ai.dto.request.GenerateQuestionsFromMatrixRequest;
 import com.datn.datnbe.ai.dto.request.MindmapPromptRequest;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
+import com.datn.datnbe.ai.dto.response.GenerateQuestionsFromMatrixResponse;
 import com.datn.datnbe.document.dto.AssignmentMatrixDto;
 import com.datn.datnbe.document.dto.request.GenerateMatrixRequest;
 import com.datn.datnbe.document.dto.request.GenerateQuestionsFromTopicRequest;
@@ -32,4 +34,15 @@ public interface ContentGenerationApi {
      * Generate questions based on topic and requirements using AI
      */
     String generateQuestions(GenerateQuestionsFromTopicRequest request, String traceId);
+
+    /**
+     * Generate questions from matrix (fixed deprecated endpoint).
+     * Supports context-based and regular questions in batch.
+     *
+     * @param request Request containing matrix items with optional context info
+     * @param traceId Trace ID for observability
+     * @return Response with generated questions and used contexts
+     */
+    GenerateQuestionsFromMatrixResponse generateQuestionsFromMatrix(GenerateQuestionsFromMatrixRequest request,
+            String traceId);
 }

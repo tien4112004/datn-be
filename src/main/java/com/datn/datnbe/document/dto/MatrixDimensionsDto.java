@@ -25,7 +25,7 @@ public class MatrixDimensionsDto {
     /**
      * List of topics with their subtopics.
      * Topics are the first dimension in the matrix.
-     * Subtopics are organizational subdivisions; questions from any subtopic 
+     * Subtopics are organizational subdivisions; questions from any subtopic
      * count toward the parent topic's cell requirements.
      */
     private List<DimensionTopicDto> topics;

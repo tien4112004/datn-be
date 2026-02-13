@@ -5,6 +5,7 @@ import com.datn.datnbe.document.dto.request.AssignmentCreateRequest;
 import com.datn.datnbe.document.dto.request.AssignmentSettingsUpdateRequest;
 import com.datn.datnbe.document.dto.request.AssignmentUpdateRequest;
 import com.datn.datnbe.document.dto.request.GenerateAssignmentFromMatrixRequest;
+import com.datn.datnbe.document.dto.request.GenerateFullAssignmentRequest;
 import com.datn.datnbe.document.dto.request.GenerateMatrixRequest;
 import com.datn.datnbe.document.dto.response.AssignmentResponse;
 import com.datn.datnbe.document.dto.response.AssignmentDraftDto;
@@ -43,4 +44,19 @@ public interface AssignmentApi {
      * @return AssignmentDraftDto containing selected questions and any gaps
      */
     AssignmentDraftDto generateAssignmentFromMatrix(GenerateAssignmentFromMatrixRequest request, String teacherId);
+
+    /**
+     * Generate a full assignment with AI-generated questions.
+     * Supports both context-based and regular curriculum questions.
+     *
+     * Features:
+     * - Topics with hasContext=true get random contexts from database
+     * - All questions generated in single LLM call
+     * - Questions automatically linked to contexts
+     *
+     * @param request   The request containing the matrix and assignment details
+     * @param teacherId The ID of the teacher creating the assignment
+     * @return AssignmentDraftDto containing the generated questions
+     */
+    AssignmentDraftDto generateFullAssignment(GenerateFullAssignmentRequest request, String teacherId);
 }

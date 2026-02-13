@@ -1,5 +1,6 @@
 package com.datn.datnbe.document.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -35,4 +36,13 @@ public class DimensionTopicDto {
      * Questions from any subtopic count toward the parent topic's requirements.
      */
     private List<DimensionSubtopicDto> subtopics;
+
+    /**
+     * Flag indicating whether this topic uses context-based questions.
+     * If true, the system will randomly select an appropriate context from the database
+     * (matching grade/subject) and generate questions based on that context.
+     * If false or null, questions are generated based on curriculum knowledge only.
+     */
+    @JsonProperty("hasContext")
+    private Boolean hasContext;
 }

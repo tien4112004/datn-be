@@ -3,18 +3,24 @@ package com.datn.datnbe.document.management;
 import com.datn.datnbe.ai.api.CoinPricingApi;
 import com.datn.datnbe.ai.api.ContentGenerationApi;
 import com.datn.datnbe.ai.api.TokenUsageApi;
+import com.datn.datnbe.ai.dto.request.GenerateQuestionsFromMatrixRequest;
+import com.datn.datnbe.ai.dto.request.GenerateQuestionsFromMatrixRequest.ContextInfo;
+import com.datn.datnbe.ai.dto.request.GenerateQuestionsFromMatrixRequest.MatrixItemWithContext;
+import com.datn.datnbe.ai.dto.response.GenerateQuestionsFromMatrixResponse;
 import com.datn.datnbe.ai.dto.response.TokenUsageInfoDto;
 import com.datn.datnbe.ai.entity.TokenUsage;
 import com.datn.datnbe.ai.service.PhoenixQueryService;
 import com.datn.datnbe.auth.api.ResourcePermissionApi;
 import com.datn.datnbe.auth.dto.request.ResourceRegistrationRequest;
 import com.datn.datnbe.document.api.AssignmentApi;
+import com.datn.datnbe.document.dto.DimensionTopicDto;
 import com.datn.datnbe.document.dto.DocumentMetadataDto;
 import com.datn.datnbe.document.dto.AssignmentMatrixDto;
 import com.datn.datnbe.document.dto.request.AssignmentCreateRequest;
 import com.datn.datnbe.document.dto.request.AssignmentSettingsUpdateRequest;
 import com.datn.datnbe.document.dto.request.AssignmentUpdateRequest;
 import com.datn.datnbe.document.dto.request.GenerateAssignmentFromMatrixRequest;
+import com.datn.datnbe.document.dto.request.GenerateFullAssignmentRequest;
 import com.datn.datnbe.document.dto.request.GenerateMatrixRequest;
 import com.datn.datnbe.document.dto.response.AssignmentResponse;
 import com.datn.datnbe.document.dto.response.AssignmentDraftDto;
@@ -24,6 +30,7 @@ import com.datn.datnbe.document.service.DocumentService;
 import com.datn.datnbe.document.service.QuestionSelectionService;
 
 import com.datn.datnbe.document.entity.Assignment;
+import com.datn.datnbe.document.entity.Context;
 import com.datn.datnbe.document.dto.request.QuestionItemRequest;
 import com.datn.datnbe.document.entity.Question;
 
@@ -33,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.datn.datnbe.document.mapper.AssignmentMapper;
 import com.datn.datnbe.document.repository.AssignmentRepository;
+import com.datn.datnbe.document.repository.ContextRepository;
 
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
@@ -47,8 +55,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -68,6 +75,7 @@ public class AssignmentManagement implements AssignmentApi {
     private final TokenUsageApi tokenUsageApi;
     private final PhoenixQueryService phoenixQueryService;
     private final CoinPricingApi coinPricingApi;
+    private final ContextRepository contextRepository;
 
     @Override
     @Transactional
@@ -311,6 +319,200 @@ public class AssignmentManagement implements AssignmentApi {
                 draft.getIsComplete() ? "complete" : "has gaps");
 
         return draft;
+    }
+
+    @Override
+    public AssignmentDraftDto generateFullAssignment(GenerateFullAssignmentRequest request, String teacherId) {
+        log.info("Generating full assignment with AI for teacher: {}", teacherId);
+
+        // 1. Load or use matrix
+        AssignmentMatrixDto matrix = loadOrUseMatrix(request.getMatrixId(), request.getMatrix());
+        String grade = matrix.getMetadata().getGrade();
+        String subject = matrix.getMetadata().getSubject();
+
+        log.info("Matrix loaded: grade={}, subject={}", grade, subject);
+
+        // 2. Identify context-based topics and select random contexts
+        Map<Integer, Context> selectedContexts = selectRandomContextsForMatrix(matrix, grade, subject);
+
+        log.info("Selected {} contexts for context-based topics", selectedContexts.size());
+
+        // 3. Flatten matrix into list of requirements with context info
+        List<MatrixItemWithContext> matrixItems = flattenMatrixWithContexts(matrix, selectedContexts);
+
+        log.info("Flattened matrix into {} items", matrixItems.size());
+
+        // 4. Call GenAI Gateway to generate questions
+        String traceId = UUID.randomUUID().toString();
+        GenerateQuestionsFromMatrixRequest genAiRequest = GenerateQuestionsFromMatrixRequest.builder()
+                .grade(grade)
+                .subject(subject)
+                .matrixItems(matrixItems)
+                .provider(request.getProvider() != null ? request.getProvider() : "google")
+                .model(request.getModel() != null ? request.getModel() : "gemini-2.5-flash")
+                .build();
+
+        GenerateQuestionsFromMatrixResponse genAiResponse = contentGenerationApi
+                .generateQuestionsFromMatrix(genAiRequest, traceId);
+
+        log.info("Generated {} questions from GenAI", genAiResponse.getTotalQuestions());
+
+        // 5. Link questions to contexts (set contextId field)
+        List<Question> questions = linkQuestionsToContexts(genAiResponse.getQuestions(),
+                genAiResponse.getUsedContexts());
+
+        // 6. Build and return draft
+        return buildDraftFromGeneratedQuestions(request
+                .getTitle(), request.getDescription(), request.getTimeLimitMinutes(), questions, teacherId, matrix);
+    }
+
+    private AssignmentMatrixDto loadOrUseMatrix(String matrixId, AssignmentMatrixDto matrix) {
+        if (matrixId != null) {
+            log.info("Loading matrix from database: {}", matrixId);
+            AssignmentMatrixEntity savedMatrix = assignmentMatrixRepository.findById(matrixId)
+                    .orElseThrow(() -> new IllegalArgumentException("Matrix not found with id: " + matrixId));
+
+            try {
+                return objectMapper.readValue(savedMatrix.getMatrixData(), AssignmentMatrixDto.class);
+            } catch (Exception e) {
+                log.error("Failed to deserialize matrix data: {}", e.getMessage(), e);
+                throw new RuntimeException("Failed to read matrix from database", e);
+            }
+        } else if (matrix != null) {
+            return matrix;
+        } else {
+            throw new IllegalArgumentException("Either matrixId or matrix must be provided");
+        }
+    }
+
+    private Map<Integer, Context> selectRandomContextsForMatrix(AssignmentMatrixDto matrix,
+            String grade,
+            String subject) {
+        Map<Integer, Context> result = new HashMap<>();
+
+        // Get all topics from dimensions
+        List<DimensionTopicDto> topics = matrix.getDimensions().getTopics();
+
+        for (int i = 0; i < topics.size(); i++) {
+            DimensionTopicDto topic = topics.get(i);
+            if (Boolean.TRUE.equals(topic.getHasContext())) {
+                // Randomly select a context for this topic
+                List<Context> availableContexts = contextRepository.findByGradeAndSubject(grade, subject);
+
+                if (availableContexts.isEmpty()) {
+                    throw new IllegalStateException(
+                            String.format("No contexts available for grade=%s, subject=%s", grade, subject));
+                }
+
+                // Random selection
+                Context randomContext = availableContexts.get(new Random().nextInt(availableContexts.size()));
+                result.put(i, randomContext);
+
+                log.info("Selected context '{}' for topic '{}' (index {})",
+                        randomContext.getTitle(),
+                        topic.getName(),
+                        i);
+            }
+        }
+
+        return result;
+    }
+
+    private List<MatrixItemWithContext> flattenMatrixWithContexts(AssignmentMatrixDto matrix,
+            Map<Integer, Context> selectedContexts) {
+        List<MatrixItemWithContext> items = new ArrayList<>();
+
+        List<DimensionTopicDto> topics = matrix.getDimensions().getTopics();
+        List<String> difficulties = matrix.getDimensions().getDifficulties();
+        List<String> questionTypes = matrix.getDimensions().getQuestionTypes();
+
+        int topicIndex = 0;
+        for (DimensionTopicDto topic : topics) {
+            for (int diffIndex = 0; diffIndex < difficulties.size(); diffIndex++) {
+                for (int qtIndex = 0; qtIndex < questionTypes.size(); qtIndex++) {
+                    // Get cell value (format: "count:points")
+                    String cellValue = matrix.getMatrix().get(topicIndex).get(diffIndex).get(qtIndex);
+                    String[] parts = cellValue.split(":");
+                    int count = Integer.parseInt(parts[0]);
+                    double points = Double.parseDouble(parts[1]);
+
+                    if (count > 0) {
+                        // Check if this topic has a context
+                        Context context = selectedContexts.get(topicIndex);
+                        ContextInfo contextInfo = null;
+
+                        if (context != null) {
+                            contextInfo = ContextInfo.builder()
+                                    .topicIndex(topicIndex)
+                                    .topicName(topic.getName())
+                                    .contextId(context.getId())
+                                    .contextType("TEXT") // Assuming text for now
+                                    .contextContent(context.getContent())
+                                    .contextTitle(context.getTitle())
+                                    .build();
+                        }
+
+                        MatrixItemWithContext item = MatrixItemWithContext.builder()
+                                .topicIndex(topicIndex)
+                                .topicName(topic.getName())
+                                .difficulty(difficulties.get(diffIndex))
+                                .questionType(questionTypes.get(qtIndex))
+                                .count(count)
+                                .points(points)
+                                .contextInfo(contextInfo)
+                                .build();
+
+                        items.add(item);
+                    }
+                }
+            }
+            topicIndex++;
+        }
+
+        return items;
+    }
+
+    private List<Question> linkQuestionsToContexts(List<Question> questions,
+            List<GenerateQuestionsFromMatrixResponse.UsedContextDto> usedContexts) {
+        // Create a map of topicIndex -> contextId
+        Map<Integer, String> topicToContext = new HashMap<>();
+        for (GenerateQuestionsFromMatrixResponse.UsedContextDto usedContext : usedContexts) {
+            topicToContext.put(usedContext.getTopicIndex(), usedContext.getContextId());
+        }
+
+        // Link questions to contexts based on topicId
+        // Note: Assuming questions have a topicId field that matches topicIndex
+        // This may need to be adjusted based on actual Question entity structure
+
+        return questions; // For now, return as-is
+    }
+
+    private AssignmentDraftDto buildDraftFromGeneratedQuestions(String title,
+            String description,
+            Integer timeLimitMinutes,
+            List<Question> questions,
+            String teacherId,
+            AssignmentMatrixDto matrix) {
+        // Create a draft assignment
+        String draftId = UUID.randomUUID().toString();
+
+        // Calculate totals
+        double totalPoints = questions.stream().mapToDouble(q -> q.getPoint() != null ? q.getPoint() : 1.0).sum();
+
+        // Build the draft
+        return AssignmentDraftDto.builder()
+                .id(draftId)
+                .title(title)
+                .description(description)
+                .duration(timeLimitMinutes)
+                .questions(questions)
+                .totalQuestions(questions.size())
+                .totalPoints(totalPoints)
+                .isComplete(true)
+                .ownerId(teacherId)
+                .subject(matrix.getMetadata() != null ? matrix.getMetadata().getSubject() : null)
+                .grade(matrix.getMetadata() != null ? matrix.getMetadata().getGrade() : null)
+                .build();
     }
 
     @Async

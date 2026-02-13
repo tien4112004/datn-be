@@ -8,6 +8,7 @@ import com.datn.datnbe.document.dto.request.AssignmentCreateRequest;
 import com.datn.datnbe.document.dto.request.AssignmentSettingsUpdateRequest;
 import com.datn.datnbe.document.dto.request.AssignmentUpdateRequest;
 import com.datn.datnbe.document.dto.request.GenerateAssignmentFromMatrixRequest;
+import com.datn.datnbe.document.dto.request.GenerateFullAssignmentRequest;
 import com.datn.datnbe.document.dto.request.GenerateMatrixRequest;
 import com.datn.datnbe.document.dto.response.AssignmentResponse;
 import com.datn.datnbe.document.mapper.AssignmentMapper;
@@ -200,7 +201,65 @@ public class AssignmentController {
     String teacherId = securityContextUtils.getCurrentUserId();
     log.info("Generate exam from matrix request from teacher: {}", teacherId);
 
+    AssignmentMatrixDto matrix = assignmentApi.generateMatrix(request, teacherId);
+    return ResponseEntity.ok(AppResponseDto.success(matrix));
+  }
+
+  /**
+   * Generate an exam by selecting questions from the question bank.
+   */
+  @Operation(summary = "Generate Exam from Matrix", description = """
+      Generate an exam by selecting questions from the question bank based on the provided matrix.
+
+      This endpoint:
+      1. Takes a matrix defining question requirements
+      2. Queries the question bank for matching questions
+      3. Returns a draft exam with selected questions (and any gaps)
+
+      **Missing Question Strategies:**
+      - `REPORT_GAPS`: Return draft with gaps indicated (default)
+      - `GENERATE_WITH_AI`: Use AI to generate missing questions
+      - `FAIL_FAST`: Reject if not all requirements can be met
+      """)
+  @ApiResponse(responseCode = "200", description = "Exam draft generated successfully")
+  @PostMapping("/generate-from-matrix")
+  public ResponseEntity<AppResponseDto<AssignmentDraftDto>> generateAssignmentFromMatrix(
+      @Valid @RequestBody GenerateAssignmentFromMatrixRequest request) {
+    String teacherId = securityContextUtils.getCurrentUserId();
+    log.info("Generate exam from matrix request from teacher: {}", teacherId);
+
     AssignmentDraftDto draft = assignmentApi.generateAssignmentFromMatrix(request, teacherId);
+    return ResponseEntity.ok(AppResponseDto.success(draft));
+  }
+
+  /**
+   * Generate assignment with AI-generated questions (supports context-based questions).
+   */
+  @Operation(summary = "Generate Assignment with AI", description = """
+      Generate an assignment using AI to create new questions.
+
+      **Features:**
+      - Context-based questions (contexts randomly selected from database)
+      - Regular curriculum questions
+      - Batch generation in single LLM call
+
+      **Difference from /generate-from-matrix:**
+      - This endpoint GENERATES new questions with AI
+      - /generate-from-matrix SELECTS existing questions from question bank
+
+      **Context-based questions:**
+      - Topics with `hasContext=true` will have contexts randomly selected
+      - Contexts are matched by grade and subject
+      - Questions are automatically linked to their contexts
+      """)
+  @ApiResponse(responseCode = "200", description = "Assignment draft generated successfully with AI")
+  @PostMapping("/generate-full-assignment")
+  public ResponseEntity<AppResponseDto<AssignmentDraftDto>> generateFullAssignment(
+      @Valid @RequestBody GenerateFullAssignmentRequest request) {
+    String teacherId = securityContextUtils.getCurrentUserId();
+    log.info("Generate full assignment with AI request from teacher: {}", teacherId);
+
+    AssignmentDraftDto draft = assignmentApi.generateFullAssignment(request, teacherId);
     return ResponseEntity.ok(AppResponseDto.success(draft));
   }
 }

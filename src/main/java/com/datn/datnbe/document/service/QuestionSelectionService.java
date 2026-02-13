@@ -59,7 +59,8 @@ public class QuestionSelectionService {
                 subject,
                 grade);
         for (SelectionCriteria criteria : criteriaList) {
-            log.info("  → Criteria: topic='{}', subtopics={}, difficulty='{}' ({}), type='{}' ({}), count={}, points={}",
+            log.info(
+                    "  → Criteria: topic='{}', subtopics={}, difficulty='{}' ({}), type='{}' ({}), count={}, points={}",
                     criteria.topicName,
                     criteria.subtopicNames,
                     criteria.difficultyStr,
@@ -169,77 +170,70 @@ public class QuestionSelectionService {
 
         for (int topicIdx = 0; topicIdx < topics.size(); topicIdx++) {
             DimensionTopicDto topic = topics.get(topicIdx);
-            
+
             // Collect all subtopic names for this topic
-            List<String> subtopicNames = topic.getSubtopics() != null 
-                ? topic.getSubtopics().stream().map(DimensionSubtopicDto::getName).toList()
-                : List.of();
-            
+            List<String> subtopicNames = topic.getSubtopics() != null
+                    ? topic.getSubtopics().stream().map(DimensionSubtopicDto::getName).toList()
+                    : List.of();
+
             List<List<String>> difficultyRows = matrix.getMatrix().get(topicIdx);
 
-                if (difficultyRows.size() != difficulties.size()) {
-                    log.warn("Matrix dimension mismatch for topic '{}': expected {} difficulty rows, found {}",
+            if (difficultyRows.size() != difficulties.size()) {
+                log.warn("Matrix dimension mismatch for topic '{}': expected {} difficulty rows, found {}",
+                        topic.getName(),
+                        difficulties.size(),
+                        difficultyRows.size());
+            }
+
+            for (int diffIdx = 0; diffIdx < difficulties.size(); diffIdx++) {
+                String difficulty = difficulties.get(diffIdx);
+                List<String> questionTypeCells = difficultyRows.get(diffIdx);
+
+                if (questionTypeCells.size() != questionTypes.size()) {
+                    log.warn(
+                            "Matrix dimension mismatch for topic '{}', difficulty '{}': expected {} question type cells, found {}",
                             topic.getName(),
-                            difficulties.size(),
-                            difficultyRows.size());
+                            difficulty,
+                            questionTypes.size(),
+                            questionTypeCells.size());
                 }
 
-                for (int diffIdx = 0; diffIdx < difficulties.size(); diffIdx++) {
-                    String difficulty = difficulties.get(diffIdx);
-                    List<String> questionTypeCells = difficultyRows.get(diffIdx);
+                for (int qtypeIdx = 0; qtypeIdx < questionTypes.size(); qtypeIdx++) {
+                    String cell = questionTypeCells.get(qtypeIdx);
+                    String questionType = questionTypes.get(qtypeIdx);
 
-                    if (questionTypeCells.size() != questionTypes.size()) {
-                        log.warn(
-                                "Matrix dimension mismatch for topic '{}', difficulty '{}': expected {} question type cells, found {}",
+                    // cell format: "count:points"
+                    int count = 0;
+                    double points = 0.0;
+                    if (cell != null && cell.contains(":")) {
+                        String[] parts = cell.split(":");
+                        count = Integer.parseInt(parts[0]);
+                        points = parts.length > 1 ? Double.parseDouble(parts[1]) : 0.0;
+                    }
+
+                    if (count > 0) {
+                        Difficulty mappedDifficulty = Difficulty.valueOf(difficulty.toUpperCase());
+                        QuestionType mappedType = parseQuestionType(questionType);
+
+                        if (mappedType == null) {
+                            log.warn("Skipping cell due to invalid question type '{}' for topic='{}', difficulty='{}'",
+                                    questionType,
+                                    topic.getName(),
+                                    difficulty);
+                            continue;
+                        }
+
+                        // Store criteria with parent topic and all its subtopics for flexible matching
+                        criteriaList.add(new SelectionCriteria(topic.getName(), subtopicNames, difficulty, questionType,
+                                mappedDifficulty, mappedType, count, points));
+                    } else {
+                        log.debug("Skipping cell with count=0 for topic='{}', difficulty='{}', type='{}'",
                                 topic.getName(),
                                 difficulty,
-                                questionTypes.size(),
-                                questionTypeCells.size());
-                    }
-
-                    for (int qtypeIdx = 0; qtypeIdx < questionTypes.size(); qtypeIdx++) {
-                        String cell = questionTypeCells.get(qtypeIdx);
-                        String questionType = questionTypes.get(qtypeIdx);
-
-                        // cell format: "count:points"
-                        int count = 0;
-                        double points = 0.0;
-                        if (cell != null && cell.contains(":")) {
-                            String[] parts = cell.split(":");
-                            count = Integer.parseInt(parts[0]);
-                            points = parts.length > 1 ? Double.parseDouble(parts[1]) : 0.0;
-                        }
-
-                        if (count > 0) {
-                            Difficulty mappedDifficulty = Difficulty.valueOf(difficulty.toUpperCase());
-                            QuestionType mappedType = parseQuestionType(questionType);
-
-                            if (mappedType == null) {
-                                log.warn("Skipping cell due to invalid question type '{}' for topic='{}', difficulty='{}'",
-                                        questionType,
-                                        topic.getName(),
-                                        difficulty);
-                                continue;
-                            }
-
-                            // Store criteria with parent topic and all its subtopics for flexible matching
-                            criteriaList.add(new SelectionCriteria(
-                                    topic.getName(), 
-                                    subtopicNames,
-                                    difficulty, 
-                                    questionType,
-                                    mappedDifficulty, 
-                                    mappedType, 
-                                    count, 
-                                    points));
-                        } else {
-                            log.debug("Skipping cell with count=0 for topic='{}', difficulty='{}', type='{}'",
-                                    topic.getName(),
-                                    difficulty,
-                                    questionType);
-                        }
+                                questionType);
                     }
                 }
+            }
         }
 
         return criteriaList;
@@ -308,7 +302,8 @@ public class QuestionSelectionService {
                 subtopicCondition.append("LOWER(chapter) IN (");
                 for (int j = 0; j < criteria.subtopicNames.size(); j++) {
                     String subtopicParam = "subtopic_" + i + "_" + j;
-                    if (j > 0) subtopicCondition.append(", ");
+                    if (j > 0)
+                        subtopicCondition.append(", ");
                     subtopicCondition.append("LOWER(:").append(subtopicParam).append(")");
                     parameters.put(subtopicParam, criteria.subtopicNames.get(j));
                 }
@@ -416,8 +411,9 @@ public class QuestionSelectionService {
      * Now checks if question chapter matches ANY subtopic within the topic (case-insensitive).
      */
     private boolean matchesCriteria(QuestionBankItem question, SelectionCriteria criteria) {
-        if (question.getChapter() == null) return false;
-        
+        if (question.getChapter() == null)
+            return false;
+
         boolean chapterMatches = false;
         if (criteria.subtopicNames != null && !criteria.subtopicNames.isEmpty()) {
             // Check if question chapter matches any subtopic
@@ -427,9 +423,8 @@ public class QuestionSelectionService {
             // Fallback to topic name matching
             chapterMatches = question.getChapter().equalsIgnoreCase(criteria.topicName);
         }
-        
-        return chapterMatches 
-                && question.getDifficulty() == criteria.difficulty 
+
+        return chapterMatches && question.getDifficulty() == criteria.difficulty
                 && question.getType() == criteria.questionType;
     }
 
@@ -484,14 +479,8 @@ public class QuestionSelectionService {
      * Internal record to hold selection criteria.
      * Now includes all subtopic names to allow matching questions from any subtopic within a topic.
      */
-    private record SelectionCriteria(
-            String topicName,
-            List<String> subtopicNames,
-            String difficultyStr, 
-            String questionTypeStr,
-            Difficulty difficulty, 
-            QuestionType questionType, 
-            int requiredCount, 
+    private record SelectionCriteria(String topicName, List<String> subtopicNames, String difficultyStr,
+            String questionTypeStr, Difficulty difficulty, QuestionType questionType, int requiredCount,
             double pointsPerCell) {
     }
 }
