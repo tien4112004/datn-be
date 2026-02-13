@@ -80,6 +80,7 @@ public class SecurityConfig {
                                 "/api/assignments/generate-matrix",
                                 "/api/assignments/generate-matrix/**",
                                 "/api/assignments/generate-from-matrix",
+                                "/api/assignments/generate-full-assignment",
                                 "/api/question-bank/**")
                         .permitAll()
                         .requestMatchers(HttpMethod.PUT,

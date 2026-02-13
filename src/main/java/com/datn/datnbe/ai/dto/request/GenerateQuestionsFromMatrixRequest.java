@@ -7,9 +7,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Request to generate questions from matrix (sent to GenAI Gateway).
+ * Updated schema to match GenAI Gateway's TopicRequirement structure.
  */
 @Data
 @Builder
@@ -23,8 +25,8 @@ public class GenerateQuestionsFromMatrixRequest {
     @JsonProperty("subject")
     private String subject;
 
-    @JsonProperty("matrix_items")
-    private List<MatrixItemWithContext> matrixItems;
+    @JsonProperty("topics")
+    private List<TopicRequirement> topics;
 
     @JsonProperty("provider")
     private String provider;
@@ -33,13 +35,13 @@ public class GenerateQuestionsFromMatrixRequest {
     private String model;
 
     /**
-     * Matrix item with optional context information.
+     * Requirements for a single topic with optional context.
      */
     @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class MatrixItemWithContext {
+    public static class TopicRequirement {
 
         @JsonProperty("topic_index")
         private Integer topicIndex;
@@ -47,20 +49,31 @@ public class GenerateQuestionsFromMatrixRequest {
         @JsonProperty("topic_name")
         private String topicName;
 
-        @JsonProperty("difficulty")
-        private String difficulty;
+        @JsonProperty("context_info")
+        private ContextInfo contextInfo;
 
-        @JsonProperty("question_type")
-        private String questionType;
+        /**
+         * Map of difficulty -> question_type -> requirement.
+         * Example: {"KNOWLEDGE": {"MULTIPLE_CHOICE": {count: 5, points: 1.0}}}
+         */
+        @JsonProperty("questionsPerDifficulty")
+        private Map<String, Map<String, QuestionRequirement>> questionsPerDifficulty;
+    }
+
+    /**
+     * Requirement for a specific difficulty and question type.
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class QuestionRequirement {
 
         @JsonProperty("count")
         private Integer count;
 
         @JsonProperty("points")
         private Double points;
-
-        @JsonProperty("context_info")
-        private ContextInfo contextInfo;
     }
 
     /**
@@ -89,5 +102,42 @@ public class GenerateQuestionsFromMatrixRequest {
 
         @JsonProperty("context_title")
         private String contextTitle;
+    }
+
+    // ============================================================================
+    // Deprecated inner classes (for backward compatibility)
+    // ============================================================================
+
+    /**
+     * @deprecated Use TopicRequirement with questionsPerDifficulty map instead.
+     * This flat structure is no longer used by the GenAI Gateway.
+     */
+    @Deprecated
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MatrixItemWithContext {
+
+        @JsonProperty("topic_index")
+        private Integer topicIndex;
+
+        @JsonProperty("topic_name")
+        private String topicName;
+
+        @JsonProperty("difficulty")
+        private String difficulty;
+
+        @JsonProperty("question_type")
+        private String questionType;
+
+        @JsonProperty("count")
+        private Integer count;
+
+        @JsonProperty("points")
+        private Double points;
+
+        @JsonProperty("context_info")
+        private ContextInfo contextInfo;
     }
 }

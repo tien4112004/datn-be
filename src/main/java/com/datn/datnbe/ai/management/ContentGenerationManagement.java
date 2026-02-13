@@ -329,20 +329,25 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     @Override
     public GenerateQuestionsFromMatrixResponse generateQuestionsFromMatrix(GenerateQuestionsFromMatrixRequest request,
             String traceId) {
-        log.info("Generating questions from matrix for grade: {}, subject: {}, items: {}",
+        log.info("Generating questions from matrix for grade: {}, subject: {}, topics: {}",
                 request.getGrade(),
                 request.getSubject(),
-                request.getMatrixItems().size());
+                request.getTopics() != null ? request.getTopics().size() : 0);
 
         log.info("Calling GenAI-Gateway at endpoint: {}", QUESTIONS_FROM_MATRIX_ENDPOINT);
         try {
             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
             headers.set("X-Trace-ID", traceId);
 
-            GenerateQuestionsFromMatrixResponse response = aiApiClient
-                    .post(QUESTIONS_FROM_MATRIX_ENDPOINT, request, GenerateQuestionsFromMatrixResponse.class, headers);
+            // GenAI Gateway returns raw JSON string - we handle parsing in backend
+            String rawJsonResponse = aiApiClient.post(QUESTIONS_FROM_MATRIX_ENDPOINT, request, String.class, headers);
 
-            log.info("Successfully received GenAI-Gateway response with {} questions", response.getTotalQuestions());
+            log.info("Successfully received raw JSON response from GenAI-Gateway");
+
+            // Return raw response wrapped in DTO for further processing by caller
+            // The AssignmentManagement will handle parsing, field filling, and grouping
+            GenerateQuestionsFromMatrixResponse response = new GenerateQuestionsFromMatrixResponse();
+            response.setRawJson(rawJsonResponse);
             return response;
         } catch (Exception e) {
             log.error("Error during matrix-based question generation", e);

@@ -5,7 +5,8 @@ import com.datn.datnbe.ai.api.ContentGenerationApi;
 import com.datn.datnbe.ai.api.TokenUsageApi;
 import com.datn.datnbe.ai.dto.request.GenerateQuestionsFromMatrixRequest;
 import com.datn.datnbe.ai.dto.request.GenerateQuestionsFromMatrixRequest.ContextInfo;
-import com.datn.datnbe.ai.dto.request.GenerateQuestionsFromMatrixRequest.MatrixItemWithContext;
+import com.datn.datnbe.ai.dto.request.GenerateQuestionsFromMatrixRequest.TopicRequirement;
+import com.datn.datnbe.ai.dto.request.GenerateQuestionsFromMatrixRequest.QuestionRequirement;
 import com.datn.datnbe.ai.dto.response.GenerateQuestionsFromMatrixResponse;
 import com.datn.datnbe.ai.dto.response.TokenUsageInfoDto;
 import com.datn.datnbe.ai.entity.TokenUsage;
@@ -337,17 +338,17 @@ public class AssignmentManagement implements AssignmentApi {
 
         log.info("Selected {} contexts for context-based topics", selectedContexts.size());
 
-        // 3. Flatten matrix into list of requirements with context info
-        List<MatrixItemWithContext> matrixItems = flattenMatrixWithContexts(matrix, selectedContexts);
+        // 3. Build topic requirements with grouped question specifications
+        List<TopicRequirement> topicRequirements = buildTopicRequirements(matrix, selectedContexts);
 
-        log.info("Flattened matrix into {} items", matrixItems.size());
+        log.info("Built requirements for {} topics", topicRequirements.size());
 
         // 4. Call GenAI Gateway to generate questions
         String traceId = UUID.randomUUID().toString();
         GenerateQuestionsFromMatrixRequest genAiRequest = GenerateQuestionsFromMatrixRequest.builder()
                 .grade(grade)
                 .subject(subject)
-                .matrixItems(matrixItems)
+                .topics(topicRequirements)
                 .provider(request.getProvider() != null ? request.getProvider() : "google")
                 .model(request.getModel() != null ? request.getModel() : "gemini-2.5-flash")
                 .build();
@@ -355,11 +356,13 @@ public class AssignmentManagement implements AssignmentApi {
         GenerateQuestionsFromMatrixResponse genAiResponse = contentGenerationApi
                 .generateQuestionsFromMatrix(genAiRequest, traceId);
 
-        log.info("Generated {} questions from GenAI", genAiResponse.getTotalQuestions());
+        log.info("Received raw JSON response from GenAI Gateway");
 
-        // 5. Link questions to contexts (set contextId field)
-        List<Question> questions = linkQuestionsToContexts(genAiResponse.getQuestions(),
-                genAiResponse.getUsedContexts());
+        // 5. Parse raw JSON and enrich with common fields
+        List<Question> questions = parseAndEnrichQuestions(genAiResponse
+                .getRawJson(), grade, subject, selectedContexts, matrix.getDimensions().getTopics());
+
+        log.info("Parsed and enriched {} questions", questions.size());
 
         // 6. Build and return draft
         return buildDraftFromGeneratedQuestions(request
@@ -418,9 +421,13 @@ public class AssignmentManagement implements AssignmentApi {
         return result;
     }
 
-    private List<MatrixItemWithContext> flattenMatrixWithContexts(AssignmentMatrixDto matrix,
+    /**
+     * Build topic requirements with grouped question specifications.
+     * Structure: topics -> difficulty -> question_type -> {count, points}
+     */
+    private List<TopicRequirement> buildTopicRequirements(AssignmentMatrixDto matrix,
             Map<Integer, Context> selectedContexts) {
-        List<MatrixItemWithContext> items = new ArrayList<>();
+        List<TopicRequirement> topicRequirements = new ArrayList<>();
 
         List<DimensionTopicDto> topics = matrix.getDimensions().getTopics();
         List<String> difficulties = matrix.getDimensions().getDifficulties();
@@ -428,8 +435,16 @@ public class AssignmentManagement implements AssignmentApi {
 
         int topicIndex = 0;
         for (DimensionTopicDto topic : topics) {
+            // Build questionsPerDifficulty map for this topic
+            Map<String, Map<String, QuestionRequirement>> questionsPerDifficulty = new HashMap<>();
+
             for (int diffIndex = 0; diffIndex < difficulties.size(); diffIndex++) {
+                String difficulty = difficulties.get(diffIndex);
+                Map<String, QuestionRequirement> questionsPerType = new HashMap<>();
+
                 for (int qtIndex = 0; qtIndex < questionTypes.size(); qtIndex++) {
+                    String questionType = questionTypes.get(qtIndex);
+
                     // Get cell value (format: "count:points")
                     String cellValue = matrix.getMatrix().get(topicIndex).get(diffIndex).get(qtIndex);
                     String[] parts = cellValue.split(":");
@@ -437,54 +452,135 @@ public class AssignmentManagement implements AssignmentApi {
                     double points = Double.parseDouble(parts[1]);
 
                     if (count > 0) {
-                        // Check if this topic has a context
-                        Context context = selectedContexts.get(topicIndex);
-                        ContextInfo contextInfo = null;
-
-                        if (context != null) {
-                            contextInfo = ContextInfo.builder()
-                                    .topicIndex(topicIndex)
-                                    .topicName(topic.getName())
-                                    .contextId(context.getId())
-                                    .contextType("TEXT") // Assuming text for now
-                                    .contextContent(context.getContent())
-                                    .contextTitle(context.getTitle())
-                                    .build();
-                        }
-
-                        MatrixItemWithContext item = MatrixItemWithContext.builder()
-                                .topicIndex(topicIndex)
-                                .topicName(topic.getName())
-                                .difficulty(difficulties.get(diffIndex))
-                                .questionType(questionTypes.get(qtIndex))
+                        QuestionRequirement requirement = QuestionRequirement.builder()
                                 .count(count)
                                 .points(points)
-                                .contextInfo(contextInfo)
                                 .build();
 
-                        items.add(item);
+                        questionsPerType.put(questionType, requirement);
                     }
                 }
+
+                if (!questionsPerType.isEmpty()) {
+                    questionsPerDifficulty.put(difficulty, questionsPerType);
+                }
             }
+
+            // Only add topic if it has any questions
+            if (!questionsPerDifficulty.isEmpty()) {
+                // Check if this topic has a context
+                Context context = selectedContexts.get(topicIndex);
+                ContextInfo contextInfo = null;
+
+                if (context != null) {
+                    contextInfo = ContextInfo.builder()
+                            .topicIndex(topicIndex)
+                            .topicName(topic.getName())
+                            .contextId(context.getId())
+                            .contextType("TEXT") // Assuming text for now
+                            .contextContent(context.getContent())
+                            .contextTitle(context.getTitle())
+                            .build();
+
+                    log.debug("Topic '{}' (index {}) has context: {} (ID: {})",
+                            topic.getName(),
+                            topicIndex,
+                            context.getTitle(),
+                            context.getId());
+                }
+
+                TopicRequirement topicReq = TopicRequirement.builder()
+                        .topicIndex(topicIndex)
+                        .topicName(topic.getName())
+                        .contextInfo(contextInfo)
+                        .questionsPerDifficulty(questionsPerDifficulty)
+                        .build();
+
+                topicRequirements.add(topicReq);
+            }
+
             topicIndex++;
         }
 
-        return items;
+        return topicRequirements;
     }
 
-    private List<Question> linkQuestionsToContexts(List<Question> questions,
-            List<GenerateQuestionsFromMatrixResponse.UsedContextDto> usedContexts) {
-        // Create a map of topicIndex -> contextId
-        Map<Integer, String> topicToContext = new HashMap<>();
-        for (GenerateQuestionsFromMatrixResponse.UsedContextDto usedContext : usedContexts) {
-            topicToContext.put(usedContext.getTopicIndex(), usedContext.getContextId());
+    /**
+     * Parse raw JSON response from GenAI Gateway and enrich with common fields.
+     * Fills in: grade, subject, chapter, contextId based on topicId.
+     */
+    private List<Question> parseAndEnrichQuestions(String rawJson,
+            String grade,
+            String subject,
+            Map<Integer, Context> selectedContexts,
+            List<DimensionTopicDto> topics) {
+
+        try {
+            // Parse raw JSON
+            com.fasterxml.jackson.databind.JsonNode rootNode = objectMapper.readTree(rawJson);
+            com.fasterxml.jackson.databind.JsonNode questionsNode = rootNode.get("questions");
+
+            if (questionsNode == null || !questionsNode.isArray()) {
+                throw new IllegalArgumentException("Invalid response: missing 'questions' array");
+            }
+
+            // Build topic index to name mapping
+            Map<Integer, String> topicIndexToName = new HashMap<>();
+            for (int i = 0; i < topics.size(); i++) {
+                topicIndexToName.put(i, topics.get(i).getName());
+            }
+
+            // Build topic index to context ID mapping
+            Map<Integer, String> topicIndexToContextId = new HashMap<>();
+            for (Map.Entry<Integer, Context> entry : selectedContexts.entrySet()) {
+                topicIndexToContextId.put(entry.getKey(), entry.getValue().getId());
+            }
+
+            // Parse and enrich each question
+            List<Question> enrichedQuestions = new ArrayList<>();
+            for (com.fasterxml.jackson.databind.JsonNode questionNode : questionsNode) {
+                // Convert to mutable ObjectNode for modification
+                com.fasterxml.jackson.databind.node.ObjectNode questionObj = (com.fasterxml.jackson.databind.node.ObjectNode) questionNode;
+
+                // Fill in common fields
+                questionObj.put("grade", grade);
+                questionObj.put("subject", subject);
+
+                // Get topicId and set chapter and contextId
+                Integer topicId = questionNode.has("topicId") ? questionNode.get("topicId").asInt() : null;
+                if (topicId != null) {
+                    // Set chapter from topic name
+                    String topicName = topicIndexToName.get(topicId);
+                    if (topicName != null) {
+                        questionObj.put("chapter", topicName);
+                    }
+
+                    // Set contextId if this topic has a context
+                    String contextId = topicIndexToContextId.get(topicId);
+                    if (contextId != null) {
+                        questionObj.put("contextId", contextId);
+                        log.debug("Question for topic {} linked to context {}", topicId, contextId);
+                    }
+                }
+
+                // Parse to Question entity from the enriched questionObj (not original questionNode)
+                Question question = objectMapper.treeToValue(questionObj, Question.class);
+
+                // Generate ID for the question
+                if (question.getId() == null) {
+                    question.setId(UUID.randomUUID().toString());
+                }
+
+                enrichedQuestions.add(question);
+            }
+
+            log.info("Successfully parsed and enriched {} questions", enrichedQuestions.size());
+            return enrichedQuestions;
+
+        } catch (Exception e) {
+            log.error("Failed to parse raw JSON response: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to parse GenAI response", e);
         }
-
-        // Link questions to contexts based on topicId
-        // Note: Assuming questions have a topicId field that matches topicIndex
-        // This may need to be adjusted based on actual Question entity structure
-
-        return questions; // For now, return as-is
     }
 
     private AssignmentDraftDto buildDraftFromGeneratedQuestions(String title,
