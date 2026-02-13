@@ -45,4 +45,5 @@ public class AssignmentResponse {
     Double passingScore;
     Date availableFrom;
     Date availableUntil;
+    String source;
 }
