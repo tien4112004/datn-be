@@ -14,6 +14,7 @@ import org.hibernate.type.SqlTypes;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(uniqueConstraints = {@UniqueConstraint(columnNames = "presentation_id", name = "uk_ai_result_presentation_id")})
 public class AIResult {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,7 +28,7 @@ public class AIResult {
     @Column(name = "created_at", nullable = false, updatable = false)
     Date createdAt;
 
-    @Column(name = "presentation_id", nullable = false)
+    @Column(name = "presentation_id", nullable = false, unique = true)
     String presentationId;
 
     @JdbcTypeCode(SqlTypes.JSON)

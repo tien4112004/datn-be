@@ -32,7 +32,7 @@ public interface PresentationEntityMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "slides", source = "slides", qualifiedByName = "toEntityList")
     @Mapping(target = "isParsed", ignore = true)
-    @Mapping(target = "metadata", ignore = true)
+    @Mapping(target = "metadata", source = "metadata")
     @Mapping(target = "deletedAt", ignore = true)
     @Mapping(target = "thumbnail", source = "thumbnail")
     void updateEntity(PresentationUpdateRequest request, @MappingTarget Presentation presentation);

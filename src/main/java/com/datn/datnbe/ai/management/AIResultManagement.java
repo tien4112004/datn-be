@@ -27,6 +27,9 @@ public class AIResultManagement implements AIResultApi {
     public AIResultResponseDto saveAIResult(String aiResult, String presentationId, String generationOptions) {
         log.info("Saving AI result for presentation {} with generation options: {}", presentationId, generationOptions);
 
+        // Delete any existing AI result for this presentation to allow overwriting
+        aiResultRepo.deleteByPresentationId(presentationId);
+
         AIResult aiResultEntity = AIResult.builder()
                 .result(aiResult)
                 .presentationId(presentationId)

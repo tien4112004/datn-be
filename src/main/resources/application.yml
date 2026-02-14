@@ -191,3 +191,10 @@ phoenix:
   api-url: ${PHOENIX_API_URL:http://localhost:6006}
   api-key: ${PHOENIX_API_KEY:}
   project-id: ${PHOENIX_PROJECT_ID:}
+
+# External API Configuration
+external-api:
+  color-api:
+    base-url: ${COLOR_API_BASE_URL:https://www.thecolorapi.com}
+    timeout: ${COLOR_API_TIMEOUT:5000}
+    enabled: ${COLOR_API_ENABLED:true}

@@ -77,6 +77,7 @@ public class SlideThemeManagement implements SlideThemeApi {
         }
 
         SlideTheme entity = slideThemeMapper.toEntity(request);
+
         SlideTheme savedEntity = slideThemeRepository.save(entity);
 
         log.info("Created slide theme with id: {}", savedEntity.getId());
@@ -91,7 +92,9 @@ public class SlideThemeManagement implements SlideThemeApi {
         SlideTheme entity = slideThemeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Slide theme not found with id: " + id));
 
+        // Update entity with new values
         slideThemeMapper.updateEntity(entity, request);
+
         SlideTheme savedEntity = slideThemeRepository.save(entity);
 
         log.info("Updated slide theme with id: {}", savedEntity.getId());

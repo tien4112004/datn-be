@@ -1,5 +1,6 @@
 package com.datn.datnbe.sharedkernel.config;
 
+import com.datn.datnbe.config.ColorApiConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,6 +24,17 @@ public class ApiClientConfig {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(MAX_TIMEOUT); // 30 seconds
         factory.setReadTimeout(MAX_TIMEOUT); // 30 seconds
+
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.setRequestFactory(factory);
+        return restTemplate;
+    }
+
+    @Bean(value = "colorApiRestTemplate")
+    public RestTemplate colorApiRestTemplate(ColorApiConfig colorApiConfig) {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(colorApiConfig.getTimeout());
+        factory.setReadTimeout(colorApiConfig.getTimeout());
 
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.setRequestFactory(factory);
