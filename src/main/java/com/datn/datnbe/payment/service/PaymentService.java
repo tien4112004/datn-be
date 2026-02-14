@@ -177,23 +177,7 @@ public class PaymentService implements PaymentApi {
 
     @Override
     public UserCoinDto addCoin(String userId, Long amount, String source) {
-        UserCoin userCoin = userCoinRepository.findById(userId)
-                .orElseGet(() -> UserCoin.builder().id(userId).coin(0L).build());
-        userCoin.setCoin(userCoin.getCoin() + amount);
-        userCoinRepository.save(userCoin);
-        // Create transaction record
-        CoinUsageTransaction transaction = CoinUsageTransaction.builder()
-                .userId(userId)
-                .type("add")
-                .source(source)
-                .amount(amount)
-                .build();
-        coinUsageTransactionRepository.save(transaction);
-        log.info("Created coin usage transaction for user: {}, {} {} coins",
-                transaction.getUserId(),
-                transaction.getType(),
-                transaction.getAmount());
-        return mapper.toUserCoinDTO(userCoin);
+        return userCoinService.addCoin(userId, amount, source);
     }
 
     @Override

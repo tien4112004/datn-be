@@ -155,7 +155,8 @@ public class SepayWebhookService {
                 }
             }
 
-            // prefer Sepay transaction id from nested `transaction` object, fall back to orderId
+            // prefer Sepay transaction id from nested `transaction` object, fall back to
+            // orderId
             String sepayTxId = null;
             if (webhookRequest != null && webhookRequest.getTransaction() != null
                     && webhookRequest.getTransaction().getTransactionId() != null
@@ -173,7 +174,8 @@ public class SepayWebhookService {
 
         } catch (Exception e) {
             log.error("Error processing Sepay webhook for orderInvoice={}: {}", orderInvoice, e.getMessage(), e);
-            // don't rethrow - webhook endpoint should return 200 to avoid retries from Sepay
+            // don't rethrow - webhook endpoint should return 200 to avoid retries from
+            // Sepay
         }
     }
 }
