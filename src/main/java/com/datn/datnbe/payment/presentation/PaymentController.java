@@ -153,6 +153,15 @@ public class PaymentController {
             }
         }
 
+        // If we can resolve a transaction id from the redirect, mark it CANCELLED locally
+        if (resolvedTransactionId != null) {
+            try {
+                paymentService.cancelTransaction(resolvedTransactionId);
+            } catch (Exception e) {
+                log.warn("Failed to mark transaction cancelled on redirect: {}", resolvedTransactionId, e);
+            }
+        }
+
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(AppResponseDto.<String>builder()
                         .data(resolvedTransactionId)
@@ -171,16 +180,6 @@ public class PaymentController {
         paymentApi.handleSepayWebhook(webhookRequest);
 
         return ResponseEntity.ok(AppResponseDto.<Void>builder().message("Webhook processed successfully").build());
-    }
-
-    // --- Testing helper: simulate a Sepay webhook (useful locally or with ngrok) ---
-    @PostMapping("/simulate/webhook")
-    public ResponseEntity<AppResponseDto<String>> simulateSepayWebhook(
-            @RequestBody SepayWebhookRequest webhookRequest) {
-        log.info("Simulating Sepay webhook: {}", webhookRequest);
-        paymentApi.handleSepayWebhook(webhookRequest);
-        return ResponseEntity
-                .ok(AppResponseDto.<String>builder().data("OK").message("Simulated webhook processed").build());
     }
 
     @GetMapping("/transaction/{transactionId}")
@@ -215,7 +214,7 @@ public class PaymentController {
             @RequestParam(defaultValue = "10") Integer size) {
         log.info("Fetching user transactions - page: {}, size: {}", page, size);
 
-        String userId = securityContextUtils.getCurrentUserId();
+        String userId = securityContextUtils.getCurrentUserProfileId();
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
         PaginatedResponseDto<TransactionDetailsDto> transactions = paymentApi.getUserTransactions(userId, pageable);
 

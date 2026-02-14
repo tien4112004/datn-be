@@ -17,4 +17,5 @@ public class CreateCheckoutRequest {
     private String successUrl;
     private String errorUrl;
     private String cancelUrl;
+    // NOTE: paymentMethod is forced server-side to BANK_TRANSFER; FE should not send it.
 }

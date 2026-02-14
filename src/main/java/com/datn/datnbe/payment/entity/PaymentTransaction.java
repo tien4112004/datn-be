@@ -62,11 +62,14 @@ public class PaymentTransaction {
 
     private Date completedAt;
 
+    // refund metadata (nullable)
+    private String refundId;
+    private Date refundedAt;
     @Column(nullable = false)
     @Builder.Default
     private String gate = "SEPAY";
 
     public enum TransactionStatus {
-        PENDING, COMPLETED, FAILED, CANCELLED, PROCESSING
+        PENDING, COMPLETED, FAILED, CANCELLED, PROCESSING, REFUNDED
     }
 }

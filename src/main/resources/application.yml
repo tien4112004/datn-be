@@ -208,8 +208,6 @@ sepay:
   secret-key: ${SEPAY_SECRET_KEY:}
   account-name: ${SEPAY_ACCOUNT_NAME:Your Bank Account Name}
   webhook-secret: ${SEPAY_WEBHOOK_SECRET:your-webhook-secret}
-  sandbox-url: ${SEPAY_SANDBOX_URL:https://sandbox.sepay.vn}
-  production-url: ${SEPAY_PRODUCTION_URL:https://payment.sepay.vn}
-  use-sandbox: ${SEPAY_USE_SANDBOX:true}
+  checkout-base-url: ${SEPAY_CHECKOUT_BASE_URL:${SEPAY_SANDBOX_URL:https://pay-sandbox.sepay.vn}}
   api-base-url: ${SEPAY_API_BASE_URL:https://sandbox-api.sepay.vn/api}
   webhook-url: ${SEPAY_WEBHOOK_URL:https://your-domain.com/api/payments/notify/sepay}
