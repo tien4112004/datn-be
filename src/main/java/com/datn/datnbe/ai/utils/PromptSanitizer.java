@@ -31,9 +31,22 @@ public final class PromptSanitizer {
                 .trim();
     }
 
-    public static Integer sanitizeGrade(Integer grade) {
-        // Integer is already safe, no sanitization needed
-        return grade;
+    public static String sanitizeGrade(String grade) {
+        // Grade is already a string; validate it's a valid number
+        if (grade == null || grade.trim().isEmpty()) {
+            return null;
+        }
+        String trimmed = grade.trim();
+        // Ensure it's a valid number between 1-12
+        try {
+            int gradeNum = Integer.parseInt(trimmed);
+            if (gradeNum >= 1 && gradeNum <= 12) {
+                return trimmed;
+            }
+        } catch (NumberFormatException e) {
+            // Invalid grade format
+        }
+        return null;
     }
 
     public static String sanitizeSubject(String subject) {

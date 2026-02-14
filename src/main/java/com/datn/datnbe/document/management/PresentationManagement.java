@@ -257,16 +257,6 @@ public class PresentationManagement implements PresentationApi {
     }
 
     @Override
-    public void updatePresentationParsingStatus(String id) {
-        Optional<Presentation> presentationOpt = presentationRepository.findById(id);
-        validation.validatePresentationExists(presentationOpt, id);
-
-        Presentation existingPresentation = presentationOpt.get();
-        existingPresentation.setIsParsed(!existingPresentation.getIsParsed());
-        presentationRepository.save(existingPresentation);
-    }
-
-    @Override
     public void deletePresentation(String id) {
         log.info("Deleting presentation with ID: {}", id);
         Optional<Presentation> presentationOpt = presentationRepository.findById(id);

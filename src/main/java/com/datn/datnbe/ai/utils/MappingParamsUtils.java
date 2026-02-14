@@ -16,7 +16,7 @@ public class MappingParamsUtils {
         params.put("model", request.getModel());
         params.put("provider", request.getProvider().toLowerCase());
 
-        Integer sanitizedGrade = PromptSanitizer.sanitizeGrade(request.getGrade());
+        String sanitizedGrade = PromptSanitizer.sanitizeGrade(request.getGrade());
         String sanitizedSubject = PromptSanitizer.sanitizeSubject(request.getSubject());
         if (sanitizedGrade != null) {
             params.put("grade", sanitizedGrade);
@@ -35,7 +35,7 @@ public class MappingParamsUtils {
         params.put("language", request.getLanguage());
         params.put("slide_count", request.getSlideCount());
 
-        Integer sanitizedGrade = PromptSanitizer.sanitizeGrade(request.getGrade());
+        String sanitizedGrade = PromptSanitizer.sanitizeGrade(request.getGrade());
         String sanitizedSubject = PromptSanitizer.sanitizeSubject(request.getSubject());
         if (sanitizedGrade != null) {
             params.put("grade", sanitizedGrade);
@@ -64,7 +64,7 @@ public class MappingParamsUtils {
         params.put("model", request.getModel());
         params.put("provider", request.getProvider().toLowerCase());
 
-        Integer sanitizedGrade = PromptSanitizer.sanitizeGrade(request.getGrade());
+        String sanitizedGrade = PromptSanitizer.sanitizeGrade(request.getGrade());
         String sanitizedSubject = PromptSanitizer.sanitizeSubject(request.getSubject());
         if (sanitizedGrade != null) {
             params.put("grade", sanitizedGrade);
