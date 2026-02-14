@@ -35,8 +35,6 @@ public class PresentationUpdateRequest {
 
     private String thumbnail;
 
-    private boolean isParsed;
-
     @Builder.Default
     private Map<String, Object> metadata = new HashMap<>();
 

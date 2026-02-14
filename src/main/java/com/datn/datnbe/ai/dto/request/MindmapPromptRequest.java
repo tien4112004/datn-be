@@ -1,7 +1,5 @@
 package com.datn.datnbe.ai.dto.request;
 
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,9 +20,7 @@ public class MindmapPromptRequest {
     String model;
     String provider;
 
-    @Min(value = 1, message = "Grade must be at least 1")
-    @Max(value = 12, message = "Grade must not exceed 12")
-    Integer grade;
+    String grade;
 
     @Size(max = 100, message = "Subject must not exceed 100 characters")
     String subject;

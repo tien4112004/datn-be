@@ -97,13 +97,6 @@ public class PresentationController {
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 
-    @PatchMapping("/{id}/parse")
-    @RequireDocumentPermission(scopes = {"edit"})
-    public ResponseEntity<Void> updatePresentationParsingStatus(@PathVariable String id) {
-        presentationApi.updatePresentationParsingStatus(id);
-        return ResponseEntity.noContent().build();
-    }
-
     @DeleteMapping("/{id}")
     @RequireDocumentPermission(scopes = {"edit"})
     public ResponseEntity<Void> deletePresentation(@PathVariable String id) {
