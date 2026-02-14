@@ -6,7 +6,7 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.util.Date;
+import java.time.Instant;
 
 @Entity
 @Table(name = "document_visits", indexes = {@Index(name = "idx_user_visited", columnList = "user_id,last_visited DESC"),
@@ -39,13 +39,13 @@ public class DocumentVisit {
     String thumbnail;
 
     @Column(name = "last_visited", nullable = false)
-    Date lastVisited;
+    Instant lastVisited;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
-    Date createdAt;
+    Instant createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at")
-    Date updatedAt;
+    Instant updatedAt;
 }
