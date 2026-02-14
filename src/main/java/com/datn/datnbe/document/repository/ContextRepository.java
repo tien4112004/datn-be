@@ -11,4 +11,14 @@ import java.util.List;
 public interface ContextRepository extends JpaRepository<Context, String>, JpaSpecificationExecutor<Context> {
 
     List<Context> findByIdIn(List<String> ids);
+
+    /**
+     * Find contexts by grade and subject for random selection.
+     * Used when generating assignments with context-based questions.
+     *
+     * @param grade   Grade level (e.g., "1", "2", "3", "4", "5", "K")
+     * @param subject Subject code (e.g., "T", "TV", "TA")
+     * @return List of contexts matching the criteria
+     */
+    List<Context> findByGradeAndSubject(String grade, String subject);
 }

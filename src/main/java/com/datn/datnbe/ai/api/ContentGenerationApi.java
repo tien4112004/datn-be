@@ -1,11 +1,13 @@
 package com.datn.datnbe.ai.api;
 
+import com.datn.datnbe.ai.dto.request.GenerateQuestionsFromMatrixRequest;
 import com.datn.datnbe.ai.dto.request.MindmapPromptRequest;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
-import com.datn.datnbe.document.exam.dto.ExamMatrixDto;
-import com.datn.datnbe.document.exam.dto.request.GenerateMatrixRequest;
-import com.datn.datnbe.document.exam.dto.request.GenerateQuestionsFromTopicRequest;
+import com.datn.datnbe.ai.dto.response.GenerateQuestionsFromMatrixResponse;
+import com.datn.datnbe.document.dto.AssignmentMatrixDto;
+import com.datn.datnbe.document.dto.request.GenerateMatrixRequest;
+import com.datn.datnbe.document.dto.request.GenerateQuestionsFromTopicRequest;
 
 import reactor.core.publisher.Flux;
 
@@ -26,10 +28,21 @@ public interface ContentGenerationApi {
      * The matrix has dimensions: [topic][difficulty][question_type]
      * Each cell is in format "count:points".
      */
-    ExamMatrixDto generateExamMatrix(GenerateMatrixRequest request, String traceId);
+    AssignmentMatrixDto generateAssignmentMatrix(GenerateMatrixRequest request, String traceId);
 
     /**
      * Generate questions based on topic and requirements using AI
      */
     String generateQuestions(GenerateQuestionsFromTopicRequest request, String traceId);
+
+    /**
+     * Generate questions from matrix (fixed deprecated endpoint).
+     * Supports context-based and regular questions in batch.
+     *
+     * @param request Request containing matrix items with optional context info
+     * @param traceId Trace ID for observability
+     * @return Response with generated questions and used contexts
+     */
+    GenerateQuestionsFromMatrixResponse generateQuestionsFromMatrix(GenerateQuestionsFromMatrixRequest request,
+            String traceId);
 }

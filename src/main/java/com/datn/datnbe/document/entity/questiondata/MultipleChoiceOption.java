@@ -1,10 +1,12 @@
 package com.datn.datnbe.document.entity.questiondata;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import java.util.UUID;
+
+/**
+ * Domain entity for Multiple Choice option.
+ * Used for storage and frontend responses.
+ */
 
 @Data
 @Builder
@@ -12,16 +14,8 @@ import java.util.UUID;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class MultipleChoiceOption {
-
-    @Builder.Default
-    String id = UUID.randomUUID().toString();
+    String id;
     String text;
-
-    @JsonProperty("imageUrl")
-    @JsonAlias({"image_url", "imageUrl"})
     String imageUrl;
-
-    @JsonProperty("isCorrect")
-    @JsonAlias({"is_correct", "correct"})
     Boolean isCorrect;
 }

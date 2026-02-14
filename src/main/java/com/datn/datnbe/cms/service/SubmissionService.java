@@ -295,7 +295,7 @@ public class SubmissionService implements SubmissionApi {
                 pointPerBlank,
                 blankSegments.size());
 
-        double totalScore = blankSegments.stream().mapToDouble(segment -> {
+        return blankSegments.stream().mapToDouble(segment -> {
             String studentAnswer = fillAnswer.getBlankAnswers().get(segment.getId());
             boolean isCorrect = studentAnswer != null && segment.getAcceptableAnswers().contains(studentAnswer);
             double points = isCorrect ? pointPerBlank : 0;
@@ -309,9 +309,6 @@ public class SubmissionService implements SubmissionApi {
 
             return points;
         }).sum();
-
-        log.info("  Fill-In-Blank total score: {}", totalScore);
-        return totalScore;
     }
 
     private double gradeMatching(Question question, AnswerData answer) {

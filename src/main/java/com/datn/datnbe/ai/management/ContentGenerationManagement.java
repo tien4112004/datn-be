@@ -3,19 +3,21 @@ package com.datn.datnbe.ai.management;
 import com.datn.datnbe.ai.api.ContentGenerationApi;
 import com.datn.datnbe.ai.api.ModelSelectionApi;
 import com.datn.datnbe.ai.apiclient.AIApiClient;
-import com.datn.datnbe.ai.dto.request.AIWorkerGenerateQuestionsRequest;
+import com.datn.datnbe.ai.dto.request.AIGatewayGenerateQuestionsRequest;
+import com.datn.datnbe.ai.dto.request.GenerateQuestionsFromMatrixRequest;
 import com.datn.datnbe.ai.dto.request.MindmapPromptRequest;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
+import com.datn.datnbe.ai.dto.response.GenerateQuestionsFromMatrixResponse;
 import com.datn.datnbe.ai.dto.response.AiWokerResponse;
 import com.datn.datnbe.ai.utils.MappingParamsUtils;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.document.entity.Chapter;
-import com.datn.datnbe.document.exam.dto.DimensionTopicDto;
-import com.datn.datnbe.document.exam.dto.ExamMatrixDto;
-import com.datn.datnbe.document.exam.dto.request.GenerateMatrixRequest;
-import com.datn.datnbe.document.exam.dto.request.GenerateQuestionsFromTopicRequest;
+import com.datn.datnbe.document.dto.DimensionTopicDto;
+import com.datn.datnbe.document.dto.AssignmentMatrixDto;
+import com.datn.datnbe.document.dto.request.GenerateMatrixRequest;
+import com.datn.datnbe.document.dto.request.GenerateQuestionsFromTopicRequest;
 import com.datn.datnbe.document.repository.ChapterRepository;
 
 import lombok.AccessLevel;
@@ -71,6 +73,10 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     @Value("${ai.api.questions-endpoint:/api/questions/generate}")
     @NonFinal
     String QUESTIONS_API_ENDPOINT;
+
+    @Value("${ai.api.questions-from-matrix-endpoint:/api/exams/generate-questions-from-matrix}")
+    @NonFinal
+    String QUESTIONS_FROM_MATRIX_ENDPOINT;
 
     @Override
     public Flux<String> generateOutline(OutlinePromptRequest request, String traceId) {
@@ -197,7 +203,7 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     }
 
     @Override
-    public ExamMatrixDto generateExamMatrix(GenerateMatrixRequest request, String traceId) {
+    public AssignmentMatrixDto generateAssignmentMatrix(GenerateMatrixRequest request, String traceId) {
         log.info("Starting exam matrix generation for grade: {}, subject: {}",
                 request.getGrade(),
                 request.getSubject());
@@ -216,7 +222,7 @@ public class ContentGenerationManagement implements ContentGenerationApi {
                 .totalPoints(request.getTotalPoints())
                 .difficulties(request.getDifficulties())
                 .questionTypes(request.getQuestionTypes())
-                .additionalRequirements(request.getAdditionalRequirements())
+                .prompt(request.getPrompt())
                 .language(request.getLanguage())
                 .provider(request.getProvider())
                 .model(request.getModel())
@@ -232,8 +238,8 @@ public class ContentGenerationManagement implements ContentGenerationApi {
         try {
             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
             headers.set("X-Trace-ID", traceId);
-            ExamMatrixDto result = aiApiClient
-                    .post(EXAM_MATRIX_API_ENDPOINT, requestWithChapters, ExamMatrixDto.class, headers);
+            AssignmentMatrixDto result = aiApiClient
+                    .post(EXAM_MATRIX_API_ENDPOINT, requestWithChapters, AssignmentMatrixDto.class, headers);
 
             // Add numeric IDs to topics (backend processing)
             if (result.getDimensions() != null && result.getDimensions().getTopics() != null) {
@@ -295,18 +301,17 @@ public class ContentGenerationManagement implements ContentGenerationApi {
         request.getQuestionsPerDifficulty()
                 .forEach((difficulty, count) -> difficultyMap.put(difficulty.toUpperCase(), count));
 
-        AIWorkerGenerateQuestionsRequest aiRequest = AIWorkerGenerateQuestionsRequest.builder()
+        AIGatewayGenerateQuestionsRequest aiRequest = AIGatewayGenerateQuestionsRequest.builder()
                 .topic(request.getTopic())
                 .grade(request.getGrade())
                 .subject(request.getSubject())
                 .questionsPerDifficulty(difficultyMap)
                 .questionTypes(questionTypesList)
-                .additionalRequirements(request.getAdditionalRequirements())
+                .prompt(request.getPrompt())
                 .provider(request.getProvider() != null ? request.getProvider() : "google")
                 .model(request.getModel() != null ? request.getModel() : "gemini-2.5-flash-lite")
                 .build();
 
-        // Make synchronous call to GenAI-Gateway - return raw JSON string
         log.info("Calling GenAI-Gateway at endpoint: {}", QUESTIONS_API_ENDPOINT);
         try {
             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
@@ -317,6 +322,35 @@ public class ContentGenerationManagement implements ContentGenerationApi {
             return jsonResponse;
         } catch (Exception e) {
             log.error("Error during question generation", e);
+            throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    @Override
+    public GenerateQuestionsFromMatrixResponse generateQuestionsFromMatrix(GenerateQuestionsFromMatrixRequest request,
+            String traceId) {
+        log.info("Generating questions from matrix for grade: {}, subject: {}, topics: {}",
+                request.getGrade(),
+                request.getSubject(),
+                request.getTopics() != null ? request.getTopics().size() : 0);
+
+        log.info("Calling GenAI-Gateway at endpoint: {}", QUESTIONS_FROM_MATRIX_ENDPOINT);
+        try {
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.set("X-Trace-ID", traceId);
+
+            // GenAI Gateway returns raw JSON string - we handle parsing in backend
+            String rawJsonResponse = aiApiClient.post(QUESTIONS_FROM_MATRIX_ENDPOINT, request, String.class, headers);
+
+            log.info("Successfully received raw JSON response from GenAI-Gateway");
+
+            // Return raw response wrapped in DTO for further processing by caller
+            // The AssignmentManagement will handle parsing, field filling, and grouping
+            GenerateQuestionsFromMatrixResponse response = new GenerateQuestionsFromMatrixResponse();
+            response.setRawJson(rawJsonResponse);
+            return response;
+        } catch (Exception e) {
+            log.error("Error during matrix-based question generation", e);
             throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
         }
     }

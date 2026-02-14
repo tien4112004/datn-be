@@ -1,17 +1,13 @@
-package com.datn.datnbe.document.entity.questiondata;
+package com.datn.datnbe.ai.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import java.util.List;
 
 /**
- * Fill-in-blank data for backend storage and frontend responses.
- * Contains parsed segments structure.
- *
- * Note: AI Gateway sends raw text format (see FillInBlankAIData),
- * which is converted to this structure by FillInBlankParser.
+ * Fill-in-blank data format from AI Gateway.
+ * AI generates text with {{answer|alternative}} placeholders that need to be parsed.
  */
 @Data
 @Builder
@@ -21,9 +17,11 @@ import java.util.List;
 public class FillInBlankData {
 
     /**
-     * Parsed segments (TEXT and BLANK) for storage and frontend.
+     * Raw text with {{answer|alternative}} placeholders from AI.
+     * Example: "The capital of Vietnam is {{Hà Nội|Hanoi}}."
      */
-    List<BlankSegment> segments;
+    @JsonProperty("data")
+    String data;
 
     /**
      * Whether answer checking should be case-sensitive.
