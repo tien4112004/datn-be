@@ -13,7 +13,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CoinUsageTransactionDTO {
+public class CoinUsageTransactionDto {
     private String id;
     private String userId;
     private Date createdAt;
