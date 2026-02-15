@@ -125,10 +125,10 @@ public class AnalyticsController {
         return ResponseEntity.ok(AppResponseDto.success(activities));
     }
 
-    @GetMapping("/student/performance")
+    @GetMapping("/teacher/students/{studentId}/performance")
     @Operation(summary = "Get student performance metrics", description = "Returns comprehensive performance metrics for the current student")
-    public ResponseEntity<AppResponseDto<StudentPerformanceDto>> getStudentPerformance() {
-        String studentId = securityContextUtils.getCurrentUserProfileId();
+    public ResponseEntity<AppResponseDto<StudentPerformanceDto>> getStudentPerformance(
+            @Parameter(description = "Student ID") @PathVariable String studentId) {
         StudentPerformanceDto performance = analyticsApi.getStudentPerformance(studentId);
         return ResponseEntity.ok(AppResponseDto.success(performance));
     }

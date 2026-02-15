@@ -25,7 +25,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -279,6 +278,9 @@ public class AnalyticsService implements AnalyticsApi {
         // Get all submissions for this class
         List<Submission> submissions = submissionRepository.findByClassId(classId);
 
+        // Deduplicate: use best submission per student per post
+        List<Submission> bestSubmissions = getBestSubmissionsPerStudentPerPost(submissions);
+
         // Calculate participation rate
         List<Post> exercisePosts = postRepository.findAll()
                 .stream()
@@ -288,20 +290,18 @@ public class AnalyticsService implements AnalyticsApi {
         double participationRate = 0.0;
         if (!exercisePosts.isEmpty() && totalStudents > 0) {
             long totalExpected = (long) exercisePosts.size() * totalStudents;
-            long totalSubmissions = submissions.size();
-            participationRate = (totalSubmissions * 100.0) / totalExpected;
+            long uniqueSubmissions = bestSubmissions.size();
+            participationRate = (uniqueSubmissions * 100.0) / totalExpected;
         }
 
         // Calculate average score as percentage
-        Double averageScore = submissions.stream()
-                .filter(s -> "graded".equals(s.getStatus()) && s.getScore() != null && s.getMaxScore() != null
-                        && s.getMaxScore() > 0)
+        Double averageScore = bestSubmissions.stream()
                 .mapToDouble(s -> (s.getScore() / s.getMaxScore()) * 100.0)
                 .average()
                 .orElse(0.0);
 
         // Grade distribution
-        Map<String, Long> gradeDistribution = calculateGradeDistribution(submissions);
+        Map<String, Long> gradeDistribution = calculateGradeDistribution(bestSubmissions);
 
         // At-risk students
         List<AtRiskStudentDto> atRiskStudents = identifyAtRiskStudentsForClass(classId, enrollments);
@@ -461,15 +461,16 @@ public class AnalyticsService implements AnalyticsApi {
             allSubmissions.addAll(submissionRepository.findByClassId(classEntity.getId()));
         }
 
+        // Deduplicate: use best submission per student per post
+        List<Submission> bestSubmissions = getBestSubmissionsPerStudentPerPost(allSubmissions);
+
         // Average class score as percentage
-        Double averageClassScore = allSubmissions.stream()
-                .filter(s -> "graded".equals(s.getStatus()) && s.getScore() != null && s.getMaxScore() != null
-                        && s.getMaxScore() > 0)
+        Double averageClassScore = bestSubmissions.stream()
                 .mapToDouble(s -> (s.getScore() / s.getMaxScore()) * 100.0)
                 .average()
                 .orElse(0.0);
 
-        // Engagement rate (24h)
+        // Engagement rate (24h) - keep using allSubmissions because we want to count recent activity
         Instant yesterday = Instant.now().minus(Duration.ofHours(24));
         long recentSubmissions = allSubmissions.stream()
                 .filter(s -> s.getSubmittedAt()
@@ -481,7 +482,7 @@ public class AnalyticsService implements AnalyticsApi {
         double engagementRate24h = totalStudents > 0 ? (recentSubmissions * 100.0) / totalStudents : 0.0;
 
         // Overall grade distribution
-        Map<String, Long> overallGradeDistribution = calculateGradeDistribution(allSubmissions);
+        Map<String, Long> overallGradeDistribution = calculateGradeDistribution(bestSubmissions);
 
         return TeacherSummaryDto.builder()
                 .totalClasses(totalClasses)
@@ -544,16 +545,24 @@ public class AnalyticsService implements AnalyticsApi {
         // Get all submissions by student
         List<Submission> submissions = submissionRepository.findByStudentId(studentId);
 
-        // Overall average as percentage
-        Double overallAverage = submissions.stream()
+        // Group submissions by postId and get the best/latest graded submission for each assignment
+        Map<String, Submission> bestSubmissionPerPost = submissions.stream()
                 .filter(s -> "graded".equals(s.getStatus()) && s.getScore() != null && s.getMaxScore() != null
                         && s.getMaxScore() > 0)
+                .collect(Collectors.toMap(Submission::getPostId,
+                        submission -> submission,
+                        // If multiple submissions for same post, keep the one with highest score
+                        (s1, s2) -> s1.getScore() > s2.getScore() ? s1 : s2));
+
+        // Overall average as percentage - calculated from best submission per assignment
+        Double overallAverage = bestSubmissionPerPost.values()
+                .stream()
                 .mapToDouble(s -> (s.getScore() / s.getMaxScore()) * 100.0)
                 .average()
                 .orElse(0.0);
 
-        // Completed vs total
-        long completedAssignments = submissions.stream().filter(s -> "graded".equals(s.getStatus())).count();
+        // Completed assignments = unique posts with graded submissions
+        int completedAssignments = bestSubmissionPerPost.size();
 
         // Get all available assignments for student's classes
         int totalAssignments = calculateTotalAssignmentsForStudent(studentId);
@@ -563,20 +572,19 @@ public class AnalyticsService implements AnalyticsApi {
         // Pending and overdue
         List<Post> pendingPosts = findPendingAssignmentsForStudent(studentId, submissions);
         int pendingAssignments = (int) pendingPosts.stream()
-                .filter(p -> (p.getDueDate() == null
-                        || p.getDueDate().after(Date.from(Instant.from(LocalDateTime.now())))))
+                .filter(p -> (p.getDueDate() == null || p.getDueDate().after(Date.from(Instant.now()))))
                 .count();
         int overdueAssignments = (int) pendingPosts.stream()
-                .filter(p -> p.getDueDate() != null
-                        && p.getDueDate().before(Date.from(Instant.from(LocalDateTime.now()))))
+                .filter(p -> p.getDueDate() != null && p.getDueDate().before(Date.from(Instant.now())))
                 .count();
 
-        // Grade distribution
-        Map<String, Long> gradeDistribution = calculateGradeDistribution(submissions);
+        // Grade distribution - based on best submission per assignment
+        Map<String, Long> gradeDistribution = calculateGradeDistribution(
+                new ArrayList<>(bestSubmissionPerPost.values()));
 
         return StudentPerformanceDto.builder()
                 .overallAverage(overallAverage)
-                .completedAssignments((int) completedAssignments)
+                .completedAssignments(completedAssignments)
                 .totalAssignments(totalAssignments)
                 .completionRate(completionRate)
                 .pendingAssignments(pendingAssignments)
@@ -588,6 +596,26 @@ public class AnalyticsService implements AnalyticsApi {
     }
 
     // Helper methods
+
+    /**
+     * Filters submissions to get the best (highest score) submission per student per post.
+     * This ensures students with multiple attempts are only counted once with their best score.
+     *
+     * @param submissions List of all submissions
+     * @return List of best submissions per student per post
+     */
+    private List<Submission> getBestSubmissionsPerStudentPerPost(List<Submission> submissions) {
+        return submissions.stream()
+                .filter(s -> "graded".equals(s.getStatus()) && s.getScore() != null && s.getMaxScore() != null
+                        && s.getMaxScore() > 0)
+                .collect(Collectors.toMap(s -> s.getStudentId() + ":" + s.getPostId(), // Composite key
+                        submission -> submission,
+                        // Keep submission with highest score
+                        (s1, s2) -> s1.getScore() > s2.getScore() ? s1 : s2))
+                .values()
+                .stream()
+                .collect(Collectors.toList());
+    }
 
     private boolean isWithinRange(Instant date, Instant start, Instant end) {
         return (start == null || !date.isBefore(start)) && (end == null || !date.isAfter(end));
@@ -617,6 +645,15 @@ public class AnalyticsService implements AnalyticsApi {
         return "Assignment";
     }
 
+    /**
+     * Calculates grade distribution from submissions.
+     *
+     * IMPORTANT: This method expects pre-deduplicated submissions
+     * (best score per student per assignment).
+     *
+     * @param submissions List of submissions (should be deduplicated by caller)
+     * @return Map of grade letters to counts
+     */
     private Map<String, Long> calculateGradeDistribution(List<Submission> submissions) {
         Map<String, Long> distribution = new HashMap<>();
         distribution.put("A", 0L);
@@ -710,31 +747,34 @@ public class AnalyticsService implements AnalyticsApi {
                 // Get submissions from pre-fetched map (no query!)
                 List<Submission> studentSubmissions = submissionsByStudent.getOrDefault(studentUserId, List.of());
 
-                // Calculate average as percentage (score/maxScore * 100)
-                double averageScore = studentSubmissions.stream()
+                // Deduplicate: get best submission per post for this student
+                Map<String, Submission> bestSubmissionPerPost = studentSubmissions.stream()
                         .filter(s -> "graded".equals(s.getStatus()) && s.getScore() != null && s.getMaxScore() != null
                                 && s.getMaxScore() > 0)
-                        .mapToDouble(s -> {
-                            var avg = (s.getScore() / s.getMaxScore()) * 100.0;
-                            log.info(
-                                    "Average score for student {} with max score is {} and original score {} and avg score is {}",
-                                    studentUserId,
-                                    s.getMaxScore(),
-                                    s.getScore(),
-                                    avg);
-                            return avg;
-                        })
-                        .average()
-                        .orElse(0.0);
+                        .collect(Collectors.toMap(Submission::getPostId,
+                                submission -> submission,
+                                (s1, s2) -> s1.getScore() > s2.getScore() ? s1 : s2));
 
-                int missedSubmissions = totalAssignments - studentSubmissions.size();
+                // Calculate average as percentage (score/maxScore * 100)
+                double averageScore = bestSubmissionPerPost.values().stream().mapToDouble(s -> {
+                    var avg = (s.getScore() / s.getMaxScore()) * 100.0;
+                    log.info(
+                            "Average score for student {} with max score is {} and original score {} and avg score is {}",
+                            studentUserId,
+                            s.getMaxScore(),
+                            s.getScore(),
+                            avg);
+                    return avg;
+                }).average().orElse(0.0);
+
+                int missedSubmissions = totalAssignments - bestSubmissionPerPost.size();
                 // Use pre-fetched postMap instead of querying database
                 long lateSubmissions = studentSubmissions.stream().filter(s -> {
                     Post post = postMap.get(s.getPostId());
                     return post != null && post.getDueDate() != null && s.getSubmittedAt().after(post.getDueDate());
-                }).count();
+                }).map(Submission::getPostId).distinct().count();
 
-                double completionRate = (studentSubmissions.size() * 100.0) / totalAssignments;
+                double completionRate = (bestSubmissionPerPost.size() * 100.0) / totalAssignments;
 
                 // Determine if at-risk
                 AtRiskStudentDto.RiskLevel riskLevel = null;
@@ -779,13 +819,21 @@ public class AnalyticsService implements AnalyticsApi {
     }
 
     private AssignmentSummaryDto createAssignmentSummary(Post post, int totalStudents) {
-        List<Submission> submissions = submissionRepository.findByPostId(post.getId());
+        List<Submission> allSubmissions = submissionRepository.findByPostId(post.getId());
 
-        long gradedCount = submissions.stream().filter(s -> "graded".equals(s.getStatus())).count();
-
-        Double averageScore = submissions.stream()
+        // Deduplicate by student (since this is a single post, only need to dedupe by student)
+        Map<String, Submission> bestSubmissionPerStudent = allSubmissions.stream()
                 .filter(s -> "graded".equals(s.getStatus()) && s.getScore() != null && s.getMaxScore() != null
                         && s.getMaxScore() > 0)
+                .collect(Collectors.toMap(Submission::getStudentId,
+                        submission -> submission,
+                        (s1, s2) -> s1.getScore() > s2.getScore() ? s1 : s2));
+
+        List<Submission> submissions = new ArrayList<>(bestSubmissionPerStudent.values());
+
+        long gradedCount = submissions.size();
+
+        Double averageScore = submissions.stream()
                 .mapToDouble(s -> (s.getScore() / s.getMaxScore()) * 100.0)
                 .average()
                 .orElse(0.0);
@@ -842,6 +890,13 @@ public class AnalyticsService implements AnalyticsApi {
                 .build();
     }
 
+    /**
+     * Analyzes question performance across ALL student attempts.
+     *
+     * Note: This method intentionally includes ALL submissions, not just best scores,
+     * because understanding question difficulty requires analyzing all attempts,
+     * including failures that led to retries.
+     */
     private List<ItemAnalysisDto.QuestionAnalysis> analyzeQuestions(AssignmentPost assignment,
             List<Submission> submissions) {
         if (assignment.getQuestions() == null) {
@@ -911,6 +966,12 @@ public class AnalyticsService implements AnalyticsApi {
         return analysis;
     }
 
+    /**
+     * Analyzes topic performance across ALL student attempts.
+     *
+     * Note: This method intentionally includes ALL submissions, not just best scores,
+     * to provide accurate topic difficulty metrics.
+     */
     private List<ItemAnalysisDto.TopicAnalysis> analyzeTopics(AssignmentPost assignment, List<Submission> submissions) {
         // Group questions by topic
         if (assignment.getQuestions() == null) {
