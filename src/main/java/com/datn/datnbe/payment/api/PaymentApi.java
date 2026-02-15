@@ -10,32 +10,32 @@ import org.springframework.data.domain.Pageable;
 
 public interface PaymentApi {
 
-    UserCoinDto getUserCoin(String userId);
+     UserCoinDto getUserCoin(String userId);
 
-    UserCoinDto initializeUserCoin(String userId);
+     UserCoinDto initializeUserCoin(String userId);
 
-    UserCoinDto subtractCoin(String userId, Long amount, String source);
+     UserCoinDto subtractCoin(String userId, Long amount, String source);
 
-    UserCoinDto addCoin(String userId, Long amount, String source);
+     UserCoinDto addCoin(String userId, Long amount, String source);
 
-    PaginatedResponseDto<CoinUsageTransactionDto> getCoinHistory(String userId,
-            String type,
-            String source,
-            Pageable pageable);
+     PaginatedResponseDto<CoinUsageTransactionDto> getCoinHistory(String userId,
+               String type,
+               String source,
+               Pageable pageable);
 
-    void handleSepayWebhook(SepayWebhookRequest webhookRequest);
+     void handleSepayWebhook(SepayWebhookRequest webhookRequest);
 
-    void handlePayosWebhook(PayosWebhookRequest webhookRequest);
+     void handlePayosWebhook(PayosWebhookRequest webhookRequest);
 
-    TransactionDetailsDto getTransactionDetails(String transactionId);
+     TransactionDetailsDto getTransactionDetails(String transactionId);
 
-    PaginatedResponseDto<TransactionDetailsDto> getUserTransactions(String userId, Pageable pageable);
+     PaginatedResponseDto<TransactionDetailsDto> getUserTransactions(String userId, Pageable pageable);
 
-    TransactionDetailsDto getTransactionByReferenceCode(String referenceCode);
+     TransactionDetailsDto getTransactionByReferenceCode(String referenceCode);
 
-    /**
-     * Find a transaction using the stored order invoice number (used by Sepay and
-     * PayOS orderCode)
-     */
-    TransactionDetailsDto getTransactionByOrderInvoiceNumber(String orderInvoiceNumber);
+     /**
+      * Find a transaction using the stored order invoice number (used by Sepay and
+      * PayOS orderCode)
+      */
+     TransactionDetailsDto getTransactionByOrderInvoiceNumber(String orderInvoiceNumber);
 }
