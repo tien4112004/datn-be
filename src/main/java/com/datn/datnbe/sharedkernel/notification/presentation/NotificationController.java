@@ -90,4 +90,20 @@ public class NotificationController {
         notificationService.sendNotificationToUsers(request);
         return ResponseEntity.ok(AppResponseDto.success("Notifications sent to users"));
     }
+
+    @PostMapping("/send-me")
+    public ResponseEntity<AppResponseDto<String>> sendNotificationToCurrentUser(@RequestBody NotificationRequest request,
+            Authentication authentication) {
+        String userId = authentication.getName();
+        SendNotificationToUsersRequest dto = SendNotificationToUsersRequest.builder()
+                .userIds(java.util.List.of(userId))
+                .title(request.getTitle() != null ? request.getTitle() : "Test notification")
+                .body(request.getBody() != null ? request.getBody() : "Test notification from payment-test.html")
+                .type(com.datn.datnbe.sharedkernel.notification.enums.NotificationType.SYSTEM)
+                .referenceId(null)
+                .data(request.getData())
+                .build();
+        notificationService.sendNotificationToUsers(dto);
+        return ResponseEntity.ok(AppResponseDto.success("Notification queued for current user"));
+    }
 }

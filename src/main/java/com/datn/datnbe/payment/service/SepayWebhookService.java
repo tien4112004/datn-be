@@ -9,6 +9,9 @@ import com.datn.datnbe.payment.dto.request.SepayWebhookRequest;
 import com.datn.datnbe.payment.entity.PaymentTransaction;
 import com.datn.datnbe.payment.entity.PaymentTransaction.TransactionStatus;
 import com.datn.datnbe.payment.repository.PaymentTransactionRepository;
+import com.datn.datnbe.sharedkernel.notification.dto.SendNotificationToUsersRequest;
+import com.datn.datnbe.sharedkernel.notification.enums.NotificationType;
+import com.datn.datnbe.sharedkernel.notification.service.NotificationService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +26,7 @@ public class SepayWebhookService {
 
     private final PaymentTransactionRepository paymentTransactionRepository;
     private final UserCoinService userCoinService;
+    private final NotificationService notificationService;
 
     @Transactional
     public void handle(SepayWebhookRequest webhookRequest) {
@@ -71,6 +75,21 @@ public class SepayWebhookService {
                         coins = orderAmount.longValue() / 1000L;
                     userCoinService.addCoin(tx.getUserId(), coins, "sepay");
 
+                    // send push + app notification to the user (if they have device tokens)
+                    try {
+                        SendNotificationToUsersRequest notif = SendNotificationToUsersRequest.builder()
+                                .userIds(java.util.List.of(tx.getUserId()))
+                                .title("Thanh toán thành công")
+                                .body(String.format("Giao dịch %s: +%d coins — đã được xác nhận", tx.getReferenceCode(), coins))
+                                .type(NotificationType.SYSTEM)
+                                .referenceId(tx.getId())
+                                .data(java.util.Map.of("transactionId", tx.getId(), "status", "COMPLETED"))
+                                .build();
+                        notificationService.sendNotificationToUsers(notif);
+                    } catch (Exception e) {
+                        log.warn("Failed to send payment notification for tx {}: {}", tx.getId(), e.getMessage());
+                    }
+
                     log.info("Payment completed (webhook): {} - added {} coins to user {}",
                             tx.getId(),
                             coins,
@@ -81,12 +100,57 @@ public class SepayWebhookService {
             } else if ("CANCELLED".equalsIgnoreCase(orderStatus)) {
                 tx.setStatus(TransactionStatus.CANCELLED);
                 log.info("Payment cancelled (webhook): {}", tx.getId());
+
+                // notify user about cancelled transaction
+                try {
+                    SendNotificationToUsersRequest notif = SendNotificationToUsersRequest.builder()
+                            .userIds(java.util.List.of(tx.getUserId()))
+                            .title("Thanh toán bị hủy")
+                            .body(String.format("Giao dịch %s đã bị hủy", tx.getReferenceCode()))
+                            .type(NotificationType.SYSTEM)
+                            .referenceId(tx.getId())
+                            .data(java.util.Map.of("transactionId", tx.getId(), "status", "CANCELLED"))
+                            .build();
+                    notificationService.sendNotificationToUsers(notif);
+                } catch (Exception e) {
+                    log.warn("Failed to send payment cancelled notification for tx {}: {}", tx.getId(), e.getMessage());
+                }
             } else if ("AUTHENTICATION_NOT_NEEDED".equalsIgnoreCase(orderStatus)) {
                 tx.setStatus(TransactionStatus.PENDING);
                 log.info("Payment pending (webhook): {}", tx.getId());
+
+                // optional: notify user that payment is pending
+                try {
+                    SendNotificationToUsersRequest notif = SendNotificationToUsersRequest.builder()
+                            .userIds(java.util.List.of(tx.getUserId()))
+                            .title("Thanh toán đang chờ")
+                            .body(String.format("Giao dịch %s đang chờ xác nhận", tx.getReferenceCode()))
+                            .type(NotificationType.SYSTEM)
+                            .referenceId(tx.getId())
+                            .data(java.util.Map.of("transactionId", tx.getId(), "status", "PENDING"))
+                            .build();
+                    notificationService.sendNotificationToUsers(notif);
+                } catch (Exception e) {
+                    log.warn("Failed to send payment pending notification for tx {}: {}", tx.getId(), e.getMessage());
+                }
             } else {
                 tx.setStatus(TransactionStatus.FAILED);
                 log.info("Payment failed (webhook) status={}: {}", orderStatus, tx.getId());
+
+                // notify user about failed transaction
+                try {
+                    SendNotificationToUsersRequest notif = SendNotificationToUsersRequest.builder()
+                            .userIds(java.util.List.of(tx.getUserId()))
+                            .title("Thanh toán thất bại")
+                            .body(String.format("Giao dịch %s: thanh toán không thành công", tx.getReferenceCode()))
+                            .type(NotificationType.SYSTEM)
+                            .referenceId(tx.getId())
+                            .data(java.util.Map.of("transactionId", tx.getId(), "status", "FAILED"))
+                            .build();
+                    notificationService.sendNotificationToUsers(notif);
+                } catch (Exception e) {
+                    log.warn("Failed to send payment failed notification for tx {}: {}", tx.getId(), e.getMessage());
+                }
             }
 
             // prefer Sepay transaction id from nested `transaction` object, fall back to orderId
