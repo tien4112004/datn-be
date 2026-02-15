@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sepay Payment Test</title>
+    <title>Payment Tester — Sepay & PayOS</title>
     <style>
         * {
             margin: 0;
@@ -310,7 +310,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>💳 Sepay Payment Tester</h1>
+        <h1>💳 Payment Tester — Sepay & PayOS</h1>
         <p class="subtitle">Test flow thanh toán Payment Gateway</p>
 
         <div class="form-group">
@@ -327,7 +327,7 @@
         <div class="form-row">
             <div class="form-group">
                 <label for="amount">Số Tiền (VND)</label>
-                <input type="number" id="amount" value="100000" min="1000" step="1000">
+                <input type="number" id="amount" value="2000" min="1000" step="1000">
             </div>
             <div class="form-group">
                 <label for="description">Mô Tả</label>
@@ -335,7 +335,19 @@
             </div>
         </div>
 
-
+        <div class="form-row">
+            <div class="form-group">
+                <label for="gateway">Gateway</label>
+                <select id="gateway">
+                    <option value="SEPAY" selected>SEPAY</option>
+                    <option value="PAYOS">PAYOS</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="referenceCode">Reference Code (optional)</label>
+                <input type="text" id="referenceCode" placeholder="custom-ref-123">
+            </div>
+        </div>
 
         <div class="form-group">
             <label for="successUrl">Success URL</label>
@@ -370,6 +382,9 @@
             <div class="info-box" id="successReferenceCode"></div>
             <div class="label-info">Checkout URL</div>
             <div class="info-box" id="successCheckoutUrl"></div>
+
+            <div class="label-info">Gateway</div>
+            <div class="info-box" id="successGateway"></div>
 
             <div class="label-info">Form Fields</div>
             <pre class="info-box" id="successFormFields" style="white-space: pre-wrap;"></pre>
@@ -433,6 +448,8 @@
             const successUrl = document.getElementById('successUrl').value;
             const errorUrl = document.getElementById('errorUrl').value;
             const cancelUrl = document.getElementById('cancelUrl').value;
+            const gate = (document.getElementById('gateway') && document.getElementById('gateway').value) || 'SEPAY';
+            const referenceCode = (document.getElementById('referenceCode') && document.getElementById('referenceCode').value.trim()) || '';
 
             // Validate
             if (!apiUrl) {
@@ -462,6 +479,8 @@
                     body: JSON.stringify({
                         amount: parseFloat(amount),
                         description: description || 'Payment',
+                        gate: gate,
+                        referenceCode: referenceCode || undefined,
                         successUrl: successUrl,
                         errorUrl: errorUrl,
                         cancelUrl: cancelUrl
@@ -479,6 +498,7 @@
                 // Save to localStorage
                 currentCheckoutData = {
                     ...checkout,
+                    gate: checkout.gate || gate,
                     createdAt: new Date().toLocaleString('vi-VN'),
                     createdAtIso: new Date().toISOString(),
                     amount: parseFloat(amount),
@@ -514,6 +534,7 @@
             document.getElementById('successTransactionId').textContent = data.transactionId || 'N/A';
             document.getElementById('successReferenceCode').textContent = data.referenceCode || 'N/A';
             document.getElementById('successCheckoutUrl').textContent = data.checkoutUrl || 'N/A';
+            document.getElementById('successGateway').textContent = data.gate || (currentCheckoutData && currentCheckoutData.gate) || 'N/A';
 
             // Display returned form fields for debugging
             const fieldsJson = JSON.stringify(data.formFields || {}, null, 2);
@@ -548,6 +569,12 @@
         function submitSepayForm() {
             if (!currentCheckoutData || !currentCheckoutData.checkoutUrl) {
                 alert('Không có checkout URL để gửi mẫu.');
+                return;
+            }
+
+            // If gateway is PayOS, open the checkout URL directly (PayOS returns a link)
+            if (currentCheckoutData.gate === 'PAYOS') {
+                window.open(currentCheckoutData.checkoutUrl, '_blank');
                 return;
             }
 
@@ -611,7 +638,7 @@
             listDiv.innerHTML = limited.map(tx => `
                 <div class="transaction-item">
                     <div class="transaction-header">
-                        <div class="transaction-id">${tx.transactionId.substring(0, 12)}...</div>
+                        <div class="transaction-id">${tx.transactionId ? tx.transactionId.substring(0, 12) + '...' : '—'} <span class="info-tag">${tx.gate || 'SEPAY'}</span></div>
                         <span class="transaction-status ${tx.status?.toLowerCase() || 'pending'}">${tx.status || 'PENDING'}</span>
                     </div>
                     <div class="transaction-info">
@@ -756,6 +783,7 @@
                     referenceCode: tx.referenceCode,
                     checkoutUrl: '', // Not available from API
                     status: tx.status,
+                    gate: tx.gate,
                     amount: tx.amount,
                     description: tx.description,
                     createdAt: tx.createdAt,

@@ -1,4 +1,18 @@
-package com.datn.datnbe.payment.apiclient;
+package com.datn.datnbe.payment.adapter;
+
+import java.math.BigDecimal;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
 import com.datn.datnbe.payment.dto.response.CheckoutResponse;
 import com.datn.datnbe.payment.dto.response.SepayOrderDetailResponse;
@@ -7,23 +21,14 @@ import com.datn.datnbe.payment.util.SepaySignatureUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.*;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
-
-import java.math.BigDecimal;
-import java.util.Map;
-
 /**
- * Sepay Payment Gateway Client
- * Implements Sepay API specification for payment processing
+ * SePay Payment Gateway Adapter
+ * Implements SePay API specification for payment processing
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class PaymentGatewayClient {
+public class SepayAdapter implements PaymentGatewayAdapter {
 
     @Value("${sepay.merchant-id}")
     private String merchantId;
@@ -43,7 +48,14 @@ public class PaymentGatewayClient {
     private final SepaySignatureUtil signatureUtil;
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public CheckoutResponse createCheckout(String orderInvoiceNumber,
+    @Override
+    public String getGatewayName() {
+        return "SEPAY";
+    }
+
+    @Override
+    public CheckoutResponse createCheckout(
+            String orderInvoiceNumber,
             BigDecimal amount,
             String description,
             String customerId,
@@ -80,7 +92,8 @@ public class PaymentGatewayClient {
             String signature = signatureUtil.generateCheckoutSignature(formFields);
             formFields.put("signature", signature);
 
-            // Checkout base URL is configurable (set to sandbox or production via properties)
+            // Checkout base URL is configurable (set to sandbox or production via
+            // properties)
             String checkoutUrl = checkoutBaseUrl + "/v1/checkout/init";
 
             log.info("Created checkout form for order: {} with amount: {}", orderInvoiceNumber, amount);
@@ -101,6 +114,7 @@ public class PaymentGatewayClient {
         }
     }
 
+    @Override
     public SepayOrderDetailResponse getOrderDetails(String orderId) {
         try {
             String url = apiBaseUrl + "/v1/order/detail/" + orderId;
@@ -124,6 +138,7 @@ public class PaymentGatewayClient {
         }
     }
 
+    @Override
     public boolean cancelOrder(String orderInvoiceNumber) {
         try {
             String url = apiBaseUrl + "/v1/order/cancel";
@@ -149,6 +164,12 @@ public class PaymentGatewayClient {
         }
     }
 
+    /**
+     * Void a transaction
+     * 
+     * @param orderInvoiceNumber Order invoice number
+     * @return true if void successful, false otherwise
+     */
     public boolean voidTransaction(String orderInvoiceNumber) {
         try {
             String url = apiBaseUrl + "/v1/order/voidTransaction";
@@ -173,6 +194,4 @@ public class PaymentGatewayClient {
             return false;
         }
     }
-
-
 }

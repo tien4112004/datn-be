@@ -207,7 +207,12 @@ sepay:
   api-key: ${SEPAY_API_KEY:your-api-key-here}
   secret-key: ${SEPAY_SECRET_KEY:}
   account-name: ${SEPAY_ACCOUNT_NAME:Your Bank Account Name}
-  webhook-secret: ${SEPAY_WEBHOOK_SECRET:your-webhook-secret}
   checkout-base-url: ${SEPAY_CHECKOUT_BASE_URL:${SEPAY_SANDBOX_URL:https://pay-sandbox.sepay.vn}}
   api-base-url: ${SEPAY_API_BASE_URL:https://sandbox-api.sepay.vn/api}
-  webhook-url: ${SEPAY_WEBHOOK_URL:https://your-domain.com/api/payments/notify/sepay}
+
+# PayOS Payment Gateway Configuration
+payos:
+  client-id: ${PAYOS_CLIENT_ID:}
+  api-key: ${PAYOS_API_KEY:}
+  checksum-key: ${PAYOS_CHECKSUM_KEY:}
+  api-base-url: ${PAYOS_API_BASE_URL:https://api-merchant.payos.vn}

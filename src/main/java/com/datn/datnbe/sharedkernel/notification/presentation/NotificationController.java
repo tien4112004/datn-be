@@ -92,7 +92,8 @@ public class NotificationController {
     }
 
     @PostMapping("/send-me")
-    public ResponseEntity<AppResponseDto<String>> sendNotificationToCurrentUser(@RequestBody NotificationRequest request,
+    public ResponseEntity<AppResponseDto<String>> sendNotificationToCurrentUser(
+            @RequestBody NotificationRequest request,
             Authentication authentication) {
         String userId = authentication.getName();
         SendNotificationToUsersRequest dto = SendNotificationToUsersRequest.builder()

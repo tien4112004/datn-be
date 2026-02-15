@@ -11,11 +11,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.datn.datnbe.payment.adapter.PaymentGatewayAdapter;
+import com.datn.datnbe.payment.adapter.PaymentGatewayFactory;
 import com.datn.datnbe.payment.api.PaymentApi;
-import com.datn.datnbe.payment.apiclient.PaymentGatewayClient;
 import com.datn.datnbe.payment.dto.CoinUsageTransactionDto;
 import com.datn.datnbe.payment.dto.UserCoinDto;
 import com.datn.datnbe.payment.dto.request.CreateCheckoutRequest;
+import com.datn.datnbe.payment.dto.request.PayosWebhookRequest;
 import com.datn.datnbe.payment.dto.request.SepayWebhookRequest;
 import com.datn.datnbe.payment.dto.response.CheckoutResponse;
 import com.datn.datnbe.payment.dto.response.TransactionDetailsDto;
@@ -43,12 +45,13 @@ import lombok.extern.slf4j.Slf4j;
 public class PaymentService implements PaymentApi {
 
     PaymentTransactionRepository paymentTransactionRepository;
-    PaymentGatewayClient paymentGatewayClient;
+    PaymentGatewayFactory paymentGatewayFactory;
     ObjectMapper objectMapper;
     private final PaymentMapper mapper;
     private final com.datn.datnbe.payment.service.UserCoinService userCoinService;
 
     private final SepayWebhookService sepayWebhookService;
+    private final PayosWebhookService payosWebhookService;
     @Value("${app.coin.initial:0}")
     @NonFinal
     private Long initCoinValue;
@@ -63,11 +66,21 @@ public class PaymentService implements PaymentApi {
                     ? request.getReferenceCode()
                     : generateReferenceCode();
 
-            // Generate order invoice number for Sepay (format: DH + timestamp)
-            String orderInvoiceNumber = "DH" + System.currentTimeMillis();
-
-            // Determine payment gateway
+            // Determine payment gateway (default to SEPAY if not specified)
             String gate = request.getGate() != null ? request.getGate() : "SEPAY";
+
+            // Get the appropriate adapter for the gateway
+            PaymentGatewayAdapter adapter = paymentGatewayFactory.getAdapter(gate);
+
+            // Generate order invoice number
+            // For PayOS we use numeric orderCode (timestamp), for Sepay we use "DH" +
+            // timestamp
+            String orderInvoiceNumber;
+            if ("PAYOS".equalsIgnoreCase(gate)) {
+                orderInvoiceNumber = String.valueOf(System.currentTimeMillis());
+            } else {
+                orderInvoiceNumber = "DH" + System.currentTimeMillis();
+            }
 
             // Prepare transaction record and save BEFORE calling external gateway
             // so we can include our internal transaction id in the redirect URLs.
@@ -76,7 +89,7 @@ public class PaymentService implements PaymentApi {
                     .amount(request.getAmount())
                     .description(request.getDescription())
                     .referenceCode(referenceCode)
-                    .orderInvoiceNumber(orderInvoiceNumber) // Store Sepay order invoice number
+                    .orderInvoiceNumber(orderInvoiceNumber)
                     .status(TransactionStatus.PENDING)
                     .gate(gate)
                     .createdAt(new Date())
@@ -85,22 +98,22 @@ public class PaymentService implements PaymentApi {
 
             PaymentTransaction savedTransaction = paymentTransactionRepository.save(transaction);
 
-            // Append transaction identifiers to provided callback URLs so Sepay redirect will include them
+            // Append transaction identifiers to provided callback URLs
             String successUrl = appendCallbackParams(request.getSuccessUrl(), savedTransaction.getId(), referenceCode);
             String errorUrl = appendCallbackParams(request.getErrorUrl(), savedTransaction.getId(), referenceCode);
             String cancelUrl = appendCallbackParams(request.getCancelUrl(), savedTransaction.getId(), referenceCode);
 
-            // Create checkout with Sepay Payment Gateway
-            // Pass null for customerId and paymentMethod to let user choose
-            CheckoutResponse checkoutResponse = paymentGatewayClient.createCheckout(orderInvoiceNumber,
+            // Create checkout using the adapter
+            log.info("Using {} gateway for order: {}", gate, orderInvoiceNumber);
+            CheckoutResponse checkoutResponse = adapter.createCheckout(
+                    orderInvoiceNumber,
                     request.getAmount(),
                     request.getDescription(),
                     userId, // customerId
                     successUrl,
                     errorUrl,
                     cancelUrl,
-                    "BANK_TRANSFER" // force BANK_TRANSFER so FE doesn't need to send paymentMethod
-            );
+                    "BANK_TRANSFER"); // Default payment method
 
             // Update transaction with returned checkout data for auditing
             savedTransaction.setTransactionData(objectMapper.writeValueAsString(checkoutResponse));
@@ -129,6 +142,13 @@ public class PaymentService implements PaymentApi {
     public void handleSepayWebhook(SepayWebhookRequest webhookRequest) {
         // delegate to extracted service to keep PaymentService minimal
         sepayWebhookService.handle(webhookRequest);
+    }
+
+    @Override
+    @Transactional
+    public void handlePayosWebhook(PayosWebhookRequest webhookRequest) {
+        // delegate to PayOS webhook service
+        payosWebhookService.handle(webhookRequest);
     }
 
     @Override
@@ -164,6 +184,15 @@ public class PaymentService implements PaymentApi {
         return mapper.toTransactionDetailsDto(transaction);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public TransactionDetailsDto getTransactionByOrderInvoiceNumber(String orderInvoiceNumber) {
+        PaymentTransaction transaction = paymentTransactionRepository.findByOrderInvoiceNumber(orderInvoiceNumber)
+                .orElseThrow(() -> new AppException(ErrorCode.INTERNAL_SERVER_ERROR, "Transaction not found"));
+
+        return mapper.toTransactionDetailsDto(transaction);
+    }
+
     @Transactional
     public void cancelTransaction(String transactionId) {
         var optionalTransaction = paymentTransactionRepository.findById(transactionId);
@@ -185,16 +214,21 @@ public class PaymentService implements PaymentApi {
         paymentTransactionRepository.save(transaction);
         log.info("Transaction marked as CANCELLED (by user redirect): {}", transactionId);
 
-        // Try to notify Sepay (best-effort) to cancel the order on their side
+        // Try to notify the payment gateway (best-effort) to cancel the order on their
+        // side
         try {
             if (transaction.getOrderInvoiceNumber() != null && !transaction.getOrderInvoiceNumber().isBlank()) {
-                boolean cancelled = paymentGatewayClient.cancelOrder(transaction.getOrderInvoiceNumber());
-                log.info("Requested Sepay cancel for order {} result={}",
+                // Get the appropriate adapter for the gateway
+                PaymentGatewayAdapter adapter = paymentGatewayFactory.getAdapter(transaction.getGate());
+                boolean cancelled = adapter.cancelOrder(transaction.getOrderInvoiceNumber());
+                log.info("Requested {} cancel for order {} result={}",
+                        transaction.getGate(),
                         transaction.getOrderInvoiceNumber(),
                         cancelled);
             }
         } catch (Exception e) {
-            log.warn("Failed to call Sepay cancel for order {}: {}",
+            log.warn("Failed to call {} cancel for order {}: {}",
+                    transaction.getGate(),
                     transaction.getOrderInvoiceNumber(),
                     e.getMessage());
         }

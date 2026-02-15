@@ -51,6 +51,8 @@ public class PaymentTransaction {
 
     private String sepayTransactionId;
 
+    private String payosPaymentLinkId; // PayOS payment link ID
+
     @Column(columnDefinition = "TEXT")
     private String transactionData;
 

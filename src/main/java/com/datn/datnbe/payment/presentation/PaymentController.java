@@ -81,7 +81,8 @@ public class PaymentController {
             }
         }
 
-        // If still not resolved, fall back to returning a friendly message (avoid HTTP 500)
+        // If still not resolved, fall back to returning a friendly message (avoid HTTP
+        // 500)
         if (resolvedTransactionId == null) {
             return ResponseEntity.ok(AppResponseDto.<String>builder()
                     .data(null)
@@ -153,7 +154,8 @@ public class PaymentController {
             }
         }
 
-        // If we can resolve a transaction id from the redirect, mark it CANCELLED locally
+        // If we can resolve a transaction id from the redirect, mark it CANCELLED
+        // locally
         if (resolvedTransactionId != null) {
             try {
                 paymentService.cancelTransaction(resolvedTransactionId);
@@ -179,7 +181,63 @@ public class PaymentController {
 
         paymentApi.handleSepayWebhook(webhookRequest);
 
-        return ResponseEntity.ok(AppResponseDto.<Void>builder().message("Webhook processed successfully").build());
+        // Resolve transaction via service by orderInvoiceNumber
+        String transactionId = "unknown";
+        String status = "NOT_FOUND";
+        if (invoice != null) {
+            try {
+                TransactionDetailsDto tx = paymentApi.getTransactionByOrderInvoiceNumber(invoice);
+                if (tx != null) {
+                    transactionId = tx.getId();
+                    status = tx.getStatus() != null ? tx.getStatus() : "UNKNOWN";
+                }
+            } catch (Exception e) {
+                log.debug("Could not resolve transaction by orderInvoiceNumber={} : {}", invoice, e.getMessage());
+            }
+        }
+
+        String timestamp = java.time.ZonedDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy-HH:mm:ss"));
+        String message = String.format("process successfully webhook - transactionid: %s, status: %s, timestamp: %s",
+                transactionId,
+                status,
+                timestamp);
+
+        return ResponseEntity.ok(AppResponseDto.<Void>builder().message(message).build());
+    }
+
+    @PostMapping("/notify/payos")
+    public ResponseEntity<AppResponseDto<Void>> handlePayosWebhook(
+            @RequestBody com.datn.datnbe.payment.dto.request.PayosWebhookRequest webhookRequest) {
+        Long orderCode = null;
+        if (webhookRequest != null && webhookRequest.getData() != null) {
+            orderCode = webhookRequest.getData().getOrderCode();
+        }
+        log.info("Received PayOS webhook for order code: {} payload={}", orderCode, webhookRequest);
+
+        paymentApi.handlePayosWebhook(webhookRequest);
+
+        // Resolve transaction via service by orderCode (we store PayOS orderCode in orderInvoiceNumber)
+        String transactionId = "unknown";
+        String status = "NOT_FOUND";
+        if (orderCode != null) {
+            try {
+                TransactionDetailsDto tx = paymentApi.getTransactionByOrderInvoiceNumber(String.valueOf(orderCode));
+                if (tx != null) {
+                    transactionId = tx.getId();
+                    status = tx.getStatus() != null ? tx.getStatus() : "UNKNOWN";
+                }
+            } catch (Exception e) {
+                log.debug("Could not resolve transaction by orderCode={} : {}", orderCode, e.getMessage());
+            }
+        }
+
+        String timestamp = java.time.ZonedDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy-HH:mm:ss"));
+        String message = String.format("process successfully webhook - transactionid: %s, status: %s, timestamp: %s",
+                transactionId,
+                status,
+                timestamp);
+
+        return ResponseEntity.ok(AppResponseDto.<Void>builder().message(message).build());
     }
 
     @GetMapping("/transaction/{transactionId}")

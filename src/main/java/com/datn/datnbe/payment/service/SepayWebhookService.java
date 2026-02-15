@@ -80,7 +80,9 @@ public class SepayWebhookService {
                         SendNotificationToUsersRequest notif = SendNotificationToUsersRequest.builder()
                                 .userIds(java.util.List.of(tx.getUserId()))
                                 .title("Thanh toán thành công")
-                                .body(String.format("Giao dịch %s: +%d coins — đã được xác nhận", tx.getReferenceCode(), coins))
+                                .body(String.format("Giao dịch %s: +%d coins — đã được xác nhận",
+                                        tx.getReferenceCode(),
+                                        coins))
                                 .type(NotificationType.SYSTEM)
                                 .referenceId(tx.getId())
                                 .data(java.util.Map.of("transactionId", tx.getId(), "status", "COMPLETED"))
