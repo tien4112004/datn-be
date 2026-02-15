@@ -139,6 +139,13 @@ public class ContentGenerationController {
 
         try {
             result = contentGenerationExternalApi.generateOutlineBatch(request, traceId.replace("-", ""));
+            String userId = securityContextUtils.getCurrentUserProfileId();
+            extractAndSaveTokenUsage(userId,
+                    "outline",
+                    traceId,
+                    objectMapper.writeValueAsString(request),
+                    request.getModel(),
+                    request.getProvider());
             log.info("Batch outline generation completed successfully");
         } catch (Exception error) {
             log.error("Error generating outline in batch mode", error);
