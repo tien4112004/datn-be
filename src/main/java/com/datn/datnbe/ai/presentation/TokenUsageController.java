@@ -3,8 +3,6 @@ package com.datn.datnbe.ai.presentation;
 import com.datn.datnbe.ai.api.TokenUsageApi;
 import com.datn.datnbe.ai.dto.request.TokenUsageFilterRequest;
 import com.datn.datnbe.ai.dto.response.TokenUsageStatsDto;
-import com.datn.datnbe.ai.dto.response.TokenUsageAggregatedDto;
-import com.datn.datnbe.ai.entity.TokenUsage;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import jakarta.validation.Valid;
@@ -34,30 +32,10 @@ public class TokenUsageController {
                 filterRequest.getProvider(),
                 filterRequest.getRequestType());
 
-        TokenUsageStatsDto result = tokenUsageApi.getTokenUsageWithFilters(userId,
+        TokenUsageStatsDto stats = tokenUsageApi.getStatsWithFilters(userId,
                 filterRequest.getModel(),
                 filterRequest.getProvider(),
                 filterRequest.getRequestType());
-
-        TokenUsageStatsDto stats = TokenUsageStatsDto.builder()
-                .totalTokens(result.getTotalTokens())
-                .totalRequests(result.getTotalRequests())
-                .build();
-
-        return ResponseEntity.ok(AppResponseDto.success(stats));
-    }
-
-    @GetMapping("/{userId}/stats")
-    public ResponseEntity<AppResponseDto<TokenUsageStatsDto>> getTokenUsageStatsForUser(@PathVariable String userId) {
-        log.info("Fetching token usage stats for user: {}", userId);
-
-        Long totalTokens = tokenUsageApi.getTotalTokensUsedByUser(userId);
-        Long totalRequests = tokenUsageApi.getRequestCountByUser(userId);
-
-        TokenUsageStatsDto stats = TokenUsageStatsDto.builder()
-                .totalTokens(totalTokens)
-                .totalRequests(totalRequests)
-                .build();
 
         return ResponseEntity.ok(AppResponseDto.success(stats));
     }
@@ -67,7 +45,8 @@ public class TokenUsageController {
         String userId = securityContextUtils.getCurrentUserId();
         log.info("Fetching image generation request count for user: {}", userId);
 
-        Long imageRequestCount = tokenUsageApi.getRequestCountByUserAndType(userId, "image");
+        TokenUsageStatsDto stats = tokenUsageApi.getStatsWithFilters(userId, null, null, "image");
+        Long imageRequestCount = stats.getTotalRequests();
 
         return ResponseEntity.ok(AppResponseDto.success(imageRequestCount));
     }
@@ -90,20 +69,5 @@ public class TokenUsageController {
         List<TokenUsageStatsDto> results = tokenUsageApi.getTokenUsageByRequestType(userId);
 
         return ResponseEntity.ok(AppResponseDto.success(results));
-    }
-
-    @GetMapping("/documents/{documentId}/aggregated")
-    public ResponseEntity<AppResponseDto<TokenUsageAggregatedDto>> getTokenUsageByDocument(
-            @PathVariable String documentId) {
-        log.info("Fetching aggregated token usage for documentId: {}", documentId);
-        TokenUsageAggregatedDto result = tokenUsageApi.getTokenUsageByDocumentId(documentId);
-        return ResponseEntity.ok(AppResponseDto.success(result));
-    }
-
-    @GetMapping("/documents/{documentId}/all")
-    public ResponseEntity<AppResponseDto<List<TokenUsage>>> getTokenUsagesForDocument(@PathVariable String documentId) {
-        log.info("Fetching all token usages for documentId: {}", documentId);
-        List<TokenUsage> usages = tokenUsageApi.getTokenUsagesByDocumentId(documentId);
-        return ResponseEntity.ok(AppResponseDto.success(usages));
     }
 }

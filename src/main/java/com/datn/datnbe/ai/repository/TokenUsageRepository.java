@@ -15,36 +15,25 @@ import java.util.List;
 @Repository
 public interface TokenUsageRepository extends JpaRepository<TokenUsage, Integer> {
 
-    @Query("SELECT SUM(t.tokenCount) FROM token_usage t WHERE t.userId = :userId")
-    Long getTotalTokensUsedByUser(@Param("userId") String userId);
+    @Query("SELECT new com.datn.datnbe.ai.dto.response.TokenUsageStatsDto(SUM(t.tokenCount), COUNT(t), SUM(t.calculatedPrice), SUM(t.actualPrice)) "
+            + "FROM token_usage t WHERE t.userId = :userId")
+    TokenUsageStatsDto getUserStats(@Param("userId") String userId);
 
-    @Query("SELECT COUNT(t) FROM token_usage t WHERE t.userId = :userId")
-    Long getRequestCountByUser(@Param("userId") String userId);
-
-    @Query("SELECT COUNT(t) FROM token_usage t WHERE t.userId = :userId AND t.request = :requestType")
-    Long getRequestCountByUserAndType(@Param("userId") String userId, @Param("requestType") String requestType);
-
-    @Query("SELECT SUM(t.tokenCount) FROM token_usage t " + "WHERE (:userId IS NULL OR t.userId = :userId) "
-            + "AND (:model IS NULL OR t.model = :model) " + "AND (:provider IS NULL OR t.provider = :provider) "
+    @Query("SELECT new com.datn.datnbe.ai.dto.response.TokenUsageStatsDto(SUM(t.tokenCount), COUNT(t), SUM(t.calculatedPrice), SUM(t.actualPrice)) "
+            + "FROM token_usage t WHERE (:userId IS NULL OR t.userId = :userId) "
+            + "AND (:model IS NULL OR t.model = :model) "
+            + "AND (:provider IS NULL OR t.provider = :provider) "
             + "AND (:requestType IS NULL OR t.request = :requestType)")
-    Long getTotalTokensWithFilters(@Param("userId") String userId,
+    TokenUsageStatsDto getStatsWithFilters(@Param("userId") String userId,
             @Param("model") String model,
             @Param("provider") String provider,
             @Param("requestType") String requestType);
 
-    @Query("SELECT COUNT(t) FROM token_usage t " + "WHERE (:userId IS NULL OR t.userId = :userId) "
-            + "AND (:model IS NULL OR t.model = :model) " + "AND (:provider IS NULL OR t.provider = :provider) "
-            + "AND (:requestType IS NULL OR t.request = :requestType)")
-    Long getRequestCountWithFilters(@Param("userId") String userId,
-            @Param("model") String model,
-            @Param("provider") String provider,
-            @Param("requestType") String requestType);
-
-    @Query("SELECT new com.datn.datnbe.ai.dto.response.TokenUsageStatsDto(t.model, SUM(t.tokenCount), COUNT(t)) "
+    @Query("SELECT new com.datn.datnbe.ai.dto.response.TokenUsageStatsDto(t.model, SUM(t.tokenCount), COUNT(t), SUM(t.calculatedPrice), SUM(t.actualPrice)) "
             + "FROM token_usage t WHERE t.userId = :userId GROUP BY t.model")
     List<TokenUsageStatsDto> getTokenUsageByModel(@Param("userId") String userId);
 
-    @Query("SELECT new com.datn.datnbe.ai.dto.response.TokenUsageStatsDto(t.request, SUM(t.tokenCount), COUNT(t)) "
+    @Query("SELECT new com.datn.datnbe.ai.dto.response.TokenUsageStatsDto(t.request, SUM(t.tokenCount), COUNT(t), SUM(t.calculatedPrice), SUM(t.actualPrice)) "
             + "FROM token_usage t WHERE t.userId = :userId GROUP BY t.request")
     List<TokenUsageStatsDto> getTokenUsageByRequestType(@Param("userId") String userId);
 
