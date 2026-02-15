@@ -21,13 +21,10 @@ import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import com.datn.datnbe.sharedkernel.utils.Base64MultipartFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ch.qos.logback.core.subst.Token;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 
-import org.apache.hc.client5.http.classic.methods.HttpHead;
-import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.scheduling.annotation.Async;
@@ -67,8 +64,9 @@ public class AIModificationService {
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Trace-ID", traceId);
         // Delegate to worker
-        AIModificationResponse response =  aiApiClient.post(AI_REFINE_ENDPOINT, request, AIModificationResponse.class, headers);
-        
+        AIModificationResponse response = aiApiClient
+                .post(AI_REFINE_ENDPOINT, request, AIModificationResponse.class, headers);
+
         String requestBody = "";
         try {
             // Log the request body as JSON string for tracking
@@ -77,7 +75,7 @@ public class AIModificationService {
             log.error("Failed to serialize refine content request for token usage tracking", e);
         }
         trackingTokenUsage(traceId, request.getModel(), request.getProvider(), "refine_content", requestBody);
-        
+
         return response;
     }
 
@@ -87,8 +85,9 @@ public class AIModificationService {
         String traceId = UUID.randomUUID().toString();
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Trace-ID", traceId);
-        AIModificationResponse response = aiApiClient.post(AI_LAYOUT_ENDPOINT, request, AIModificationResponse.class, headers);
-        
+        AIModificationResponse response = aiApiClient
+                .post(AI_LAYOUT_ENDPOINT, request, AIModificationResponse.class, headers);
+
         String requestBody = "";
         try {
             // Log the request body as JSON string for tracking
@@ -97,7 +96,7 @@ public class AIModificationService {
             log.error("Failed to serialize transform layout request for token usage tracking", e);
         }
         trackingTokenUsage(traceId, request.getModel(), request.getProvider(), "transform_layout", requestBody);
-        
+
         return response;
     }
 
@@ -107,8 +106,9 @@ public class AIModificationService {
         String traceId = UUID.randomUUID().toString();
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Trace-ID", traceId);
-        AIModificationResponse response = aiApiClient.post(AI_REFINE_TEXT_ENDPOINT, request, AIModificationResponse.class, headers);
-        
+        AIModificationResponse response = aiApiClient
+                .post(AI_REFINE_TEXT_ENDPOINT, request, AIModificationResponse.class, headers);
+
         String requestBody = "";
         try {
             // Log the request body as JSON string for tracking
@@ -117,7 +117,7 @@ public class AIModificationService {
             log.error("Failed to serialize refine element text request for token usage tracking", e);
         }
         trackingTokenUsage(traceId, request.getModel(), request.getProvider(), "refine_element_text", requestBody);
-        
+
         return response;
     }
 
@@ -191,7 +191,7 @@ public class AIModificationService {
                 log.error("Failed to serialize image generation request for token usage tracking", e);
             }
             trackingTokenUsage(traceId, imageRequest.getModel(), imageRequest.getProvider(), "image", requestBody);
-            
+
             return AIModificationResponse.success(resultData);
 
         } catch (IllegalArgumentException e) {
@@ -244,8 +244,9 @@ public class AIModificationService {
         String traceId = UUID.randomUUID().toString();
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Trace-ID", traceId);
-        AIModificationResponse response =  aiApiClient.post(AI_REFINE_COMBINED_TEXT_ENDPOINT, request, AIModificationResponse.class, headers);
-        
+        AIModificationResponse response = aiApiClient
+                .post(AI_REFINE_COMBINED_TEXT_ENDPOINT, request, AIModificationResponse.class, headers);
+
         String requestBody = "";
         try {
             // Log the request body as JSON string for tracking
@@ -254,7 +255,7 @@ public class AIModificationService {
             log.error("Failed to serialize refine combined text request for token usage tracking", e);
         }
         trackingTokenUsage(traceId, request.getModel(), request.getProvider(), "refine_combined_text", requestBody);
-        
+
         return response;
     }
 
@@ -310,7 +311,7 @@ public class AIModificationService {
     private void trackingTokenUsage(String traceId, String model, String provider, String operation, String request) {
         TokenUsageInfoDto token = phoenixQueryService.getTokenUsageFromPhoenix(traceId, operation);
         if (token != null) {
-            TokenUsage  tokenUsage = TokenUsage.builder()
+            TokenUsage tokenUsage = TokenUsage.builder()
                     .model(model)
                     .provider(provider)
                     .request(operation)

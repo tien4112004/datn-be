@@ -28,6 +28,7 @@ import com.datn.datnbe.document.dto.request.MindmapUpdateTitleAndDescriptionRequ
 import com.datn.datnbe.document.dto.response.MindmapCreateResponseDto;
 import com.datn.datnbe.document.dto.response.MindmapDto;
 import com.datn.datnbe.document.dto.response.MindmapListResponseDto;
+import com.datn.datnbe.document.dto.response.MindmapMetadataResponseDto;
 import com.datn.datnbe.document.entity.Mindmap;
 import com.datn.datnbe.document.management.validation.MindmapValidation;
 import com.datn.datnbe.document.mapper.MindmapEntityMapper;
@@ -250,6 +251,52 @@ public class MindmapManagement implements MindmapApi {
             throw e;
         } catch (Exception e) {
             log.error("Failed to retrieve mindmap with id: '{}'. Error: {}", id, e.getMessage());
+            throw e;
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MindmapMetadataResponseDto getMindmapMetadata(String id) {
+        log.info("Retrieving mindmap metadata for id: '{}'", id);
+
+        try {
+            validation.validateMindmapExists(id);
+
+            Mindmap mindmap = findMindmapById(id);
+
+            // Extract root node ID (assuming first node or node with no parent)
+            String rootNodeId = null;
+            if (mindmap.getNodes() != null && !mindmap.getNodes().isEmpty()) {
+                rootNodeId = mindmap.getNodes().get(0).getId();
+            }
+
+            // Extract grade and subject from extraFields if available
+            String grade = null;
+            String subject = null;
+            if (mindmap.getExtraFields() != null) {
+                Object gradeObj = mindmap.getExtraFields().get("grade");
+                Object subjectObj = mindmap.getExtraFields().get("subject");
+                grade = gradeObj != null ? gradeObj.toString() : null;
+                subject = subjectObj != null ? subjectObj.toString() : null;
+            }
+
+            MindmapMetadataResponseDto response = MindmapMetadataResponseDto.builder()
+                    .mindmapId(mindmap.getId())
+                    .title(mindmap.getTitle())
+                    .description(mindmap.getDescription())
+                    .rootNodeId(rootNodeId)
+                    .grade(grade)
+                    .subject(subject)
+                    .build();
+
+            log.info("Successfully retrieved metadata for mindmap id: '{}'", id);
+            return response;
+        } catch (ResourceNotFoundException e) {
+            log.error("Mindmap not found with id: '{}'", id);
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to retrieve mindmap metadata with id: '{}'. Error: {}", id, e.getMessage());
             throw e;
         }
     }
