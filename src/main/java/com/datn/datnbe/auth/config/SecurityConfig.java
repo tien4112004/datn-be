@@ -56,7 +56,9 @@ public class SecurityConfig {
                                 "/api/auth/**",
                                 "/api/admin/auth/**",
                                 "/api/resources/register",
-                                "/v3/**")
+                                "/v3/**",
+                                "/api/payments/callback/**",
+                                "/api/payments/notify/**")
                         .permitAll()
 
                         // Public GET endpoints - allow anonymous access
