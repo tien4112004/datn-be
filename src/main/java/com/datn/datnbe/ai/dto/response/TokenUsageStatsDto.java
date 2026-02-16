@@ -43,4 +43,15 @@ public class TokenUsageStatsDto {
         this.totalCoin = totalCoin != null ? String.valueOf(totalCoin) : null;
         this.totalMoney = totalMoney != null ? totalMoney.toString() : null;
     }
+
+    // Constructor for request type grouping with coin and money
+    // Parameter order is intentionally different to allow overloading
+    public TokenUsageStatsDto(Long totalTokens, Long totalRequests, Long totalCoin, BigDecimal totalMoney,
+            String requestType) {
+        this.requestType = requestType;
+        this.totalTokens = totalTokens;
+        this.totalRequests = totalRequests;
+        this.totalCoin = totalCoin != null ? String.valueOf(totalCoin) : null;
+        this.totalMoney = totalMoney != null ? totalMoney.toString() : null;
+    }
 }

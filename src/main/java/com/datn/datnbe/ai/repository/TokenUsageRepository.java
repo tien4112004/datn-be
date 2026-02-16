@@ -32,7 +32,7 @@ public interface TokenUsageRepository extends JpaRepository<TokenUsage, Integer>
             + "FROM token_usage t WHERE t.userId = :userId GROUP BY t.model")
     List<TokenUsageStatsDto> getTokenUsageByModel(@Param("userId") String userId);
 
-    @Query("SELECT new com.datn.datnbe.ai.dto.response.TokenUsageStatsDto(t.request, SUM(t.tokenCount), COUNT(t), SUM(t.calculatedPrice), SUM(t.actualPrice)) "
+    @Query("SELECT new com.datn.datnbe.ai.dto.response.TokenUsageStatsDto(SUM(t.tokenCount), COUNT(t), SUM(t.calculatedPrice), SUM(t.actualPrice), t.request) "
             + "FROM token_usage t WHERE t.userId = :userId GROUP BY t.request")
     List<TokenUsageStatsDto> getTokenUsageByRequestType(@Param("userId") String userId);
 
