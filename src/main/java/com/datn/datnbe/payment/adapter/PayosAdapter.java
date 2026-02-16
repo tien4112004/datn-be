@@ -49,8 +49,7 @@ public class PayosAdapter implements PaymentGatewayAdapter {
     }
 
     @Override
-    public CheckoutResponse createCheckout(
-            String orderInvoiceNumber,
+    public CheckoutResponse createCheckout(String orderInvoiceNumber,
             BigDecimal amount,
             String description,
             String customerId,
