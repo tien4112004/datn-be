@@ -19,6 +19,8 @@ import com.datn.datnbe.auth.mapper.UserProfileMapper;
 import com.datn.datnbe.auth.repository.UserProfileRepo;
 import com.datn.datnbe.auth.service.KeycloakAuthService;
 import com.datn.datnbe.auth.validation.AvatarValidation;
+import com.datn.datnbe.ai.api.TokenUsageApi;
+import com.datn.datnbe.ai.dto.response.TokenUsageStatsDto;
 import com.datn.datnbe.payment.api.PaymentApi;
 import com.datn.datnbe.document.api.MediaStorageApi;
 import com.datn.datnbe.document.dto.response.UploadedMediaResponseDto;
@@ -45,6 +47,7 @@ public class UserProfileManagement implements UserProfileApi {
     MediaStorageApi mediaStorageApi;
     AvatarValidation avatarValidation;
     PaymentApi paymentApi;
+    TokenUsageApi tokenUsageApi;
 
     @Override
     public PaginatedResponseDto<UserProfileResponse> getUserProfiles(UserCollectionRequest request) {
@@ -67,7 +70,23 @@ public class UserProfileManagement implements UserProfileApi {
             userProfilesPage = userProfileRepo.findAll(pageable);
         }
 
-        var userProfiles = userProfilesPage.getContent().stream().map(userProfileMapper::toResponseDto).toList();
+        var userProfiles = userProfilesPage.getContent().stream().map(userProfile -> {
+            UserProfileResponse response = userProfileMapper.toResponseDto(userProfile);
+
+            // Enrich with token usage stats
+            try {
+                TokenUsageStatsDto stats = tokenUsageApi.getStatsWithFilters(userProfile.getId(), null, null, null);
+                if (stats != null) {
+                    response.setTotalCoin(stats.getTotalCoin());
+                    response.setTotalMoney(stats.getTotalMoney());
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch token usage for user {}: {}", userProfile.getId(), e.getMessage());
+                // Continue without token usage data
+            }
+
+            return response;
+        }).toList();
 
         PaginationDto pagination = new PaginationDto(request.getPage(), userProfilesPage.getSize(),
                 userProfilesPage.getTotalElements(), userProfilesPage.getTotalPages());
@@ -126,7 +145,21 @@ public class UserProfileManagement implements UserProfileApi {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_PROFILE_NOT_FOUND,
                         "User profile not found for user ID: " + userId));
 
-        return userProfileMapper.toResponseDto(userProfile);
+        UserProfileResponse response = userProfileMapper.toResponseDto(userProfile);
+
+        // Enrich with token usage stats
+        try {
+            TokenUsageStatsDto stats = tokenUsageApi.getStatsWithFilters(userProfile.getId(), null, null, null);
+            if (stats != null) {
+                response.setTotalCoin(stats.getTotalCoin());
+                response.setTotalMoney(stats.getTotalMoney());
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch token usage for user {}: {}", userProfile.getId(), e.getMessage());
+            // Continue without token usage data
+        }
+
+        return response;
     }
 
     @Override
