@@ -27,7 +27,8 @@ public class TokenUsageStatsDto {
     }
 
     // Constructor for model grouping with coin and money
-    public TokenUsageStatsDto(String model, Long totalTokens, Long totalRequests, Long totalCoin, BigDecimal totalMoney) {
+    public TokenUsageStatsDto(String model, Long totalTokens, Long totalRequests, Long totalCoin,
+            BigDecimal totalMoney) {
         this.model = model;
         this.totalTokens = totalTokens;
         this.totalRequests = totalRequests;

@@ -105,8 +105,7 @@ public class PaymentService implements PaymentApi {
 
             // Create checkout using the adapter
             log.info("Using {} gateway for order: {}", gate, orderInvoiceNumber);
-            CheckoutResponse checkoutResponse = adapter.createCheckout(
-                    orderInvoiceNumber,
+            CheckoutResponse checkoutResponse = adapter.createCheckout(orderInvoiceNumber,
                     request.getAmount(),
                     request.getDescription(),
                     userId, // customerId
