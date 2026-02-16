@@ -49,7 +49,7 @@ public class PayosAdapter implements PaymentGatewayAdapter {
     }
 
     @Override
-    public CheckoutResponse createCheckout(String orderInvoiceNumber,
+    public String createCheckout(String orderInvoiceNumber,
             BigDecimal amount,
             String description,
             String customerId,
@@ -118,18 +118,10 @@ public class PayosAdapter implements PaymentGatewayAdapter {
                 throw new RuntimeException("PayOS returned error: " + payosResponse.getDesc());
             }
 
-            // Convert to CheckoutResponse
-            CheckoutResponse checkoutResponse = CheckoutResponse.builder()
-                    .orderInvoiceNumber(String.valueOf(orderCode))
-                    .gate("PAYOS")
-                    .checkoutUrl(payosResponse.getData().getCheckoutUrl())
-                    .amount(amount)
-                    .status(payosResponse.getData().getStatus())
-                    .build();
-
+            String checkoutUrl = payosResponse.getData().getCheckoutUrl();
             log.info("Successfully created PayOS payment link: {}", payosResponse.getData().getPaymentLinkId());
-
-            return checkoutResponse;
+            
+            return checkoutUrl;
 
         } catch (Exception e) {
             log.error("Error creating PayOS payment link for order: {}", orderInvoiceNumber, e);
