@@ -27,7 +27,8 @@ public class TokenUsageStatsDto {
     }
 
     // Constructor for model grouping with coin and money
-    public TokenUsageStatsDto(String model, Long totalTokens, Long totalRequests, Long totalCoin, BigDecimal totalMoney) {
+    public TokenUsageStatsDto(String model, Long totalTokens, Long totalRequests, Long totalCoin,
+            BigDecimal totalMoney) {
         this.model = model;
         this.totalTokens = totalTokens;
         this.totalRequests = totalRequests;
@@ -37,6 +38,17 @@ public class TokenUsageStatsDto {
 
     // Constructor for aggregated stats (no grouping)
     public TokenUsageStatsDto(Long totalTokens, Long totalRequests, Long totalCoin, BigDecimal totalMoney) {
+        this.totalTokens = totalTokens;
+        this.totalRequests = totalRequests;
+        this.totalCoin = totalCoin != null ? String.valueOf(totalCoin) : null;
+        this.totalMoney = totalMoney != null ? totalMoney.toString() : null;
+    }
+
+    // Constructor for request type grouping with coin and money
+    // Parameter order is intentionally different to allow overloading
+    public TokenUsageStatsDto(Long totalTokens, Long totalRequests, Long totalCoin, BigDecimal totalMoney,
+            String requestType) {
+        this.requestType = requestType;
         this.totalTokens = totalTokens;
         this.totalRequests = totalRequests;
         this.totalCoin = totalCoin != null ? String.valueOf(totalCoin) : null;
