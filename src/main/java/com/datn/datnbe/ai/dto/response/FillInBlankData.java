@@ -1,9 +1,12 @@
 package com.datn.datnbe.ai.dto.response;
 
+import com.datn.datnbe.document.entity.questiondata.BlankSegment;
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import java.util.List;
 
 /**
  * Fill-in-blank data format from AI Gateway.
@@ -14,6 +17,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class FillInBlankData {
 
     /**
@@ -22,6 +26,9 @@ public class FillInBlankData {
      */
     @JsonProperty("data")
     String data;
+
+    @JsonProperty("segments")
+    List<BlankSegment> segments;
 
     /**
      * Whether answer checking should be case-sensitive.
