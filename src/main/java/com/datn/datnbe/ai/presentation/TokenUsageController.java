@@ -25,7 +25,7 @@ public class TokenUsageController {
     @GetMapping("/stats")
     public ResponseEntity<AppResponseDto<TokenUsageStatsDto>> getTokenUsageStats(
             @Valid @ModelAttribute TokenUsageFilterRequest filterRequest) {
-        String userId = securityContextUtils.getCurrentUserId();
+        String userId = securityContextUtils.getCurrentUserProfileId();
         log.info("Fetching token usage stats for user: {} with filters - model: {}, provider: {}, requestType: {}",
                 userId,
                 filterRequest.getModel(),
@@ -42,7 +42,7 @@ public class TokenUsageController {
 
     @GetMapping("/requests/image/count")
     public ResponseEntity<AppResponseDto<Long>> getImageRequestCount() {
-        String userId = securityContextUtils.getCurrentUserId();
+        String userId = securityContextUtils.getCurrentUserProfileId();
         log.info("Fetching image generation request count for user: {}", userId);
 
         TokenUsageStatsDto stats = tokenUsageApi.getStatsWithFilters(userId, null, null, "image");
@@ -53,7 +53,7 @@ public class TokenUsageController {
 
     @GetMapping("/by-model")
     public ResponseEntity<AppResponseDto<List<TokenUsageStatsDto>>> getTokenUsageByModel() {
-        String userId = securityContextUtils.getCurrentUserId();
+        String userId = securityContextUtils.getCurrentUserProfileId();
         log.info("Fetching token usage by model for user: {}", userId);
 
         List<TokenUsageStatsDto> results = tokenUsageApi.getTokenUsageByModel(userId);
@@ -63,7 +63,7 @@ public class TokenUsageController {
 
     @GetMapping("/by-request-type")
     public ResponseEntity<AppResponseDto<List<TokenUsageStatsDto>>> getTokenUsageByRequestType() {
-        String userId = securityContextUtils.getCurrentUserId();
+        String userId = securityContextUtils.getCurrentUserProfileId();
         log.info("Fetching token usage by request type for user: {}", userId);
 
         List<TokenUsageStatsDto> results = tokenUsageApi.getTokenUsageByRequestType(userId);

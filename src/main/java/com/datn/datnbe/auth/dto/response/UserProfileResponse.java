@@ -39,4 +39,8 @@ public class UserProfileResponse {
     String username;
 
     String role;
+
+    String totalCoin;
+
+    String totalMoney;
 }
