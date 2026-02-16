@@ -9,6 +9,7 @@ import com.datn.datnbe.document.dto.request.MindmapUpdateTitleAndDescriptionRequ
 import com.datn.datnbe.document.dto.response.MindmapCreateResponseDto;
 import com.datn.datnbe.document.dto.response.MindmapDto;
 import com.datn.datnbe.document.dto.response.MindmapListResponseDto;
+import com.datn.datnbe.document.dto.response.MindmapMetadataResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 
 public interface MindmapApi {
@@ -21,4 +22,6 @@ public interface MindmapApi {
     void updateTitleAndDescriptionMindmap(String id, MindmapUpdateTitleAndDescriptionRequest request);
 
     MindmapDto getMindmap(String id);
+
+    MindmapMetadataResponseDto getMindmapMetadata(String id);
 }
