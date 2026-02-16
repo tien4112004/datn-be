@@ -54,8 +54,7 @@ public class SepayAdapter implements PaymentGatewayAdapter {
     }
 
     @Override
-    public CheckoutResponse createCheckout(
-            String orderInvoiceNumber,
+    public CheckoutResponse createCheckout(String orderInvoiceNumber,
             BigDecimal amount,
             String description,
             String customerId,
@@ -166,7 +165,7 @@ public class SepayAdapter implements PaymentGatewayAdapter {
 
     /**
      * Void a transaction
-     * 
+     *
      * @param orderInvoiceNumber Order invoice number
      * @return true if void successful, false otherwise
      */

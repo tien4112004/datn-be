@@ -40,12 +40,9 @@ public class TokenUsageManagement implements TokenUsageApi {
     }
 
     @Override
-    public TokenUsageStatsDto getStatsWithFilters(String userId,
-            String model,
-            String provider,
-            String requestType) {
+    public TokenUsageStatsDto getStatsWithFilters(String userId, String model, String provider, String requestType) {
         TokenUsageStatsDto result = tokenUsageRepo.getStatsWithFilters(userId, model, provider, requestType);
-        
+
         if (result == null) {
             result = TokenUsageStatsDto.builder()
                     .totalTokens(0L)

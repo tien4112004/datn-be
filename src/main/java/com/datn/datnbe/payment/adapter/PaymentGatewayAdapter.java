@@ -6,7 +6,7 @@ import com.datn.datnbe.payment.dto.response.CheckoutResponse;
 
 /**
  * Payment Gateway Adapter Interface
- * 
+ *
  * Defines the contract for all payment gateway adapters.
  * Each payment gateway (SePay, PayOS, etc.) should implement this interface
  * to provide a consistent API for payment operations.
@@ -15,7 +15,7 @@ public interface PaymentGatewayAdapter {
 
     /**
      * Create a checkout/payment link
-     * 
+     *
      * @param orderInvoiceNumber Unique order invoice number
      * @param amount             Payment amount
      * @param description        Payment description
@@ -26,8 +26,7 @@ public interface PaymentGatewayAdapter {
      * @param paymentMethod      Optional payment method (can be null)
      * @return CheckoutResponse containing checkout URL and details
      */
-    CheckoutResponse createCheckout(
-            String orderInvoiceNumber,
+    CheckoutResponse createCheckout(String orderInvoiceNumber,
             BigDecimal amount,
             String description,
             String customerId,
@@ -38,7 +37,7 @@ public interface PaymentGatewayAdapter {
 
     /**
      * Get order/payment details
-     * 
+     *
      * @param orderId Order ID or invoice number
      * @return Order details (gateway-specific response)
      */
@@ -46,7 +45,7 @@ public interface PaymentGatewayAdapter {
 
     /**
      * Cancel an order/payment
-     * 
+     *
      * @param orderInvoiceNumber Order invoice number
      * @return true if cancellation successful, false otherwise
      */
@@ -54,14 +53,14 @@ public interface PaymentGatewayAdapter {
 
     /**
      * Get the gateway name/identifier
-     * 
+     *
      * @return Gateway name (e.g., "SEPAY", "PAYOS")
      */
     String getGatewayName();
 
     /**
      * Check if this adapter supports the given gateway name
-     * 
+     *
      * @param gatewayName Gateway name to check
      * @return true if this adapter supports the gateway, false otherwise
      */
