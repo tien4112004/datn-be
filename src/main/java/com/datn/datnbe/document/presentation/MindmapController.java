@@ -25,6 +25,7 @@ import com.datn.datnbe.document.dto.request.MindmapUpdateTitleAndDescriptionRequ
 import com.datn.datnbe.document.dto.response.MindmapCreateResponseDto;
 import com.datn.datnbe.document.dto.response.MindmapDto;
 import com.datn.datnbe.document.dto.response.MindmapListResponseDto;
+import com.datn.datnbe.document.dto.response.MindmapMetadataResponseDto;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.security.annotation.RequireDocumentPermission;
@@ -66,6 +67,14 @@ public class MindmapController {
     public ResponseEntity<AppResponseDto<MindmapDto>> getMindmap(@PathVariable String id) {
         log.info("Received request to get mindmap with id: {}", id);
         MindmapDto response = mindmapApi.getMindmap(id);
+        return ResponseEntity.ok(AppResponseDto.success(response));
+    }
+
+    @GetMapping(value = "/{id}/metadata", produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequireDocumentPermission
+    public ResponseEntity<AppResponseDto<MindmapMetadataResponseDto>> getMindmapMetadata(@PathVariable String id) {
+        log.info("Received request to get mindmap metadata for id: {}", id);
+        MindmapMetadataResponseDto response = mindmapApi.getMindmapMetadata(id);
         return ResponseEntity.ok(AppResponseDto.success(response));
     }
 
