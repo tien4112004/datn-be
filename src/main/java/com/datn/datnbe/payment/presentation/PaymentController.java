@@ -196,7 +196,8 @@ public class PaymentController {
             }
         }
 
-        String timestamp = java.time.ZonedDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy-HH:mm:ss"));
+        String timestamp = java.time.ZonedDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy-HH:mm:ss"));
         String message = String.format("process successfully webhook - transactionid: %s, status: %s, timestamp: %s",
                 transactionId,
                 status,
@@ -231,7 +232,8 @@ public class PaymentController {
             }
         }
 
-        String timestamp = java.time.ZonedDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy-HH:mm:ss"));
+        String timestamp = java.time.ZonedDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy-HH:mm:ss"));
         String message = String.format("process successfully webhook - transactionid: %s, status: %s, timestamp: %s",
                 transactionId,
                 status,

@@ -55,4 +55,37 @@ public interface AssignmentMatrixTemplateRepository extends JpaRepository<Assign
      */
     @Query("SELECT am FROM AssignmentMatrixEntity am WHERE am.ownerId = :ownerId AND LOWER(am.name) LIKE LOWER(CONCAT('%', :name, '%')) ORDER BY am.createdAt DESC")
     List<AssignmentMatrixEntity> searchByOwnerIdAndName(@Param("ownerId") String ownerId, @Param("name") String name);
+
+    // Public template queries (ownerId IS NULL)
+
+    /**
+     * Find all public matrices (ownerId IS NULL).
+     */
+    @Query("SELECT am FROM AssignmentMatrixEntity am WHERE am.ownerId IS NULL ORDER BY am.createdAt DESC")
+    List<AssignmentMatrixEntity> findByOwnerIdIsNull();
+
+    /**
+     * Find public matrices by subject.
+     */
+    @Query("SELECT am FROM AssignmentMatrixEntity am WHERE am.ownerId IS NULL AND am.subject = :subject ORDER BY am.createdAt DESC")
+    List<AssignmentMatrixEntity> findByOwnerIdIsNullAndSubject(@Param("subject") String subject);
+
+    /**
+     * Find public matrices by grade.
+     */
+    @Query("SELECT am FROM AssignmentMatrixEntity am WHERE am.ownerId IS NULL AND am.grade = :grade ORDER BY am.createdAt DESC")
+    List<AssignmentMatrixEntity> findByOwnerIdIsNullAndGrade(@Param("grade") String grade);
+
+    /**
+     * Find public matrices by subject and grade.
+     */
+    @Query("SELECT am FROM AssignmentMatrixEntity am WHERE am.ownerId IS NULL AND am.subject = :subject AND am.grade = :grade ORDER BY am.createdAt DESC")
+    List<AssignmentMatrixEntity> findByOwnerIdIsNullAndSubjectAndGrade(@Param("subject") String subject,
+            @Param("grade") String grade);
+
+    /**
+     * Search public matrices by name (case-insensitive contains).
+     */
+    @Query("SELECT am FROM AssignmentMatrixEntity am WHERE am.ownerId IS NULL AND LOWER(am.name) LIKE LOWER(CONCAT('%', :name, '%')) ORDER BY am.createdAt DESC")
+    List<AssignmentMatrixEntity> searchByOwnerIdIsNullAndName(@Param("name") String name);
 }
