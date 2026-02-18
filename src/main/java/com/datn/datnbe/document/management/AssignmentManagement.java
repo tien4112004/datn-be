@@ -349,8 +349,8 @@ public class AssignmentManagement implements AssignmentApi {
                 .grade(grade)
                 .subject(subject)
                 .topics(topicRequirements)
-                .provider(request.getProvider() != null ? request.getProvider() : "google")
-                .model(request.getModel() != null ? request.getModel() : "gemini-2.5-flash")
+                .provider(request.getProvider() != null ? request.getProvider().toLowerCase() : "google")
+                .model(request.getModel() != null ? request.getModel().toLowerCase() : "gemini-2.5-flash")
                 .build();
 
         GenerateQuestionsFromMatrixResponse genAiResponse = contentGenerationApi
