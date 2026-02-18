@@ -224,8 +224,8 @@ public class ContentGenerationManagement implements ContentGenerationApi {
                 .questionTypes(request.getQuestionTypes())
                 .prompt(request.getPrompt())
                 .language(request.getLanguage())
-                .provider(request.getProvider())
-                .model(request.getModel())
+                .provider(request.getProvider() != null ? request.getProvider().toLowerCase() : null)
+                .model(request.getModel() != null ? request.getModel().toLowerCase() : null)
                 .build();
 
         if (!modelSelectionApi.isModelEnabled(request.getModel())) {
@@ -308,8 +308,8 @@ public class ContentGenerationManagement implements ContentGenerationApi {
                 .questionsPerDifficulty(difficultyMap)
                 .questionTypes(questionTypesList)
                 .prompt(request.getPrompt())
-                .provider(request.getProvider() != null ? request.getProvider() : "google")
-                .model(request.getModel() != null ? request.getModel() : "gemini-2.5-flash-lite")
+                .provider(request.getProvider() != null ? request.getProvider().toLowerCase() : "google")
+                .model(request.getModel() != null ? request.getModel().toLowerCase() : "gemini-2.5-flash-lite")
                 .build();
 
         log.info("Calling GenAI-Gateway at endpoint: {}", QUESTIONS_API_ENDPOINT);

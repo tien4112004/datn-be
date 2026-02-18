@@ -166,8 +166,9 @@ ai:
     presentation-batch-endpoint: ${AI_API_PRESENTATION_BATCH_ENDPOINT:/api/presentations/generate/mock}
     image-endpoint: ${AI_API_IMAGE_ENDPOINT:/api/image/generate/mock}
     mindmap-endpoint: ${AI_API_MINDMAP_ENDPOINT:/api/mindmap/generate}
-    exam-matrix-endpoint: ${AI_API_EXAM_MATRIX_ENDPOINT:api/exams/generate-matrix}
+    exam-matrix-endpoint: ${AI_API_EXAM_MATRIX_ENDPOINT:/api/exams/generate-matrix}
     questions-endpoint: ${AI_API_QUESTIONS_ENDPOINT:/api/questions/generate}
+    questions-from-matrix-endpoint: ${AI_API_QUESTIONS_FROM_MATRIX_ENDPOINT:/api/exams/generate-questions-from-matrix}
 
 rustfs:
   endpoint: ${S3_ENDPOINT:http://localhost:9000}
