@@ -1,6 +1,7 @@
 package com.datn.datnbe.document.presentation;
 
 import com.datn.datnbe.document.api.QuestionApi;
+import com.datn.datnbe.document.dto.request.GenerateQuestionsFromContextRequest;
 import com.datn.datnbe.document.dto.request.QuestionCreateRequest;
 import com.datn.datnbe.document.dto.request.QuestionUpdateRequest;
 import com.datn.datnbe.document.dto.request.QuestionCollectionRequest;
@@ -95,6 +96,22 @@ public class QuestionController {
 
         return ResponseEntity.ok(
                 AppResponseDto.successWithPagination(paginatedResponse.getData(), paginatedResponse.getPagination()));
+    }
+
+    @PostMapping("/generate-from-context")
+    @Operation(summary = "Generate Questions from Context", description = "Generate questions based on a specific reading passage or image context and save to question bank")
+    public ResponseEntity<AppResponseDto<GeneratedQuestionsResponse>> generateQuestionsFromContext(
+            @Valid @RequestBody GenerateQuestionsFromContextRequest request) {
+
+        String currentUserId = securityContextUtils.getCurrentUserId();
+        log.info("Generating questions from context for teacher: {}, contextId: {}",
+                currentUserId,
+                request.getContextId());
+
+        GeneratedQuestionsResponse response = questionGenerationService.generateAndSaveQuestionsFromContext(request,
+                currentUserId);
+
+        return ResponseEntity.ok(AppResponseDto.success(response));
     }
 
     @PostMapping("/generate")

@@ -3,6 +3,7 @@ package com.datn.datnbe.ai.management;
 import com.datn.datnbe.ai.api.ContentGenerationApi;
 import com.datn.datnbe.ai.api.ModelSelectionApi;
 import com.datn.datnbe.ai.apiclient.AIApiClient;
+import com.datn.datnbe.ai.dto.request.AIGatewayGenerateQuestionsFromContextRequest;
 import com.datn.datnbe.ai.dto.request.AIGatewayGenerateQuestionsRequest;
 import com.datn.datnbe.ai.dto.request.GenerateQuestionsFromMatrixRequest;
 import com.datn.datnbe.ai.dto.request.MindmapPromptRequest;
@@ -77,6 +78,10 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     @Value("${ai.api.questions-from-matrix-endpoint:/api/exams/generate-questions-from-matrix}")
     @NonFinal
     String QUESTIONS_FROM_MATRIX_ENDPOINT;
+
+    @Value("${ai.api.questions-from-context-endpoint:/api/questions/generate-from-context}")
+    @NonFinal
+    String QUESTIONS_FROM_CONTEXT_ENDPOINT;
 
     @Override
     public Flux<String> generateOutline(OutlinePromptRequest request, String traceId) {
@@ -351,6 +356,25 @@ public class ContentGenerationManagement implements ContentGenerationApi {
             return response;
         } catch (Exception e) {
             log.error("Error during matrix-based question generation", e);
+            throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    @Override
+    public String generateQuestionsFromContext(AIGatewayGenerateQuestionsFromContextRequest request, String traceId) {
+        log.info("Generating questions from context with traceId: {}", traceId);
+
+        log.info("Calling GenAI-Gateway at endpoint: {}", QUESTIONS_FROM_CONTEXT_ENDPOINT);
+        try {
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.set("X-Trace-ID", traceId);
+
+            String jsonResponse = aiApiClient.post(QUESTIONS_FROM_CONTEXT_ENDPOINT, request, String.class, headers);
+
+            log.info("Successfully received response from GenAI-Gateway for context-based question generation");
+            return jsonResponse;
+        } catch (Exception e) {
+            log.error("Error during context-based question generation", e);
             throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
         }
     }

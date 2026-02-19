@@ -3,14 +3,18 @@ package com.datn.datnbe.document.service;
 import com.datn.datnbe.ai.api.CoinPricingApi;
 import com.datn.datnbe.ai.api.ContentGenerationApi;
 import com.datn.datnbe.ai.api.TokenUsageApi;
+import com.datn.datnbe.ai.dto.request.AIGatewayGenerateQuestionsFromContextRequest;
 import com.datn.datnbe.ai.dto.response.TokenUsageInfoDto;
 import com.datn.datnbe.ai.entity.TokenUsage;
 import com.datn.datnbe.ai.service.PhoenixQueryService;
+import com.datn.datnbe.document.dto.request.GenerateQuestionsFromContextRequest;
 import com.datn.datnbe.document.dto.response.QuestionResponseDto;
+import com.datn.datnbe.document.entity.Context;
 import com.datn.datnbe.document.entity.Question;
 import com.datn.datnbe.document.entity.QuestionBankItem;
 import com.datn.datnbe.document.dto.request.GenerateQuestionsFromTopicRequest;
 import com.datn.datnbe.document.dto.response.GeneratedQuestionsResponse;
+import com.datn.datnbe.document.repository.ContextRepository;
 import com.datn.datnbe.document.entity.questiondata.FillInBlankData;
 import com.datn.datnbe.document.entity.questiondata.MatchingData;
 import com.datn.datnbe.document.entity.questiondata.MatchingPair;
@@ -49,6 +53,7 @@ public class QuestionGenerationService {
     PhoenixQueryService phoenixQueryService;
     TokenUsageApi tokenUsageApi;
     CoinPricingApi coinPricingApi;
+    ContextRepository contextRepository;
 
     @Transactional
     public GeneratedQuestionsResponse generateAndSaveQuestions(GenerateQuestionsFromTopicRequest request,
@@ -166,6 +171,77 @@ public class QuestionGenerationService {
         }
 
         // Extract IDs and full question details
+        List<QuestionResponseDto> questionDetails = savedQuestions.stream()
+                .map(questionMapper::toResponseDto)
+                .collect(Collectors.toList());
+
+        return GeneratedQuestionsResponse.builder()
+                .totalGenerated(savedQuestions.size())
+                .questions(questionDetails)
+                .build();
+    }
+
+    @Transactional
+    public GeneratedQuestionsResponse generateAndSaveQuestionsFromContext(GenerateQuestionsFromContextRequest request,
+            String teacherId) {
+
+        log.info("Generating questions from context for teacher: {}, contextId: {}", teacherId, request.getContextId());
+
+        // 1. Fetch context from database
+        Context context = contextRepository.findById(request.getContextId())
+                .orElseThrow(() -> new AppException(ErrorCode.CONTEXT_NOT_FOUND));
+
+        AIGatewayGenerateQuestionsFromContextRequest aiRequest = AIGatewayGenerateQuestionsFromContextRequest.builder()
+                .context(context.getContent())
+                .contextType("TEXT")
+                .grade(context.getGrade())
+                .subject(context.getSubject())
+                .questionsPerDifficulty(request.getQuestionsPerDifficulty())
+                .prompt(request.getPrompt())
+                .provider(request.getProvider() != null ? request.getProvider().toLowerCase() : "google")
+                .model(request.getModel() != null ? request.getModel().toLowerCase() : "gemini-2.5-flash")
+                .build();
+
+        // 4. Call AI service
+        String traceId = java.util.UUID.randomUUID().toString();
+        String jsonResult = contentGenerationApi.generateQuestionsFromContext(aiRequest, traceId);
+        log.info("AI response received, length: {} chars", jsonResult != null ? jsonResult.length() : 0);
+
+        // 5. Parse JSON response
+        List<Question> aiQuestions;
+        try {
+            ObjectMapper lenientMapper = objectMapper.copy();
+            lenientMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+                    false);
+            lenientMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY,
+                    true);
+            aiQuestions = lenientMapper.readValue(jsonResult, new TypeReference<List<Question>>() {
+            });
+            log.info("Parsed {} questions from AI response", aiQuestions.size());
+        } catch (Exception e) {
+            log.error("Failed to parse AI response: {}", e.getMessage());
+            throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, "Failed to parse AI response: " + e.getMessage());
+        }
+
+        // 6. Convert and enrich with contextId
+        List<QuestionBankItem> questionEntities = aiQuestions.stream().map(q -> {
+            QuestionBankItem item = convertToQuestionBankItem(q, teacherId);
+            item.setContextId(context.getId());
+            return item;
+        }).collect(Collectors.toList());
+
+        log.info("Saving {} context-based questions to database", questionEntities.size());
+
+        List<QuestionBankItem> savedQuestions;
+        try {
+            savedQuestions = questionRepository.saveAll(questionEntities);
+            log.info("Successfully saved {} questions", savedQuestions.size());
+        } catch (Exception e) {
+            log.error("Failed to save questions to database: {}", e.getMessage());
+            throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR,
+                    "Failed to save questions to database: " + e.getMessage());
+        }
+
         List<QuestionResponseDto> questionDetails = savedQuestions.stream()
                 .map(questionMapper::toResponseDto)
                 .collect(Collectors.toList());
