@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 
 import java.util.Map;
 
+import static com.datn.datnbe.ai.dto.request.GenerateQuestionsFromMatrixRequest.QuestionRequirement;
+
 /**
  * Request DTO sent to GenAI Gateway for context-based question generation.
  * Maps to GenAI Gateway's GenerateQuestionsFromContextRequest schema.
@@ -34,11 +36,11 @@ public class AIGatewayGenerateQuestionsFromContextRequest {
     private String subject;
 
     /**
-     * Map of difficulty -> questionType -> "count:points" string.
-     * Sent as "questionsPerDifficulty" (camelCase) to match GenAI Gateway alias.
+     * Map of difficulty -> questionType -> requirement (count and points).
+     * Matches the same structure used by GenerateQuestionsFromMatrixRequest.TopicRequirement.
      */
     @JsonProperty("questionsPerDifficulty")
-    private Map<String, Map<String, String>> questionsPerDifficulty;
+    private Map<String, Map<String, QuestionRequirement>> questionsPerDifficulty;
 
     @JsonProperty("prompt")
     private String prompt;

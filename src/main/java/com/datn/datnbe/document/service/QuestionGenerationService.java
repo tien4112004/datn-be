@@ -4,6 +4,7 @@ import com.datn.datnbe.ai.api.CoinPricingApi;
 import com.datn.datnbe.ai.api.ContentGenerationApi;
 import com.datn.datnbe.ai.api.TokenUsageApi;
 import com.datn.datnbe.ai.dto.request.AIGatewayGenerateQuestionsFromContextRequest;
+import com.datn.datnbe.ai.dto.request.GenerateQuestionsFromMatrixRequest;
 import com.datn.datnbe.ai.dto.response.TokenUsageInfoDto;
 import com.datn.datnbe.ai.entity.TokenUsage;
 import com.datn.datnbe.ai.service.PhoenixQueryService;
@@ -38,6 +39,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -191,12 +193,30 @@ public class QuestionGenerationService {
         Context context = contextRepository.findById(request.getContextId())
                 .orElseThrow(() -> new AppException(ErrorCode.CONTEXT_NOT_FOUND));
 
+        // Parse "count:points" cell strings into structured QuestionRequirement objects,
+        // consistent with GenerateQuestionsFromMatrixRequest.TopicRequirement.
+        Map<String, Map<String, GenerateQuestionsFromMatrixRequest.QuestionRequirement>> parsedQuestionsPerDifficulty = request
+                .getQuestionsPerDifficulty()
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getKey,
+                        diffEntry -> diffEntry.getValue()
+                                .entrySet()
+                                .stream()
+                                .collect(Collectors.toMap(Map.Entry::getKey, typeEntry -> {
+                                    String[] parts = typeEntry.getValue().split(":");
+                                    return GenerateQuestionsFromMatrixRequest.QuestionRequirement.builder()
+                                            .count(Integer.parseInt(parts[0]))
+                                            .points(Double.parseDouble(parts[1]))
+                                            .build();
+                                }))));
+
         AIGatewayGenerateQuestionsFromContextRequest aiRequest = AIGatewayGenerateQuestionsFromContextRequest.builder()
                 .context(context.getContent())
                 .contextType("TEXT")
                 .grade(context.getGrade())
                 .subject(context.getSubject())
-                .questionsPerDifficulty(request.getQuestionsPerDifficulty())
+                .questionsPerDifficulty(parsedQuestionsPerDifficulty)
                 .prompt(request.getPrompt())
                 .provider(request.getProvider() != null ? request.getProvider().toLowerCase() : "google")
                 .model(request.getModel() != null ? request.getModel().toLowerCase() : "gemini-2.5-flash")

@@ -79,11 +79,7 @@ public class SecurityConfig {
                                 "/api/slide-templates",
                                 "/api/slide-templates/**",
                                 "/api/students/import",
-                                "/api/assignments/generate-matrix",
-                                "/api/assignments/generate-matrix/**",
-                                "/api/assignments/generate-from-matrix",
-                                "/api/assignments/generate-full-assignment",
-                                "/api/question-bank/**")
+                                "/api/question-bank/generate-from-context")
                         .permitAll()
                         .requestMatchers(HttpMethod.PUT,
                                 "/api/slide-themes",
