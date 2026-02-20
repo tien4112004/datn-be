@@ -36,11 +36,6 @@ public class AssignmentDraftDto {
     private String description;
 
     /**
-     * Duration/time limit in minutes (maps to Assignment.duration).
-     */
-    private Integer duration;
-
-    /**
      * Owner/teacher ID (maps to Assignment.ownerId).
      */
     private String ownerId;

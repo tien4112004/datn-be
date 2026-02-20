@@ -37,9 +37,6 @@ public class AssignmentPost {
     @Column(name = "description", columnDefinition = "TEXT")
     String description;
 
-    @Column(name = "duration")
-    Integer duration;
-
     @Column(name = "owner_id", nullable = false, length = 36)
     String ownerId;
 

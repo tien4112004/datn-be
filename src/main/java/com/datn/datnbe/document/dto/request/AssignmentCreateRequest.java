@@ -8,7 +8,6 @@ import java.util.List;
 public class AssignmentCreateRequest {
     private String title;
     private String description;
-    private Integer duration;
     private String subject;
     private String grade;
     private List<QuestionItemRequest> questions;

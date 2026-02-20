@@ -47,11 +47,6 @@ public class GenerateFullAssignmentRequest {
     private String description;
 
     /**
-     * Time limit in minutes (optional).
-     */
-    private Integer timeLimitMinutes;
-
-    /**
      * AI provider to use for question generation.
      * Defaults to "google" if not specified.
      */
