@@ -164,11 +164,10 @@ public class PaymentController {
             }
         }
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(AppResponseDto.<String>builder()
-                        .data(resolvedTransactionId)
-                        .message("Payment cancelled by user.")
-                        .build());
+        return ResponseEntity.ok(AppResponseDto.<String>builder()
+                .data(resolvedTransactionId)
+                .message("Payment cancelled by user.")
+                .build());
     }
 
     @PostMapping("/notify/sepay")
@@ -217,7 +216,8 @@ public class PaymentController {
 
         paymentApi.handlePayosWebhook(webhookRequest);
 
-        // Resolve transaction via service by orderCode (we store PayOS orderCode in orderInvoiceNumber)
+        // Resolve transaction via service by orderCode (we store PayOS orderCode in
+        // orderInvoiceNumber)
         String transactionId = "unknown";
         String status = "NOT_FOUND";
         if (orderCode != null) {
