@@ -1,5 +1,6 @@
 package com.datn.datnbe.payment.service;
 
+import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -105,7 +106,7 @@ public class PaymentService implements PaymentApi {
 
             // Create checkout using the adapter
             log.info("Using {} gateway for order: {}", gate, orderInvoiceNumber);
-            CheckoutResponse checkoutResponse = adapter.createCheckout(orderInvoiceNumber,
+            String checkoutUrl = adapter.createCheckout(orderInvoiceNumber,
                     request.getAmount(),
                     request.getDescription(),
                     userId, // customerId
@@ -113,6 +114,14 @@ public class PaymentService implements PaymentApi {
                     errorUrl,
                     cancelUrl,
                     "BANK_TRANSFER"); // Default payment method
+
+            CheckoutResponse checkoutResponse = CheckoutResponse.builder()
+                    .orderInvoiceNumber(orderInvoiceNumber)
+                    .gate(gate)
+                    .checkoutUrl(checkoutUrl)
+                    .amount(request.getAmount())
+                    .status("PENDING")
+                    .build();
 
             // Update transaction with returned checkout data for auditing
             savedTransaction.setTransactionData(objectMapper.writeValueAsString(checkoutResponse));

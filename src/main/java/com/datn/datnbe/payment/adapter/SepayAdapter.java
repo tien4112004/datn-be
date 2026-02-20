@@ -1,6 +1,8 @@
 package com.datn.datnbe.payment.adapter;
 
 import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -12,7 +14,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import com.datn.datnbe.payment.dto.response.CheckoutResponse;
 import com.datn.datnbe.payment.dto.response.SepayOrderDetailResponse;
@@ -21,10 +26,6 @@ import com.datn.datnbe.payment.util.SepaySignatureUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * SePay Payment Gateway Adapter
- * Implements SePay API specification for payment processing
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -54,7 +55,7 @@ public class SepayAdapter implements PaymentGatewayAdapter {
     }
 
     @Override
-    public CheckoutResponse createCheckout(String orderInvoiceNumber,
+    public String createCheckout(String orderInvoiceNumber,
             BigDecimal amount,
             String description,
             String customerId,
@@ -91,25 +92,47 @@ public class SepayAdapter implements PaymentGatewayAdapter {
             String signature = signatureUtil.generateCheckoutSignature(formFields);
             formFields.put("signature", signature);
 
-            // Checkout base URL is configurable (set to sandbox or production via
-            // properties)
-            String checkoutUrl = checkoutBaseUrl + "/v1/checkout/init";
+            // POST form to Sepay checkout endpoint and get redirect URL
+            String checkoutUrl = submitCheckoutForm(formFields);
 
-            log.info("Created checkout form for order: {} with amount: {}", orderInvoiceNumber, amount);
-            log.debug("Checkout URL: {}", checkoutUrl);
+            log.info("Successfully created Sepay checkout link: {}", checkoutUrl);
 
-            return CheckoutResponse.builder()
-                    .orderInvoiceNumber(orderInvoiceNumber)
-                    .gate("SEPAY")
-                    .checkoutUrl(checkoutUrl)
-                    .formFields(formFields)
-                    .amount(amount)
-                    .status("PENDING")
-                    .build();
+            return checkoutUrl;
 
         } catch (Exception e) {
             log.error("Error creating checkout for order: {}", orderInvoiceNumber, e);
-            throw new RuntimeException("Failed to create checkout: " + e.getMessage(), e);
+            throw new RuntimeException("Failed to create Sepay checkout: " + e.getMessage(), e);
+        }
+    }
+
+    private String submitCheckoutForm(Map<String, String> formFields) {
+        try {
+            String checkoutInitUrl = checkoutBaseUrl + "/v1/checkout/init";
+            
+            // Convert to form data
+            MultiValueMap<String, String> body = new LinkedMultiValueMap<String, String>();
+            formFields.forEach(body::add);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+            HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(body, headers);
+
+            try {
+                ResponseEntity<String> response = restTemplate.postForEntity(checkoutInitUrl, entity, String.class);
+                if (response.getHeaders().getLocation() != null) {
+                    return response.getHeaders().getLocation().toString();
+                }
+                return checkoutInitUrl;
+            } catch (HttpClientErrorException e) {
+                if (e.getStatusCode().is3xxRedirection() && e.getResponseHeaders().getLocation() != null) {
+                    return e.getResponseHeaders().getLocation().toString();
+                }
+                throw e;
+            }
+        } catch (Exception e) {
+            log.error("Error submitting checkout form: {}", e.getMessage());
+            throw new RuntimeException("Failed to submit checkout form: " + e.getMessage(), e);
         }
     }
 
