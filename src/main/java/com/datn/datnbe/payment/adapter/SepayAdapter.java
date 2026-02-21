@@ -1,8 +1,6 @@
 package com.datn.datnbe.payment.adapter;
 
 import java.math.BigDecimal;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +17,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import com.datn.datnbe.payment.dto.response.CheckoutResponse;
 import com.datn.datnbe.payment.dto.response.SepayOrderDetailResponse;
 import com.datn.datnbe.payment.util.SepaySignatureUtil;
 
@@ -108,7 +105,7 @@ public class SepayAdapter implements PaymentGatewayAdapter {
     private String submitCheckoutForm(Map<String, String> formFields) {
         try {
             String checkoutInitUrl = checkoutBaseUrl + "/v1/checkout/init";
-            
+
             // Convert to form data
             MultiValueMap<String, String> body = new LinkedMultiValueMap<String, String>();
             formFields.forEach(body::add);
