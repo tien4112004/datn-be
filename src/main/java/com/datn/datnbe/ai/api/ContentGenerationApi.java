@@ -1,5 +1,6 @@
 package com.datn.datnbe.ai.api;
 
+import com.datn.datnbe.ai.dto.request.AIGatewayGenerateQuestionsFromContextRequest;
 import com.datn.datnbe.ai.dto.request.GenerateQuestionsFromMatrixRequest;
 import com.datn.datnbe.ai.dto.request.MindmapPromptRequest;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
@@ -45,4 +46,13 @@ public interface ContentGenerationApi {
      */
     GenerateQuestionsFromMatrixResponse generateQuestionsFromMatrix(GenerateQuestionsFromMatrixRequest request,
             String traceId);
+
+    /**
+     * Generate questions from a specific context (reading passage or image).
+     *
+     * @param request Request with context content, grade, subject, and question requirements
+     * @param traceId Trace ID for observability
+     * @return Raw JSON string containing list of generated questions
+     */
+    String generateQuestionsFromContext(AIGatewayGenerateQuestionsFromContextRequest request, String traceId);
 }
