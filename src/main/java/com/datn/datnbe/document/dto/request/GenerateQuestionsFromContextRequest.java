@@ -1,6 +1,5 @@
 package com.datn.datnbe.document.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,8 +19,20 @@ import java.util.Map;
 @AllArgsConstructor
 public class GenerateQuestionsFromContextRequest {
 
-    @NotBlank
+    /** Context ID (optional - used when context exists in DB). */
     private String contextId;
+
+    /** Inline context content (used when context may not exist in DB). */
+    private String contextContent;
+
+    /** Context title (used with inline content). */
+    private String contextTitle;
+
+    /** Grade level (used with inline content, e.g., "1", "2", "3", "4", "5"). */
+    private String grade;
+
+    /** Subject code (used with inline content, e.g., "T", "TV", "TA"). */
+    private String subject;
 
     /**
      * Map of difficulty -> questionType -> "count:points" string.

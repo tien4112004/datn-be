@@ -38,10 +38,10 @@ public class FillInBlankParser {
 
             if (!acceptableAnswers.isEmpty()) {
                 String firstAnswer = acceptableAnswers.get(0);
-                List<String> remainingAnswers = acceptableAnswers.size() > 1 
-                    ? acceptableAnswers.subList(1, acceptableAnswers.size()) 
-                    : Collections.emptyList();
-                
+                List<String> remainingAnswers = acceptableAnswers.size() > 1
+                        ? acceptableAnswers.subList(1, acceptableAnswers.size())
+                        : Collections.emptyList();
+
                 BlankSegment blankSegment = BlankSegment.builder()
                         .type(BlankSegment.SegmentType.BLANK)
                         .content(firstAnswer)

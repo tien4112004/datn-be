@@ -189,9 +189,26 @@ public class QuestionGenerationService {
 
         log.info("Generating questions from context for teacher: {}, contextId: {}", teacherId, request.getContextId());
 
-        // 1. Fetch context from database
-        Context context = contextRepository.findById(request.getContextId())
-                .orElseThrow(() -> new AppException(ErrorCode.CONTEXT_NOT_FOUND));
+        // 1. Resolve context: fetch from DB or use inline content
+        String contextContent;
+        String contextGrade;
+        String contextSubject;
+        String contextId = request.getContextId();
+
+        if (contextId != null && !contextId.isBlank()) {
+            Context context = contextRepository.findById(contextId)
+                    .orElseThrow(() -> new AppException(ErrorCode.CONTEXT_NOT_FOUND));
+            contextContent = context.getContent();
+            contextGrade = context.getGrade();
+            contextSubject = context.getSubject();
+        } else if (request.getContextContent() != null && !request.getContextContent().isBlank()) {
+            contextContent = request.getContextContent();
+            contextGrade = request.getGrade();
+            contextSubject = request.getSubject();
+            contextId = null;
+        } else {
+            throw new AppException(ErrorCode.VALIDATION_ERROR, "Either contextId or contextContent must be provided");
+        }
 
         // Parse "count:points" cell strings into structured QuestionRequirement objects,
         // consistent with GenerateQuestionsFromMatrixRequest.TopicRequirement.
@@ -212,10 +229,10 @@ public class QuestionGenerationService {
                                 }))));
 
         AIGatewayGenerateQuestionsFromContextRequest aiRequest = AIGatewayGenerateQuestionsFromContextRequest.builder()
-                .context(context.getContent())
+                .context(contextContent)
                 .contextType("TEXT")
-                .grade(context.getGrade())
-                .subject(context.getSubject())
+                .grade(contextGrade)
+                .subject(contextSubject)
                 .questionsPerDifficulty(parsedQuestionsPerDifficulty)
                 .prompt(request.getPrompt())
                 .provider(request.getProvider() != null ? request.getProvider().toLowerCase() : "google")
@@ -243,10 +260,13 @@ public class QuestionGenerationService {
             throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, "Failed to parse AI response: " + e.getMessage());
         }
 
-        // 6. Convert and enrich with contextId
+        // 6. Convert and enrich with contextId (if available)
+        final String resolvedContextId = contextId;
         List<QuestionBankItem> questionEntities = aiQuestions.stream().map(q -> {
             QuestionBankItem item = convertToQuestionBankItem(q, teacherId);
-            item.setContextId(context.getId());
+            if (resolvedContextId != null) {
+                item.setContextId(resolvedContextId);
+            }
             return item;
         }).collect(Collectors.toList());
 
