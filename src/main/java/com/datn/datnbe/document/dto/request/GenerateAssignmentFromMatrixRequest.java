@@ -53,13 +53,6 @@ public class GenerateAssignmentFromMatrixRequest {
     private String description;
 
     /**
-     * Time limit in minutes (optional).
-     */
-    @JsonProperty("timeLimitMinutes")
-    @JsonAlias("time_limit_minutes")
-    private Integer timeLimitMinutes;
-
-    /**
      * Strategy for handling missing questions.
      * - REPORT_GAPS: Return draft with gaps indicated
      * - GENERATE_WITH_AI: Use AI to generate missing questions

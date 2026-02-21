@@ -95,7 +95,6 @@ public class PostService implements PostApi {
                     AssignmentPost clonedAssignment = AssignmentPost.builder()
                             .title(originalAssignment.getTitle())
                             .description(originalAssignment.getDescription())
-                            .duration(originalAssignment.getDuration())
                             .ownerId(securityContextUtils.getCurrentUserId())
                             .subject(originalAssignment.getSubject())
                             .grade(originalAssignment.getGrade())

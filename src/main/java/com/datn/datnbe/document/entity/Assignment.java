@@ -32,9 +32,6 @@ public class Assignment {
     @Column(name = "description", columnDefinition = "TEXT")
     String description;
 
-    @Column(name = "duration")
-    Integer duration;
-
     @Column(name = "owner_id", nullable = false, length = 36)
     String ownerId;
 
@@ -70,9 +67,6 @@ public class Assignment {
     @Column(name = "allow_retake")
     Boolean allowRetake;
 
-    @Column(name = "shuffle_questions")
-    Boolean shuffleQuestions;
-
     @Column(name = "show_correct_answers")
     Boolean showCorrectAnswers;
 
@@ -81,9 +75,6 @@ public class Assignment {
 
     @Column(name = "passing_score")
     Double passingScore;
-
-    @Column(name = "time_limit")
-    Integer timeLimit;
 
     @Column(name = "available_from")
     Date availableFrom;

@@ -25,7 +25,6 @@ public class AssignmentResponse {
     String id;
     String title;
     String description;
-    Integer duration;
     String ownerId;
     String subject;
     String grade;
@@ -39,7 +38,6 @@ public class AssignmentResponse {
     List<AssessmentMatrixCell> matrixCells;
     Integer maxSubmissions;
     Boolean allowRetake;
-    Boolean shuffleQuestions;
     Boolean showCorrectAnswers;
     Boolean showScoreImmediately;
     Double passingScore;

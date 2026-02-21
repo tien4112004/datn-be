@@ -16,7 +16,6 @@ import java.util.List;
 public class AssignmentSettingsUpdateRequest {
     Integer maxSubmissions;
     Boolean allowRetake;
-    Boolean shuffleQuestions;
     Boolean showCorrectAnswers;
     Boolean showScoreImmediately;
     Double passingScore;

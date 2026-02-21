@@ -286,7 +286,6 @@ public class AssignmentManagement implements AssignmentApi {
                                 .title(request.getTitle())
                                 .description(request.getDescription())
                                 .matrix(matrix)
-                                .timeLimitMinutes(request.getTimeLimitMinutes())
                                 .missingStrategy(request.getMissingStrategy())
                                 .includePersonalQuestions(request.getIncludePersonalQuestions())
                                 .build(),
@@ -366,7 +365,7 @@ public class AssignmentManagement implements AssignmentApi {
 
         // 6. Build and return draft
         return buildDraftFromGeneratedQuestions(request
-                .getTitle(), request.getDescription(), request.getTimeLimitMinutes(), questions, teacherId, matrix);
+                .getTitle(), request.getDescription(), questions, teacherId, matrix);
     }
 
     private AssignmentMatrixDto loadOrUseMatrix(String matrixId, AssignmentMatrixDto matrix) {
@@ -585,7 +584,6 @@ public class AssignmentManagement implements AssignmentApi {
 
     private AssignmentDraftDto buildDraftFromGeneratedQuestions(String title,
             String description,
-            Integer timeLimitMinutes,
             List<Question> questions,
             String teacherId,
             AssignmentMatrixDto matrix) {
@@ -600,7 +598,6 @@ public class AssignmentManagement implements AssignmentApi {
                 .id(draftId)
                 .title(title)
                 .description(description)
-                .duration(timeLimitMinutes)
                 .questions(questions)
                 .totalQuestions(questions.size())
                 .totalPoints(totalPoints)
