@@ -6,7 +6,7 @@ Hồi đầu năm học, tôi mới học chữ cái. Thế mà bây giờ, tôi
 Ai cũng bảo từ khi đi học, tôi chững chạc hẳn lên.', 'Trung Sơn', true, NULL),
 ('243', 1, 'TV', 'ĐÔI TAI XẤU XÍ', 'Thỏ có đôi tai dài và to. Bị bạn bè chê, thỏ buồn lắm. Thỏ bố động viên: "Rồi con sẽ thấy đôi tai mình rất đẹp".
 
-Một lần, thỏ và các bạn đi chơi xa, quên khuấy đường về. Ai cũng hoảng sợ. Thỏ chợt dỏng tai: "Suỵt! Có tiếng bố tớ gọi". Cả nhóm đi theo hướng có tiếng gọi. Tất cả về được tới nhà. Các bạn tấm tắc khen tai thỏ thật tuyệt. 
+Một lần, thỏ và các bạn đi chơi xa, quên khuấy đường về. Ai cũng hoảng sợ. Thỏ chợt dỏng tai: "Suỵt! Có tiếng bố tớ gọi". Cả nhóm đi theo hướng có tiếng gọi. Tất cả về được tới nhà. Các bạn tấm tắc khen tai thỏ thật tuyệt.
 
 Từ đó, thỏ không còn buồn vì đôi tai nữa.', 'Theo Truyện kể cho bé mầm non', true, NULL),
 ('244', 1, 'TV', 'BẠN CỦA GIÓ', 'Ai là bạn gió?
@@ -30,7 +30,7 @@ Ai gọi: Gió ơi
 Trong vòm lá biếc.', 'Ngân Hà', true, NULL),
 ('245', 1, 'TV', 'GIẢI THƯỞNG TÌNH BẠN', 'Nai và Hoẵng tham dự một cuộc chạy đua. Trước vạch xuất phát, Nai và Hoẵng đứng cạnh nhau. Sau tiếng hô "Bắt đầu!", cả hai dồn sức chạy thật nhanh.
 
-Bỗng nhiên, Hoẵng vấp phải một hòn đá rồi ngã oạch. Nai vội dừng lại, đỡ Hoẵng đứng dậy. Cả hai về đích cùng nhau. 
+Bỗng nhiên, Hoẵng vấp phải một hòn đá rồi ngã oạch. Nai vội dừng lại, đỡ Hoẵng đứng dậy. Cả hai về đích cùng nhau.
 
 Tuy không ai giành giải nhất, nhưng Nai và Hoẵng đều nhận được "Giải thưởng tình bạn".', 'Sưu tầm', true, NULL),
 ('246', 1, 'TV', 'SINH NHẬT CỦA VOI CON', 'Hôm nay là sinh nhật của Voi Con, nhưng nó bị ốm. Đang buồn bã, bỗng Voi Con nghe tiếng gọi. Thì ra các bạn đến chúc mừng sinh nhật Voi. Thỏ Trắng mang cà rốt. Gấu Đen ngoạm nguyên một nải chuối. Khỉ Vàng và Sóc Nâu tặng Voi tiết mục "ngúc ngoắc đuôi". Vẹt Mỏ Khoằm thay mặt các bạn nói những lời chúc tốt đẹp.
@@ -46,7 +46,7 @@ Nam cảm thấy thật ấm áp. Cậu im lặng rồi đột nhiên mỉm cư�
 
 Nam đặt một nụ hôn vào tay mẹ rồi thủ thỉ:
 
-- Bây giờ thì mẹ cũng có nụ hôn trên bàn tay rồi. Con yêu mẹ! 
+- Bây giờ thì mẹ cũng có nụ hôn trên bàn tay rồi. Con yêu mẹ!
 
 Nam chào mẹ và tung tăng bước vào lớp.', 'Theo Au-đrây Pen', true, NULL),
 ('248', 1, 'TV', 'CẢ NHÀ ĐI CHƠI NÚI', 'Bố mẹ cho Nam và Đức đi chơi núi. Hôm trước, mẹ thức khuya để chuẩn bị quần áo, thức ăn, nước uống và cả tuýp thuốc chống côn trùng.
@@ -136,7 +136,7 @@ Bài học mới sang trang.', 'Nguyễn Lãm Thắng', true, NULL),
 - Cứu tôi với, cứu tôi với!
 Nghe tiếng kêu cứu của kiến, bồ câu nhanh trí nhặt một chiếc lá thả xuống nước. Kiến bám vào chiếc lá và leo được lên bờ.
 
-Một hôm, kiến thấy người thợ săn đang ngắm bắn bồ câu. Ngay lập tức, nó bò đến, cắn vào chân anh ta. Người thợ săn giật mình. Bồ câu thấy động liền bay đi. 
+Một hôm, kiến thấy người thợ săn đang ngắm bắn bồ câu. Ngay lập tức, nó bò đến, cắn vào chân anh ta. Người thợ săn giật mình. Bồ câu thấy động liền bay đi.
 Bồ câu tìm đến chỗ kiến, cảm động nói:
 - Cảm ơn cậu đã cứu tớ.
 Kiến đáp:
@@ -186,7 +186,6 @@ Nam nhìn quanh, thấy một chú bảo vệ đang đứng gần đấy. Nam ch
 Còn đèn vàng báo hiệu phải đi chậm lại trước khi dừng hẳn.
 
 Cây đèn ba màu này được gọi là đèn giao thông. Nó điều khiển việc đi lại trên đường phố. Nếu không có đèn giao thông thì việc đi lại sẽ rất lộn xộn và nguy hiểm. Tuân thủ sự điều khiển của đèn giao thông giúp chúng ta bảo đảm an toàn khi đi lại.', 'Trung Kiên', true, NULL),
-('262', tiếp),
 ('263', 1, 'TV', 'CÂU CHUYỆN CỦA RỄ', 'Hoa nở trên cành
 Khoe muôn sắc thắm
 Giữa vòm lá xanh
@@ -828,7 +827,6 @@ Là cô tu hú.
 Nhấp nhem buồn ngủ
 Là bác cú mèo.', 'Đồng dao', true, NULL),
 ('318', 2, 'TV', 'KHỦNG LONG', 'Khủng long là loài vật sống ở các vùng đất khô. Chúng có kích thước lớn nhỏ khác nhau, thích ăn cỏ và thịt. Chân khủng long thẳng và rất khoẻ. Vì thế chúng có thể đi khắp một vùng rộng lớn để kiếm ăn. Khủng long có khả năng săn mồi tốt nhờ có đôi mắt tinh tường cùng cái mũi và đôi tai thính. Khủng long cũng có khả năng tự vệ tốt nhờ vào cái đầu cứng và cái quất đuôi dũng mãnh. Trước khi con người xuất hiện thì khủng long đã bị tuyệt chủng, thế nên chúng ta không thể gặp chúng ngoài đời thật.', 'Theo Bách khoa tri thức về khám phá thế giới cho trẻ em', true, NULL),
-('319', tiếp),
 ('320', 2, 'TV', 'SỰ TÍCH CÂY THÌ LÀ', 'Ngày xưa, cây cối trên trái đất chưa có tên gọi. Trời bèn gọi chúng lên để đặt tên. Cây cối mừng rỡ kéo nhau lên trời. Trời chỉ tay vào từng cây và đặt tên:
 — Chú thì ta đặt tên cho là cây dừa.
 — Chú thì ta đặt tên cho là cây cau.
