@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.UUID;
+
 /**
  * AI Gateway DTO for Matching pair.
  * Represents a single matching pair received from AI Gateway.
@@ -17,7 +19,8 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MatchingPair {
-
+    @Builder.Default
+    String id = UUID.randomUUID().toString();
     String left;
 
     @JsonProperty("leftImageUrl")

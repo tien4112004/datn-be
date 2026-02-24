@@ -1,5 +1,6 @@
 package com.datn.datnbe.cms.service;
 
+import com.datn.datnbe.ai.dto.response.*;
 import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.dto.response.UserMinimalInfoDto;
 import com.datn.datnbe.cms.api.PostApi;
@@ -22,11 +23,6 @@ import com.datn.datnbe.cms.repository.AssignmentPostRepository;
 import com.datn.datnbe.cms.repository.SubmissionRepository;
 import com.datn.datnbe.document.entity.Question;
 import com.datn.datnbe.document.entity.questiondata.BlankSegment;
-import com.datn.datnbe.document.entity.questiondata.FillInBlankData;
-import com.datn.datnbe.document.entity.questiondata.MatchingData;
-import com.datn.datnbe.document.entity.questiondata.MatchingPair;
-import com.datn.datnbe.document.entity.questiondata.MultipleChoiceData;
-import com.datn.datnbe.document.entity.questiondata.MultipleChoiceOption;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
