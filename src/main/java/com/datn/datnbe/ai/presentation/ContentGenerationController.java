@@ -160,7 +160,7 @@ public class ContentGenerationController {
     public ResponseEntity<Flux<String>> generateSlides(@RequestBody PresentationPromptRequest request) {
 
         String presentationId = request.getPresentationId();
-        String userId = securityContextUtils.getCurrentUserId();
+        String userId = securityContextUtils.getCurrentUserProfileId();
 
         // Serialize generation options to JSON
         String generationOptionsJson = null;
