@@ -22,9 +22,8 @@ import com.datn.datnbe.document.entity.Assignment;
 import com.datn.datnbe.document.mapper.AssignmentMapper;
 import com.datn.datnbe.document.repository.AssignmentRepository;
 import com.datn.datnbe.document.dto.response.AssignmentResponse;
-import com.datn.datnbe.sharedkernel.notification.dto.NotificationRequest;
-import com.datn.datnbe.sharedkernel.notification.entity.UserDevice;
-import com.datn.datnbe.sharedkernel.notification.repository.UserDeviceRepository;
+import com.datn.datnbe.sharedkernel.notification.dto.SendNotificationToUsersRequest;
+import com.datn.datnbe.sharedkernel.notification.enums.NotificationType;
 import com.datn.datnbe.sharedkernel.notification.service.NotificationService;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
@@ -62,7 +61,6 @@ public class PostService implements PostApi {
     private final LinkedResourcePermissionService linkedResourcePermissionService;
     private final LinkedResourceEnricher linkedResourceEnricher;
     private final NotificationService notificationService;
-    private final UserDeviceRepository userDeviceRepository;
     private final StudentApi studentApi;
     private final AssignmentPostRepository assignmentPostRepository;
     private final AssignmentRepository assignmentRepository;
@@ -343,36 +341,26 @@ public class PostService implements PostApi {
             log.info("Found {} students in class", students.size());
 
             List<String> userIds = students.stream().map(StudentResponseDto::getUserId).toList();
-            log.info("User IDs to notify: {}", userIds);
 
             if (userIds.isEmpty()) {
                 log.warn("No students found to notify for class {}", classId);
                 return;
             }
 
-            List<String> tokens = userIds.stream()
-                    .map(userDeviceRepository::findAllByUserId)
-                    .flatMap(List::stream)
-                    .map(UserDevice::getFcmToken)
-                    .filter(token -> token != null && !token.isEmpty())
-                    .distinct()
-                    .collect(Collectors.toList());
+            String body = post.getContent() != null && post.getContent().length() > 50
+                    ? post.getContent().substring(0, 50) + "..."
+                    : post.getContent();
 
-            log.info("Found {} tokens for these users", tokens.size());
+            SendNotificationToUsersRequest notiRequest = SendNotificationToUsersRequest.builder()
+                    .userIds(userIds)
+                    .title(title)
+                    .body(body)
+                    .type(NotificationType.POST)
+                    .referenceId(classId)
+                    .data(Map.of("type", "POST", "referenceId", classId))
+                    .build();
 
-            if (!tokens.isEmpty()) {
-                NotificationRequest notiRequest = NotificationRequest.builder()
-                        .title(title)
-                        .body(post.getContent() != null && post.getContent().length() > 50
-                                ? post.getContent().substring(0, 50) + "..."
-                                : post.getContent())
-                        .data(Map.of("type", "POST", "referenceId", classId))
-                        .build();
-                notificationService.sendMulticast(tokens, notiRequest);
-            } else {
-                log.warn("No valid FCM tokens found for students in class {}", classId);
-            }
-
+            notificationService.sendNotificationToUsers(notiRequest);
         } catch (Exception e) {
             log.error("Failed to send notification for new post", e);
         }
