@@ -57,8 +57,11 @@ public class AuthController {
     public ResponseEntity<AppResponseDto<Map<String, String>>> logout(HttpServletRequest request,
             HttpServletResponse response,
             Authentication auth) {
-        authenticationService.logout(request, response, auth);
-        sessionService.clearSession(response);
+        try {
+            authenticationService.logout(request, response, auth);
+        } finally {
+            sessionService.clearSession(response);
+        }
 
         return ResponseEntity.noContent().build();
     }

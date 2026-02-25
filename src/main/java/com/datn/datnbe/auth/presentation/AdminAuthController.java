@@ -51,8 +51,11 @@ public class AdminAuthController {
     public ResponseEntity<AppResponseDto<Map<String, String>>> logout(HttpServletRequest request,
             HttpServletResponse response,
             Authentication auth) {
-        authenticationService.adminLogout(request, response, auth);
-        sessionService.clearAdminSession(response);
+        try {
+            authenticationService.adminLogout(request, response, auth);
+        } finally {
+            sessionService.clearAdminSession(response);
+        }
 
         return ResponseEntity.noContent().build();
     }
