@@ -136,6 +136,8 @@ public class SessionManagementService {
         Cookie cookie = new Cookie(name, null);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setAttribute("sameSite", "None");
         cookie.setMaxAge(0);
         response.addCookie(cookie);
         log.trace("Deleted cookie: {}", name);
