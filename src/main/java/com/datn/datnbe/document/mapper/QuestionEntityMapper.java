@@ -131,8 +131,7 @@ public abstract class QuestionEntityMapper {
             // 2. Map: {type: "FILL_IN_BLANK", data: "text with {{}}", caseSensitive: false}
             // 3. Legacy string: "text with {{}}"
 
-            if (data instanceof com.datn.datnbe.ai.dto.response.FillInBlankData) {
-                com.datn.datnbe.ai.dto.response.FillInBlankData aiData = (com.datn.datnbe.ai.dto.response.FillInBlankData) data;
+            if (data instanceof FillInBlankData aiData) {
                 textContent = aiData.getData();
                 caseSensitive = aiData.getCaseSensitive() != null ? aiData.getCaseSensitive() : false;
                 log.debug("Processing AI FillInBlankData. Text: {}, CaseSensitive: {}", textContent, caseSensitive);
@@ -185,8 +184,7 @@ public abstract class QuestionEntityMapper {
         try {
             log.debug("Processing MULTIPLE_CHOICE data. Type: {}", data != null ? data.getClass().getName() : "null");
 
-            if (data instanceof com.datn.datnbe.ai.dto.response.MultipleChoiceData) {
-                com.datn.datnbe.ai.dto.response.MultipleChoiceData aiData = (com.datn.datnbe.ai.dto.response.MultipleChoiceData) data;
+            if (data instanceof MultipleChoiceData aiData) {
                 java.util.List<com.datn.datnbe.document.entity.questiondata.MultipleChoiceOption> options = aiData
                         .getOptions()
                         .stream()
@@ -223,8 +221,7 @@ public abstract class QuestionEntityMapper {
         try {
             log.debug("Processing MATCHING data. Type: {}", data != null ? data.getClass().getName() : "null");
 
-            if (data instanceof com.datn.datnbe.ai.dto.response.MatchingData) {
-                com.datn.datnbe.ai.dto.response.MatchingData aiData = (com.datn.datnbe.ai.dto.response.MatchingData) data;
+            if (data instanceof MatchingData aiData) {
                 java.util.List<com.datn.datnbe.document.entity.questiondata.MatchingPair> pairs = aiData.getPairs()
                         .stream()
                         .map(aiPair -> com.datn.datnbe.document.entity.questiondata.MatchingPair.builder()
@@ -261,8 +258,7 @@ public abstract class QuestionEntityMapper {
         try {
             log.debug("Processing OPEN_ENDED data. Type: {}", data != null ? data.getClass().getName() : "null");
 
-            if (data instanceof com.datn.datnbe.ai.dto.response.OpenEndedData) {
-                com.datn.datnbe.ai.dto.response.OpenEndedData aiData = (com.datn.datnbe.ai.dto.response.OpenEndedData) data;
+            if (data instanceof OpenEndedData aiData) {
                 com.datn.datnbe.document.entity.questiondata.OpenEndedData domainData = com.datn.datnbe.document.entity.questiondata.OpenEndedData
                         .builder()
                         .expectedAnswer(aiData.getExpectedAnswer())
