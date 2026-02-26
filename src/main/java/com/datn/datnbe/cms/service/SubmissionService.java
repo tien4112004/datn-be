@@ -1,6 +1,6 @@
 package com.datn.datnbe.cms.service;
 
-import com.datn.datnbe.ai.dto.response.*;
+import com.datn.datnbe.document.entity.questiondata.*;
 import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.dto.response.UserMinimalInfoDto;
 import com.datn.datnbe.cms.api.PostApi;
@@ -133,9 +133,6 @@ public class SubmissionService implements SubmissionApi {
     public SubmissionResponseDto gradeSubmissionManually(String submissionId, SubmissionGradeRequest request) {
         Submission submission = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Submission not found"));
-
-        // Verify teacher is the author of the assignment
-        PostResponseDto post = postApi.getPostById(submission.getPostId());
 
         if (!securityContextUtils.hasRole("teacher")) {
             throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, "You don't have permission to grade this submission");

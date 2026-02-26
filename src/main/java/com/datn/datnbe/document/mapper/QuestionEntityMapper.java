@@ -88,7 +88,7 @@ public abstract class QuestionEntityMapper {
         }
     }
 
-    private Object convertDataToQuestionData(Object data, String type) {
+    public Object convertDataToQuestionData(Object data, String type) {
         if (type == null) {
             log.warn("Question type is null, cannot convert data");
             return data;
@@ -140,7 +140,7 @@ public abstract class QuestionEntityMapper {
                 textContent = (String) data;
                 log.debug("Processing FILL_IN_BLANK with direct string format: {}", textContent);
             } else if (data instanceof java.util.Map) {
-                @SuppressWarnings("unchecked") java.util.Map<String, Object> dataMap = (java.util.Map<String, Object>) data;
+                java.util.Map<String, Object> dataMap = (java.util.Map<String, Object>) data;
                 log.debug("Processing FILL_IN_BLANK with Map format. Keys: {}", dataMap.keySet());
 
                 Object nestedData = dataMap.get("data");
