@@ -63,6 +63,8 @@ services:
       - SEPAY_API_KEY=${SEPAY_API_KEY}
       - SEPAY_SECRET_KEY=${SEPAY_SECRET_KEY}
       - SEPAY_ACCOUNT_NAME=${SEPAY_ACCOUNT_NAME}
+
+      - PEXELS_API_KEY=${PEXELS_API_KEY}
     healthcheck:
       test:
         [
