@@ -57,8 +57,12 @@ public class StudentMapper {
         return Student.builder()
                 .userId(csvRow.getUserId())
                 .enrollmentDate(new java.util.Date())
+                .dateOfBirth(csvRow.getDateOfBirth())
                 .address(csvRow.getAddress())
                 .parentContactEmail(csvRow.getParentContactEmail())
+                .gender(csvRow.getGender())
+                .parentName(csvRow.getParentName())
+                .parentPhone(csvRow.getParentPhone())
                 .build();
     }
 

@@ -42,6 +42,9 @@ public class Student {
     @Column(name = "enrollment_date")
     Date enrollmentDate;
 
+    @Column(name = "date_of_birth")
+    Date dateOfBirth;
+
     @Column(name = "address", length = 255)
     String address;
 

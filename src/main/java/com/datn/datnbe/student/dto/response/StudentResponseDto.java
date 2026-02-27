@@ -28,6 +28,7 @@ public class StudentResponseDto {
     String id;
     String userId;
     Date enrollmentDate;
+    Date dateOfBirth;
     String address;
     String gender;
     String parentName;

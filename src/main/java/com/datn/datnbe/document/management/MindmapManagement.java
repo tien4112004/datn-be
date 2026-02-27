@@ -327,4 +327,23 @@ public class MindmapManagement implements MindmapApi {
         return mindmapRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Mindmap not found with id: " + id));
     }
+
+    @Override
+    public void deleteMindmap(String id) {
+        log.info("Deleting mindmap with id: '{}'", id);
+
+        try {
+            validation.validateMindmapExists(id);
+
+            mindmapRepository.deleteById(id);
+
+            log.info("Successfully deleted mindmap with id: '{}'", id);
+        } catch (ResourceNotFoundException e) {
+            log.error("Mindmap not found with id: '{}'", id);
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to delete mindmap with id: '{}'. Error: {}", id, e.getMessage());
+            throw e;
+        }
+    }
 }

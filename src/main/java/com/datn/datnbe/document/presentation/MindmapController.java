@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -96,6 +97,14 @@ public class MindmapController {
             @Valid @RequestBody MindmapUpdateTitleAndDescriptionRequest request) {
         log.info("Received request to update mindmap title with id: {}", id);
         mindmapApi.updateTitleAndDescriptionMindmap(id, request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{id}")
+    @RequireDocumentPermission(scopes = {"edit"})
+    public ResponseEntity<AppResponseDto<Void>> deleteMindmap(@PathVariable String id) {
+        log.info("Received request to delete mindmap with id: {}", id);
+        mindmapApi.deleteMindmap(id);
         return ResponseEntity.noContent().build();
     }
 }

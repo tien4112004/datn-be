@@ -1,6 +1,6 @@
 package com.datn.datnbe.cms.service;
 
-import com.datn.datnbe.ai.dto.response.*;
+import com.datn.datnbe.document.entity.questiondata.*;
 import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.dto.response.UserMinimalInfoDto;
 import com.datn.datnbe.cms.api.PostApi;
@@ -133,9 +133,6 @@ public class SubmissionService implements SubmissionApi {
     public SubmissionResponseDto gradeSubmissionManually(String submissionId, SubmissionGradeRequest request) {
         Submission submission = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Submission not found"));
-
-        // Verify teacher is the author of the assignment
-        PostResponseDto post = postApi.getPostById(submission.getPostId());
 
         if (!securityContextUtils.hasRole("teacher")) {
             throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, "You don't have permission to grade this submission");
@@ -293,13 +290,16 @@ public class SubmissionService implements SubmissionApi {
 
         return blankSegments.stream().mapToDouble(segment -> {
             String studentAnswer = fillAnswer.getBlankAnswers().get(segment.getId());
-            boolean isCorrect = studentAnswer != null && segment.getAcceptableAnswers().contains(studentAnswer);
+            boolean isCorrect = studentAnswer != null && 
+                    (segment.getAcceptableAnswers().contains(studentAnswer) || 
+                     (segment.getContent() != null && segment.getContent().equals(studentAnswer)));
             double points = isCorrect ? pointPerBlank : 0;
 
-            log.info("    Segment: {} | Student: '{}' | Acceptable: {} | Correct: {} | Points: {}",
+            log.info("    Segment: {} | Student: '{}' | Acceptable: {} | Content: {} | Correct: {} | Points: {}",
                     segment.getId(),
                     studentAnswer,
                     segment.getAcceptableAnswers(),
+                    segment.getContent(),
                     isCorrect,
                     points);
 
