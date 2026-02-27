@@ -290,13 +290,16 @@ public class SubmissionService implements SubmissionApi {
 
         return blankSegments.stream().mapToDouble(segment -> {
             String studentAnswer = fillAnswer.getBlankAnswers().get(segment.getId());
-            boolean isCorrect = studentAnswer != null && segment.getAcceptableAnswers().contains(studentAnswer);
+            boolean isCorrect = studentAnswer != null && 
+                    (segment.getAcceptableAnswers().contains(studentAnswer) || 
+                     (segment.getContent() != null && segment.getContent().equals(studentAnswer)));
             double points = isCorrect ? pointPerBlank : 0;
 
-            log.info("    Segment: {} | Student: '{}' | Acceptable: {} | Correct: {} | Points: {}",
+            log.info("    Segment: {} | Student: '{}' | Acceptable: {} | Content: {} | Correct: {} | Points: {}",
                     segment.getId(),
                     studentAnswer,
                     segment.getAcceptableAnswers(),
+                    segment.getContent(),
                     isCorrect,
                     points);
 
