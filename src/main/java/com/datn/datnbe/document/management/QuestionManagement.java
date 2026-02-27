@@ -165,8 +165,17 @@ public class QuestionManagement implements QuestionApi {
             }
 
             // Filter by chapter (supports multi-select)
+            // Strips any leading prefix (e.g. "Chủ đề x: ", "Chapter x: ") and matches with
+            // LIKE
             if (request.getChapter() != null && !request.getChapter().isEmpty()) {
-                predicates.add(root.get("chapter").in(request.getChapter()));
+                List<jakarta.persistence.criteria.Predicate> chapterPredicates = new ArrayList<>();
+                for (String ch : request.getChapter()) {
+                    int colonIdx = ch.indexOf(": ");
+                    String bareTitle = colonIdx >= 0 ? ch.substring(colonIdx + 2) : ch;
+                    chapterPredicates.add(cb.like(root.get("chapter"),
+                            "%" + bareTitle.replace("%", "\\%").replace("_", "\\_") + "%"));
+                }
+                predicates.add(cb.or(chapterPredicates.toArray(new jakarta.persistence.criteria.Predicate[0])));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));
@@ -278,7 +287,8 @@ public class QuestionManagement implements QuestionApi {
 
         log.info("Batch processed - successful: {}, failed: {}", successful.size(), failed.size());
 
-        // If no items were successfully created, throw an exception with the first error
+        // If no items were successfully created, throw an exception with the first
+        // error
         if (successful.isEmpty() && !failed.isEmpty()) {
             BatchCreateQuestionResponseDto.BatchItemErrorDto firstError = failed.get(0);
             log.error("Batch creation failed completely. First error - index: {}, title: {}, message: {}",
@@ -401,8 +411,17 @@ public class QuestionManagement implements QuestionApi {
             }
 
             // Filter by chapter (supports multi-select)
+            // Strips any leading prefix (e.g. "Chủ đề x: ", "Chapter x: ") and matches with
+            // LIKE
             if (request.getChapter() != null && !request.getChapter().isEmpty()) {
-                predicates.add(root.get("chapter").in(request.getChapter()));
+                List<jakarta.persistence.criteria.Predicate> chapterPredicates = new ArrayList<>();
+                for (String ch : request.getChapter()) {
+                    int colonIdx = ch.indexOf(": ");
+                    String bareTitle = colonIdx >= 0 ? ch.substring(colonIdx + 2) : ch;
+                    chapterPredicates.add(cb.like(root.get("chapter"),
+                            "%" + bareTitle.replace("%", "\\%").replace("_", "\\_") + "%"));
+                }
+                predicates.add(cb.or(chapterPredicates.toArray(new jakarta.persistence.criteria.Predicate[0])));
             }
 
             if (predicates.isEmpty()) {
