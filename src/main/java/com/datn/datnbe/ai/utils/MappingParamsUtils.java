@@ -52,6 +52,9 @@ public class MappingParamsUtils {
         params.put("model", request.getModel().toLowerCase());
         params.put("provider", request.getProvider().toLowerCase());
         params.put("aspect_ratio", request.getAspectRatio());
+        if (request.getNegativePrompt() != null && !request.getNegativePrompt().isEmpty()) {
+            params.put("negative_prompt", request.getNegativePrompt());
+        }
         return params;
     }
 
