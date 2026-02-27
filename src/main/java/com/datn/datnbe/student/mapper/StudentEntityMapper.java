@@ -22,6 +22,7 @@ public class StudentEntityMapper {
                 .id(entity.getId())
                 .userId(entity.getUserId())
                 .enrollmentDate(entity.getEnrollmentDate())
+                .dateOfBirth(entity.getDateOfBirth())
                 .gender(entity.getGender())
                 .address(entity.getAddress())
                 .parentContactEmail(entity.getParentContactEmail())

@@ -142,6 +142,16 @@ public class StudentImportManagement implements StudentImportApi {
             }
         }
 
+        // Update credentials with actual student IDs from saved students
+        for (Student student : savedStudents) {
+            for (StudentCredentialDto credential : createdCredentials) {
+                if (credential.getStudentId().equals(student.getUserId())) {
+                    credential.setStudentId(student.getId());
+                    break;
+                }
+            }
+        }
+
         // Step 7: Enroll students in the class
         int enrolledCount = 0;
         for (Student student : savedStudents) {
