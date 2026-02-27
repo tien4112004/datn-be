@@ -24,4 +24,6 @@ public interface MindmapApi {
     MindmapDto getMindmap(String id);
 
     MindmapMetadataResponseDto getMindmapMetadata(String id);
+
+    void deleteMindmap(String id);
 }
