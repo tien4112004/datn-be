@@ -290,9 +290,8 @@ public class SubmissionService implements SubmissionApi {
 
         return blankSegments.stream().mapToDouble(segment -> {
             String studentAnswer = fillAnswer.getBlankAnswers().get(segment.getId());
-            boolean isCorrect = studentAnswer != null && 
-                    (segment.getAcceptableAnswers().contains(studentAnswer) || 
-                     (segment.getContent() != null && segment.getContent().equals(studentAnswer)));
+            boolean isCorrect = studentAnswer != null && (segment.getAcceptableAnswers().contains(studentAnswer)
+                    || (segment.getContent() != null && segment.getContent().equals(studentAnswer)));
             double points = isCorrect ? pointPerBlank : 0;
 
             log.info("    Segment: {} | Student: '{}' | Acceptable: {} | Content: {} | Correct: {} | Points: {}",
@@ -334,21 +333,14 @@ public class SubmissionService implements SubmissionApi {
         log.info("  Total points: {} | Points per pair: {} | Total pairs: {}", totalPoint, pointPerPair, pairs.size());
 
         double totalScore = pairs.stream().mapToDouble(pair -> {
-            String leftKey = pair.getLeft() != null && !pair.getLeft().isBlank()
-                    ? pair.getLeft()
-                    : pair.getLeftImageUrl();
-            String rightValue = pair.getRight() != null && !pair.getRight().isBlank()
-                    ? pair.getRight()
-                    : pair.getRightImageUrl();
-
-            String studentValue = studentPairs.get(leftKey);
-            boolean isCorrect = studentValue != null && studentValue.equals(rightValue);
+            String pairId = pair.getId();
+            String studentRightId = studentPairs.get(pairId);
+            boolean isCorrect = studentRightId != null && studentRightId.equals(pairId);
             double points = isCorrect ? pointPerPair : 0;
 
-            log.info("    Left: {} | Expected: {} | Student: {} | Correct: {} | Points: {}",
-                    leftKey,
-                    rightValue,
-                    studentValue,
+            log.info("    Pair ID: {} | Student matched to: {} | Correct: {} | Points: {}",
+                    pairId,
+                    studentRightId,
                     isCorrect,
                     points);
 

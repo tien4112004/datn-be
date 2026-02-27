@@ -43,7 +43,7 @@ public class MindmapController {
 
     private final MindmapApi mindmapApi;
 
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<AppResponseDto<MindmapCreateResponseDto>> createMindmap(
             @Valid @RequestBody MindmapCreateRequest request) {
         log.info("Received request to create mindmap with title: {}", request.getTitle());
