@@ -104,6 +104,7 @@ app:
       - "https://datn-fe.vercel.app"
       - "https://api.huy-devops.site"
       - "https://app.huy-devops.site"
+      - "https://elearning-api.llms.vn"
     # Use allowed-origin-patterns for wildcard matching with Spring AntPathMatcher syntax
     # * matches any characters except /
     # ** matches any characters including /
@@ -114,6 +115,7 @@ app:
       - "http://127.0.0.1:*"
       - "https://localhost:*"
       - "https://*.huy-devops.site"
+      - "https://*.llms.vn"
     allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
     allow-credentials: true
     max-age: 3600
@@ -143,6 +145,7 @@ app:
         - http://localhost:5175
         - http://admin.localhost:5175
         - https://admin.huy-devops.site
+        - https://elearning-admin.llms.vn
 
     authorization:
       server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8082}

@@ -63,6 +63,7 @@ public class StudentMapper {
                 .gender(csvRow.getGender())
                 .parentName(csvRow.getParentName())
                 .parentPhone(csvRow.getParentPhone())
+                .password(csvRow.getPassword())
                 .build();
     }
 

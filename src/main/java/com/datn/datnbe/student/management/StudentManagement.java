@@ -6,6 +6,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.datn.datnbe.sharedkernel.exceptions.AppException;
+import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -100,6 +102,7 @@ public class StudentManagement implements StudentApi {
                 .gender(request.getGender())
                 .parentName(request.getParentName())
                 .parentPhone(request.getParentPhone())
+                .password(password)
                 .build();
 
         Student savedStudent = studentRepository.save(student);
@@ -425,6 +428,13 @@ public class StudentManagement implements StudentApi {
                 .filter(student -> classEnrollmentRepository.existsByClassIdAndStudentId(classId, student.getId()))
                 .isPresent();
 
+    }
+
+    @Override
+    public StudentResponseDto getStudentByUserId(String userId) {
+        return studentEntityMapper.toResponseDto(studentRepository.findByUserId(userId)
+                .orElseThrow(
+                        () -> new AppException(ErrorCode.USER_NOT_FOUND, "student not found with userId: " + userId)));
     }
 
     /**

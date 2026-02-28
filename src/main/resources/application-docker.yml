@@ -100,6 +100,7 @@ app:
     allowed-origins:
       - "http://localhost:5173"
       - "https://api.huy-devops.site"
+      - "https://elearning-api.llms.vn"
     allowed-origin-patterns:
       - "https://*.ngrok-free.app"
       - "https://*.ts.net:*"
@@ -111,6 +112,7 @@ app:
       - "https://datn-fe.vercel.app" # Production Vercel deployment
       - "https://*.vercel.app" # All Vercel apps (more permissive, use with caution)
       - "https://*.huy-devops.site" # Any subdomain on huy-devops.site
+      - "https://*.llms.vn" # Any subdomain on llms.vn
     allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
     allow-credentials: true
     max-age: 3600
@@ -139,6 +141,7 @@ app:
         - http://localhost:5175
         - http://admin.localhost:5175
         - https://admin.huy-devops.site
+        - https://elearning-admin.llms.vn
     authorization:
       server-url: ${KEYCLOAK_SERVER_URL:http://keycloak:8080}
       realm: ${KEYCLOAK_REALM:ai-primary-dev}
