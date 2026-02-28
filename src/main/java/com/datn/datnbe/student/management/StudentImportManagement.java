@@ -223,6 +223,10 @@ public class StudentImportManagement implements StudentImportApi {
 
             log.info("Created user {} with email {} for row {}", createdUser.getId(), email, rowNumber);
 
+            // Store credentials in csvRow for later saving to Student entity
+            csvRow.setUsername(email);
+            csvRow.setPassword(temporaryPassword);
+
             // Return credentials
             return StudentCredentialDto.builder()
                     .studentId(createdUser.getId())

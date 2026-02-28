@@ -30,4 +30,10 @@ public class StudentCsvRow {
 
     // Set by import process after user creation
     String userId;
+
+    // Set by import process after user creation
+    String username;
+
+    // Set by import process after user creation
+    String password;
 }

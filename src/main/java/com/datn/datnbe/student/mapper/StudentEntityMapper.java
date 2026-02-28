@@ -30,6 +30,7 @@ public class StudentEntityMapper {
                 .parentPhone(entity.getParentPhone())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
+                .password(entity.getPassword())
                 .build();
     }
 
@@ -69,6 +70,14 @@ public class StudentEntityMapper {
 
         if (request.getParentPhone() != null) {
             entity.setParentPhone(request.getParentPhone());
+        }
+
+        if (request.getDateOfBirth() != null) {
+            entity.setDateOfBirth(request.getDateOfBirth());
+        }
+
+        if (request.getPassword() != null) {
+            entity.setPassword(request.getPassword());
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.datn.datnbe.auth.management;
 
 import com.datn.datnbe.auth.dto.response.UserMinimalInfoDto;
+import com.datn.datnbe.student.repository.StudentRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -48,6 +49,7 @@ public class UserProfileManagement implements UserProfileApi {
     AvatarValidation avatarValidation;
     PaymentApi paymentApi;
     TokenUsageApi tokenUsageApi;
+    StudentRepository studentRepository;
 
     @Override
     public PaginatedResponseDto<UserProfileResponse> getUserProfiles(UserCollectionRequest request) {
@@ -394,6 +396,15 @@ public class UserProfileManagement implements UserProfileApi {
         try {
             // Update password via Keycloak
             keycloakAuthService.setUserPassword(userProfile.getKeycloakUserId(), newPassword);
+            // Update password in Student entity if user is a student
+            if ("student".equalsIgnoreCase(userProfile.getRole())) {
+                var student = studentRepository.findByUserId(userId);
+                if (student.isPresent()) {
+                    student.get().setPassword(newPassword);
+                    studentRepository.save(student.get());
+                    log.info("Student password updated in database for user: {}", userId);
+                }
+            }
             log.info("Password updated successfully for user: {}", userId);
         } catch (Exception e) {
             log.error("Failed to update password for user {}: {}", userId, e.getMessage(), e);

@@ -21,6 +21,10 @@ public interface StudentRepository extends JpaRepository<Student, String> {
 
     boolean existsByIdIn(Set<String> ids);
 
+    @Query(value = """
+            SELECT s.* FROM student s
+            WHERE s.user_id = :id
+            """, nativeQuery = true)
     Optional<Student> findByUserId(String userId);
 
     boolean existsByUserId(String userId);

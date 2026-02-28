@@ -42,4 +42,6 @@ public class StudentUpdateRequest {
     String parentPhone;
 
     String fullName;
+
+    String password;
 }

@@ -67,4 +67,7 @@ public class Student {
 
     @Column(name = "parent_contact_phone", length = 15)
     String parentPhone;
+
+    @Column(name = "password", length = 255)
+    String password;
 }

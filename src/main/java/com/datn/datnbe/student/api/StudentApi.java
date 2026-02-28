@@ -121,4 +121,6 @@ public interface StudentApi {
      * @return true if the user is enrolled, false otherwise
      */
     boolean isUserEnrolledInClass(String classId, String userId);
+
+    StudentResponseDto getStudentByUserId(String userId);
 }
