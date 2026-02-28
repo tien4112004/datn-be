@@ -203,7 +203,8 @@ public class QuestionGenerationService {
             throw new AppException(ErrorCode.VALIDATION_ERROR, "Either contextId or contextContent must be provided");
         }
 
-        // Parse "count:points" cell strings into structured QuestionRequirement objects,
+        // Parse "count:points" cell strings into structured QuestionRequirement
+        // objects,
         // consistent with GenerateQuestionsFromMatrixRequest.TopicRequirement.
         Map<String, Map<String, GenerateQuestionsFromMatrixRequest.QuestionRequirement>> parsedQuestionsPerDifficulty = request
                 .getQuestionsPerDifficulty()
@@ -287,7 +288,8 @@ public class QuestionGenerationService {
 
     private QuestionBankItem convertToQuestionBankItem(Question aiQuestion, String ownerId) {
         // Use topic name directly as chapter field (String)
-        // The chapter field stores the topic name for filtering by grade, subject, and topic
+        // The chapter field stores the topic name for filtering by grade, subject, and
+        // topic
         String topicName = aiQuestion.getChapter();
 
         if (topicName != null && !topicName.isEmpty()) {
