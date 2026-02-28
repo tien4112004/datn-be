@@ -103,7 +103,7 @@ public class QuestionController {
     public ResponseEntity<AppResponseDto<GeneratedQuestionsResponse>> generateQuestionsFromContext(
             @Valid @RequestBody GenerateQuestionsFromContextRequest request) {
 
-        String currentUserId = securityContextUtils.getCurrentUserId();
+        String currentUserId = securityContextUtils.getCurrentUserProfileId();
         log.info("Generating questions from context for teacher: {}, contextId: {}",
                 currentUserId,
                 request.getContextId());
@@ -122,7 +122,7 @@ public class QuestionController {
         // TODO: Remove this - temporary test user ID when auth is disabled
         String currentUserId;
         try {
-            currentUserId = securityContextUtils.getCurrentUserId();
+            currentUserId = securityContextUtils.getCurrentUserProfileId();
             // Check if user is anonymous (not authenticated)
             if ("anonymousUser".equals(currentUserId)) {
                 currentUserId = "00000000-0000-0000-0000-000000000001";

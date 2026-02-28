@@ -169,7 +169,7 @@ public class AssignmentController {
     @PostMapping("/generate-matrix")
     public ResponseEntity<AppResponseDto<AssignmentMatrixDto>> generateMatrix(
             @Valid @RequestBody GenerateMatrixRequest request) {
-        String teacherId = securityContextUtils.getCurrentUserId();
+        String teacherId = securityContextUtils.getCurrentUserProfileId();
         log.info("Generate matrix request from teacher: {} for grade: {}, subject: {}",
                 teacherId,
                 request.getGrade(),
@@ -199,7 +199,7 @@ public class AssignmentController {
     @PostMapping("/generate-from-matrix")
     public ResponseEntity<AppResponseDto<AssignmentDraftDto>> generateAssignmentFromMatrix(
             @Valid @RequestBody GenerateAssignmentFromMatrixRequest request) {
-        String teacherId = securityContextUtils.getCurrentUserId();
+        String teacherId = securityContextUtils.getCurrentUserProfileId();
         log.info("Generate exam from matrix request from teacher: {}", teacherId);
 
         AssignmentDraftDto draft = assignmentApi.generateAssignmentFromMatrix(request, teacherId);
@@ -230,7 +230,7 @@ public class AssignmentController {
     @PostMapping("/generate-full-assignment")
     public ResponseEntity<AppResponseDto<AssignmentDraftDto>> generateFullAssignment(
             @Valid @RequestBody GenerateFullAssignmentRequest request) {
-        String teacherId = securityContextUtils.getCurrentUserId();
+        String teacherId = securityContextUtils.getCurrentUserProfileId();
         log.info("Generate full assignment with AI request from teacher: {}", teacherId);
 
         AssignmentDraftDto draft = assignmentApi.generateFullAssignment(request, teacherId);
