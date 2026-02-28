@@ -21,5 +21,6 @@ public class ImagePromptRequest {
     String model;
     String provider;
     String prompt;
+    String negativePrompt;
     String presentationId;
 }
