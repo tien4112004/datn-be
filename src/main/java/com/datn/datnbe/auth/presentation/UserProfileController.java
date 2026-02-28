@@ -99,10 +99,10 @@ public class UserProfileController {
             Authentication authentication) {
         // Get userId from security context
         String userId = securityContextUtils.getCurrentUserProfileId();
-        
+
         // Validate userId is available
         if (userId == null || userId.isBlank()) {
-            log.warn("Unable to get userId from security context for user: {}", 
+            log.warn("Unable to get userId from security context for user: {}",
                     authentication != null ? authentication.getName() : "unknown");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(AppResponseDto.<Map<String, String>>builder()
@@ -111,7 +111,7 @@ public class UserProfileController {
                             .data(Map.of("error", "User not authenticated properly"))
                             .build());
         }
-        
+
         log.info("Received request to change password for user: {}", userId);
         UserProfileResponse user = userProfileApi.getUserProfile(userId);
 

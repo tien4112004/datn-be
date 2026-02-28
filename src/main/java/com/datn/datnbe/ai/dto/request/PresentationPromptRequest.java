@@ -1,8 +1,10 @@
 package com.datn.datnbe.ai.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -36,4 +38,7 @@ public class PresentationPromptRequest {
 
     // ✅ ADD: Full presentation config with theme data from frontend
     PresentationConfigDto presentation;
+
+    @JsonProperty("file_urls")
+    List<String> fileUrls;
 }
