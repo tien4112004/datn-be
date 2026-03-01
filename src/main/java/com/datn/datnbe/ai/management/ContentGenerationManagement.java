@@ -5,11 +5,13 @@ import com.datn.datnbe.ai.api.ModelSelectionApi;
 import com.datn.datnbe.ai.apiclient.AIApiClient;
 import com.datn.datnbe.ai.dto.request.AIGatewayGenerateQuestionsFromContextRequest;
 import com.datn.datnbe.ai.dto.request.AIGatewayGenerateQuestionsRequest;
+import com.datn.datnbe.ai.dto.request.AIGradeRequest;
 import com.datn.datnbe.ai.dto.request.GenerateQuestionsFromMatrixRequest;
 import com.datn.datnbe.ai.dto.request.MindmapPromptRequest;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
 import com.datn.datnbe.ai.dto.response.GenerateQuestionsFromMatrixResponse;
+import com.datn.datnbe.ai.dto.response.AIGradeResponse;
 import com.datn.datnbe.ai.dto.response.AiWokerResponse;
 import com.datn.datnbe.ai.utils.MappingParamsUtils;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
@@ -82,6 +84,10 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     @Value("${ai.api.questions-from-context-endpoint:/api/questions/generate-from-context}")
     @NonFinal
     String QUESTIONS_FROM_CONTEXT_ENDPOINT;
+
+    @Value("${ai.api.grade-answer-endpoint:/api/questions/grade}")
+    @NonFinal
+    String GRADE_ANSWER_API_ENDPOINT;
 
     @Override
     public Flux<String> generateOutline(OutlinePromptRequest request, String traceId) {
@@ -379,4 +385,21 @@ public class ContentGenerationManagement implements ContentGenerationApi {
         }
     }
 
+    @Override
+    public AIGradeResponse gradeAnswer(AIGradeRequest request, String traceId) {
+    
+        log.info("Calling GenAI-Gateway at endpoint: {}", GRADE_ANSWER_API_ENDPOINT);
+        try {
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.set("X-Trace-ID", traceId);
+
+            AIGradeResponse response = aiApiClient.post(GRADE_ANSWER_API_ENDPOINT, request, AIGradeResponse.class, headers);
+            log.info("Successfully received grading response from GenAI-Gateway");
+            return response;
+        } catch (Exception e) {
+            log.error("Error during answer grading", e);
+            throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
+        }       
+    }
+    
 }

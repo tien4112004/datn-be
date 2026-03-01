@@ -1,10 +1,12 @@
 package com.datn.datnbe.ai.api;
 
 import com.datn.datnbe.ai.dto.request.AIGatewayGenerateQuestionsFromContextRequest;
+import com.datn.datnbe.ai.dto.request.AIGradeRequest;
 import com.datn.datnbe.ai.dto.request.GenerateQuestionsFromMatrixRequest;
 import com.datn.datnbe.ai.dto.request.MindmapPromptRequest;
 import com.datn.datnbe.ai.dto.request.OutlinePromptRequest;
 import com.datn.datnbe.ai.dto.request.PresentationPromptRequest;
+import com.datn.datnbe.ai.dto.response.AIGradeResponse;
 import com.datn.datnbe.ai.dto.response.GenerateQuestionsFromMatrixResponse;
 import com.datn.datnbe.document.dto.AssignmentMatrixDto;
 import com.datn.datnbe.document.dto.request.GenerateMatrixRequest;
@@ -55,4 +57,6 @@ public interface ContentGenerationApi {
      * @return Raw JSON string containing list of generated questions
      */
     String generateQuestionsFromContext(AIGatewayGenerateQuestionsFromContextRequest request, String traceId);
+
+    AIGradeResponse gradeAnswer(AIGradeRequest request, String traceId);
 }
