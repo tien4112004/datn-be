@@ -1,7 +1,6 @@
 package com.datn.datnbe.document.management;
 
 import com.datn.datnbe.document.api.MatrixTemplateApi;
-import com.datn.datnbe.document.dto.AssignmentMatrixDto;
 import com.datn.datnbe.document.dto.request.MatrixTemplateCollectionRequest;
 import com.datn.datnbe.document.dto.request.MatrixTemplateCreateRequest;
 import com.datn.datnbe.document.dto.request.MatrixTemplateUpdateRequest;
@@ -160,8 +159,13 @@ public class MatrixTemplateManagement implements MatrixTemplateApi {
                 request.getGrade(),
                 ownerId);
 
-        // Validate matrix JSON
-        validateMatrixData(request.getMatrixData());
+        // Serialize typed DTO to JSON string for storage
+        String matrixDataJson;
+        try {
+            matrixDataJson = objectMapper.writeValueAsString(request.getMatrixData());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Failed to serialize matrix data: " + e.getMessage(), e);
+        }
 
         // Create entity
         AssignmentMatrixEntity entity = AssignmentMatrixEntity.builder()
@@ -170,7 +174,7 @@ public class MatrixTemplateManagement implements MatrixTemplateApi {
                 .name(request.getName())
                 .subject(request.getSubject())
                 .grade(request.getGrade())
-                .matrixData(request.getMatrixData())
+                .matrixData(matrixDataJson)
                 .build();
 
         AssignmentMatrixEntity saved = repository.save(entity);
@@ -197,8 +201,11 @@ public class MatrixTemplateManagement implements MatrixTemplateApi {
             log.debug("Updating name to: {}", request.getName());
         }
         if (request.getMatrixData() != null) {
-            validateMatrixData(request.getMatrixData());
-            entity.setMatrixData(request.getMatrixData());
+            try {
+                entity.setMatrixData(objectMapper.writeValueAsString(request.getMatrixData()));
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Failed to serialize matrix data: " + e.getMessage(), e);
+            }
             log.debug("Updating matrix data");
         }
 
@@ -224,18 +231,4 @@ public class MatrixTemplateManagement implements MatrixTemplateApi {
         log.info("Deleted matrix template: id={}, ownerId={}", id, ownerId);
     }
 
-    /**
-     * Validate that matrixData is valid JSON and can be parsed to AssignmentMatrixDto.
-     *
-     * @param matrixData JSON string to validate
-     * @throws IllegalArgumentException if JSON is invalid
-     */
-    private void validateMatrixData(String matrixData) {
-        try {
-            objectMapper.readValue(matrixData, AssignmentMatrixDto.class);
-        } catch (Exception e) {
-            log.error("Invalid matrix data JSON: {}", e.getMessage());
-            throw new IllegalArgumentException("Invalid matrix data JSON: " + e.getMessage(), e);
-        }
-    }
 }

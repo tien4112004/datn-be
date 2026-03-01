@@ -48,6 +48,8 @@ public class AssignmentMatrix {
         String id;
         String name;
         List<Subtopic> subtopics;
+        @JsonProperty("hasContext")
+        Boolean hasContext;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
