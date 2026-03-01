@@ -124,7 +124,7 @@ app:
     file-size-limit: 104857600 # 100MB
     avatar-size-limit: "104857600" # 100MB
   api-client:
-    timeout: 30000 # 30 seconds
+    timeout: 300000 # 5 minutes (large file processing needs more time)
     max-in-memory-size: 104857600 # 100MB
   auth:
     properties:

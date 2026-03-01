@@ -40,5 +40,6 @@ public class PresentationPromptRequest {
     PresentationConfigDto presentation;
 
     @JsonProperty("file_urls")
+    @JsonAlias("fileUrls")
     List<String> fileUrls;
 }

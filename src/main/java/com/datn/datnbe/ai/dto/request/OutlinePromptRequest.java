@@ -29,5 +29,6 @@ public class OutlinePromptRequest {
     String subject;
 
     @JsonProperty("file_urls")
+    @JsonAlias("fileUrls")
     List<String> fileUrls;
 }

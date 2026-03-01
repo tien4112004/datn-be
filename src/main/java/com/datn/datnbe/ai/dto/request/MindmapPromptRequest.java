@@ -1,6 +1,5 @@
 package com.datn.datnbe.ai.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Size;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -27,6 +26,5 @@ public class MindmapPromptRequest {
     @Size(max = 100, message = "Subject must not exceed 100 characters")
     String subject;
 
-    @JsonProperty("file_urls")
     List<String> fileUrls;
 }
