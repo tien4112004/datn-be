@@ -375,4 +375,62 @@ public class PostService implements PostApi {
         }
         return assignmentMapper.toDto(assignmentPost);
     }
+
+    @Override
+    @Transactional
+    public void sendDeadlineReminder(String postId) {
+        log.info("Sending deadline reminder for post: {}", postId);
+
+        // Get the post
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Post not found"));
+
+        // Check if post is an assignment with a due date
+        if (post.getAssignmentId() == null || post.getAssignmentId().isEmpty()) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "This post is not an assignment");
+        }
+
+        if (post.getDueDate() == null) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Assignment does not have a due date");
+        }
+
+        // Check if deadline has passed
+        long currentTime = System.currentTimeMillis();
+        long dueTime = post.getDueDate().getTime();
+        if (currentTime > dueTime) {
+            log.warn("Assignment deadline has already passed for post: {}", postId);
+            // Still continue to send reminders to those who haven't submitted
+        }
+
+        // Get all students enrolled in the class who haven't submitted
+        List<String> studentIds = new java.util.ArrayList<>();
+        try {
+            studentIds = postRepository.findStudentsWithoutSubmissionByPost(post.getClassId(), postId);
+        } catch (Exception e) {
+            log.error("Error finding students without submission", e);
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Failed to fetch students without submission");
+        }
+
+        if (studentIds == null || studentIds.isEmpty()) {
+            log.info("All students have submitted the assignment for post: {}", postId);
+            return;
+        }
+
+        // Send notification to students who haven't submitted
+        String assignmentTitle = "Nhắc nhở Hạn chót Bài tập";
+        String message = "Bạn chưa nộp bài tập. Hạn chót là " + 
+                        new java.text.SimpleDateFormat("HH:mm dd/MM/yyyy").format(post.getDueDate()) + 
+                        ". Vui lòng nộp bài trước hạn chót.";
+
+        SendNotificationToUsersRequest notificationRequest = SendNotificationToUsersRequest.builder()
+                .userIds(studentIds)
+                .title(assignmentTitle)
+                .body(message)
+                .type(NotificationType.ASSIGNMENT_DEADLINE)
+                .referenceId(postId)
+                .build();
+
+        notificationService.sendNotificationToUsers(notificationRequest);
+        log.info("Deadline reminder sent to {} students for post: {}", studentIds.size(), postId);
+    }
 }

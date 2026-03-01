@@ -21,4 +21,6 @@ public interface PostApi {
     PostResponseDto pinPost(String postId, PinPostRequest request);
 
     AssignmentResponse getAssignmentByPostId(String postId);
+
+    void sendDeadlineReminder(String postId);
 }
