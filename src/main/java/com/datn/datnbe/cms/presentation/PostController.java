@@ -79,4 +79,12 @@ public class PostController {
     public ResponseEntity<AppResponseDto<AssignmentResponse>> getAssignmentByPostId(@PathVariable String postId) {
         return ResponseEntity.ok(AppResponseDto.success(postApi.getAssignmentByPostId(postId)));
     }
+
+    @PostMapping("/posts/{postId}/send-deadline-reminder")
+    @RequireTeacherPermission
+    public ResponseEntity<AppResponseDto<Void>> sendDeadlineReminder(@PathVariable String postId) {
+        log.info("Sending deadline reminder for post: {}", postId);
+        postApi.sendDeadlineReminder(postId);
+        return ResponseEntity.ok(AppResponseDto.success());
+    }
 }

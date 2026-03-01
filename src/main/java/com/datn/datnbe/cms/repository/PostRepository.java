@@ -32,4 +32,14 @@ public interface PostRepository extends JpaRepository<Post, String> {
             WHERE p.id = :postId
             """, nativeQuery = true)
     AssignmentPost getAssignmentByPostId(String postId);
+
+    @Query(value = """
+            SELECT DISTINCT ce.student_id FROM class_enrollments ce
+            WHERE ce.class_id = :classId
+            AND ce.student_id NOT IN (
+                SELECT s.student_id FROM submissions s
+                WHERE s.post_id = :postId
+            )
+            """, nativeQuery = true)
+    java.util.List<String> findStudentsWithoutSubmissionByPost(String classId, String postId);
 }

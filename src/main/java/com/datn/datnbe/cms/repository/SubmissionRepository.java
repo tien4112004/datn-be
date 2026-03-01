@@ -116,4 +116,17 @@ public interface SubmissionRepository extends JpaRepository<Submission, String> 
      */
     @Query("SELECT COUNT(s) FROM Submission s WHERE s.studentId = :studentId")
     long countByStudentId(String studentId);
+
+    /**
+     * Find all students who haven't submitted for a specific post
+     */
+    @Query(value = """
+            SELECT DISTINCT ce.student_id FROM class_enrollments ce
+            WHERE ce.class_id = :classId
+            AND ce.student_id NOT IN (
+                SELECT s.student_id FROM submissions s
+                WHERE s.post_id = :postId
+            )
+            """, nativeQuery = true)
+    List<String> findStudentsWithoutSubmission(String classId, String postId);
 }
