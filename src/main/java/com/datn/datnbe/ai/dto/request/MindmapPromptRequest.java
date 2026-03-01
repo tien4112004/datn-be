@@ -1,6 +1,7 @@
 package com.datn.datnbe.ai.dto.request;
 
 import jakarta.validation.constraints.Size;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,4 +25,6 @@ public class MindmapPromptRequest {
 
     @Size(max = 100, message = "Subject must not exceed 100 characters")
     String subject;
+
+    List<String> fileUrls;
 }

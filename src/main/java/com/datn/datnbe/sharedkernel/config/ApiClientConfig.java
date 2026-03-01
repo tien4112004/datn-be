@@ -8,6 +8,7 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
+import java.time.Duration;
 import reactor.netty.http.HttpProtocol;
 import reactor.netty.http.client.HttpClient;
 
@@ -43,7 +44,9 @@ public class ApiClientConfig {
 
     @Bean(value = "basicWebClient")
     public WebClient webClient() {
-        HttpClient httpClient = HttpClient.create().protocol(HttpProtocol.HTTP11);
+        HttpClient httpClient = HttpClient.create()
+                .protocol(HttpProtocol.HTTP11)
+                .responseTimeout(Duration.ofMinutes(10)); // allow large file + LLM processing
         return WebClient.builder()
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .codecs(c -> c.defaultCodecs().maxInMemorySize(MAX_IN_MEMORY_SIZE))

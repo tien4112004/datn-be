@@ -1,7 +1,9 @@
 package com.datn.datnbe.ai.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Size;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,4 +27,8 @@ public class OutlinePromptRequest {
 
     @Size(max = 100, message = "Subject must not exceed 100 characters")
     String subject;
+
+    @JsonProperty("file_urls")
+    @JsonAlias("fileUrls")
+    List<String> fileUrls;
 }
