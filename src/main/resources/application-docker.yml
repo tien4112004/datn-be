@@ -91,6 +91,44 @@ server:
       enabled: true
       force: true
 
+# Actuator and Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  health:
+    probes:
+      enabled: true
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+logging:
+  level:
+    root: INFO
+    com.datn: DEBUG
+    org.springframework: INFO
+    org.hibernate: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{requestId}] %5p [%thread] %c{1}:%L - %m%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{requestId}] %5p [%thread] %c{1}:%L - %m%n"
+  file:
+    name: /opt/datn-be/app.log
+    max-size: 10MB
+    max-history: 10
+    total-size-cap: 100MB
+
 app:
   coin:
     initial: ${INITIAL_COIN_VALUE:100}
@@ -182,12 +220,6 @@ cloudflare:
     secretKey: ${S3_SECRET_KEY}
     bucket: ${S3_BUCKET}
     public-url: ${S3_PUBLIC_URL}
-
-logging:
-  level:
-    "org.springframework.data.mongodb.core.MongoTemplate": DEBUG
-    com.datn.datnbe.sharedkernel.security.interceptor: DEBUG
-    com.datn.datnbe.auth.config.SecurityConfig: WARN
 
 pexels:
   api:

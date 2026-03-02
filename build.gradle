@@ -59,6 +59,10 @@ dependencies {
     implementation 'org.apache.commons:commons-csv:1.10.0'
     implementation 'com.google.firebase:firebase-admin:9.2.0'
     implementation 'vn.payos:payos-java:2.0.1'
+    
+    // Monitoring and Observability
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'com.github.loki4j:loki-logback-appender:1.4.1'
 
     testImplementation 'io.projectreactor:reactor-test'
     testImplementation 'org.springframework.security:spring-security-test'
@@ -92,6 +96,7 @@ dependencyManagement {
         mavenBom "org.springframework.ai:spring-ai-bom:$springAiVersion"
         mavenBom "org.springframework.modulith:spring-modulith-bom:$springModulithVersion"
         mavenBom "org.testcontainers:testcontainers-bom:$testcontainersVersion"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:2023.0.1"
     }
 }
 
