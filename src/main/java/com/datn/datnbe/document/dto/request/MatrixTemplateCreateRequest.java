@@ -1,6 +1,9 @@
 package com.datn.datnbe.document.dto.request;
 
+import com.datn.datnbe.document.dto.AssignmentMatrixDto;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,6 +31,7 @@ public class MatrixTemplateCreateRequest {
     @Size(max = 10, message = "Grade must not exceed 10 characters")
     private String grade;
 
-    @NotBlank(message = "Matrix data is required")
-    private String matrixData;
+    @Valid
+    @NotNull(message = "Matrix data is required")
+    private AssignmentMatrixDto matrixData;
 }

@@ -1,5 +1,7 @@
 package com.datn.datnbe.document.dto.request;
 
+import com.datn.datnbe.document.dto.AssignmentMatrixDto;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,5 +21,6 @@ public class MatrixTemplateUpdateRequest {
     @Size(max = 255, message = "Name must not exceed 255 characters")
     private String name;
 
-    private String matrixData;
+    @Valid
+    private AssignmentMatrixDto matrixData;
 }
