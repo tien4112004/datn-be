@@ -115,30 +115,35 @@ public class UserProfileController {
         log.info("Received request to change password for user: {}", userId);
         UserProfileResponse user = userProfileApi.getUserProfile(userId);
 
+        // Step 1: Verify current password
         try {
-            // Verify current password by attempting to sign in
             SigninRequest verifyRequest = SigninRequest.builder()
                     .username(user.getEmail())
                     .password(request.getCurrentPassword())
                     .build();
-
-            // This will throw an exception if credentials are invalid
             authenticationService.signIn(verifyRequest);
-
-            // Update password via UserProfileAPI
-            userProfileApi.updatePassword(userId, request.getNewPassword());
-
-            log.info("Password changed successfully for user: {}", userId);
-
-            return ResponseEntity.ok(AppResponseDto.success(Map.of("message", "Password changed successfully")));
-
         } catch (Exception e) {
-            log.error("Failed to change password for user {}: {}", userId, e.getMessage());
+            log.warn("Password verification failed for user {}: {}", userId, e.getMessage());
             return ResponseEntity.badRequest()
                     .body(AppResponseDto.<Map<String, String>>builder()
                             .success(false)
                             .code(400)
-                            .data(Map.of("error", "Invalid current password or failed to update password"))
+                            .data(Map.of("error", "Invalid current password"))
+                            .build());
+        }
+
+        // Step 2: Update password
+        try {
+            userProfileApi.updatePassword(userId, request.getNewPassword());
+            log.info("Password changed successfully for user: {}", userId);
+            return ResponseEntity.ok(AppResponseDto.success(Map.of("message", "Password changed successfully")));
+        } catch (Exception e) {
+            log.error("Failed to update password for user {}: {}", userId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(AppResponseDto.<Map<String, String>>builder()
+                            .success(false)
+                            .code(500)
+                            .data(Map.of("error", "Failed to update password"))
                             .build());
         }
     }

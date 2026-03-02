@@ -51,8 +51,9 @@ public class AssignmentDeadlineReminderScheduler {
 
         long tomorrowEnd = tomorrowStart + (24 * 60 * 60 * 1000) - 1;
 
-        log.info("Checking for assignments with deadlines tomorrow (from {} to {})", 
-                new Date(tomorrowStart), new Date(tomorrowEnd));
+        log.info("Checking for assignments with deadlines tomorrow (from {} to {})",
+                new Date(tomorrowStart),
+                new Date(tomorrowEnd));
 
         // Fetch all posts (paginated to avoid memory issues)
         int page = 0;
@@ -64,15 +65,13 @@ public class AssignmentDeadlineReminderScheduler {
 
             for (Post post : posts.getContent()) {
                 // Check if post is an assignment with a deadline
-                if (post.getAssignmentId() != null && !post.getAssignmentId().isEmpty() &&
-                        post.getDueDate() != null) {
+                if (post.getAssignmentId() != null && !post.getAssignmentId().isEmpty() && post.getDueDate() != null) {
 
                     long dueTime = post.getDueDate().getTime();
 
                     // Check if deadline is tomorrow
                     if (dueTime >= tomorrowStart && dueTime <= tomorrowEnd) {
-                        log.info("Found assignment due tomorrow: post={}, dueDate={}", 
-                                post.getId(), post.getDueDate());
+                        log.info("Found assignment due tomorrow: post={}, dueDate={}", post.getId(), post.getDueDate());
                         sendReminderAsync(post);
                     }
                 }
@@ -94,8 +93,8 @@ public class AssignmentDeadlineReminderScheduler {
             log.info("Sending deadline reminder for post: {}", post.getId());
 
             // Get students who haven't submitted
-            List<String> studentIds = postRepository.findStudentsWithoutSubmissionByPost(
-                    post.getClassId(), post.getId());
+            List<String> studentIds = postRepository.findStudentsWithoutSubmissionByPost(post.getClassId(),
+                    post.getId());
 
             if (studentIds == null || studentIds.isEmpty()) {
                 return;
@@ -104,9 +103,8 @@ public class AssignmentDeadlineReminderScheduler {
             // Create reminder notification
             String assignmentTitle = "Nhắc nhở Hạn chót Bài tập";
             SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm dd/MM/yyyy");
-            String message = "Bạn chưa nộp bài tập. Hạn chót là " +
-                    dateFormat.format(post.getDueDate()) +
-                    ". Vui lòng nộp bài trước hạn chót.";
+            String message = "Bạn chưa nộp bài tập. Hạn chót là " + dateFormat.format(post.getDueDate())
+                    + ". Vui lòng nộp bài trước hạn chót.";
 
             SendNotificationToUsersRequest notificationRequest = SendNotificationToUsersRequest.builder()
                     .userIds(studentIds)

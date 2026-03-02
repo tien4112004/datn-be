@@ -386,7 +386,6 @@ public class UserProfileManagement implements UserProfileApi {
     }
 
     @Override
-    @Transactional
     public void updatePassword(String userId, String newPassword) {
         log.info("Updating password for user: {}", userId);
 
@@ -396,13 +395,17 @@ public class UserProfileManagement implements UserProfileApi {
         try {
             // Update password via Keycloak
             keycloakAuthService.setUserPassword(userProfile.getKeycloakUserId(), newPassword);
-            // Update password in Student entity if user is a student
+            // Update password in Student entity if user is a student (non-fatal)
             if ("student".equalsIgnoreCase(userProfile.getRole())) {
-                var student = studentRepository.findByUserId(userId);
-                if (student.isPresent()) {
-                    student.get().setPassword(newPassword);
-                    studentRepository.save(student.get());
-                    log.info("Student password updated in database for user: {}", userId);
+                try {
+                    var student = studentRepository.findByUserId(userId);
+                    if (student.isPresent()) {
+                        student.get().setPassword(newPassword);
+                        studentRepository.save(student.get());
+                        log.info("Student password updated in database for user: {}", userId);
+                    }
+                } catch (Exception ex) {
+                    log.warn("Failed to sync password to student table for user {}: {}", userId, ex.getMessage());
                 }
             }
             log.info("Password updated successfully for user: {}", userId);

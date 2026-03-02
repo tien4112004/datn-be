@@ -418,9 +418,9 @@ public class PostService implements PostApi {
 
         // Send notification to students who haven't submitted
         String assignmentTitle = "Nhắc nhở Hạn chót Bài tập";
-        String message = "Bạn chưa nộp bài tập. Hạn chót là " + 
-                        new java.text.SimpleDateFormat("HH:mm dd/MM/yyyy").format(post.getDueDate()) + 
-                        ". Vui lòng nộp bài trước hạn chót.";
+        String message = "Bạn chưa nộp bài tập. Hạn chót là "
+                + new java.text.SimpleDateFormat("HH:mm dd/MM/yyyy").format(post.getDueDate())
+                + ". Vui lòng nộp bài trước hạn chót.";
 
         SendNotificationToUsersRequest notificationRequest = SendNotificationToUsersRequest.builder()
                 .userIds(studentIds)
