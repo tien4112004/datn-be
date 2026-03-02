@@ -1,6 +1,9 @@
 package com.datn.datnbe.cms.service;
 
 import com.datn.datnbe.document.entity.questiondata.*;
+import com.datn.datnbe.ai.api.ContentGenerationApi;
+import com.datn.datnbe.ai.dto.request.AIGradeRequest;
+import com.datn.datnbe.ai.dto.response.AIGradeResponse;
 import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.dto.response.UserMinimalInfoDto;
 import com.datn.datnbe.cms.api.PostApi;
@@ -18,11 +21,13 @@ import com.datn.datnbe.cms.entity.answerData.AnswerData;
 import com.datn.datnbe.cms.entity.answerData.FillInBlankAnswer;
 import com.datn.datnbe.cms.entity.answerData.MatchingAnswer;
 import com.datn.datnbe.cms.entity.answerData.MultipleChoiceAnswer;
+import com.datn.datnbe.cms.entity.answerData.OpenEndedAnswer;
 import com.datn.datnbe.cms.mapper.SubmissionMapper;
 import com.datn.datnbe.cms.repository.AssignmentPostRepository;
 import com.datn.datnbe.cms.repository.SubmissionRepository;
+import com.datn.datnbe.document.dto.response.ContextResponse;
 import com.datn.datnbe.document.entity.Question;
-import com.datn.datnbe.document.entity.questiondata.BlankSegment;
+import com.datn.datnbe.document.service.ContextService;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
@@ -37,6 +42,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -50,6 +56,8 @@ public class SubmissionService implements SubmissionApi {
     private final PostApi postApi;
     private final UserProfileApi userProfileApi;
     private final AssignmentPostRepository assignmentPostRepository;
+    private final ContentGenerationApi contentGenerationApi;
+    private final ContextService contextService;
 
     @Override
     public synchronized SubmissionResponseDto createSubmission(String postId, SubmissionCreateRequest request) {
@@ -196,6 +204,7 @@ public class SubmissionService implements SubmissionApi {
 
             submission.setStatus("graded");
             submission.setScore(totalScore);
+            submission.setQuestions(answers);
 
             submissionRepository.save(submission);
             log.info("Grading completed for submission: {}. Score: {}", submission.getId(), totalScore);
@@ -229,6 +238,12 @@ public class SubmissionService implements SubmissionApi {
             case MATCHING : {
                 double point = gradeMatching(question, answer);
                 log.info("Question {} (MATCHING) - Points: {}", question.getId(), point);
+                answer.setPoint(point);
+                yield point;
+            }
+            case OPEN_ENDED : {
+                double point = gradeOpenEnded(question, answer);
+                log.info("Question {} (OPEN_ENDED) - Points: {}", question.getId(), point);
                 answer.setPoint(point);
                 yield point;
             }
@@ -349,6 +364,45 @@ public class SubmissionService implements SubmissionApi {
 
         log.info("  Matching total score: {}", totalScore);
         return totalScore;
+    }
+
+    private double gradeOpenEnded(Question question, AnswerData answer) {
+        OpenEndedData openEndedData = (OpenEndedData) question.getData();
+        OpenEndedAnswer openAnswer = (OpenEndedAnswer) answer.getAnswer();
+        if (openAnswer == null || openAnswer.getResponse() == null || openAnswer.getResponse().trim().isEmpty()) {
+            log.info("  No answer provided for question: {}", question.getId());
+            return 0;
+        }
+
+        ContextResponse context = null;
+        if (question.getContextId() != null) {
+            try {
+                context = contextService.getContextById(question.getContextId());
+            } catch (Exception e) {
+                log.warn("Could not fetch context for question: {}", question.getId(), e);
+            }
+        }
+
+        AIGradeRequest gradeRequest = AIGradeRequest.builder()
+                .questionContent(question.getTitle())
+                .questionExplaination(question.getExplanation())
+                .expectedAnswer(openEndedData.getExpectedAnswer())
+                .context(context != null ? context.getContent() : null)
+                .answerData(openAnswer.getResponse())
+                .maxScore(question.getPoint().doubleValue())
+                .grade(question.getGrade())
+                .subject(question.getSubject())
+                .chapter(question.getChapter())
+                .build();
+
+        AIGradeResponse gradeResponse = contentGenerationApi.gradeAnswer(gradeRequest, UUID.randomUUID().toString());
+        
+        // Set the AI feedback on the answer
+        if (gradeResponse.getFeedback() != null) {
+            answer.setFeedback(gradeResponse.getFeedback());
+        }
+        
+        return gradeResponse.getTotalScore();
     }
 
     // New methods for assignment feature alignment

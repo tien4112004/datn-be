@@ -311,6 +311,7 @@ public class AIModificationService {
     private void trackingTokenUsage(String traceId, String model, String provider, String operation, String request) {
         TokenUsageInfoDto token = phoenixQueryService.getTokenUsageFromPhoenix(traceId, operation);
         if (token != null) {
+            String userId = securityContextUtils.getCurrentUserProfileId();
             TokenUsage tokenUsage = TokenUsage.builder()
                     .model(model)
                     .provider(provider)
@@ -318,6 +319,7 @@ public class AIModificationService {
                     .inputTokens(token.getInputTokens())
                     .outputTokens(token.getOutputTokens())
                     .tokenCount(token.getTotalTokens())
+                    .userId(userId)
                     .requestBody(request)
                     .build();
             tokenUsageApi.recordTokenUsage(tokenUsage);
