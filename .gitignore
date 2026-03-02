@@ -64,3 +64,6 @@ keycloak-data/import/*.json
 keycloak-data/h2
 
 firebase-service-account.json
+
+# Logs folder
+logs/

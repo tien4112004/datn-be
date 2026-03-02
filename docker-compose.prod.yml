@@ -84,6 +84,13 @@ services:
       - /opt/datn-be/ai-primary-backend-selfsigned.key:/app/ssl/backend.key:ro
       - /opt/datn-be/ai-primary-backend.p12:/app/ssl/backend.p12:ro
       - /opt/datn-be/firebase-service-account.json:/app/firebase-service-account.json:ro
+      - ./logs:/opt/datn-be
+    logging:
+      driver: "json-file"
+      options:
+        labels: "service=datn-be"
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   network-aiprimary:

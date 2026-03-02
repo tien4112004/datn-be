@@ -68,6 +68,7 @@ services:
       - "8080:8080"
     volumes:
       - ./firebase-service-account.json:/app/firebase-service-account.json:ro
+      - ./logs:/opt/datn-be
 
 # TODO: When deploying to production, consider using a managed Keycloak service or set up Keycloak in a separate, secure environment.
   keycloak:

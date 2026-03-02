@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,15 +13,16 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Enumeration;
+import java.util.UUID;
 
 @Slf4j
 @Configuration
 public class RequestLoggingFilter {
 
     @Bean
-    public FilterRegistrationBean<RequestLoggingFilterImpl> loggingFilter() {
-        FilterRegistrationBean<RequestLoggingFilterImpl> registrationBean = new FilterRegistrationBean<>();
-        registrationBean.setFilter(new RequestLoggingFilterImpl());
+    public FilterRegistrationBean<RequestLoggingAndIdFilterImpl> loggingFilter() {
+        FilterRegistrationBean<RequestLoggingAndIdFilterImpl> registrationBean = new FilterRegistrationBean<>();
+        registrationBean.setFilter(new RequestLoggingAndIdFilterImpl());
         registrationBean.addUrlPatterns("/*");
         registrationBean.setOrder(0);
         registrationBean.setName("requestLoggingFilter");
@@ -28,24 +30,34 @@ public class RequestLoggingFilter {
     }
 
     @Slf4j
-    public static class RequestLoggingFilterImpl extends OncePerRequestFilter {
+    public static class RequestLoggingAndIdFilterImpl extends OncePerRequestFilter {
+
+        private static final String REQUEST_ID_HEADER = "X-Request-ID";
+        private static final String REQUEST_ID_MDC = "requestId";
 
         @Override
         protected void doFilterInternal(HttpServletRequest request,
                 HttpServletResponse response,
                 FilterChain filterChain) throws ServletException, IOException {
 
+            // 1. Generate/get request ID and put in MDC
+            String requestId = request.getHeader(REQUEST_ID_HEADER);
+            if (requestId == null || requestId.isEmpty()) {
+                requestId = UUID.randomUUID().toString();
+            }
+            MDC.put(REQUEST_ID_MDC, requestId);
+            response.setHeader(REQUEST_ID_HEADER, requestId);
+
+            // 2. Extract request information
             String contentType = request.getContentType();
             String method = request.getMethod();
-
-            long startTime = System.currentTimeMillis();
-
             String path = request.getRequestURI();
             String queryString = request.getQueryString();
             String origin = request.getHeader("Origin");
             String remoteAddr = getClientIp(request);
             String pathWithQuery = path + (queryString != null ? "?" + queryString : "");
-            getHeadersAsString(request);
+
+            long startTime = System.currentTimeMillis();
 
             // Log incoming request
             log.info(">>> REQUEST - Method: {}, Path: {}, Origin: {}, RemoteAddr: {}, ContentType: {}",
@@ -66,6 +78,9 @@ public class RequestLoggingFilter {
                         pathWithQuery,
                         status,
                         duration);
+
+                // 5. Clean up MDC
+                MDC.remove(REQUEST_ID_MDC);
             }
         }
 
