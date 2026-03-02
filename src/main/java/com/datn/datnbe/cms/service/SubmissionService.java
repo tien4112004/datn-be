@@ -396,12 +396,12 @@ public class SubmissionService implements SubmissionApi {
                 .build();
 
         AIGradeResponse gradeResponse = contentGenerationApi.gradeAnswer(gradeRequest, UUID.randomUUID().toString());
-        
+
         // Set the AI feedback on the answer
         if (gradeResponse.getFeedback() != null) {
             answer.setFeedback(gradeResponse.getFeedback());
         }
-        
+
         return gradeResponse.getTotalScore();
     }
 

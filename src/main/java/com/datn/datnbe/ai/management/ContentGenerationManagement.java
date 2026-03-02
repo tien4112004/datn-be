@@ -387,19 +387,20 @@ public class ContentGenerationManagement implements ContentGenerationApi {
 
     @Override
     public AIGradeResponse gradeAnswer(AIGradeRequest request, String traceId) {
-    
+
         log.info("Calling GenAI-Gateway at endpoint: {}", GRADE_ANSWER_API_ENDPOINT);
         try {
             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
             headers.set("X-Trace-ID", traceId);
 
-            AIGradeResponse response = aiApiClient.post(GRADE_ANSWER_API_ENDPOINT, request, AIGradeResponse.class, headers);
+            AIGradeResponse response = aiApiClient
+                    .post(GRADE_ANSWER_API_ENDPOINT, request, AIGradeResponse.class, headers);
             log.info("Successfully received grading response from GenAI-Gateway");
             return response;
         } catch (Exception e) {
             log.error("Error during answer grading", e);
             throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
-        }       
+        }
     }
-    
+
 }
