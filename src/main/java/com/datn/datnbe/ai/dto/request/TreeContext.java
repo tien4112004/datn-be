@@ -24,6 +24,7 @@ public class TreeContext {
     String mindmapDescription;
     String rootNodeContent;
     List<String> fullAncestryPath; // Ordered from root to immediate parent
+    List<String> existingChildrenContents; // Current children of the node being expanded
     String grade;
     String subject;
 }
