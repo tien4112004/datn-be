@@ -6,12 +6,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.datn.datnbe.payment.dto.request.SepayWebhookRequest;
+import com.datn.datnbe.payment.entity.CoinPackage;
 import com.datn.datnbe.payment.entity.PaymentTransaction;
 import com.datn.datnbe.payment.entity.PaymentTransaction.TransactionStatus;
+import com.datn.datnbe.payment.repository.CoinPackageRepository;
 import com.datn.datnbe.payment.repository.PaymentTransactionRepository;
-import com.datn.datnbe.sharedkernel.notification.dto.SendNotificationToUsersRequest;
-import com.datn.datnbe.sharedkernel.notification.enums.NotificationType;
-import com.datn.datnbe.sharedkernel.notification.service.NotificationService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,8 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 public class SepayWebhookService {
 
     private final PaymentTransactionRepository paymentTransactionRepository;
+    private final CoinPackageRepository coinPackageRepository;
     private final UserCoinService userCoinService;
-    private final NotificationService notificationService;
 
     @Transactional
     public void handle(SepayWebhookRequest webhookRequest) {
@@ -71,30 +70,41 @@ public class SepayWebhookService {
                     tx.setCompletedAt(new Date());
 
                     long coins = 0L;
-                    if (orderAmount != null)
-                        coins = orderAmount.longValue() / 1000L;
-                    userCoinService.addCoin(tx.getUserId(), coins, "sepay");
+                    long bonusCoins = 0L;
 
-                    // send push + app notification to the user (if they have device tokens)
-                    try {
-                        SendNotificationToUsersRequest notif = SendNotificationToUsersRequest.builder()
-                                .userIds(java.util.List.of(tx.getUserId()))
-                                .title("Thanh toán thành công")
-                                .body(String.format("Giao dịch %s: +%d coins — đã được xác nhận",
-                                        tx.getReferenceCode(),
-                                        coins))
-                                .type(NotificationType.SYSTEM)
-                                .referenceId(tx.getId())
-                                .data(java.util.Map.of("transactionId", tx.getId(), "status", "COMPLETED"))
-                                .build();
-                        notificationService.sendNotificationToUsers(notif);
-                    } catch (Exception e) {
-                        log.warn("Failed to send payment notification for tx {}: {}", tx.getId(), e.getMessage());
+                    if (orderAmount != null) {
+                        Long amountVnd = orderAmount.longValue();
+                        coins = amountVnd / 1000L;
+
+                        // Query CoinPackage to get bonus coins based on price
+                        var coinPackageOpt = coinPackageRepository.findByPrice(amountVnd);
+                        if (coinPackageOpt.isPresent()) {
+                            CoinPackage pkg = coinPackageOpt.get();
+                            bonusCoins = pkg.getBonus() != null ? pkg.getBonus() : 0L;
+                            log.info("Found coin package: {} for price: {}, bonus: {}",
+                                    pkg.getName(),
+                                    amountVnd,
+                                    bonusCoins);
+                        } else {
+                            // Package not found: apply 7.5% bonus if amount >= 100k
+                            if (amountVnd >= 100000L) {
+                                bonusCoins = Math.round(coins * 0.075);
+                                log.info("No coin package found for price: {}, applying 7.5% bonus: {}",
+                                        amountVnd,
+                                        bonusCoins);
+                            } else {
+                                log.info("No coin package found for price: {} (< 100k), no bonus applied", amountVnd);
+                            }
+                        }
                     }
+
+                    // Add coins (base + bonus)
+                    long totalCoins = coins + bonusCoins;
+                    userCoinService.addCoin(tx.getUserId(), totalCoins, "sepay");
 
                     log.info("Payment completed (webhook): {} - added {} coins to user {}",
                             tx.getId(),
-                            coins,
+                            totalCoins,
                             tx.getUserId());
                 } else {
                     log.info("Webhook CAPTURED but tx already COMPLETED: {}", tx.getId());
@@ -102,57 +112,12 @@ public class SepayWebhookService {
             } else if ("CANCELLED".equalsIgnoreCase(orderStatus)) {
                 tx.setStatus(TransactionStatus.CANCELLED);
                 log.info("Payment cancelled (webhook): {}", tx.getId());
-
-                // notify user about cancelled transaction
-                try {
-                    SendNotificationToUsersRequest notif = SendNotificationToUsersRequest.builder()
-                            .userIds(java.util.List.of(tx.getUserId()))
-                            .title("Thanh toán bị hủy")
-                            .body(String.format("Giao dịch %s đã bị hủy", tx.getReferenceCode()))
-                            .type(NotificationType.SYSTEM)
-                            .referenceId(tx.getId())
-                            .data(java.util.Map.of("transactionId", tx.getId(), "status", "CANCELLED"))
-                            .build();
-                    notificationService.sendNotificationToUsers(notif);
-                } catch (Exception e) {
-                    log.warn("Failed to send payment cancelled notification for tx {}: {}", tx.getId(), e.getMessage());
-                }
             } else if ("AUTHENTICATION_NOT_NEEDED".equalsIgnoreCase(orderStatus)) {
                 tx.setStatus(TransactionStatus.PENDING);
                 log.info("Payment pending (webhook): {}", tx.getId());
-
-                // optional: notify user that payment is pending
-                try {
-                    SendNotificationToUsersRequest notif = SendNotificationToUsersRequest.builder()
-                            .userIds(java.util.List.of(tx.getUserId()))
-                            .title("Thanh toán đang chờ")
-                            .body(String.format("Giao dịch %s đang chờ xác nhận", tx.getReferenceCode()))
-                            .type(NotificationType.SYSTEM)
-                            .referenceId(tx.getId())
-                            .data(java.util.Map.of("transactionId", tx.getId(), "status", "PENDING"))
-                            .build();
-                    notificationService.sendNotificationToUsers(notif);
-                } catch (Exception e) {
-                    log.warn("Failed to send payment pending notification for tx {}: {}", tx.getId(), e.getMessage());
-                }
             } else {
                 tx.setStatus(TransactionStatus.FAILED);
                 log.info("Payment failed (webhook) status={}: {}", orderStatus, tx.getId());
-
-                // notify user about failed transaction
-                try {
-                    SendNotificationToUsersRequest notif = SendNotificationToUsersRequest.builder()
-                            .userIds(java.util.List.of(tx.getUserId()))
-                            .title("Thanh toán thất bại")
-                            .body(String.format("Giao dịch %s: thanh toán không thành công", tx.getReferenceCode()))
-                            .type(NotificationType.SYSTEM)
-                            .referenceId(tx.getId())
-                            .data(java.util.Map.of("transactionId", tx.getId(), "status", "FAILED"))
-                            .build();
-                    notificationService.sendNotificationToUsers(notif);
-                } catch (Exception e) {
-                    log.warn("Failed to send payment failed notification for tx {}: {}", tx.getId(), e.getMessage());
-                }
             }
 
             // prefer Sepay transaction id from nested `transaction` object, fall back to orderId

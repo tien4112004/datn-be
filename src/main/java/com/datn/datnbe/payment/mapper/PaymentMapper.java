@@ -1,7 +1,9 @@
 package com.datn.datnbe.payment.mapper;
 
+import com.datn.datnbe.payment.dto.CoinPackageDto;
 import com.datn.datnbe.payment.dto.CoinUsageTransactionDto;
 import com.datn.datnbe.payment.dto.UserCoinDto;
+import com.datn.datnbe.payment.entity.CoinPackage;
 import com.datn.datnbe.payment.entity.CoinUsageTransaction;
 import com.datn.datnbe.payment.entity.UserCoin;
 import com.datn.datnbe.payment.entity.PaymentTransaction;
@@ -19,4 +21,10 @@ public interface PaymentMapper {
 
     // Map PaymentTransaction -> TransactionDetailsDto
     com.datn.datnbe.payment.dto.response.TransactionDetailsDto toTransactionDetailsDto(PaymentTransaction transaction);
+
+    // Map CoinPackage -> CoinPackageDto
+    CoinPackageDto toCoinPackageDTO(CoinPackage coinPackage);
+
+    // Map CoinPackageDto -> CoinPackage
+    CoinPackage toCoinPackageEntity(CoinPackageDto dto);
 }

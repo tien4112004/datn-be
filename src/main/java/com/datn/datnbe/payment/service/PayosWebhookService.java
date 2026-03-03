@@ -7,12 +7,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.datn.datnbe.payment.dto.request.PayosWebhookRequest;
+import com.datn.datnbe.payment.entity.CoinPackage;
 import com.datn.datnbe.payment.entity.PaymentTransaction;
 import com.datn.datnbe.payment.entity.PaymentTransaction.TransactionStatus;
+import com.datn.datnbe.payment.repository.CoinPackageRepository;
 import com.datn.datnbe.payment.repository.PaymentTransactionRepository;
-import com.datn.datnbe.sharedkernel.notification.dto.SendNotificationToUsersRequest;
-import com.datn.datnbe.sharedkernel.notification.enums.NotificationType;
-import com.datn.datnbe.sharedkernel.notification.service.NotificationService;
 
 import vn.payos.PayOS;
 import vn.payos.exception.WebhookException;
@@ -35,8 +34,8 @@ public class PayosWebhookService {
     private String checksumKey;
 
     private final PaymentTransactionRepository paymentTransactionRepository;
+    private final CoinPackageRepository coinPackageRepository;
     private final UserCoinService userCoinService;
-    private final NotificationService notificationService;
 
     private PayOS payOSClient;
 
@@ -98,32 +97,41 @@ public class PayosWebhookService {
 
                     // Calculate coins (1000 VND = 1 coin)
                     long coins = 0L;
-                    if (amount != null) {
-                        coins = amount.longValue() / 1000L;
-                    }
-                    userCoinService.addCoin(tx.getUserId(), coins, "payos");
+                    long bonusCoins = 0L;
 
-                    // Send notification to user
-                    try {
-                        SendNotificationToUsersRequest notif = SendNotificationToUsersRequest.builder()
-                                .userIds(java.util.List.of(tx.getUserId()))
-                                .title("Thanh toán thành công")
-                                .body(String.format("Giao dịch %s: +%d coins — đã được xác nhận qua PayOS",
-                                        tx.getReferenceCode(),
-                                        coins))
-                                .type(NotificationType.SYSTEM)
-                                .referenceId(tx.getId())
-                                .data(java.util.Map
-                                        .of("transactionId", tx.getId(), "status", "COMPLETED", "gateway", "PAYOS"))
-                                .build();
-                        notificationService.sendNotificationToUsers(notif);
-                    } catch (Exception e) {
-                        log.warn("Failed to send PayOS payment notification for tx {}: {}", tx.getId(), e.getMessage());
+                    if (amount != null) {
+                        Long amountVnd = amount.longValue();
+                        coins = amountVnd / 1000L;
+
+                        // Query CoinPackage to get bonus coins based on price
+                        var coinPackageOpt = coinPackageRepository.findByPrice(amountVnd);
+                        if (coinPackageOpt.isPresent()) {
+                            CoinPackage pkg = coinPackageOpt.get();
+                            bonusCoins = pkg.getBonus() != null ? pkg.getBonus() : 0L;
+                            log.info("Found coin package: {} for price: {}, bonus: {}",
+                                    pkg.getName(),
+                                    amountVnd,
+                                    bonusCoins);
+                        } else {
+                            // Package not found: apply 7.5% bonus if amount >= 100k
+                            if (amountVnd >= 100000L) {
+                                bonusCoins = Math.round(coins * 0.075);
+                                log.info("No coin package found for price: {}, applying 7.5% bonus: {}",
+                                        amountVnd,
+                                        bonusCoins);
+                            } else {
+                                log.info("No coin package found for price: {} (< 100k), no bonus applied", amountVnd);
+                            }
+                        }
                     }
+
+                    // Add coins (base + bonus)
+                    long totalCoins = coins + bonusCoins;
+                    userCoinService.addCoin(tx.getUserId(), totalCoins, "payos");
 
                     log.info("PayOS payment completed (webhook): {} - added {} coins to user {}",
                             tx.getId(),
-                            coins,
+                            totalCoins,
                             tx.getUserId());
                 } else {
                     log.info("PayOS webhook received but tx already COMPLETED: {}", tx.getId());
@@ -134,46 +142,10 @@ public class PayosWebhookService {
                 tx.setStatus(TransactionStatus.CANCELLED);
                 log.info("PayOS payment cancelled (webhook): {}", tx.getId());
 
-                // Notify user about cancelled transaction
-                try {
-                    SendNotificationToUsersRequest notif = SendNotificationToUsersRequest.builder()
-                            .userIds(java.util.List.of(tx.getUserId()))
-                            .title("Thanh toán bị hủy")
-                            .body(String.format("Giao dịch %s đã bị hủy trên PayOS", tx.getReferenceCode()))
-                            .type(NotificationType.SYSTEM)
-                            .referenceId(tx.getId())
-                            .data(java.util.Map
-                                    .of("transactionId", tx.getId(), "status", "CANCELLED", "gateway", "PAYOS"))
-                            .build();
-                    notificationService.sendNotificationToUsers(notif);
-                } catch (Exception e) {
-                    log.warn("Failed to send PayOS payment cancelled notification for tx {}: {}",
-                            tx.getId(),
-                            e.getMessage());
-                }
-
             } else {
                 // Payment failed
                 tx.setStatus(TransactionStatus.FAILED);
                 log.info("PayOS payment failed (webhook) code={}: {}", code, tx.getId());
-
-                // Notify user about failed transaction
-                try {
-                    SendNotificationToUsersRequest notif = SendNotificationToUsersRequest.builder()
-                            .userIds(java.util.List.of(tx.getUserId()))
-                            .title("Thanh toán thất bại")
-                            .body(String.format("Giao dịch %s: thanh toán không thành công trên PayOS",
-                                    tx.getReferenceCode()))
-                            .type(NotificationType.SYSTEM)
-                            .referenceId(tx.getId())
-                            .data(java.util.Map.of("transactionId", tx.getId(), "status", "FAILED", "gateway", "PAYOS"))
-                            .build();
-                    notificationService.sendNotificationToUsers(notif);
-                } catch (Exception e) {
-                    log.warn("Failed to send PayOS payment failed notification for tx {}: {}",
-                            tx.getId(),
-                            e.getMessage());
-                }
             }
 
             // Store PayOS payment link ID
