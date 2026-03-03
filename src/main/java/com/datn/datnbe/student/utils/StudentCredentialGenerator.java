@@ -16,7 +16,9 @@ public final class StudentCredentialGenerator {
             throw new IllegalArgumentException("Full name cannot be null or blank");
         }
 
-        String nameBase = extractMiddleAndLastName(fullName);
+        String nameBase = extractMiddleAndLastName(fullName)
+                .replace("Đ", "d")
+                .replace("đ", "d");
 
         String normalized = Normalizer.normalize(nameBase, Normalizer.Form.NFD)
                 .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
