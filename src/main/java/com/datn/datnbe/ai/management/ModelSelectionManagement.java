@@ -2,6 +2,7 @@ package com.datn.datnbe.ai.management;
 
 import com.datn.datnbe.ai.api.ModelSelectionApi;
 import com.datn.datnbe.ai.config.chatmodelconfiguration.ModelProperties;
+import com.datn.datnbe.ai.dto.request.CreateModelRequest;
 import com.datn.datnbe.ai.dto.request.UpdateModelStatusRequest;
 import com.datn.datnbe.ai.dto.response.ModelResponseDto;
 import com.datn.datnbe.ai.entity.ModelConfigurationEntity;
@@ -32,7 +33,8 @@ public class ModelSelectionManagement implements ModelSelectionApi {
     public List<ModelResponseDto> getModelConfigurations() {
         return modelConfigurationRepo.findAll()
                 .stream()
-                .sorted(Comparator.comparing(ModelConfigurationEntity::getProvider))
+                .sorted(Comparator.comparing(ModelConfigurationEntity::getProvider)
+                        .thenComparing(ModelConfigurationEntity::getModelId))
                 .map(modelDataMapper::toModelResponseDto)
                 .toList();
     }
@@ -44,7 +46,8 @@ public class ModelSelectionManagement implements ModelSelectionApi {
         } else {
             return modelConfigurationRepo.findAllByModelType(modelType)
                     .stream()
-                    .sorted(Comparator.comparing(ModelConfigurationEntity::getProvider))
+                    .sorted(Comparator.comparing(ModelConfigurationEntity::getProvider)
+                            .thenComparing(ModelConfigurationEntity::getModelId))
                     .map(modelDataMapper::toModelResponseDto)
                     .toList();
         }
@@ -132,6 +135,26 @@ public class ModelSelectionManagement implements ModelSelectionApi {
         modelEntity.setDefault(modelInfo.isDefaultModel());
 
         modelConfigurationRepo.save(modelEntity);
+    }
+
+    @Override
+    @Transactional
+    public ModelResponseDto createModel(CreateModelRequest request) {
+        if (modelConfigurationRepo.existsByModelNameAndModelType(request.getModelName(), request.getModelType())) {
+            throw new AppException(ErrorCode.RESOURCE_ALREADY_EXISTS,
+                    "Model '" + request.getModelName() + "' already exists for type " + request.getModelType());
+        }
+
+        ModelConfigurationEntity entity = new ModelConfigurationEntity();
+        entity.setModelName(request.getModelName());
+        entity.setDisplayName(request.getDisplayName());
+        entity.setProvider(request.getProvider());
+        entity.setModelType(request.getModelType());
+        entity.setEnabled(true);
+        entity.setDefault(false);
+
+        ModelConfigurationEntity saved = modelConfigurationRepo.save(entity);
+        return modelDataMapper.toModelResponseDto(saved);
     }
 
     @Override

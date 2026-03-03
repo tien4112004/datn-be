@@ -16,8 +16,12 @@ public class CookieBearerTokenResolver implements BearerTokenResolver {
     private final OriginValidator originValidator;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
+    // Endpoints that are fully public (all HTTP methods)
     private static final String[] PUBLIC_ENDPOINTS = {"/public/**", "/api/auth/**", "/api/admin/auth/**",
-            "/api/resources/register", "/v3/**", "/api/models", "/api/models/**", "/api/slide-themes",
+            "/api/resources/register", "/v3/**"};
+
+    // Endpoints that are only public for GET requests (non-GET requires authentication)
+    private static final String[] PUBLIC_GET_ONLY_ENDPOINTS = {"/api/models", "/api/models/**", "/api/slide-themes",
             "/api/slide-themes/**", "/api/slide-templates", "/api/slide-templates/**"};
 
     public CookieBearerTokenResolver(String cookieName, OriginValidator originValidator) {
@@ -29,11 +33,21 @@ public class CookieBearerTokenResolver implements BearerTokenResolver {
     @Override
     public String resolve(HttpServletRequest request) {
         String requestPath = request.getRequestURI();
+        String method = request.getMethod();
 
-        // Skip token extraction for public endpoints
+        // Skip token extraction for fully public endpoints
         for (String publicEndpoint : PUBLIC_ENDPOINTS) {
             if (pathMatcher.match(publicEndpoint, requestPath)) {
                 return null;
+            }
+        }
+
+        // Skip token extraction only for GET requests on GET-only public endpoints
+        if ("GET".equalsIgnoreCase(method)) {
+            for (String publicGetEndpoint : PUBLIC_GET_ONLY_ENDPOINTS) {
+                if (pathMatcher.match(publicGetEndpoint, requestPath)) {
+                    return null;
+                }
             }
         }
 

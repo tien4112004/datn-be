@@ -1,6 +1,7 @@
 package com.datn.datnbe.ai.api;
 
 import com.datn.datnbe.ai.config.chatmodelconfiguration.ModelProperties;
+import com.datn.datnbe.ai.dto.request.CreateModelRequest;
 import com.datn.datnbe.ai.dto.request.UpdateModelStatusRequest;
 import com.datn.datnbe.ai.dto.response.ModelResponseDto;
 import com.datn.datnbe.ai.enums.ModelType;
@@ -75,4 +76,12 @@ public interface ModelSelectionApi {
      * @param modelName the name of the model to remove
      */
     void removeModelByName(String modelName);
+
+    /**
+     * Creates a new model configuration.
+     *
+     * @param request the request containing the model information to create
+     * @return a ModelResponseDto containing the created model information
+     */
+    ModelResponseDto createModel(CreateModelRequest request);
 }
