@@ -1,5 +1,6 @@
 package com.datn.datnbe.cms.api;
 
+import com.datn.datnbe.cms.dto.request.AssignmentRenameRequest;
 import com.datn.datnbe.cms.dto.request.PinPostRequest;
 import com.datn.datnbe.cms.dto.request.PostCreateRequest;
 import com.datn.datnbe.cms.dto.request.PostUpdateRequest;
@@ -21,6 +22,8 @@ public interface PostApi {
     PostResponseDto pinPost(String postId, PinPostRequest request);
 
     AssignmentResponse getAssignmentByPostId(String postId);
+
+    AssignmentResponse renameAssignment(String assignmentId, AssignmentRenameRequest request);
 
     void sendDeadlineReminder(String postId);
 }

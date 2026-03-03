@@ -1,6 +1,7 @@
 package com.datn.datnbe.cms.presentation;
 
 import com.datn.datnbe.cms.api.PostApi;
+import com.datn.datnbe.cms.dto.request.AssignmentRenameRequest;
 import com.datn.datnbe.cms.dto.request.PinPostRequest;
 import com.datn.datnbe.cms.dto.request.PostCreateRequest;
 import com.datn.datnbe.cms.dto.request.PostUpdateRequest;
@@ -78,6 +79,13 @@ public class PostController {
     @GetMapping("/posts/{postId}/assignment")
     public ResponseEntity<AppResponseDto<AssignmentResponse>> getAssignmentByPostId(@PathVariable String postId) {
         return ResponseEntity.ok(AppResponseDto.success(postApi.getAssignmentByPostId(postId)));
+    }
+
+    @PatchMapping("/posts/assignment/{assignmentId}/rename")
+    @RequireTeacherPermission
+    public ResponseEntity<AppResponseDto<AssignmentResponse>> renameAssignment(@PathVariable String assignmentId,
+            @Valid @RequestBody AssignmentRenameRequest request) {
+        return ResponseEntity.ok(AppResponseDto.success(postApi.renameAssignment(assignmentId, request)));
     }
 
     @PostMapping("/posts/{postId}/send-deadline-reminder")
