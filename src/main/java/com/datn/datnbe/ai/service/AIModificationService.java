@@ -1,9 +1,11 @@
 package com.datn.datnbe.ai.service;
 
+import com.datn.datnbe.ai.api.CoinPricingApi;
 import com.datn.datnbe.ai.api.TokenUsageApi;
 import com.datn.datnbe.ai.apiclient.AIApiClient;
 import com.datn.datnbe.ai.dto.AIModificationResponse; // Use the one we created or move it
 import com.datn.datnbe.ai.dto.request.ExpandCombinedTextRequest;
+import com.datn.datnbe.ai.dto.request.GenerateSlidesRequest;
 import com.datn.datnbe.ai.dto.request.ImageGenerateRequest;
 import com.datn.datnbe.ai.dto.request.ImagePromptRequest;
 import com.datn.datnbe.ai.dto.request.RefineContentRequest;
@@ -49,6 +51,7 @@ public class AIModificationService {
     private final SecurityContextUtils securityContextUtils;
     private final PhoenixQueryService phoenixQueryService;
     private final TokenUsageApi tokenUsageApi;
+    private final CoinPricingApi coinPricingApi;
     private final ObjectMapper objectMapper;
 
     // These endpoints must match the AI Worker's router
@@ -56,6 +59,7 @@ public class AIModificationService {
     private static final String AI_LAYOUT_ENDPOINT = "/api/modification/layout";
     private static final String AI_REFINE_TEXT_ENDPOINT = "/api/modification/refine-text";
     private static final String AI_REFINE_COMBINED_TEXT_ENDPOINT = "/api/modification/refine-combined-text";
+    private static final String AI_GENERATE_SLIDES_ENDPOINT = "/api/slides/generate";
 
     public AIModificationResponse refineContent(RefineContentRequest request) {
         log.info("Refining content for slide: {}", request.getContext().getSlideId());
@@ -259,6 +263,77 @@ public class AIModificationService {
         return response;
     }
 
+    public AIModificationResponse generateSlides(GenerateSlidesRequest request) {
+        log.info("Generating {} slides with prompt: {}",
+                request.getSlideCount(),
+                request.getPrompt().substring(0, Math.min(100, request.getPrompt().length())));
+
+        if (request.getModel() == null) {
+            request.setModel("gemini-2.0-flash-exp");
+        }
+        if (request.getProvider() == null) {
+            request.setProvider("google");
+        }
+        if (request.getLanguage() == null) {
+            request.setLanguage("vi");
+        }
+
+        String traceId = UUID.randomUUID().toString();
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Trace-ID", traceId);
+
+        // Build payload with snake_case keys for GenAI
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("prompt", request.getPrompt());
+        payload.put("slide_count", request.getSlideCount());
+        payload.put("model", request.getModel());
+        payload.put("provider", request.getProvider());
+        payload.put("language", request.getLanguage());
+        if (request.getArtStyle() != null)
+            payload.put("art_style", request.getArtStyle());
+        if (request.getImageModel() != null)
+            payload.put("image_model", request.getImageModel());
+        if (request.getImageProvider() != null)
+            payload.put("image_provider", request.getImageProvider());
+        if (request.getNegativePrompt() != null)
+            payload.put("negative_prompt", request.getNegativePrompt());
+        if (request.getContext() != null)
+            payload.put("context", request.getContext());
+
+        // GenAI returns {data: {schemas: [...]}, token_usage: {...}} — no 'success' field,
+        // so deserialize as Map and wrap with AIModificationResponse.success()
+        @SuppressWarnings("unchecked") Map<String, Object> genaiResponse = aiApiClient
+                .post(AI_GENERATE_SLIDES_ENDPOINT, payload, Map.class, headers);
+
+        Object data = genaiResponse.get("data");
+
+        String requestBody = "";
+        try {
+            requestBody = objectMapper.writeValueAsString(request);
+        } catch (Exception e) {
+            log.error("Failed to serialize generate slides request for token usage tracking", e);
+        }
+
+        recordSlideGenerationTokenUsage(traceId,
+                request.getModel(),
+                request.getProvider(),
+                "generate_slides",
+                traceId,
+                requestBody);
+
+        // Include documentId (traceId) in response so FE can use it for image tracking
+        Map<String, Object> responseData = new HashMap<>();
+        if (data instanceof Map) {
+            @SuppressWarnings("unchecked") Map<String, Object> dataMap = (Map<String, Object>) data;
+            responseData.putAll(dataMap);
+        } else {
+            responseData.put("schemas", data);
+        }
+        responseData.put("documentId", traceId);
+
+        return AIModificationResponse.success(responseData);
+    }
+
     /**
      * Set default model and provider if they are null.
      * This provides backward compatibility for clients that don't yet send these fields.
@@ -304,6 +379,43 @@ public class AIModificationService {
             if (req.getProvider() == null) {
                 req.setProvider("google");
             }
+        }
+    }
+
+    @Async
+    private void recordSlideGenerationTokenUsage(String traceId,
+            String model,
+            String provider,
+            String operation,
+            String documentId,
+            String requestBody) {
+        try {
+            TokenUsageInfoDto tokenUsageInfo = phoenixQueryService.getTokenUsageFromPhoenix(traceId, operation);
+            if (tokenUsageInfo != null && tokenUsageInfo.getTotalTokens() != null) {
+                String userId = securityContextUtils.getCurrentUserProfileId();
+                Long priceInCoins = coinPricingApi.getTokenPriceInCoins(model, provider, "SLIDE");
+
+                TokenUsage tokenUsage = TokenUsage.builder()
+                        .userId(userId)
+                        .request(operation)
+                        .inputTokens(tokenUsageInfo.getInputTokens())
+                        .outputTokens(tokenUsageInfo.getOutputTokens())
+                        .tokenCount(tokenUsageInfo.getTotalTokens())
+                        .model(model)
+                        .provider(provider)
+                        .documentId(documentId)
+                        .requestBody(requestBody)
+                        .actualPrice(tokenUsageInfo.getTotalPrice())
+                        .calculatedPrice(priceInCoins)
+                        .build();
+
+                tokenUsageApi.recordTokenUsage(tokenUsage);
+                log.info("Slide generation token usage recorded with coin price: {} for document: {}",
+                        priceInCoins,
+                        documentId);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to record slide generation token usage for traceId: {}", traceId, e);
         }
     }
 

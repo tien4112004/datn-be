@@ -2,6 +2,7 @@ package com.datn.datnbe.ai.controller;
 
 import com.datn.datnbe.ai.dto.AIModificationResponse;
 import com.datn.datnbe.ai.dto.request.ExpandCombinedTextRequest;
+import com.datn.datnbe.ai.dto.request.GenerateSlidesRequest;
 import com.datn.datnbe.ai.dto.request.RefineContentRequest;
 import com.datn.datnbe.ai.dto.request.RefineElementTextRequest;
 import com.datn.datnbe.ai.dto.request.ReplaceElementImageRequest;
@@ -41,5 +42,10 @@ public class AIModificationController {
     @PostMapping("/refine-combined-text")
     public ResponseEntity<AIModificationResponse> refineCombinedText(@RequestBody ExpandCombinedTextRequest request) {
         return ResponseEntity.ok(modificationService.refineCombinedText(request));
+    }
+
+    @PostMapping("/generate-slides")
+    public ResponseEntity<AIModificationResponse> generateSlides(@RequestBody GenerateSlidesRequest request) {
+        return ResponseEntity.ok(modificationService.generateSlides(request));
     }
 }
