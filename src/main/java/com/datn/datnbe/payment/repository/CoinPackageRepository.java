@@ -23,7 +23,14 @@ public interface CoinPackageRepository extends JpaRepository<CoinPackage, String
     Optional<CoinPackage> findByName(String name);
 
     /**
-     * Get a coin package by price (to find bonus coins after payment)
+     * Get an active coin package by price (to find bonus coins after payment)
+     * If multiple packages have the same price, returns the one with highest bonus
      */
+    @Query("SELECT cp FROM CoinPackage cp WHERE cp.price = :price AND cp.isActive = true ORDER BY cp.bonus DESC LIMIT 1")
     Optional<CoinPackage> findByPrice(Long price);
+
+    /**
+     * Check if a coin package with given name exists
+     */
+    boolean existsByName(String name);
 }

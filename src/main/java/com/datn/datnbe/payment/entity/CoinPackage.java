@@ -29,6 +29,9 @@ public class CoinPackage {
     private Long price; // Price in VND (e.g., 100000) - 1k VND = 1 coin
 
     @Column(nullable = false)
+    private Long coin; // Number of coins for this package (price / 1000)
+
+    @Column(nullable = false)
     @Builder.Default
     private Long bonus = 0L; // Bonus coins (e.g., 10)
 

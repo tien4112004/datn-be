@@ -9,14 +9,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.datn.datnbe.payment.api.PaymentApi;
-import com.datn.datnbe.payment.dto.CoinPackageDto;
 import com.datn.datnbe.payment.dto.CoinUsageTransactionDto;
 import com.datn.datnbe.payment.dto.UserCoinDto;
 import com.datn.datnbe.payment.dto.request.CreateCheckoutRequest;
 import com.datn.datnbe.payment.dto.request.SepayWebhookRequest;
 import com.datn.datnbe.payment.dto.response.CheckoutResponse;
 import com.datn.datnbe.payment.dto.response.TransactionDetailsDto;
-import com.datn.datnbe.payment.service.CoinPackageService;
 import com.datn.datnbe.payment.service.PaymentService;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
@@ -27,8 +25,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/payments")
@@ -41,7 +37,6 @@ public class PaymentController {
 
     PaymentApi paymentApi;
     PaymentService paymentService;
-    CoinPackageService coinPackageService;
     SecurityContextUtils securityContextUtils;
 
     @PostMapping("/checkout/create")
@@ -55,38 +50,6 @@ public class PaymentController {
         return ResponseEntity.ok(AppResponseDto.<CheckoutResponse>builder()
                 .data(response)
                 .message("Checkout created successfully. Redirect to checkoutUrl")
-                .build());
-    }
-
-    /**
-     * Get all available coin packages for user
-     * Endpoint: GET /api/payments/coin-packages
-     */
-    @GetMapping("/coin-packages")
-    public ResponseEntity<AppResponseDto<List<CoinPackageDto>>> getAllCoinPackages() {
-        log.info("Fetching all available coin packages");
-
-        List<CoinPackageDto> packages = coinPackageService.getAllActivePackages();
-
-        return ResponseEntity.ok(AppResponseDto.<List<CoinPackageDto>>builder()
-                .data(packages)
-                .message("Coin packages retrieved successfully")
-                .build());
-    }
-
-    /**
-     * Get a specific coin package by ID
-     * Endpoint: GET /api/payments/coin-packages/{packageId}
-     */
-    @GetMapping("/coin-packages/{packageId}")
-    public ResponseEntity<AppResponseDto<CoinPackageDto>> getCoinPackage(@PathVariable String packageId) {
-        log.info("Fetching coin package: {}", packageId);
-
-        CoinPackageDto packageDto = coinPackageService.getPackageById(packageId);
-
-        return ResponseEntity.ok(AppResponseDto.<CoinPackageDto>builder()
-                .data(packageDto)
-                .message("Coin package retrieved successfully")
                 .build());
     }
 

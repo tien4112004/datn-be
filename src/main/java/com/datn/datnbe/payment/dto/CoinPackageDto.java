@@ -15,5 +15,6 @@ public class CoinPackageDto {
     private String id;
     private String name;
     private Long price;
+    private Long coin;
     private Long bonus;
 }
