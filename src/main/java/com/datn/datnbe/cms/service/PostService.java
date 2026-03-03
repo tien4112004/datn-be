@@ -6,6 +6,7 @@ import com.datn.datnbe.auth.dto.request.ResourceRegistrationRequest;
 import com.datn.datnbe.auth.dto.response.UserMinimalInfoDto;
 import com.datn.datnbe.cms.api.PostApi;
 import com.datn.datnbe.cms.dto.LinkedResourceDto;
+import com.datn.datnbe.cms.dto.request.AssignmentRenameRequest;
 import com.datn.datnbe.cms.dto.request.PinPostRequest;
 import com.datn.datnbe.cms.dto.request.PostCreateRequest;
 import com.datn.datnbe.cms.dto.request.PostUpdateRequest;
@@ -374,6 +375,30 @@ public class PostService implements PostApi {
             throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Assignment not found");
         }
         return assignmentMapper.toDto(assignmentPost);
+    }
+
+    @Override
+    @Transactional
+    public AssignmentResponse renameAssignment(String assignmentId, AssignmentRenameRequest request) {
+        log.info("Renaming assignment: {}", assignmentId);
+
+        // Get the assignment
+        AssignmentPost assignmentPost = assignmentPostRepository.findById(assignmentId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Assignment not found"));
+
+        // Update title and description
+        if (request.getTitle() != null) {
+            assignmentPost.setTitle(request.getTitle());
+        }
+        if (request.getDescription() != null) {
+            assignmentPost.setDescription(request.getDescription());
+        }
+
+        // Save the updated assignment
+        AssignmentPost savedAssignment = assignmentPostRepository.save(assignmentPost);
+        log.info("Successfully renamed assignment {}", savedAssignment.getId());
+
+        return assignmentMapper.toDto(savedAssignment);
     }
 
     @Override

@@ -14,7 +14,8 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class MatchingPair {
-    String id;
+    @Builder.Default
+    String id = java.util.UUID.randomUUID().toString();
     String left;
     String leftImageUrl;
     String right;
