@@ -216,6 +216,7 @@ public class StudentImportManagement implements StudentImportApi {
                     .password(temporaryPassword)
                     .dateOfBirth(csvRow.getDateOfBirth())
                     .phoneNumber(csvRow.getParentPhone())
+                    .role("student")
                     .build();
 
             // Call UserProfileAPI to create user
