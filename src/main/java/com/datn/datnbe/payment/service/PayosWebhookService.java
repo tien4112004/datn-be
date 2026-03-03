@@ -7,8 +7,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.datn.datnbe.payment.dto.request.PayosWebhookRequest;
+import com.datn.datnbe.payment.entity.CoinPackage;
 import com.datn.datnbe.payment.entity.PaymentTransaction;
 import com.datn.datnbe.payment.entity.PaymentTransaction.TransactionStatus;
+import com.datn.datnbe.payment.repository.CoinPackageRepository;
 import com.datn.datnbe.payment.repository.PaymentTransactionRepository;
 
 import vn.payos.PayOS;
@@ -32,6 +34,7 @@ public class PayosWebhookService {
     private String checksumKey;
 
     private final PaymentTransactionRepository paymentTransactionRepository;
+    private final CoinPackageRepository coinPackageRepository;
     private final UserCoinService userCoinService;
 
     private PayOS payOSClient;
@@ -94,14 +97,41 @@ public class PayosWebhookService {
 
                     // Calculate coins (1000 VND = 1 coin)
                     long coins = 0L;
+                    long bonusCoins = 0L;
+
                     if (amount != null) {
-                        coins = amount.longValue() / 1000L;
+                        Long amountVnd = amount.longValue();
+                        coins = amountVnd / 1000L;
+
+                        // Query CoinPackage to get bonus coins based on price
+                        var coinPackageOpt = coinPackageRepository.findByPrice(amountVnd);
+                        if (coinPackageOpt.isPresent()) {
+                            CoinPackage pkg = coinPackageOpt.get();
+                            bonusCoins = pkg.getBonus() != null ? pkg.getBonus() : 0L;
+                            log.info("Found coin package: {} for price: {}, bonus: {}",
+                                    pkg.getName(),
+                                    amountVnd,
+                                    bonusCoins);
+                        } else {
+                            // Package not found: apply 7.5% bonus if amount >= 100k
+                            if (amountVnd >= 100000L) {
+                                bonusCoins = Math.round(coins * 0.075);
+                                log.info("No coin package found for price: {}, applying 7.5% bonus: {}",
+                                        amountVnd,
+                                        bonusCoins);
+                            } else {
+                                log.info("No coin package found for price: {} (< 100k), no bonus applied", amountVnd);
+                            }
+                        }
                     }
-                    userCoinService.addCoin(tx.getUserId(), coins, "payos");
+
+                    // Add coins (base + bonus)
+                    long totalCoins = coins + bonusCoins;
+                    userCoinService.addCoin(tx.getUserId(), totalCoins, "payos");
 
                     log.info("PayOS payment completed (webhook): {} - added {} coins to user {}",
                             tx.getId(),
-                            coins,
+                            totalCoins,
                             tx.getUserId());
                 } else {
                     log.info("PayOS webhook received but tx already COMPLETED: {}", tx.getId());

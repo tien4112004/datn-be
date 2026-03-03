@@ -21,4 +21,9 @@ public interface CoinPackageRepository extends JpaRepository<CoinPackage, String
      * Get a coin package by name
      */
     Optional<CoinPackage> findByName(String name);
+
+    /**
+     * Get a coin package by price (to find bonus coins after payment)
+     */
+    Optional<CoinPackage> findByPrice(Long price);
 }
