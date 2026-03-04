@@ -88,7 +88,7 @@ class ModelConfigurationControllerTest {
 	@DisplayName("Should return list of all models successfully")
 	void getAllModels_WithValidData_ShouldReturnSuccessResponse() throws Exception {
 		// Given
-		when(modelSelectionApi.getModelConfigurations(null)).thenReturn(mockModels);
+		when(modelSelectionApi.getModelConfigurations(null, false)).thenReturn(mockModels);
 
 		// When & Then
 		mockMvc
@@ -141,7 +141,7 @@ class ModelConfigurationControllerTest {
 	void getAllModels_WithServiceException_ShouldReturnErrorResponse() throws Exception {
 		// Given
 		// Passing modelType as null to simulate no filter
-		when(modelSelectionApi.getModelConfigurations(null))
+		when(modelSelectionApi.getModelConfigurations(null, false))
 				.thenThrow(new AppException(ErrorCode.UNCATEGORIZED_ERROR,
 						"Database connection failed"));
 
@@ -182,7 +182,7 @@ class ModelConfigurationControllerTest {
                         .isDefault(false)
                         .build());
 
-        when(modelSelectionApi.getModelConfigurations(ModelType.TEXT)).thenReturn(textModels);
+        when(modelSelectionApi.getModelConfigurations(ModelType.TEXT, false)).thenReturn(textModels);
 
         // When & Then
         mockMvc.perform(get("/api/models?modelType=TEXT").contentType(MediaType.APPLICATION_JSON))
@@ -210,7 +210,7 @@ class ModelConfigurationControllerTest {
 	@DisplayName("Should return empty list when no text models exist")
 	void getTextModels_WithEmptyData_ShouldReturnEmptyListResponse() throws Exception {
 		// Given
-		when(modelSelectionApi.getModelConfigurations(ModelType.TEXT)).thenReturn(Collections.emptyList());
+		when(modelSelectionApi.getModelConfigurations(ModelType.TEXT, false)).thenReturn(Collections.emptyList());
 
 		// When & Then
 		mockMvc
@@ -249,7 +249,7 @@ class ModelConfigurationControllerTest {
                         .isDefault(false)
                         .build());
 
-        when(modelSelectionApi.getModelConfigurations(ModelType.IMAGE)).thenReturn(imageModels);
+        when(modelSelectionApi.getModelConfigurations(ModelType.IMAGE, false)).thenReturn(imageModels);
 
         // When & Then
         mockMvc.perform(get("/api/models?modelType=IMAGE").contentType(MediaType.APPLICATION_JSON))
@@ -277,7 +277,7 @@ class ModelConfigurationControllerTest {
 	@DisplayName("Should return empty list when no image models exist")
 	void getImageModels_WithEmptyData_ShouldReturnEmptyListResponse() throws Exception {
 		// Given
-		when(modelSelectionApi.getModelConfigurations(ModelType.IMAGE)).thenReturn(Collections.emptyList());
+		when(modelSelectionApi.getModelConfigurations(ModelType.IMAGE, false)).thenReturn(Collections.emptyList());
 
 		// When & Then
 		mockMvc
@@ -294,7 +294,7 @@ class ModelConfigurationControllerTest {
 	@DisplayName("Should handle service exception when getting image models")
 	void getImageModels_WithServiceException_ShouldReturnErrorResponse() throws Exception {
 		// Given
-		when(modelSelectionApi.getModelConfigurations(ModelType.IMAGE))
+		when(modelSelectionApi.getModelConfigurations(ModelType.IMAGE, false))
 				.thenThrow(new AppException(ErrorCode.UNCATEGORIZED_ERROR,
 						"Database connection failed"));
 
