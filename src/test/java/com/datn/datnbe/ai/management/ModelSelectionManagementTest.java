@@ -316,8 +316,8 @@ class ModelSelectionManagementTest {
         when(modelConfigurationRepo.findAllByModelType(ModelType.IMAGE)).thenReturn(imageModels);
 
         // When
-        List<ModelResponseDto> textResult = modelSelectionService.getModelConfigurations(ModelType.TEXT);
-        List<ModelResponseDto> imageResult = modelSelectionService.getModelConfigurations(ModelType.IMAGE);
+        List<ModelResponseDto> textResult = modelSelectionService.getModelConfigurations(ModelType.TEXT, false);
+        List<ModelResponseDto> imageResult = modelSelectionService.getModelConfigurations(ModelType.IMAGE, false);
 
         // Then
         assertEquals(2, textResult.size());

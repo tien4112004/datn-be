@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Date;
+
 @Builder
 @Data
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
@@ -16,4 +18,5 @@ public class ModelResponseDto {
     boolean isEnabled;
     boolean isDefault;
     ModelType modelType;
+    Date deletedAt;
 }

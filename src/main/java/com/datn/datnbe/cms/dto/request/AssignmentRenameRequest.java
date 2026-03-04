@@ -7,6 +7,6 @@ import lombok.Data;
 public class AssignmentRenameRequest {
     @NotBlank(message = "Title is required")
     private String title;
-    
+
     private String description;
 }

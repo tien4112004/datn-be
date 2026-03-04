@@ -4,11 +4,17 @@ import com.datn.datnbe.ai.enums.ModelType;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
+import java.util.Date;
 
 @Entity(name = "model_configuration")
 @Getter
 @Setter
 @Table(uniqueConstraints = {@UniqueConstraint(name = "uk_model_name_type", columnNames = {"model_name", "model_type"})})
+@SQLDelete(sql = "UPDATE model_configuration SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
 @AllArgsConstructor
@@ -36,4 +42,7 @@ public class ModelConfigurationEntity {
 
     @Column(name = "provider", nullable = false)
     String provider;
+
+    @Column(name = "deleted_at")
+    Date deletedAt;
 }
