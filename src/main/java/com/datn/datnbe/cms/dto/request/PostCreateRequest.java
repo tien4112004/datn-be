@@ -37,4 +37,5 @@ public class PostCreateRequest {
     private Double passingScore;
     private Date availableFrom;
     private Date availableUntil;
+    private String assignmentTitle;
 }
