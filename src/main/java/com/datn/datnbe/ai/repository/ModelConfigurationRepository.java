@@ -32,4 +32,10 @@ public interface ModelConfigurationRepository extends JpaRepository<ModelConfigu
     @Modifying
     @Query("UPDATE model_configuration m SET m.isDefault = false WHERE m.modelType = :modelType AND m.modelId <> :modelId")
     void disableDefaultModelsExcept(@Param("modelType") ModelType modelType, @Param("modelId") Integer modelId);
+
+    @Query(value = "SELECT * FROM model_configuration ORDER BY provider, id", nativeQuery = true)
+    List<ModelConfigurationEntity> findAllIncludingDeleted();
+
+    @Query(value = "SELECT * FROM model_configuration WHERE model_type = :modelType ORDER BY provider, id", nativeQuery = true)
+    List<ModelConfigurationEntity> findAllByModelTypeIncludingDeleted(@Param("modelType") String modelType);
 }

@@ -2,6 +2,7 @@ package com.datn.datnbe.ai.presentation;
 
 import com.datn.datnbe.ai.api.ModelSelectionApi;
 import com.datn.datnbe.ai.dto.request.CreateModelRequest;
+import com.datn.datnbe.ai.dto.request.UpdateModelRequest;
 import com.datn.datnbe.ai.dto.request.UpdateModelStatusRequest;
 import com.datn.datnbe.ai.dto.response.ModelResponseDto;
 import com.datn.datnbe.ai.enums.ModelType;
@@ -33,9 +34,10 @@ public class ModelConfigurationController {
      */
     @GetMapping
     public ResponseEntity<AppResponseDto<List<ModelResponseDto>>> getAllModels(
-            @RequestParam(name = "modelType", required = false) ModelType modelType) {
-        log.info("Fetching all models");
-        var models = modelSelectionApi.getModelConfigurations(modelType);
+            @RequestParam(name = "modelType", required = false) ModelType modelType,
+            @RequestParam(name = "includeDeleted", required = false, defaultValue = "false") boolean includeDeleted) {
+        log.info("Fetching all models (includeDeleted={})", includeDeleted);
+        var models = modelSelectionApi.getModelConfigurations(modelType, includeDeleted);
 
         return ResponseEntity.ok(AppResponseDto.success(models));
     }
@@ -55,6 +57,19 @@ public class ModelConfigurationController {
     }
 
     /**
+     * Endpoint to delete a model by its ID.
+     *
+     * @param id The ID of the model to delete.
+     * @return ResponseEntity indicating the result of the operation.
+     */
+    @DeleteMapping(value = "/{id}")
+    public ResponseEntity<AppResponseDto<Void>> deleteModel(@PathVariable Integer id) {
+        log.info("Deleting model with ID: {}", id);
+        modelSelectionApi.deleteModel(id);
+        return ResponseEntity.ok(AppResponseDto.success(null));
+    }
+
+    /**
      * Endpoint to update status of a model by its ID.
      *
      * @param id      The ID of the model to update.
@@ -68,6 +83,21 @@ public class ModelConfigurationController {
         log.info("Updating model status with ID: {}", id);
         var updatedModel = modelSelectionApi.setModelStatus(id, request);
 
+        return ResponseEntity.ok(AppResponseDto.success(updatedModel));
+    }
+
+    /**
+     * Endpoint to update the name, displayName and provider of a model.
+     *
+     * @param id      The ID of the model to update.
+     * @param request The update request containing modelName, displayName, and provider.
+     * @return ResponseEntity containing the updated model.
+     */
+    @PutMapping(value = "/{id}")
+    public ResponseEntity<AppResponseDto<ModelResponseDto>> updateModel(@PathVariable Integer id,
+            @Valid @RequestBody UpdateModelRequest request) {
+        log.info("Updating model with ID: {}", id);
+        var updatedModel = modelSelectionApi.updateModel(id, request);
         return ResponseEntity.ok(AppResponseDto.success(updatedModel));
     }
 }

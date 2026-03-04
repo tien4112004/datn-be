@@ -15,5 +15,6 @@ public interface ModelDataMapper {
     @Mapping(target = "modelId", ignore = true)
     @Mapping(target = "enabled", ignore = true)
     @Mapping(target = "default", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     ModelConfigurationEntity toModelConfigurationEntity(ModelProperties.ModelInfo modelInfo);
 }

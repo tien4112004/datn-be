@@ -2,6 +2,7 @@ package com.datn.datnbe.ai.api;
 
 import com.datn.datnbe.ai.config.chatmodelconfiguration.ModelProperties;
 import com.datn.datnbe.ai.dto.request.CreateModelRequest;
+import com.datn.datnbe.ai.dto.request.UpdateModelRequest;
 import com.datn.datnbe.ai.dto.request.UpdateModelStatusRequest;
 import com.datn.datnbe.ai.dto.response.ModelResponseDto;
 import com.datn.datnbe.ai.enums.ModelType;
@@ -11,21 +12,20 @@ import java.util.List;
 public interface ModelSelectionApi {
 
     /**
-     * Retrieves the minimal configuration of a model by its ID.
+     * Retrieves all active model configurations.
      *
-     * @return a list of ModelResponseDto containing the minimal configuration of
-     *         the model
+     * @return a list of ModelResponseDto
      */
     List<ModelResponseDto> getModelConfigurations();
 
     /**
-     * Retrieves the minimal configuration of a model by its ID.
+     * Retrieves model configurations, optionally including soft-deleted ones.
      *
-     * @param modelType the type of the model to retrieve
-     * @return a list of ModelResponseDto containing the minimal configuration of
-     *         the model
+     * @param modelType      the type of the model to retrieve (nullable for all types)
+     * @param includeDeleted whether to include soft-deleted models
+     * @return a list of ModelResponseDto
      */
-    List<ModelResponseDto> getModelConfigurations(ModelType modelType);
+    List<ModelResponseDto> getModelConfigurations(ModelType modelType, boolean includeDeleted);
 
     /**
      * Enables a model by its ID.
@@ -84,4 +84,20 @@ public interface ModelSelectionApi {
      * @return a ModelResponseDto containing the created model information
      */
     ModelResponseDto createModel(CreateModelRequest request);
+
+    /**
+     * Deletes a model configuration by its ID.
+     *
+     * @param modelId the ID of the model to delete
+     */
+    void deleteModel(Integer modelId);
+
+    /**
+     * Updates the name, displayName and provider of an existing model.
+     *
+     * @param modelId the ID of the model to update
+     * @param request the request containing updated model information
+     * @return a ModelResponseDto containing the updated model information
+     */
+    ModelResponseDto updateModel(Integer modelId, UpdateModelRequest request);
 }

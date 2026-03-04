@@ -3,6 +3,7 @@ package com.datn.datnbe.ai.management;
 import com.datn.datnbe.ai.api.ModelSelectionApi;
 import com.datn.datnbe.ai.config.chatmodelconfiguration.ModelProperties;
 import com.datn.datnbe.ai.dto.request.CreateModelRequest;
+import com.datn.datnbe.ai.dto.request.UpdateModelRequest;
 import com.datn.datnbe.ai.dto.request.UpdateModelStatusRequest;
 import com.datn.datnbe.ai.dto.response.ModelResponseDto;
 import com.datn.datnbe.ai.entity.ModelConfigurationEntity;
@@ -31,26 +32,28 @@ public class ModelSelectionManagement implements ModelSelectionApi {
 
     @Override
     public List<ModelResponseDto> getModelConfigurations() {
-        return modelConfigurationRepo.findAll()
-                .stream()
+        return getModelConfigurations(null, false);
+    }
+
+    @Override
+    public List<ModelResponseDto> getModelConfigurations(ModelType modelType, boolean includeDeleted) {
+        List<ModelConfigurationEntity> entities;
+
+        if (includeDeleted) {
+            entities = Objects.isNull(modelType)
+                    ? modelConfigurationRepo.findAllIncludingDeleted()
+                    : modelConfigurationRepo.findAllByModelTypeIncludingDeleted(modelType.name());
+        } else {
+            entities = Objects.isNull(modelType)
+                    ? modelConfigurationRepo.findAll()
+                    : modelConfigurationRepo.findAllByModelType(modelType);
+        }
+
+        return entities.stream()
                 .sorted(Comparator.comparing(ModelConfigurationEntity::getProvider)
                         .thenComparing(ModelConfigurationEntity::getModelId))
                 .map(modelDataMapper::toModelResponseDto)
                 .toList();
-    }
-
-    @Override
-    public List<ModelResponseDto> getModelConfigurations(ModelType modelType) {
-        if (Objects.isNull(modelType)) {
-            return getModelConfigurations();
-        } else {
-            return modelConfigurationRepo.findAllByModelType(modelType)
-                    .stream()
-                    .sorted(Comparator.comparing(ModelConfigurationEntity::getProvider)
-                            .thenComparing(ModelConfigurationEntity::getModelId))
-                    .map(modelDataMapper::toModelResponseDto)
-                    .toList();
-        }
     }
 
     @Override
@@ -158,6 +161,20 @@ public class ModelSelectionManagement implements ModelSelectionApi {
     }
 
     @Override
+    @Transactional
+    public void deleteModel(Integer modelId) {
+        ModelConfigurationEntity model = modelConfigurationRepo.findById(modelId)
+                .orElseThrow(() -> new AppException(ErrorCode.MODEL_NOT_FOUND));
+
+        if (model.isDefault()) {
+            resetDefaultModel(model.getModelType());
+        }
+
+        modelConfigurationRepo.delete(model);
+        log.info("Deleted model with ID: {}", modelId);
+    }
+
+    @Override
     public boolean existByName(String modelName) {
         return modelConfigurationRepo.existsByModelName(modelName);
     }
@@ -165,6 +182,28 @@ public class ModelSelectionManagement implements ModelSelectionApi {
     @Override
     public boolean existByNameAndType(String modelName, String modelType) {
         return modelConfigurationRepo.existsByModelNameAndModelType(modelName, ModelType.valueOf(modelType));
+    }
+
+    @Override
+    @Transactional
+    public ModelResponseDto updateModel(Integer modelId, UpdateModelRequest request) {
+        ModelConfigurationEntity entity = modelConfigurationRepo.findById(modelId)
+                .orElseThrow(() -> new AppException(ErrorCode.MODEL_NOT_FOUND));
+
+        // If the model name is changing, verify no other model has the same (name, type) pair
+        if (!entity.getModelName().equals(request.getModelName())) {
+            if (modelConfigurationRepo.existsByModelNameAndModelType(request.getModelName(), entity.getModelType())) {
+                throw new AppException(ErrorCode.RESOURCE_ALREADY_EXISTS,
+                        "Model '" + request.getModelName() + "' already exists for type " + entity.getModelType());
+            }
+        }
+
+        entity.setModelName(request.getModelName());
+        entity.setDisplayName(request.getDisplayName());
+        entity.setProvider(request.getProvider());
+
+        ModelConfigurationEntity saved = modelConfigurationRepo.save(entity);
+        return modelDataMapper.toModelResponseDto(saved);
     }
 
     @Override
