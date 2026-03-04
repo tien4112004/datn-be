@@ -32,7 +32,6 @@ import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import com.datn.datnbe.student.api.StudentApi;
-import com.datn.datnbe.student.dto.response.StudentResponseDto;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -338,10 +337,8 @@ public class PostService implements PostApi {
     private void notifyStudents(String classId, Post post, String title) {
         try {
             log.info("Notifying students in class: {}", classId);
-            var students = studentApi.getStudentsByClassId(classId);
-            log.info("Found {} students in class", students.size());
-
-            List<String> userIds = students.stream().map(StudentResponseDto::getUserId).toList();
+            List<String> userIds = studentApi.getEnrolledStudentKeycloakUserIds(classId);
+            log.info("Found {} students in class", userIds.size());
 
             if (userIds.isEmpty()) {
                 log.warn("No students found to notify for class {}", classId);
@@ -441,6 +438,18 @@ public class PostService implements PostApi {
             return;
         }
 
+        // Map student entity IDs to Keycloak user IDs for the notification system
+        List<String> keycloakUserIds = studentIds.stream()
+                .map(studentApi::getKeycloakUserIdForStudent)
+                .filter(java.util.Optional::isPresent)
+                .map(java.util.Optional::get)
+                .toList();
+
+        if (keycloakUserIds.isEmpty()) {
+            log.warn("Could not resolve any Keycloak user IDs for students without submission, post: {}", postId);
+            return;
+        }
+
         // Send notification to students who haven't submitted
         String assignmentTitle = "Nhắc nhở Hạn chót Bài tập";
         String message = "Bạn chưa nộp bài tập. Hạn chót là "
@@ -448,7 +457,7 @@ public class PostService implements PostApi {
                 + ". Vui lòng nộp bài trước hạn chót.";
 
         SendNotificationToUsersRequest notificationRequest = SendNotificationToUsersRequest.builder()
-                .userIds(studentIds)
+                .userIds(keycloakUserIds)
                 .title(assignmentTitle)
                 .body(message)
                 .type(NotificationType.ASSIGNMENT_DEADLINE)
