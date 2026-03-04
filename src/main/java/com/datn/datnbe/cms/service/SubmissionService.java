@@ -147,16 +147,16 @@ public class SubmissionService implements SubmissionApi {
         }
 
         // Update scores based on request
-        Map<String, Integer> questionScores = request.getQuestionScores();
+        Map<String, Double> questionScores = request.getQuestionScores();
         if (questionScores != null && !questionScores.isEmpty()) {
-            double totalScore = questionScores.values().stream().mapToInt(Integer::intValue).sum();
+            double totalScore = questionScores.values().stream().mapToDouble(Double::doubleValue).sum();
 
             submission.setScore(totalScore);
 
             Map<String, String> questionFeedback = request.getQuestionFeedback();
             List<AnswerData> answers = submission.getQuestions();
 
-            for (Map.Entry<String, Integer> entry : questionScores.entrySet()) {
+            for (Map.Entry<String, Double> entry : questionScores.entrySet()) {
                 String questionId = entry.getKey();
                 String feedback = (questionFeedback != null) ? questionFeedback.get(questionId) : null;
                 answers.stream().filter(a -> a.getId().equals(questionId)).findFirst().ifPresent(a -> {

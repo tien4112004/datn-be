@@ -12,7 +12,7 @@ import java.util.Map;
 @NoArgsConstructor
 public class SubmissionGradeRequest {
     // Map questionId -> score
-    private Map<String, Integer> questionScores;
+    private Map<String, Double> questionScores;
 
     // Map questionId -> feedback (per-question feedback)
     private Map<String, String> questionFeedback;
