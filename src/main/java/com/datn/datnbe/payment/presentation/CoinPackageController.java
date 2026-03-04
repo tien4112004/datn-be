@@ -37,11 +37,10 @@ public class CoinPackageController {
     public ResponseEntity<AppResponseDto<List<CoinPackageDto>>> getAllCoinPackages() {
         log.info("Fetching all available coin packages");
 
-        List<CoinPackageDto> packages = coinPackageService.getAllActivePackages();
+        List<CoinPackageDto> packages = coinPackageService.getAllPackages();
 
         return ResponseEntity.ok(AppResponseDto.<List<CoinPackageDto>>builder()
                 .data(packages)
-                .message("Coin packages retrieved successfully")
                 .build());
     }
 
@@ -57,7 +56,6 @@ public class CoinPackageController {
 
         return ResponseEntity.ok(AppResponseDto.<CoinPackageDto>builder()
                 .data(packageDto)
-                .message("Coin package retrieved successfully")
                 .build());
     }
 
@@ -75,7 +73,6 @@ public class CoinPackageController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(AppResponseDto.<CoinPackageDto>builder()
                         .data(packageDto)
-                        .message("Coin package created successfully")
                         .build());
     }
 
@@ -92,7 +89,6 @@ public class CoinPackageController {
 
         return ResponseEntity.ok(AppResponseDto.<CoinPackageDto>builder()
                 .data(packageDto)
-                .message("Coin package updated successfully")
                 .build());
     }
 
@@ -106,7 +102,7 @@ public class CoinPackageController {
 
         coinPackageService.deleteCoinPackage(packageId);
 
-        return ResponseEntity.ok(AppResponseDto.<Void>builder().message("Coin package deleted successfully").build());
+        return ResponseEntity.noContent().build();
     }
 
     /**
@@ -121,7 +117,6 @@ public class CoinPackageController {
 
         return ResponseEntity.ok(AppResponseDto.<CoinPackageDto>builder()
                 .data(packageDto)
-                .message("Coin package status toggled successfully")
                 .build());
     }
 }

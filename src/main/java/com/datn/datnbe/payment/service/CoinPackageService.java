@@ -38,6 +38,15 @@ public class CoinPackageService {
     }
 
     /**
+     * Get all coin packages (including inactive)
+     */
+    @Transactional(readOnly = true)
+    public List<CoinPackageDto> getAllPackages() {
+        List<CoinPackage> packages = coinPackageRepository.findAll();
+        return packages.stream().map(mapper::toCoinPackageDTO).collect(Collectors.toList());
+    }
+
+    /**
      * Get a specific coin package by ID
      */
     @Transactional(readOnly = true)
@@ -46,11 +55,6 @@ public class CoinPackageService {
             log.warn("Coin package not found with ID: {}", packageId);
             return new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Coin package not found");
         });
-
-        if (!coinPackage.getIsActive()) {
-            log.warn("Coin package is not active: {}", packageId);
-            throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Coin package is not available");
-        }
 
         return mapper.toCoinPackageDTO(coinPackage);
     }

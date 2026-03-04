@@ -17,4 +17,5 @@ public class CoinPackageDto {
     private Long price;
     private Long coin;
     private Long bonus;
+    private Boolean isActive;
 }
