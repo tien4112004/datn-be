@@ -69,6 +69,7 @@ public class SubmissionService implements SubmissionApi {
 
         // Fetch post to extract assignment ID
         PostResponseDto post = postApi.getPostById(postId);
+        Boolean autoGrade = true; // default to true
 
         if (post.getAssignmentId() != null) {
             submission.setAssignmentId(post.getAssignmentId());
@@ -76,6 +77,7 @@ public class SubmissionService implements SubmissionApi {
             // Fetch assignment from assignment_post table (bypasses permission check)
             try {
                 AssignmentPost assignment = assignmentPostRepository.findAssignmentById(post.getAssignmentId());
+                autoGrade = assignment.getAutoGrade() != null ? assignment.getAutoGrade() : true;
                 if (assignment != null && assignment.getQuestions() != null) {
                     int maxScore = assignment.getQuestions()
                             .stream()
@@ -94,7 +96,7 @@ public class SubmissionService implements SubmissionApi {
 
         Submission saved = submissionRepository.save(submission);
 
-        if (request.isAutoGrade()) {
+        if (autoGrade) {
             gradeSubmission(saved);
         }
 

@@ -86,6 +86,9 @@ public class AssignmentPost {
     @Column(name = "available_until")
     Date availableUntil;
 
+    @Column(name = "auto_grade")
+    Boolean autoGrade;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "topics", columnDefinition = "jsonb")
     List<AssignmentTopic> topics;

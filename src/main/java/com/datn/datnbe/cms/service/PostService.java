@@ -111,6 +111,7 @@ public class PostService implements PostApi {
                             .topics(originalAssignment.getTopics())
                             .matrixCells(originalAssignment.getMatrixCells())
                             .source(originalAssignment.getId())
+                            .autoGrade(request.getAutoGrade())
                             .build();
 
                     // Save to assignment_post table
