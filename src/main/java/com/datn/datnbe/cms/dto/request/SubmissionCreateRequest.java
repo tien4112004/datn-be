@@ -18,6 +18,4 @@ import lombok.Setter;
 public class SubmissionCreateRequest {
     private String postId;
     private List<AnswerDataDto> questions;
-    @Builder.Default
-    private boolean autoGrade = true;
 }

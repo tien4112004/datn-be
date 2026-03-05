@@ -3,12 +3,14 @@ package com.datn.datnbe.cms.dto.request;
 import com.datn.datnbe.cms.dto.LinkedResourceDto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Builder;
 import lombok.Data;
 
 import java.util.Date;
 import java.util.List;
 
 @Data
+@Builder
 public class PostCreateRequest {
     @NotBlank
     private String content;
@@ -37,4 +39,6 @@ public class PostCreateRequest {
     private Date availableFrom;
     private Date availableUntil;
     private String assignmentTitle;
+    @Builder.Default
+    private Boolean autoGrade = true;
 }
