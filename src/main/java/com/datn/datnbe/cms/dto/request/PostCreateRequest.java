@@ -33,7 +33,6 @@ public class PostCreateRequest {
     private Boolean allowRetake;
     private Boolean shuffleQuestions;
     private Boolean showCorrectAnswers;
-    private Boolean showScoreImmediately;
     private Double passingScore;
     private Date availableFrom;
     private Date availableUntil;
