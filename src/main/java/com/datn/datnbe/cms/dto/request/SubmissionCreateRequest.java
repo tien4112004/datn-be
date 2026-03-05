@@ -5,6 +5,7 @@ import java.util.List;
 import com.datn.datnbe.cms.dto.AnswerDataDto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,8 +14,10 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class SubmissionCreateRequest {
     private String postId;
     private List<AnswerDataDto> questions;
-    private boolean autoGrade;
+    @Builder.Default
+    private boolean autoGrade = true;
 }
