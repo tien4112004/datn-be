@@ -34,4 +34,13 @@ public class AIResult {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "generation_options", columnDefinition = "JSONB")
     String generationOptions;
+
+    @Column(name = "subject")
+    String subject;
+
+    @Column(name = "grade")
+    String grade;
+
+    @Column(name = "chapter", length = 255)
+    String chapter;
 }

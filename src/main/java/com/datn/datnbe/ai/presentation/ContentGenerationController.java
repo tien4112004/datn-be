@@ -209,7 +209,12 @@ public class ContentGenerationController {
                     // Remove token usage from result before saving
                     cleanedResult = removeTokenUsageFromString(cleanedResult);
 
-                    aiResultApi.saveAIResult(cleanedResult, presentationId, optionsJson);
+                    aiResultApi.saveAIResult(cleanedResult,
+                            presentationId,
+                            optionsJson,
+                            request.getSubject(),
+                            request.getGrade(),
+                            request.getChapter());
                     log.info("Slide generation completed with signal {}, saved {} bytes for ID: {}",
                             signalType,
                             cleanedResult.length(),
@@ -254,7 +259,12 @@ public class ContentGenerationController {
             }
         }
 
-        aiResultApi.saveAIResult(result, presentationId, generationOptionsJson);
+        aiResultApi.saveAIResult(result,
+                presentationId,
+                generationOptionsJson,
+                request.getSubject(),
+                request.getGrade(),
+                request.getChapter());
 
         String title = (request.getTopic() != null && !request.getTopic().trim().isEmpty())
                 ? request.getTopic()
@@ -265,6 +275,9 @@ public class ContentGenerationController {
                 .title(title)
                 .slides(new ArrayList<>())
                 .isParsed(false)
+                .grade(request.getGrade())
+                .subject(request.getSubject())
+                .chapter(request.getChapter())
                 .build();
         var newPresentation = presentationApi.createPresentation(createRequest);
 

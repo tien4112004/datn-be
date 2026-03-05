@@ -24,7 +24,12 @@ public class AIResultManagement implements AIResultApi {
     AIResultMapper aiResultMapper;
 
     @Override
-    public AIResultResponseDto saveAIResult(String aiResult, String presentationId, String generationOptions) {
+    public AIResultResponseDto saveAIResult(String aiResult,
+            String presentationId,
+            String generationOptions,
+            String subject,
+            String grade,
+            String chapter) {
         log.info("Saving AI result for presentation {} with generation options: {}", presentationId, generationOptions);
 
         // Delete any existing AI result for this presentation to allow overwriting
@@ -34,6 +39,9 @@ public class AIResultManagement implements AIResultApi {
                 .result(aiResult)
                 .presentationId(presentationId)
                 .generationOptions(generationOptions)
+                .subject(subject)
+                .grade(grade)
+                .chapter(chapter)
                 .build();
 
         AIResult savedEntity = aiResultRepo.save(aiResultEntity);

@@ -29,6 +29,9 @@ public interface MindmapEntityMapper {
     @Mapping(target = "updatedAt", expression = "java(new Date())")
     @Mapping(target = "nodes", source = "nodes")
     @Mapping(target = "edges", source = "edges")
+    @Mapping(target = "grade", source = "grade")
+    @Mapping(target = "subject", source = "subject")
+    @Mapping(target = "chapter", source = "chapter")
     @Mapping(target = "extraFields", source = "extraFields")
     Mindmap createRequestToEntity(MindmapCreateRequest request);
 

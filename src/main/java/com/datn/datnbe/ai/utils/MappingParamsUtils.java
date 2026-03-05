@@ -24,6 +24,9 @@ public class MappingParamsUtils {
         if (sanitizedSubject != null && !sanitizedSubject.isEmpty()) {
             params.put("subject", sanitizedSubject);
         }
+        if (request.getChapter() != null && !request.getChapter().isEmpty()) {
+            params.put("chapter", request.getChapter());
+        }
         if (request.getFileUrls() != null && !request.getFileUrls().isEmpty()) {
             params.put("file_urls", request.getFileUrls());
         }
@@ -45,6 +48,9 @@ public class MappingParamsUtils {
         }
         if (sanitizedSubject != null && !sanitizedSubject.isEmpty()) {
             params.put("subject", sanitizedSubject);
+        }
+        if (request.getChapter() != null && !request.getChapter().isEmpty()) {
+            params.put("chapter", request.getChapter());
         }
         if (request.getFileUrls() != null && !request.getFileUrls().isEmpty()) {
             params.put("file_urls", request.getFileUrls());
@@ -80,6 +86,9 @@ public class MappingParamsUtils {
         }
         if (sanitizedSubject != null && !sanitizedSubject.isEmpty()) {
             params.put("subject", sanitizedSubject);
+        }
+        if (request.getChapter() != null && !request.getChapter().isEmpty()) {
+            params.put("chapter", request.getChapter());
         }
         if (request.getFileUrls() != null && !request.getFileUrls().isEmpty()) {
             params.put("file_urls", request.getFileUrls());

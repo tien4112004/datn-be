@@ -24,6 +24,9 @@ public interface PresentationEntityMapper {
     @Mapping(target = "slides", source = "slides", qualifiedByName = "toEntityList")
     @Mapping(target = "isParsed", source = "isParsed", defaultValue = "true")
     @Mapping(target = "metadata", source = "metadata")
+    @Mapping(target = "grade", source = "grade")
+    @Mapping(target = "subject", source = "subject")
+    @Mapping(target = "chapter", source = "chapter")
     @Mapping(target = "deletedAt", ignore = true)
     Presentation createRequestToEntity(PresentationCreateRequest request);
 
