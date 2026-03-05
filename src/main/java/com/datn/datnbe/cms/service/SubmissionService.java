@@ -94,7 +94,9 @@ public class SubmissionService implements SubmissionApi {
 
         Submission saved = submissionRepository.save(submission);
 
-        gradeSubmission(saved);
+        if (request.isAutoGrade()) {
+            gradeSubmission(saved);
+        }
 
         return enrichSubmissionDto(submissionMapper.toDto(saved));
     }
@@ -220,7 +222,6 @@ public class SubmissionService implements SubmissionApi {
             log.warn("Answer not found for question: {}", question.getId());
             return 0;
         }
-        answer.setAutoGraded(true);
 
         return switch (question.getType()) {
             case MULTIPLE_CHOICE : {

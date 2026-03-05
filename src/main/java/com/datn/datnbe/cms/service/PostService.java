@@ -105,7 +105,6 @@ public class PostService implements PostApi {
                             .allowRetake(request.getAllowRetake())
                             .shuffleQuestions(request.getShuffleQuestions())
                             .showCorrectAnswers(request.getShowCorrectAnswers())
-                            .showScoreImmediately(request.getShowScoreImmediately())
                             .passingScore(request.getPassingScore())
                             .availableFrom(request.getAvailableFrom())
                             .availableUntil(request.getAvailableUntil())
