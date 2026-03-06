@@ -1,28 +1,41 @@
 package com.datn.datnbe.document.service;
 
+import com.datn.datnbe.auth.api.ResourcePermissionApi;
 import com.datn.datnbe.document.dto.DocumentMetadataDto;
+import com.datn.datnbe.document.dto.request.DocumentCollectionRequest;
 import com.datn.datnbe.document.dto.request.RecentDocumentCollectionRequest;
 import com.datn.datnbe.document.dto.response.DocumentMinimalResponseDto;
 import com.datn.datnbe.document.entity.DocumentVisit;
-import com.datn.datnbe.document.repository.DocumentVisitRepository;
+import com.datn.datnbe.document.repository.DocumentRepository;
 import com.datn.datnbe.sharedkernel.dto.BaseCollectionRequest;
+import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
+import com.datn.datnbe.sharedkernel.dto.PaginationDto;
+import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class DocumentService {
 
-    private final DocumentVisitRepository visitRepository;
+    private final DocumentRepository documentRepository;
+    private final SecurityContextUtils securityContextUtils;
+    private final ResourcePermissionApi resourcePermissionApi;
+    private final ObjectMapper objectMapper;
 
     /**
      * Track document visit asynchronously (background job)
@@ -36,7 +49,8 @@ public class DocumentService {
                 metadata.getDocumentId(),
                 metadata.getType());
 
-        DocumentVisit visit = visitRepository.findByUserIdAndDocumentId(metadata.getUserId(), metadata.getDocumentId())
+        DocumentVisit visit = documentRepository
+                .findByUserIdAndDocumentId(metadata.getUserId(), metadata.getDocumentId())
                 .orElse(DocumentVisit.builder()
                         .userId(metadata.getUserId())
                         .documentId(metadata.getDocumentId())
@@ -46,7 +60,7 @@ public class DocumentService {
         visit.setLastVisited(Instant.now());
         visit.setTitle(metadata.getTitle());
         visit.setThumbnail(metadata.getThumbnail());
-        visitRepository.save(visit);
+        documentRepository.save(visit);
 
         log.debug("Visit tracked successfully for userId: {}, documentId: {}, title: {}",
                 metadata.getUserId(),
@@ -65,7 +79,7 @@ public class DocumentService {
                 request.getPageSize());
 
         Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize());
-        return visitRepository.findRecentDocumentsByUser(userId, pageable);
+        return documentRepository.findRecentDocumentsByUser(userId, pageable);
     }
 
     /**
@@ -74,7 +88,7 @@ public class DocumentService {
     @Transactional(readOnly = true)
     public Page<DocumentVisit> getRecentDocuments(String userId) {
         Pageable pageable = PageRequest.of(0, BaseCollectionRequest.DEFAULT_PAGE_SIZE);
-        return visitRepository.findRecentDocumentsByUser(userId, pageable);
+        return documentRepository.findRecentDocumentsByUser(userId, pageable);
     }
 
     /**
@@ -83,12 +97,52 @@ public class DocumentService {
     @Transactional
     public void deleteDocumentVisits(String documentId) {
         log.info("Deleting all visits for document: {}", documentId);
-        visitRepository.deleteByDocumentId(documentId);
+        documentRepository.deleteByDocumentId(documentId);
     }
 
     public DocumentMinimalResponseDto getMinimalDocumentInfo(String documentId) {
         log.info("Fetching minimal info for document: {}", documentId);
-        return visitRepository.findMinimalDocumentInfoByDocumentId(documentId)
+        return documentRepository.findMinimalDocumentInfoByDocumentId(documentId)
                 .orElseThrow(() -> new IllegalArgumentException("Document not found: " + documentId));
+    }
+
+    public PaginatedResponseDto<JsonNode> getAllDocument(DocumentCollectionRequest request) {
+
+        Sort sortOrder = "asc".equalsIgnoreCase(request.getSort())
+                ? Sort.by(Sort.Direction.ASC, "created_at")
+                : Sort.by(Sort.Direction.DESC, "created_at");
+
+        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sortOrder);
+
+        String ownerId = securityContextUtils.getCurrentUserId();
+
+        List<String> presentationIds = resourcePermissionApi.getAllResourceByTypeOfOwner(ownerId, "presentation");
+        List<String> mindmapIds = resourcePermissionApi.getAllResourceByTypeOfOwner(ownerId, "mindmap");
+        List<String> assignmentIds = resourcePermissionApi.getAllResourceByTypeOfOwner(ownerId, "assignment");
+
+        Page<String> paginatedDocuments = documentRepository.getAllDocuments(pageable,
+                request.getFilter(),
+                request.getChapter(),
+                request.getSubject(),
+                request.getGrade(),
+                presentationIds,
+                mindmapIds,
+                assignmentIds);
+
+        List<JsonNode> documents = paginatedDocuments.getContent().stream()
+                .map(json -> {
+                    try {
+                        return objectMapper.readTree(json);
+                    } catch (Exception e) {
+                        log.warn("Failed to parse document JSON: {}", e.getMessage());
+                        return objectMapper.missingNode();
+                    }
+                })
+                .toList();
+
+        PaginationDto pagination = new PaginationDto(request.getPage(), request.getPageSize(),
+                paginatedDocuments.getTotalElements(), paginatedDocuments.getTotalPages());
+
+        return new PaginatedResponseDto<>(documents, pagination);
     }
 }

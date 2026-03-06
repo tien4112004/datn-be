@@ -125,8 +125,7 @@ public class PresentationManagement implements PresentationApi {
     }
 
     @Override
-    public PaginatedResponseDto<PresentationListResponseDto> getAllPresentations(
-            DocumentCollectionRequest request) {
+    public PaginatedResponseDto<PresentationListResponseDto> getAllPresentations(DocumentCollectionRequest request) {
         log.info("Fetching presentations with collection request - page: {}, pageSize: {}, filter: {}, sort: {}",
                 request.getPage(),
                 request.getPageSize(),

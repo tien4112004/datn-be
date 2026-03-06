@@ -20,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.datn.datnbe.document.api.PresentationApi;
 import com.datn.datnbe.document.api.SlidesApi;
 import com.datn.datnbe.document.dto.request.DocumentCollectionRequest;
-import com.datn.datnbe.document.dto.request.PresentationCollectionRequest;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
 import com.datn.datnbe.document.dto.request.PresentationUpdateRequest;
 import com.datn.datnbe.document.dto.request.PresentationUpdateTitleRequest;

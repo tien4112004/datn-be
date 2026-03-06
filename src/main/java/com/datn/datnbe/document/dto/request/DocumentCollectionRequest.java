@@ -17,6 +17,9 @@ public class DocumentCollectionRequest extends BaseCollectionRequest {
     @Size(max = 100, message = "Filter length cannot exceed 100 characters")
     @JsonAlias({"search", "q", "searchQuery"})
     private String filter;
+    private String chapter;
+    private String subject;
+    private String grade;
 
     @Builder
     public DocumentCollectionRequest(int page, int pageSize, String sort, String filter) {

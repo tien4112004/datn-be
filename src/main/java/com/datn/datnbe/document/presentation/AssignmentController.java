@@ -58,7 +58,7 @@ public class AssignmentController {
 
     @GetMapping
     public ResponseEntity<AppResponseDto<List<AssignmentResponse>>> getAssignments(
-        @Valid @ModelAttribute DocumentCollectionRequest request) {
+            @Valid @ModelAttribute DocumentCollectionRequest request) {
 
         PaginatedResponseDto<AssignmentResponse> paginated = assignmentApi.getAssignments(request);
         return ResponseEntity.ok(AppResponseDto.successWithPagination(paginated.getData(), paginated.getPagination()));

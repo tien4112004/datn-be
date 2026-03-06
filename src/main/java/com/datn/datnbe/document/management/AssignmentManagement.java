@@ -108,7 +108,8 @@ public class AssignmentManagement implements AssignmentApi {
         String userId = securityContextUtils.getCurrentUserId();
         List<String> allowedIds = resourcePermissionApi.getAllResourceByTypeOfOwner(userId, "assignment");
 
-        Pageable pageable = PageRequest.of(Math.max(0, request.getPage() - 1), request.getPageSize(), Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest
+                .of(Math.max(0, request.getPage() - 1), request.getPageSize(), Sort.by("createdAt").descending());
         Page<Assignment> assignmentPage = assignmentRepository.findByIdIn(allowedIds, pageable);
 
         return PaginatedResponseDto.<AssignmentResponse>builder()

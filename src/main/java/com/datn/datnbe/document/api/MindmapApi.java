@@ -1,7 +1,5 @@
 package com.datn.datnbe.document.api;
 
-import javax.print.Doc;
-
 import org.springframework.web.multipart.MultipartFile;
 
 import com.datn.datnbe.document.dto.request.DocumentCollectionRequest;

@@ -8,7 +8,7 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 import com.datn.datnbe.auth.api.ResourcePermissionApi;
-import com.datn.datnbe.document.dto.request.PresentationCollectionRequest;
+import com.datn.datnbe.document.dto.request.DocumentCollectionRequest;
 import com.datn.datnbe.document.dto.response.PresentationListResponseDto;
 import com.datn.datnbe.document.entity.Presentation;
 import com.datn.datnbe.document.management.validation.PresentationValidation;
@@ -131,7 +131,7 @@ class GetAllPresentationsTest {
     @Test
     void getAllPresentations_WithPagination_ShouldReturnPaginatedResponse() {
         // Given
-        PresentationCollectionRequest request = PresentationCollectionRequest.builder()
+        DocumentCollectionRequest request = DocumentCollectionRequest.builder()
                 .page(1)
                 .pageSize(10)
                 .sort("asc")
@@ -160,7 +160,7 @@ class GetAllPresentationsTest {
     @Test
     void getAllPresentations_WithFilter_ShouldReturnFilteredResults() {
         // Given
-        PresentationCollectionRequest request = PresentationCollectionRequest.builder()
+        DocumentCollectionRequest request = DocumentCollectionRequest.builder()
                 .page(1)
                 .pageSize(10)
                 .filter("First")
@@ -187,7 +187,7 @@ class GetAllPresentationsTest {
     @Test
     void getAllPresentations_WithSortDesc_ShouldSortByCreatedAtDesc() {
         // Given
-        PresentationCollectionRequest request = PresentationCollectionRequest.builder()
+        DocumentCollectionRequest request = DocumentCollectionRequest.builder()
                 .page(1)
                 .pageSize(10)
                 .sort("desc")
@@ -212,7 +212,7 @@ class GetAllPresentationsTest {
     @Test
     void getAllPresentations_WithEmptyFilter_ShouldReturnAllResults() {
         // Given
-        PresentationCollectionRequest request = PresentationCollectionRequest.builder()
+        DocumentCollectionRequest request = DocumentCollectionRequest.builder()
                 .page(1)
                 .pageSize(10)
                 .filter("")
@@ -238,7 +238,7 @@ class GetAllPresentationsTest {
     @Test
     void getAllPresentations_WithNoResults_ShouldReturnEmptyPaginatedResponse() {
         // Given
-        PresentationCollectionRequest request = PresentationCollectionRequest.builder()
+        DocumentCollectionRequest request = DocumentCollectionRequest.builder()
                 .page(1)
                 .pageSize(10)
                 .filter("NonExistent")
@@ -264,11 +264,7 @@ class GetAllPresentationsTest {
     @Test
     void getAllPresentations_WithSecondPage_ShouldReturnCorrectPage() {
         // Given
-        PresentationCollectionRequest request = PresentationCollectionRequest.builder()
-                .page(2)
-                .pageSize(1)
-                .sort("asc")
-                .build();
+        DocumentCollectionRequest request = DocumentCollectionRequest.builder().page(2).pageSize(1).sort("asc").build();
 
         List<Presentation> secondPagePresentations = List.of(presentation2);
         Page<Presentation> presentationPage = new PageImpl<>(secondPagePresentations,

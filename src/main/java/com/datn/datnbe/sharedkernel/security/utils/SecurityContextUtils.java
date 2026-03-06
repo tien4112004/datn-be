@@ -1,6 +1,8 @@
 package com.datn.datnbe.sharedkernel.security.utils;
 
 import com.datn.datnbe.auth.api.UserProfileApi;
+import com.datn.datnbe.auth.repository.UserProfileRepo;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -17,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class SecurityContextUtils {
 
-    private final UserProfileApi userProfileApi;
+    private final UserProfileRepo userProfileApi;
 
     public String getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -47,11 +49,10 @@ public class SecurityContextUtils {
 
     public String getCurrentUserProfileId() {
         String keycloakUserId = getCurrentUserId();
-        String userProfileId = userProfileApi.getUSerProfileIdByKeycloakUserId(keycloakUserId);
-
-        if (userProfileId == null)
-            throw new AppException(ErrorCode.UNAUTHORIZED,
-                    "User profile not found for Keycloak user ID: " + keycloakUserId);
+        String userProfileId = userProfileApi.findByKeycloakUserId(keycloakUserId).orElseThrow(
+                () -> new AppException(ErrorCode.UNAUTHORIZED,
+                        "User profile not found for Keycloak user ID: " + keycloakUserId)
+        ).getId();
 
         return userProfileId;
     }
@@ -97,12 +98,10 @@ public class SecurityContextUtils {
 
     public boolean hasRole(String role) {
         String keycloakUserId = getCurrentUserId();
-        var userProfile = userProfileApi.getUserProfile(keycloakUserId);
-
-        if (userProfile == null) {
-            throw new AppException(ErrorCode.UNAUTHORIZED,
-                    "User profile not found for Keycloak user ID: " + keycloakUserId);
-        }
+        var userProfile = userProfileApi.findByKeycloakUserId(keycloakUserId).orElseThrow(
+                () -> new AppException(ErrorCode.UNAUTHORIZED,
+                        "User profile not found for Keycloak user ID: " + keycloakUserId)
+        );
 
         return userProfile.getRole().equalsIgnoreCase(role);
     }
