@@ -7,6 +7,7 @@ import com.datn.datnbe.document.dto.AssignmentMatrixDto;
 import com.datn.datnbe.document.dto.request.AssignmentCreateRequest;
 import com.datn.datnbe.document.dto.request.AssignmentSettingsUpdateRequest;
 import com.datn.datnbe.document.dto.request.AssignmentUpdateRequest;
+import com.datn.datnbe.document.dto.request.DocumentCollectionRequest;
 import com.datn.datnbe.document.dto.request.GenerateAssignmentFromMatrixRequest;
 import com.datn.datnbe.document.dto.request.GenerateFullAssignmentRequest;
 import com.datn.datnbe.document.dto.request.GenerateMatrixRequest;
@@ -57,11 +58,9 @@ public class AssignmentController {
 
     @GetMapping
     public ResponseEntity<AppResponseDto<List<AssignmentResponse>>> getAssignments(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String search) {
+        @Valid @ModelAttribute DocumentCollectionRequest request) {
 
-        PaginatedResponseDto<AssignmentResponse> paginated = assignmentApi.getAssignments(page, size, search);
+        PaginatedResponseDto<AssignmentResponse> paginated = assignmentApi.getAssignments(request);
         return ResponseEntity.ok(AppResponseDto.successWithPagination(paginated.getData(), paginated.getPagination()));
     }
 

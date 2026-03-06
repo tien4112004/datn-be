@@ -20,6 +20,7 @@ import com.datn.datnbe.document.dto.AssignmentMatrixDto;
 import com.datn.datnbe.document.dto.request.AssignmentCreateRequest;
 import com.datn.datnbe.document.dto.request.AssignmentSettingsUpdateRequest;
 import com.datn.datnbe.document.dto.request.AssignmentUpdateRequest;
+import com.datn.datnbe.document.dto.request.DocumentCollectionRequest;
 import com.datn.datnbe.document.dto.request.GenerateAssignmentFromMatrixRequest;
 import com.datn.datnbe.document.dto.request.GenerateFullAssignmentRequest;
 import com.datn.datnbe.document.dto.request.GenerateMatrixRequest;
@@ -103,12 +104,11 @@ public class AssignmentManagement implements AssignmentApi {
     }
 
     @Override
-    public PaginatedResponseDto<AssignmentResponse> getAssignments(int page, int size, String search) {
+    public PaginatedResponseDto<AssignmentResponse> getAssignments(DocumentCollectionRequest request) {
         String userId = securityContextUtils.getCurrentUserId();
         List<String> allowedIds = resourcePermissionApi.getAllResourceByTypeOfOwner(userId, "assignment");
 
-        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size, Sort.by("createdAt").descending());
-
+        Pageable pageable = PageRequest.of(Math.max(0, request.getPage() - 1), request.getPageSize(), Sort.by("createdAt").descending());
         Page<Assignment> assignmentPage = assignmentRepository.findByIdIn(allowedIds, pageable);
 
         return PaginatedResponseDto.<AssignmentResponse>builder()
