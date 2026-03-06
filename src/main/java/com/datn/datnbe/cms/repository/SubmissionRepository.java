@@ -72,7 +72,7 @@ public interface SubmissionRepository extends JpaRepository<Submission, String> 
     /**
      * Find submissions by student across all classes
      */
-    @Query("SELECT s FROM Submission s WHERE s.studentId = :studentId")
+    @Query("SELECT s FROM Submission s WHERE s.studentId = :studentId ORDER BY s.submittedAt DESC")
     List<Submission> findByStudentId(String studentId);
 
     /**

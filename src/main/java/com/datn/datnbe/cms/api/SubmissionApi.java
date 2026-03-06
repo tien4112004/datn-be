@@ -30,4 +30,6 @@ public interface SubmissionApi {
     SubmissionStatisticsDto getAssignmentStatistics(String assignmentId);
 
     SubmissionValidationResponse validateSubmission(String assignmentId, SubmissionValidationRequest request);
+
+    List<SubmissionResponseDto> getSubmissionsByStudentProfileId(String userProfileId);
 }

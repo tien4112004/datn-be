@@ -17,4 +17,5 @@ public class UserMinimalInfoDto {
     String lastName;
     String email;
     String avatarUrl;
+    String phoneNumber;
 }

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -28,6 +29,12 @@ public interface StudentRepository extends JpaRepository<Student, String> {
     Optional<Student> findByUserId(@Param("id") String userId);
 
     boolean existsByUserId(String userId);
+
+    @Query(value = """
+            SELECT s.user_id FROM student s
+            WHERE s.user_id IN :userIds
+            """, nativeQuery = true)
+    Set<String> findExistingUserIds(@Param("userIds") Collection<String> userIds);
 
     @Query("SELECT COUNT(up) FROM Student s JOIN UserProfile up ON s.userId = up.id " + "WHERE up.email LIKE :pattern")
     int countExistingUsernames(@Param("pattern") String pattern);

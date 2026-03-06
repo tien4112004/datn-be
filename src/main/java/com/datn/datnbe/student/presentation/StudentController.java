@@ -1,5 +1,7 @@
 package com.datn.datnbe.student.presentation;
 
+import com.datn.datnbe.cms.api.SubmissionApi;
+import com.datn.datnbe.cms.dto.response.SubmissionResponseDto;
 import com.datn.datnbe.student.api.StudentApi;
 import com.datn.datnbe.student.api.StudentImportApi;
 import com.datn.datnbe.student.dto.request.StudentCreateRequest;
@@ -8,6 +10,7 @@ import com.datn.datnbe.student.dto.request.RegeneratePasswordRequest;
 import com.datn.datnbe.student.dto.response.StudentImportResponseDto;
 import com.datn.datnbe.student.dto.response.StudentResponseDto;
 import com.datn.datnbe.sharedkernel.dto.AppResponseDto;
+import com.datn.datnbe.sharedkernel.security.annotation.RequireTeacherPermission;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +34,7 @@ public class StudentController {
 
     StudentImportApi studentImportApi;
     StudentApi studentApi;
+    SubmissionApi submissionApi;
 
     @GetMapping("/classes/{classId}/students")
     public ResponseEntity<AppResponseDto<?>> getStudentsByClass(@PathVariable String classId,
@@ -96,6 +100,16 @@ public class StudentController {
         log.info("Received request to get student with ID: {}", studentId);
         StudentResponseDto response = studentApi.getStudentById(studentId);
         return ResponseEntity.ok(AppResponseDto.success(response));
+    }
+
+    @GetMapping("/students/{studentId}/submissions")
+    @RequireTeacherPermission
+    public ResponseEntity<AppResponseDto<List<SubmissionResponseDto>>> getStudentSubmissions(
+            @PathVariable String studentId) {
+        log.info("Received request to get submissions for student: {}", studentId);
+        StudentResponseDto student = studentApi.getStudentById(studentId);
+        List<SubmissionResponseDto> submissions = submissionApi.getSubmissionsByStudentProfileId(student.getUserId());
+        return ResponseEntity.ok(AppResponseDto.success(submissions));
     }
 
     @PostMapping("/students/regenerate-passwords")

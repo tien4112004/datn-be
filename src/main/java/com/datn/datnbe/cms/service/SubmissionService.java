@@ -6,6 +6,7 @@ import com.datn.datnbe.ai.dto.request.AIGradeRequest;
 import com.datn.datnbe.ai.dto.response.AIGradeResponse;
 import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.dto.response.UserMinimalInfoDto;
+import com.datn.datnbe.cms.api.ClassApi;
 import com.datn.datnbe.cms.api.PostApi;
 import com.datn.datnbe.cms.api.SubmissionApi;
 import com.datn.datnbe.cms.dto.request.SubmissionCreateRequest;
@@ -58,6 +59,7 @@ public class SubmissionService implements SubmissionApi {
     private final AssignmentPostRepository assignmentPostRepository;
     private final ContentGenerationApi contentGenerationApi;
     private final ContextService contextService;
+    private final ClassApi classApi;
 
     @Override
     public synchronized SubmissionResponseDto createSubmission(String postId, SubmissionCreateRequest request) {
@@ -486,6 +488,71 @@ public class SubmissionService implements SubmissionApi {
         }
 
         return SubmissionValidationResponse.builder().valid(errors.isEmpty()).errors(errors).warnings(warnings).build();
+    }
+
+    @Override
+    public List<SubmissionResponseDto> getSubmissionsByStudentProfileId(String userProfileId) {
+        List<Submission> submissions = submissionRepository.findByStudentId(userProfileId);
+        List<SubmissionResponseDto> dtos = enrichSubmissionDtoList(
+                submissions.stream().map(submissionMapper::toDto).collect(Collectors.toList()));
+
+        // Batch-enrich with assignmentTitle and className
+        Map<String, String> postToClassMap = new HashMap<>();
+        Map<String, String> postToAssignmentMap = new HashMap<>();
+        Map<String, String> classNameCache = new HashMap<>();
+        Map<String, String> assignmentTitleCache = new HashMap<>();
+
+        for (SubmissionResponseDto dto : dtos) {
+            if (dto.getPostId() == null)
+                continue;
+            if (postToClassMap.containsKey(dto.getPostId()))
+                continue;
+            try {
+                var post = postApi.getPostById(dto.getPostId());
+                if (post.getClassId() != null)
+                    postToClassMap.put(dto.getPostId(), post.getClassId());
+                if (post.getAssignmentId() != null)
+                    postToAssignmentMap.put(dto.getPostId(), post.getAssignmentId());
+            } catch (Exception e) {
+                log.warn("Could not fetch post {} for submission enrichment", dto.getPostId(), e);
+            }
+        }
+
+        for (String classId : postToClassMap.values()) {
+            if (classNameCache.containsKey(classId))
+                continue;
+            try {
+                var cls = classApi.getClassById(classId);
+                if (cls.getName() != null)
+                    classNameCache.put(classId, cls.getName());
+            } catch (Exception e) {
+                log.warn("Could not fetch class {} for submission enrichment", classId, e);
+            }
+        }
+
+        for (String assignmentId : postToAssignmentMap.values()) {
+            if (assignmentTitleCache.containsKey(assignmentId))
+                continue;
+            try {
+                var assignment = assignmentPostRepository.findAssignmentById(assignmentId);
+                if (assignment != null && assignment.getTitle() != null) {
+                    assignmentTitleCache.put(assignmentId, assignment.getTitle());
+                }
+            } catch (Exception e) {
+                log.warn("Could not fetch assignment {} for submission enrichment", assignmentId, e);
+            }
+        }
+
+        for (SubmissionResponseDto dto : dtos) {
+            String classId = postToClassMap.get(dto.getPostId());
+            String assignmentId = postToAssignmentMap.get(dto.getPostId());
+            if (classId != null)
+                dto.setClassName(classNameCache.get(classId));
+            if (assignmentId != null)
+                dto.setAssignmentTitle(assignmentTitleCache.get(assignmentId));
+        }
+
+        return dtos;
     }
 
     // Helper methods

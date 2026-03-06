@@ -36,6 +36,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -381,6 +385,7 @@ public class UserProfileManagement implements UserProfileApi {
                         .lastName(userProfile.getLastName())
                         .email(userProfile.getEmail())
                         .avatarUrl(userProfile.getAvatarUrl())
+                        .phoneNumber(userProfile.getPhoneNumber())
                         .build())
                 .orElse(null);
     }
@@ -413,6 +418,36 @@ public class UserProfileManagement implements UserProfileApi {
             log.error("Failed to update password for user {}: {}", userId, e.getMessage(), e);
             throw new AppException(ErrorCode.USER_UPDATE_FAILED, "Failed to update password");
         }
+    }
+
+    @Override
+    public Map<String, UserMinimalInfoDto> getUserMinimalInfoBatch(List<String> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return Map.of();
+        }
+        return userProfileRepo.findAllByIdOrKeycloakUserIdIn(userIds)
+                .stream()
+                .collect(Collectors.toMap(UserProfile::getId,
+                        u -> UserMinimalInfoDto.builder()
+                                .id(u.getId())
+                                .firstName(u.getFirstName())
+                                .lastName(u.getLastName())
+                                .email(u.getEmail())
+                                .avatarUrl(u.getAvatarUrl())
+                                .phoneNumber(u.getPhoneNumber())
+                                .build(),
+                        (a, b) -> a));
+    }
+
+    @Override
+    public Map<String, String> getKeycloakUserIdsBatch(List<String> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return Map.of();
+        }
+        return userProfileRepo.findAllByIdOrKeycloakUserIdIn(userIds)
+                .stream()
+                .filter(u -> u.getKeycloakUserId() != null)
+                .collect(Collectors.toMap(UserProfile::getId, UserProfile::getKeycloakUserId, (a, b) -> a));
     }
 
     @Override
