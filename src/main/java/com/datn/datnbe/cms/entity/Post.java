@@ -1,9 +1,12 @@
 package com.datn.datnbe.cms.entity;
 
+import com.datn.datnbe.cms.dto.AttachmentDto;
+import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.util.Date;
@@ -36,8 +39,9 @@ public class Post {
     @Column(name = "type", length = 32)
     String type;
 
-    @Column(name = "attachments")
-    String[] attachments;
+    @Type(JsonType.class)
+    @Column(name = "attachments", columnDefinition = "jsonb")
+    List<AttachmentDto> attachments;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default

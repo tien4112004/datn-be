@@ -1,5 +1,6 @@
 package com.datn.datnbe.cms.dto.request;
 
+import com.datn.datnbe.cms.dto.AttachmentDto;
 import com.datn.datnbe.cms.dto.LinkedResourceDto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -17,7 +18,7 @@ public class PostCreateRequest {
 
     private String type; // Post, Assignment
 
-    private List<String> attachments;
+    private List<AttachmentDto> attachments;
 
     @Valid
     private List<LinkedResourceDto> linkedResources;

@@ -1,6 +1,7 @@
 package com.datn.datnbe.cms.dto.response;
 
 import com.datn.datnbe.auth.dto.response.UserMinimalInfoDto;
+import com.datn.datnbe.cms.dto.AttachmentDto;
 import com.datn.datnbe.cms.dto.LinkedResourceDto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
@@ -23,7 +24,7 @@ public class PostResponseDto {
     private UserMinimalInfoDto author;
     private String content;
     private String type; // Post, Assignment
-    private List<String> attachments;
+    private List<AttachmentDto> attachments;
     private List<LinkedResourceDto> linkedResources;
     private String linkedLessonId;
     private String assignmentId;

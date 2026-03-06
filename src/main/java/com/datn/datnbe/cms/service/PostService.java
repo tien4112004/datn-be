@@ -5,6 +5,7 @@ import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.dto.request.ResourceRegistrationRequest;
 import com.datn.datnbe.auth.dto.response.UserMinimalInfoDto;
 import com.datn.datnbe.cms.api.PostApi;
+import com.datn.datnbe.cms.dto.AttachmentDto;
 import com.datn.datnbe.cms.dto.LinkedResourceDto;
 import com.datn.datnbe.cms.dto.request.AssignmentRenameRequest;
 import com.datn.datnbe.cms.dto.request.PinPostRequest;
@@ -32,6 +33,7 @@ import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import com.datn.datnbe.student.api.StudentApi;
+import com.nimbusds.openid.connect.sdk.assurance.evidences.attachment.Attachment;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -81,6 +83,19 @@ public class PostService implements PostApi {
         post.setClassId(classId);
         post.setAuthorId(securityContextUtils.getCurrentUserId());
         post.setAllowComments(Boolean.TRUE.equals(request.getAllowComments()));
+        List<AttachmentDto> attachments = request.getAttachments() == null ? null :
+                request.getAttachments().stream()
+                        .map(a -> {
+                            if (a.getName() == null || a.getName().isEmpty()) {
+                                String fallback = a.getUrl() != null
+                                        ? a.getUrl().substring(a.getUrl().lastIndexOf('/') + 1)
+                                        : null;
+                                a.setName(fallback);
+                            }
+                            return a;
+                        })
+                        .toList();
+        post.setAttachments(attachments);
 
         // If assignmentId is provided in request, clone the assignment for this post
         if (request.getAssignmentId() != null && !request.getAssignmentId().isEmpty()) {
@@ -258,6 +273,19 @@ public class PostService implements PostApi {
         String classId = exist.getClassId();
 
         postMapper.updateEntity(request, exist);
+        List<AttachmentDto> attachments = request.getAttachments() == null ? null :
+        request.getAttachments().stream()
+                .map(a -> {
+                    if (a.getName() == null || a.getName().isEmpty()) {
+                        String fallback = a.getUrl() != null
+                                ? a.getUrl().substring(a.getUrl().lastIndexOf('/') + 1)
+                                : null;
+                        a.setName(fallback);
+                    }
+                    return a;
+                })
+                .toList();
+        exist.setAttachments(attachments);
         Post saved = postRepository.save(exist);
 
         // Update linked resources in join table
