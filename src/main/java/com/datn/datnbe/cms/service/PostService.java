@@ -178,6 +178,10 @@ public class PostService implements PostApi {
             postLinkedResourceRepository.saveAll(postLinkedResources);
 
             // Grant class permissions for linked resources
+            // If post allows comments, upgrade all linked resources to comment scope
+            if (Boolean.TRUE.equals(request.getAllowComments())) {
+                linkedResources.forEach(r -> r.setPermissionLevel("comment"));
+            }
             linkedResourcePermissionService.grantClassPermissions(classId, linkedResources);
         }
 

@@ -53,7 +53,10 @@ public interface DocumentRepository extends JpaRepository<DocumentVisit, Integer
                         'thumbnail', p.thumbnail,
                         'createdAt', p.created_at,
                         'updatedAt', p.updated_at,
-                        'type', 'presentation'
+                        'type', 'presentation',
+                        'grade', p.grade,
+                        'subject', p.subject,
+                        'chapter', p.chapter
                     ) AS data
                 FROM presentations p
                 WHERE p.title LIKE CONCAT('%', :keyword, '%') AND (:chapter IS NULL OR p.chapter = :chapter) AND (:subject IS NULL OR p.subject = :subject) AND (:grade IS NULL OR p.grade = :grade) AND p.id IN (:presentationIds)
@@ -69,7 +72,10 @@ public interface DocumentRepository extends JpaRepository<DocumentVisit, Integer
                         'thumbnail', m.thumbnail,
                         'createdAt', m.created_at,
                         'updatedAt', m.updated_at,
-                        'type', 'mindmap'
+                        'type', 'mindmap',
+                        'grade', m.grade,
+                        'subject', m.subject,
+                        'chapter', m.chapter
                     ) AS data
                 FROM mindmaps m
                 WHERE m.title LIKE CONCAT('%', :keyword, '%') AND (:chapter IS NULL OR m.chapter = :chapter) AND (:subject IS NULL OR m.subject = :subject) AND (:grade IS NULL OR m.grade = :grade) AND m.id IN (:mindmapIds)
@@ -79,7 +85,17 @@ public interface DocumentRepository extends JpaRepository<DocumentVisit, Integer
 
                 SELECT
                     a.created_at,
-                    to_jsonb(a) || jsonb_build_object('type','assignment')
+                    jsonb_build_object(
+                        'id', a.id,
+                        'title', a.title,
+                        'description', a.description,
+                        'createdAt', a.created_at,
+                        'updatedAt', a.updated_at,
+                        'type', 'assignment',
+                        'grade', a.grade,
+                        'subject', a.subject,
+                        'chapter', a.chapter,
+                    ) AS data
                 FROM assignments a
                 WHERE a.title LIKE CONCAT('%', :keyword, '%') AND (:chapter IS NULL OR a.chapter = :chapter) AND (:subject IS NULL OR a.subject = :subject) AND (:grade IS NULL OR a.grade = :grade) AND a.id IN (:assignmentIds)
             ) t

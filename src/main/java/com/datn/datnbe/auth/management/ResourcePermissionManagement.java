@@ -211,35 +211,30 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
                     .toResourcePermissionResponse(documentId, userId, List.of(READ_SCOPE, COMMENT_SCOPE, EDIT_SCOPE));
         }
 
-        // Check if resource is public - grant public permissions to non-owners
+        // Get Keycloak permissions (if user is in any share group)
+        List<String> keycloakPermissions = keycloakAuthzService.checkUserPermissions(userId, mapping.getKeycloakResourceId());
+
+        // Get public permissions (if resource is public)
+        List<String> publicPermissions = new ArrayList<>();
         if (Boolean.TRUE.equals(mapping.getIsPublic())) {
-            log.info("Resource {} is public (user {} is not owner), granting public permission: {}",
-                    documentId,
-                    userId,
-                    mapping.getPublicPermission());
-
-            // Grant public permission level
-            List<String> publicPermissions;
+            log.info("Resource {} is public, applying public permission: {}", documentId, mapping.getPublicPermission());
             if ("comment".equals(mapping.getPublicPermission())) {
-                publicPermissions = List.of(READ_SCOPE, COMMENT_SCOPE); // Commenter gets both read and comment
+                publicPermissions = List.of(READ_SCOPE, COMMENT_SCOPE);
             } else {
-                publicPermissions = List.of(READ_SCOPE); // Default to read-only
+                publicPermissions = List.of(READ_SCOPE);
             }
-
-            return mapper.toResourcePermissionResponse(documentId, userId, publicPermissions);
         }
 
-        // For non-owners of non-public resources, check Keycloak permissions
-        log.info("User {} is NOT the owner of document {} (owner is '{}'), checking Keycloak permissions",
-                userId,
-                documentId,
-                mapping.getOwnerId());
+        // Merge both sources: take the highest permission level
+        List<String> mergedPermissions = mergePermissions(keycloakPermissions, publicPermissions);
 
-        List<String> permissions = keycloakAuthzService.checkUserPermissions(userId, mapping.getKeycloakResourceId());
+        if (mergedPermissions.isEmpty()) {
+            log.info("User {} has no permissions on document {}", userId, documentId);
+        } else {
+            log.info("User {} has merged permissions {} on document {}", userId, mergedPermissions, documentId);
+        }
 
-        log.debug("User has permissions {} on document {}", permissions, documentId);
-
-        return mapper.toResourcePermissionResponse(documentId, userId, permissions);
+        return mapper.toResourcePermissionResponse(documentId, userId, mergedPermissions);
     }
 
     @Transactional
@@ -676,6 +671,18 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
             return "read";
         }
         return "read"; // Default fallback
+    }
+
+    /**
+     * Merge permissions from two sources (Keycloak groups + public access).
+     * Returns the union of permissions, effectively taking the highest level.
+     * e.g. [read] + [read, comment] → [read, comment]
+     */
+    private List<String> mergePermissions(List<String> keycloakPerms, List<String> publicPerms) {
+        Set<String> merged = new java.util.HashSet<>();
+        if (keycloakPerms != null) merged.addAll(keycloakPerms);
+        if (publicPerms != null) merged.addAll(publicPerms);
+        return new ArrayList<>(merged);
     }
 
     private void notifyUserResourceShared(String targetUserId,
