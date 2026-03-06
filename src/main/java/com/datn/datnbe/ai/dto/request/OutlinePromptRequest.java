@@ -28,6 +28,9 @@ public class OutlinePromptRequest {
     @Size(max = 100, message = "Subject must not exceed 100 characters")
     String subject;
 
+    @Size(max = 255, message = "Chapter must not exceed 255 characters")
+    String chapter;
+
     @JsonProperty("file_urls")
     @JsonAlias("fileUrls")
     List<String> fileUrls;

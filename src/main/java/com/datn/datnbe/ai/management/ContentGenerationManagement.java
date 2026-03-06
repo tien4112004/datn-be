@@ -144,7 +144,8 @@ public class ContentGenerationManagement implements ContentGenerationApi {
                     AiWokerResponse.class,
                     headers);
 
-            // Token usage will be extracted by controller via extractAndSaveTokenUsage(traceId)
+            // Token usage will be extracted by controller via
+            // extractAndSaveTokenUsage(traceId)
             // Do not call saveTokenUsageIfPresent here - it doesn't have correct traceId
 
             log.info("Batch outline generation completed successfully");
@@ -175,7 +176,8 @@ public class ContentGenerationManagement implements ContentGenerationApi {
                     AiWokerResponse.class,
                     headers);
 
-            // Token usage will be extracted by controller via extractAndSaveTokenUsage(traceId)
+            // Token usage will be extracted by controller via
+            // extractAndSaveTokenUsage(traceId)
             // Do not call saveTokenUsageIfPresent here - it doesn't have correct traceId
 
             log.info("Batch presentation generation completed successfully");
@@ -219,7 +221,8 @@ public class ContentGenerationManagement implements ContentGenerationApi {
                 request.getGrade(),
                 request.getSubject());
 
-        // TODO: Replace this mock implementation with actual chapter fetching from database
+        // TODO: Replace this mock implementation with actual chapter fetching from
+        // database
         // Query: SELECT chapter_name FROM chapters WHERE grade = ? AND subject = ?
         List<String> chapters = fetchChaptersFromDatabase(request.getGrade(), request.getSubject());
 
@@ -271,7 +274,7 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     /**
      * Fetch chapters from database based on grade and subject.
      *
-     * @param grade Grade level
+     * @param grade   Grade level
      * @param subject Subject code (T, TV, TA)
      * @return List of chapter names
      */

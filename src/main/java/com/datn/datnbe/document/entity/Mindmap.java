@@ -50,6 +50,15 @@ public class Mindmap {
     @Column(name = "thumbnail", columnDefinition = "TEXT", nullable = true)
     String thumbnail;
 
+    @Column(name = "grade", length = 50)
+    String grade;
+
+    @Column(name = "subject", length = 100)
+    String subject;
+
+    @Column(name = "chapter", length = 255)
+    String chapter;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "extra_fields", columnDefinition = "jsonb")
     @Builder.Default

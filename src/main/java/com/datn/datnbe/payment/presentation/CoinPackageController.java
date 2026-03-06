@@ -39,9 +39,7 @@ public class CoinPackageController {
 
         List<CoinPackageDto> packages = coinPackageService.getAllPackages();
 
-        return ResponseEntity.ok(AppResponseDto.<List<CoinPackageDto>>builder()
-                .data(packages)
-                .build());
+        return ResponseEntity.ok(AppResponseDto.<List<CoinPackageDto>>builder().data(packages).build());
     }
 
     /**
@@ -54,9 +52,7 @@ public class CoinPackageController {
 
         CoinPackageDto packageDto = coinPackageService.getPackageById(packageId);
 
-        return ResponseEntity.ok(AppResponseDto.<CoinPackageDto>builder()
-                .data(packageDto)
-                .build());
+        return ResponseEntity.ok(AppResponseDto.<CoinPackageDto>builder().data(packageDto).build());
     }
 
     /**
@@ -71,9 +67,7 @@ public class CoinPackageController {
         CoinPackageDto packageDto = coinPackageService.createCoinPackage(request);
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(AppResponseDto.<CoinPackageDto>builder()
-                        .data(packageDto)
-                        .build());
+                .body(AppResponseDto.<CoinPackageDto>builder().data(packageDto).build());
     }
 
     /**
@@ -87,9 +81,7 @@ public class CoinPackageController {
 
         CoinPackageDto packageDto = coinPackageService.updateCoinPackage(packageId, request);
 
-        return ResponseEntity.ok(AppResponseDto.<CoinPackageDto>builder()
-                .data(packageDto)
-                .build());
+        return ResponseEntity.ok(AppResponseDto.<CoinPackageDto>builder().data(packageDto).build());
     }
 
     /**
@@ -115,8 +107,6 @@ public class CoinPackageController {
 
         CoinPackageDto packageDto = coinPackageService.togglePackageStatus(packageId);
 
-        return ResponseEntity.ok(AppResponseDto.<CoinPackageDto>builder()
-                .data(packageDto)
-                .build());
+        return ResponseEntity.ok(AppResponseDto.<CoinPackageDto>builder().data(packageDto).build());
     }
 }
