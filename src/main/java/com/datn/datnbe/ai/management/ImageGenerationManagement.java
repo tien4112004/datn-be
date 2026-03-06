@@ -48,7 +48,9 @@ public class ImageGenerationManagement implements ImageGenerationApi {
 
         //TODO: check if model supports image generation
 
-        if (request.getPresentationId() != null && !request.getPresentationId().isEmpty()) {
+        if (request.getDocumentId() != null && !request.getDocumentId().isEmpty()) {
+            traceId = request.getDocumentId();
+        } else if (request.getPresentationId() != null && !request.getPresentationId().isEmpty()) {
             traceId = request.getPresentationId();
         }
         log.info("Calling AI to generate image with traceId: {}", traceId);

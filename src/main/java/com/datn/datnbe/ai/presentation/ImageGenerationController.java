@@ -131,8 +131,11 @@ public class ImageGenerationController {
             fullRequestBody = "";
         }
 
-        // Record token usage
-        recordImageTokenUsage(ownerId, "image", request, request.getPresentationId(), fullRequestBody);
+        // Record token usage — prefer documentId (for slide generation tracking) over presentationId
+        String tokenDocumentId = (request.getDocumentId() != null && !request.getDocumentId().isEmpty())
+                ? request.getDocumentId()
+                : request.getPresentationId();
+        recordImageTokenUsage(ownerId, "image", request, tokenDocumentId, fullRequestBody);
 
         return ResponseEntity.ok(AppResponseDto.<ImageResponseDto>builder().data(uploadedMedia).build());
     }

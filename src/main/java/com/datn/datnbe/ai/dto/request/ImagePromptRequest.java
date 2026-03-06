@@ -23,4 +23,5 @@ public class ImagePromptRequest {
     String prompt;
     String negativePrompt;
     String presentationId;
+    String documentId;
 }
