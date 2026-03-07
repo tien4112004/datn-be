@@ -43,8 +43,8 @@ services:
 
       # HTTP/HTTPS Configuration for production behind reverse proxy
       - KC_HTTP_ENABLED=true
-      - KC_HOSTNAME_URL=https://auth.huy-devops.site
-      - KC_HOSTNAME_ADMIN_URL=https://auth.huy-devops.site
+      - KC_HOSTNAME_URL=${KEYCLOAK_SERVER_URL}
+      - KC_HOSTNAME_ADMIN_URL=${KEYCLOAK_SERVER_URL}
       - KC_HOSTNAME_STRICT=true
       - KC_HOSTNAME_STRICT_HTTPS=true
       - KC_PROXY=edge
