@@ -25,6 +25,7 @@ import com.datn.datnbe.auth.mapper.ResourcePermissionMapper;
 import com.datn.datnbe.auth.repository.DocumentResourceMappingRepository;
 import com.datn.datnbe.auth.repository.UserProfileRepo;
 import com.datn.datnbe.auth.service.KeycloakAuthorizationService;
+import com.datn.datnbe.sharedkernel.notification.constants.NotificationMessages;
 import com.datn.datnbe.sharedkernel.notification.dto.SendNotificationToUsersRequest;
 import com.datn.datnbe.sharedkernel.notification.enums.NotificationType;
 import com.datn.datnbe.sharedkernel.notification.service.NotificationService;
@@ -212,12 +213,15 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
         }
 
         // Get Keycloak permissions (if user is in any share group)
-        List<String> keycloakPermissions = keycloakAuthzService.checkUserPermissions(userId, mapping.getKeycloakResourceId());
+        List<String> keycloakPermissions = keycloakAuthzService.checkUserPermissions(userId,
+                mapping.getKeycloakResourceId());
 
         // Get public permissions (if resource is public)
         List<String> publicPermissions = new ArrayList<>();
         if (Boolean.TRUE.equals(mapping.getIsPublic())) {
-            log.info("Resource {} is public, applying public permission: {}", documentId, mapping.getPublicPermission());
+            log.info("Resource {} is public, applying public permission: {}",
+                    documentId,
+                    mapping.getPublicPermission());
             if ("comment".equals(mapping.getPublicPermission())) {
                 publicPermissions = List.of(READ_SCOPE, COMMENT_SCOPE);
             } else {
@@ -680,8 +684,10 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
      */
     private List<String> mergePermissions(List<String> keycloakPerms, List<String> publicPerms) {
         Set<String> merged = new java.util.HashSet<>();
-        if (keycloakPerms != null) merged.addAll(keycloakPerms);
-        if (publicPerms != null) merged.addAll(publicPerms);
+        if (keycloakPerms != null)
+            merged.addAll(keycloakPerms);
+        if (publicPerms != null)
+            merged.addAll(publicPerms);
         return new ArrayList<>(merged);
     }
 
@@ -741,11 +747,13 @@ public class ResourcePermissionManagement implements ResourcePermissionApi {
                 log.warn("Failed to fetch sender profile: {}", e.getMessage());
             }
 
-            String body = senderName + " shared \"" + resourceTitle + "\" with you.";
+            NotificationMessages.NotificationTemplate template = NotificationMessages.TEMPLATES.getOrDefault(type,
+                    NotificationMessages.TEMPLATES.get(NotificationType.SHARED_PRESENTATION));
+            String body = String.format(template.bodyTemplate(), senderName, resourceTitle);
 
             SendNotificationToUsersRequest request = SendNotificationToUsersRequest.builder()
                     .userIds(List.of(targetUserId))
-                    .title("Resource Shared")
+                    .title(template.title())
                     .body(body)
                     .type(type)
                     .referenceId(documentId)

@@ -129,16 +129,14 @@ public class DocumentService {
                 mindmapIds,
                 assignmentIds);
 
-        List<JsonNode> documents = paginatedDocuments.getContent().stream()
-                .map(json -> {
-                    try {
-                        return objectMapper.readTree(json);
-                    } catch (Exception e) {
-                        log.warn("Failed to parse document JSON: {}", e.getMessage());
-                        return objectMapper.missingNode();
-                    }
-                })
-                .toList();
+        List<JsonNode> documents = paginatedDocuments.getContent().stream().map(json -> {
+            try {
+                return objectMapper.readTree(json);
+            } catch (Exception e) {
+                log.warn("Failed to parse document JSON: {}", e.getMessage());
+                return objectMapper.missingNode();
+            }
+        }).toList();
 
         PaginationDto pagination = new PaginationDto(request.getPage(), request.getPageSize(),
                 paginatedDocuments.getTotalElements(), paginatedDocuments.getTotalPages());
