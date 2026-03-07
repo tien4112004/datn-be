@@ -11,7 +11,7 @@ import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 public interface PresentationApi {
     PresentationCreateResponseDto createPresentation(PresentationCreateRequest request);
 
-    PaginatedResponseDto<PresentationListResponseDto> getAllPresentations(PresentationCollectionRequest request);
+    PaginatedResponseDto<PresentationListResponseDto> getAllPresentations(DocumentCollectionRequest request);
 
     void updatePresentation(String id, PresentationUpdateRequest request, MultipartFile thumbnailFile);
 

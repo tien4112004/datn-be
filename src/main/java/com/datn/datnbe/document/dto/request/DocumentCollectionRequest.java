@@ -1,0 +1,29 @@
+package com.datn.datnbe.document.dto.request;
+
+import com.datn.datnbe.sharedkernel.dto.BaseCollectionRequest;
+import com.fasterxml.jackson.annotation.JsonAlias;
+
+import jakarta.validation.constraints.Size;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+@Data
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
+public class DocumentCollectionRequest extends BaseCollectionRequest {
+
+    @Size(max = 100, message = "Filter length cannot exceed 100 characters")
+    @JsonAlias({"search", "q", "searchQuery"})
+    private String filter;
+    private String chapter;
+    private String subject;
+    private String grade;
+
+    @Builder
+    public DocumentCollectionRequest(int page, int pageSize, String sort, String filter) {
+        super(page, pageSize, sort);
+        this.filter = filter;
+    }
+}

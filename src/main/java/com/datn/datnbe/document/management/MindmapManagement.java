@@ -21,7 +21,7 @@ import com.datn.datnbe.auth.api.ResourcePermissionApi;
 import com.datn.datnbe.auth.dto.request.ResourceRegistrationRequest;
 import com.datn.datnbe.document.api.MindmapApi;
 import com.datn.datnbe.document.dto.DocumentMetadataDto;
-import com.datn.datnbe.document.dto.request.MindmapCollectionRequest;
+import com.datn.datnbe.document.dto.request.DocumentCollectionRequest;
 import com.datn.datnbe.document.dto.request.MindmapCreateRequest;
 import com.datn.datnbe.document.dto.request.MindmapUpdateRequest;
 import com.datn.datnbe.document.dto.request.MindmapUpdateTitleAndDescriptionRequest;
@@ -105,7 +105,7 @@ public class MindmapManagement implements MindmapApi {
 
     @Override
     @Transactional(readOnly = true)
-    public PaginatedResponseDto<MindmapListResponseDto> getAllMindmaps(MindmapCollectionRequest request) {
+    public PaginatedResponseDto<MindmapListResponseDto> getAllMindmaps(DocumentCollectionRequest request) {
         log.info("Retrieving mindmaps with pagination - page: {}, size: {}", request.getPage(), request.getPageSize());
 
         try {

@@ -4,6 +4,7 @@ import com.datn.datnbe.document.dto.AssignmentMatrixDto;
 import com.datn.datnbe.document.dto.request.AssignmentCreateRequest;
 import com.datn.datnbe.document.dto.request.AssignmentSettingsUpdateRequest;
 import com.datn.datnbe.document.dto.request.AssignmentUpdateRequest;
+import com.datn.datnbe.document.dto.request.DocumentCollectionRequest;
 import com.datn.datnbe.document.dto.request.GenerateAssignmentFromMatrixRequest;
 import com.datn.datnbe.document.dto.request.GenerateFullAssignmentRequest;
 import com.datn.datnbe.document.dto.request.GenerateMatrixRequest;
@@ -15,7 +16,7 @@ public interface AssignmentApi {
 
     AssignmentResponse createAssignment(AssignmentCreateRequest request);
 
-    PaginatedResponseDto<AssignmentResponse> getAssignments(int page, int size, String search);
+    PaginatedResponseDto<AssignmentResponse> getAssignments(DocumentCollectionRequest request);
 
     AssignmentResponse getAssignmentById(String id);
 

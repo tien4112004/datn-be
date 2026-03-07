@@ -4,7 +4,7 @@ import com.datn.datnbe.auth.api.ResourcePermissionApi;
 import com.datn.datnbe.auth.dto.request.ResourceRegistrationRequest;
 import com.datn.datnbe.document.api.PresentationApi;
 import com.datn.datnbe.document.dto.DocumentMetadataDto;
-import com.datn.datnbe.document.dto.request.PresentationCollectionRequest;
+import com.datn.datnbe.document.dto.request.DocumentCollectionRequest;
 import com.datn.datnbe.document.dto.request.PresentationCreateRequest;
 import com.datn.datnbe.document.dto.request.PresentationUpdateRequest;
 import com.datn.datnbe.document.dto.request.PresentationUpdateTitleRequest;
@@ -125,8 +125,7 @@ public class PresentationManagement implements PresentationApi {
     }
 
     @Override
-    public PaginatedResponseDto<PresentationListResponseDto> getAllPresentations(
-            PresentationCollectionRequest request) {
+    public PaginatedResponseDto<PresentationListResponseDto> getAllPresentations(DocumentCollectionRequest request) {
         log.info("Fetching presentations with collection request - page: {}, pageSize: {}, filter: {}, sort: {}",
                 request.getPage(),
                 request.getPageSize(),

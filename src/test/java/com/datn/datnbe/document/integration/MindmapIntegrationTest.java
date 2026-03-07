@@ -3,7 +3,7 @@ package com.datn.datnbe.document.integration;
 import com.datn.datnbe.auth.api.ResourcePermissionApi;
 import com.datn.datnbe.document.dto.MindmapNodeDto;
 import com.datn.datnbe.document.dto.MindmapEdgeDto;
-import com.datn.datnbe.document.dto.request.MindmapCollectionRequest;
+import com.datn.datnbe.document.dto.request.DocumentCollectionRequest;
 import com.datn.datnbe.document.dto.request.MindmapCreateRequest;
 import com.datn.datnbe.document.dto.request.MindmapUpdateTitleAndDescriptionRequest;
 import com.datn.datnbe.document.dto.response.MindmapCreateResponseDto;
@@ -523,7 +523,7 @@ public class MindmapIntegrationTest extends BaseIntegrationTest {
         }
 
         // Act - Get first page
-        MindmapCollectionRequest pageRequest = MindmapCollectionRequest.builder().page(1).pageSize(10).build();
+        DocumentCollectionRequest pageRequest = DocumentCollectionRequest.builder().page(1).pageSize(10).build();
         PaginatedResponseDto<MindmapListResponseDto> page1 = management.getAllMindmaps(pageRequest);
 
         // Assert

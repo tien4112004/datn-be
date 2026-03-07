@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.datn.datnbe.document.api.MindmapApi;
-import com.datn.datnbe.document.dto.request.MindmapCollectionRequest;
+import com.datn.datnbe.document.dto.request.DocumentCollectionRequest;
 import com.datn.datnbe.document.dto.request.MindmapCreateRequest;
 import com.datn.datnbe.document.dto.request.MindmapUpdateRequest;
 import com.datn.datnbe.document.dto.request.MindmapUpdateTitleAndDescriptionRequest;
@@ -53,7 +53,7 @@ public class MindmapController {
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<AppResponseDto<List<MindmapListResponseDto>>> getAllMindmapsPaginated(
-            @Valid @ModelAttribute MindmapCollectionRequest request) {
+            @Valid @ModelAttribute DocumentCollectionRequest request) {
         log.info("Received request to get paginated mindmaps - page: {}, size: {}",
                 request.getPage(),
                 request.getPageSize());
