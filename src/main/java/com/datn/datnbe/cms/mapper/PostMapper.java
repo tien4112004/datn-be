@@ -20,6 +20,7 @@ public interface PostMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "postLinkedResources", ignore = true)
+    @Mapping(target = "attachments", ignore = true)
     Post toEntity(PostCreateRequest request);
 
     @Mapping(target = "linkedResources", source = "postLinkedResources")
@@ -33,5 +34,6 @@ public interface PostMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "postLinkedResources", ignore = true)
+    @Mapping(target = "attachments", ignore = true)
     void updateEntity(PostUpdateRequest request, @org.mapstruct.MappingTarget Post entity);
 }

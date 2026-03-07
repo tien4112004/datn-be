@@ -16,6 +16,8 @@ public interface MediaRepository extends JpaRepository<Media, Long> {
 
     Optional<Media> findByStorageKey(String storageKey);
 
+    Optional<Media> findByCdnUrl(String cdnUrl);
+
     List<Media> findByMediaType(MediaType mediaType);
 
     Page<Media> findByMediaType(MediaType mediaType, Pageable pageable);

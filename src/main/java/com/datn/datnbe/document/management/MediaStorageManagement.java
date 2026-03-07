@@ -83,6 +83,7 @@ public class MediaStorageManagement implements MediaStorageApi {
                 .mediaType(mediaType.name())
                 .cdnUrl(savedMedia.getCdnUrl())
                 .extension(extension)
+                .originalFilename(savedMedia.getOriginalFilename())
                 .build();
     }
 
@@ -142,6 +143,7 @@ public class MediaStorageManagement implements MediaStorageApi {
                 .mediaType(mediaType.name())
                 .cdnUrl(savedMedia.getCdnUrl())
                 .extension(extension)
+                .originalFilename(savedMedia.getOriginalFilename())
                 .build();
     }
 
