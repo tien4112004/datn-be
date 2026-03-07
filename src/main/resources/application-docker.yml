@@ -137,8 +137,10 @@ app:
   cors:
     allowed-origins:
       - "http://localhost:5173"
-      - "https://api.huy-devops.site"
-      - "https://elearning-api.llms.vn"
+      - "https://app.huy-devops.site"
+      - "https://admin.huy-devops.site"
+      - "https://elearning.llms.vn"
+      - "https://elearning-admin.llms.vn"
     allowed-origin-patterns:
       - "https://*.ngrok-free.app"
       - "https://*.ts.net:*"
