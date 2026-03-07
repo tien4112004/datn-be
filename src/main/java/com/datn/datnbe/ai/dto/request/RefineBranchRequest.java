@@ -27,4 +27,7 @@ public class RefineBranchRequest {
 
     String model;
     String provider;
+    String grade;
+    String subject;
+    String chapter;
 }

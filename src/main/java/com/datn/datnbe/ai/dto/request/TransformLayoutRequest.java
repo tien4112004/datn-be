@@ -9,4 +9,7 @@ public class TransformLayoutRequest {
     private String targetType;
     private String model;
     private String provider;
+    private String grade;
+    private String subject;
+    private String chapter;
 }

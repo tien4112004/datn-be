@@ -35,6 +35,15 @@ public class PresentationUpdateRequest {
 
     private String thumbnail;
 
+    @Size(max = 50)
+    private String grade;
+
+    @Size(max = 100)
+    private String subject;
+
+    @Size(max = 255)
+    private String chapter;
+
     @Builder.Default
     private Map<String, Object> metadata = new HashMap<>();
 

@@ -10,6 +10,7 @@ public class AssignmentCreateRequest {
     private String description;
     private String subject;
     private String grade;
+    private String chapter;
     private List<QuestionItemRequest> questions;
     private List<com.datn.datnbe.document.entity.AssignmentContext> contexts;
     private AssignmentMatrix matrix;

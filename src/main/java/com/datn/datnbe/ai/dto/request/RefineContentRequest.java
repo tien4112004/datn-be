@@ -10,6 +10,9 @@ public class RefineContentRequest {
     private String operation;
     private String model;
     private String provider;
+    private String grade;
+    private String subject;
+    private String chapter;
 
     @Data
     public static class RefineContext {

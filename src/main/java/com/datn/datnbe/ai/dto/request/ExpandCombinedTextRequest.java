@@ -14,4 +14,7 @@ public class ExpandCombinedTextRequest {
     private String operation;
     private String model;
     private String provider;
+    private String grade;
+    private String subject;
+    private String chapter;
 }

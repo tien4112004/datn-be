@@ -31,6 +31,7 @@ public class ExpandNodeRequest {
     String language = "en";
     String grade;
     String subject;
+    String chapter;
     TreeContext context;
     String model;
     String provider;
