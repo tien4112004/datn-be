@@ -28,6 +28,7 @@ public class AssignmentResponse {
     String ownerId;
     String subject;
     String grade;
+    String chapter;
     List<AssignmentContext> contexts;
     List<Question> questions;
     AssignmentMatrix matrix;

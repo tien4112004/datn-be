@@ -31,6 +31,15 @@ public class MindmapUpdateRequest {
 
     private List<MindmapEdgeDto> edges;
 
+    @Size(max = 50)
+    private String grade;
+
+    @Size(max = 100)
+    private String subject;
+
+    @Size(max = 255)
+    private String chapter;
+
     @Builder.Default
     Map<String, Object> extraFields = new java.util.HashMap<>();
 

@@ -17,4 +17,7 @@ public class GenerateSlidesRequest {
     private Map<String, Object> context;
     private String language;
     private String presentationId;
+    private String grade;
+    private String subject;
+    private String chapter;
 }

@@ -53,6 +53,27 @@ public class GenerateAssignmentFromMatrixRequest {
     private String description;
 
     /**
+     * Grade level (optional).
+     */
+    @JsonProperty("grade")
+    @JsonAlias("grade")
+    private String grade;
+
+    /**
+     * Subject for the assignment (optional, different from matrix subject).
+     */
+    @JsonProperty("assignmentSubject")
+    @JsonAlias("assignment_subject")
+    private String assignmentSubject;
+
+    /**
+     * Chapter (optional).
+     */
+    @JsonProperty("chapter")
+    @JsonAlias("chapter")
+    private String chapter;
+
+    /**
      * Strategy for handling missing questions.
      * - REPORT_GAPS: Return draft with gaps indicated
      * - GENERATE_WITH_AI: Use AI to generate missing questions

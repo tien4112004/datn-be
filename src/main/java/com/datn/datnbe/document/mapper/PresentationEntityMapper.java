@@ -38,6 +38,9 @@ public interface PresentationEntityMapper {
     @Mapping(target = "metadata", source = "metadata")
     @Mapping(target = "deletedAt", ignore = true)
     @Mapping(target = "thumbnail", source = "thumbnail")
+    @Mapping(target = "grade", source = "grade")
+    @Mapping(target = "subject", source = "subject")
+    @Mapping(target = "chapter", source = "chapter")
     void updateEntity(PresentationUpdateRequest request, @MappingTarget Presentation presentation);
 
     @Mapping(target = "id", expression = "java(entity.getId() != null ? entity.getId().toString() : null)")
@@ -58,6 +61,9 @@ public interface PresentationEntityMapper {
     @Mapping(target = "id", expression = "java(entity.getId() != null ? entity.getId().toString() : null)")
     @Mapping(target = "slides", source = "slides", qualifiedByName = "toDtoList")
     @Mapping(target = "isParsed", source = "isParsed")
+    @Mapping(target = "grade", source = "grade")
+    @Mapping(target = "subject", source = "subject")
+    @Mapping(target = "chapter", source = "chapter")
     PresentationDto toDetailedDto(Presentation entity);
 
     // Helper methods for null safety

@@ -2,6 +2,7 @@ package com.datn.datnbe.document.dto.request;
 
 import com.datn.datnbe.document.dto.AssignmentMatrixDto;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -45,6 +46,24 @@ public class GenerateFullAssignmentRequest {
      * Description of the assignment (optional).
      */
     private String description;
+
+    /**
+     * Grade level (optional).
+     */
+    @Size(max = 50)
+    private String grade;
+
+    /**
+     * Subject (optional).
+     */
+    @Size(max = 100)
+    private String subject;
+
+    /**
+     * Chapter (optional).
+     */
+    @Size(max = 255)
+    private String chapter;
 
     /**
      * AI provider to use for question generation.
