@@ -10,6 +10,7 @@ public final class NotificationMessages {
     }
 
     public static final String POST_CREATED_TITLE = "Bài viết mới trong lớp học";
+    public static final String ASSIGNMENT_CREATED_TITLE = "Bài tập mới trong lớp học";
     public static final String POST_UPDATED_TITLE = "Bài viết đã được cập nhật";
     public static final String POST_PINNED_TITLE = "Bài viết đã được ghim";
     public static final String POST_UNPINNED_TITLE = "Bài viết đã được bỏ ghim";

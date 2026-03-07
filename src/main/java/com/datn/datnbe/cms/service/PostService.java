@@ -188,7 +188,11 @@ public class PostService implements PostApi {
         populateAuthorInfo(dto, saved.getAuthorId());
 
         // Send notification to all students in the class
-        notifyStudents(classId, saved, NotificationMessages.POST_CREATED_TITLE);
+        boolean isAssignment = saved.getAssignmentId() != null && !saved.getAssignmentId().isEmpty();
+        notifyStudents(classId,
+                saved,
+                isAssignment ? NotificationMessages.ASSIGNMENT_CREATED_TITLE : NotificationMessages.POST_CREATED_TITLE,
+                isAssignment ? NotificationType.ASSIGNMENT : NotificationType.POST);
 
         return dto;
     }
@@ -316,7 +320,7 @@ public class PostService implements PostApi {
 
         PostResponseDto dto = postMapper.toResponseDto(saved);
         populateAuthorInfo(dto, saved.getAuthorId());
-        notifyStudents(saved.getClassId(), saved, NotificationMessages.POST_UPDATED_TITLE);
+        notifyStudents(saved.getClassId(), saved, NotificationMessages.POST_UPDATED_TITLE, NotificationType.POST);
         return dto;
     }
 
@@ -355,9 +359,8 @@ public class PostService implements PostApi {
         populateAuthorInfo(dto, saved.getAuthorId());
         notifyStudents(saved.getClassId(),
                 saved,
-                exist.getIsPinned()
-                        ? NotificationMessages.POST_PINNED_TITLE
-                        : NotificationMessages.POST_UNPINNED_TITLE);
+                exist.getIsPinned() ? NotificationMessages.POST_PINNED_TITLE : NotificationMessages.POST_UNPINNED_TITLE,
+                NotificationType.POST);
         return dto;
     }
 
@@ -368,7 +371,7 @@ public class PostService implements PostApi {
         }
     }
 
-    private void notifyStudents(String classId, Post post, String title) {
+    private void notifyStudents(String classId, Post post, String title, NotificationType type) {
         try {
             log.info("Notifying students in class: {}", classId);
             List<String> userIds = studentApi.getEnrolledStudentKeycloakUserIds(classId);
@@ -387,9 +390,9 @@ public class PostService implements PostApi {
                     .userIds(userIds)
                     .title(title)
                     .body(body)
-                    .type(NotificationType.POST)
-                    .referenceId(classId)
-                    .data(Map.of("type", "POST", "referenceId", classId))
+                    .type(type)
+                    .referenceId(post.getId())
+                    .data(Map.of("type", type.name(), "referenceId", post.getId(), "classId", classId))
                     .build();
 
             notificationService.sendNotificationToUsers(notiRequest);

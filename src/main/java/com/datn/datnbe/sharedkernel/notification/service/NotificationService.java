@@ -21,6 +21,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,6 +33,7 @@ public class NotificationService {
 
     private final UserDeviceRepository userDeviceRepository;
     private final AppNotificationRepository appNotificationRepository;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public NotificationService(UserDeviceRepository userDeviceRepository,
             AppNotificationRepository appNotificationRepository) {
@@ -94,6 +97,15 @@ public class NotificationService {
 
     @Transactional
     public void sendNotificationToUsers(SendNotificationToUsersRequest request) {
+        String dataJson = null;
+        if (request.getData() != null && !request.getData().isEmpty()) {
+            try {
+                dataJson = objectMapper.writeValueAsString(request.getData());
+            } catch (Exception ignored) {
+            }
+        }
+        final String finalDataJson = dataJson;
+
         // Save AppNotification for each userId (batch save)
         List<AppNotification> notifications = request.getUserIds()
                 .stream()
@@ -103,6 +115,7 @@ public class NotificationService {
                         .body(request.getBody())
                         .type(request.getType())
                         .referenceId(request.getReferenceId())
+                        .data(finalDataJson)
                         .isRead(false)
                         .build())
                 .toList();
