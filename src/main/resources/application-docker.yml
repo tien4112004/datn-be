@@ -137,6 +137,8 @@ app:
   cors:
     allowed-origins:
       - "http://localhost:5173"
+      - "https://app.huy-devops.site"
+      - "https://admin.huy-devops.site"
       - "https://elearning.llms.vn"
       - "https://elearning-admin.llms.vn"
     allowed-origin-patterns:
