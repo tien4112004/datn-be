@@ -2,6 +2,7 @@ package com.datn.datnbe.student.management;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -17,6 +18,7 @@ import com.datn.datnbe.auth.api.ClassGroupApi;
 import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.dto.request.SignupRequest;
 import com.datn.datnbe.auth.dto.request.UserProfileUpdateRequest;
+import com.datn.datnbe.auth.dto.response.UserMinimalInfoDto;
 import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginationDto;
@@ -212,9 +214,24 @@ public class StudentManagement implements StudentApi {
         // Get students with pagination
         Page<Student> studentsPage = studentRepository.findByIdIn(Set.copyOf(studentIds), pageable);
 
+        // Batch-fetch all user profiles in a single query to avoid N+1
+        List<String> userIds = studentsPage.getContent()
+                .stream()
+                .map(Student::getUserId)
+                .filter(id -> id != null)
+                .collect(Collectors.toList());
+        Map<String, UserMinimalInfoDto> profileMap = userProfileApi.getUserMinimalInfoBatch(userIds);
+
         List<StudentResponseDto> studentDtos = studentsPage.getContent().stream().map(s -> {
             StudentResponseDto dto = studentEntityMapper.toResponseDto(s);
-            enrichWithUserProfile(dto, s.getUserId());
+            UserMinimalInfoDto profile = profileMap.get(s.getUserId());
+            if (profile != null) {
+                dto.setUsername(profile.getEmail());
+                dto.setFirstName(profile.getFirstName());
+                dto.setLastName(profile.getLastName());
+                dto.setAvatarUrl(profile.getAvatarUrl());
+                dto.setPhoneNumber(profile.getPhoneNumber());
+            }
             return dto;
         }).collect(Collectors.toList());
 
@@ -428,6 +445,47 @@ public class StudentManagement implements StudentApi {
                 .filter(student -> classEnrollmentRepository.existsByClassIdAndStudentId(classId, student.getId()))
                 .isPresent();
 
+    }
+
+    @Override
+    @Transactional
+    public void enrollStudentsInBatch(String classId, List<Student> students) {
+        if (students.isEmpty())
+            return;
+
+        // Batch-check which students are already enrolled
+        List<String> studentIds = students.stream().map(Student::getId).collect(Collectors.toList());
+        Set<String> alreadyEnrolled = classEnrollmentRepository.findAlreadyEnrolledStudentIds(classId, studentIds);
+
+        List<ClassEnrollment> enrollments = students.stream()
+                .filter(s -> !alreadyEnrolled.contains(s.getId()))
+                .map(s -> ClassEnrollment.builder()
+                        .classId(classId)
+                        .studentId(s.getId())
+                        .status(EnrollmentStatus.ACTIVE)
+                        .build())
+                .collect(Collectors.toList());
+
+        if (!enrollments.isEmpty()) {
+            classEnrollmentRepository.saveAll(enrollments);
+            log.info("Batch enrolled {} students in class {}", enrollments.size(), classId);
+        }
+
+        // Batch-fetch Keycloak IDs and sync group membership in one call
+        List<String> userIds = students.stream()
+                .map(Student::getUserId)
+                .filter(id -> id != null)
+                .collect(Collectors.toList());
+        Map<String, String> keycloakIdMap = userProfileApi.getKeycloakUserIdsBatch(userIds);
+        List<String> keycloakUserIds = new ArrayList<>(keycloakIdMap.values());
+
+        if (!keycloakUserIds.isEmpty()) {
+            try {
+                classGroupApi.syncClassGroupMembers(classId, keycloakUserIds);
+            } catch (Exception e) {
+                log.warn("Failed to sync class group members for class {}: {}", classId, e.getMessage());
+            }
+        }
     }
 
     @Override

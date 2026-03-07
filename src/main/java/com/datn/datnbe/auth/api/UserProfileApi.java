@@ -9,6 +9,9 @@ import com.datn.datnbe.auth.dto.response.UserProfileResponse;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+import java.util.Map;
+
 public interface UserProfileApi {
 
     /**
@@ -86,6 +89,22 @@ public interface UserProfileApi {
      * @return UserMinimalInfoDto containing minimal user information, or null if not found
      */
     UserMinimalInfoDto getUserMinimalInfo(String userId);
+
+    /**
+     * Retrieves minimal user information for a batch of user IDs in a single query.
+     *
+     * @param userIds list of user IDs or Keycloak user IDs
+     * @return map of userId -> UserMinimalInfoDto
+     */
+    Map<String, UserMinimalInfoDto> getUserMinimalInfoBatch(List<String> userIds);
+
+    /**
+     * Retrieves a map of userId -> keycloakUserId for a batch of user IDs.
+     *
+     * @param userIds list of user profile IDs
+     * @return map of userId -> keycloakUserId
+     */
+    Map<String, String> getKeycloakUserIdsBatch(List<String> userIds);
 
     /**
      * Updates the password of a user profile.

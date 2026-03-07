@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Management service for student import operations.
@@ -119,9 +120,13 @@ public class StudentImportManagement implements StudentImportApi {
             return StudentImportResponseDto.failure(errors);
         }
 
+        // Batch-check for existing students in a single query
+        List<String> allUserIds = students.stream().map(Student::getUserId).collect(Collectors.toList());
+        Set<String> existingUserIds = studentRepository.findExistingUserIds(allUserIds);
+
         List<Student> newStudents = new ArrayList<>();
         for (Student student : students) {
-            if (studentRepository.existsByUserId(student.getUserId())) {
+            if (existingUserIds.contains(student.getUserId())) {
                 log.warn("Student already exists for user ID: {}, skipping", student.getUserId());
                 errors.add(String.format("Student already exists for user ID: %s (skipped)", student.getUserId()));
             } else {
@@ -152,19 +157,14 @@ public class StudentImportManagement implements StudentImportApi {
             }
         }
 
-        // Step 7: Enroll students in the class
-        int enrolledCount = 0;
-        for (Student student : savedStudents) {
-            try {
-                studentApi.enrollStudent(classId, student.getId());
-                enrolledCount++;
-                log.info("Enrolled student {} in class {}", student.getId(), classId);
-            } catch (Exception e) {
-                log.error("Error enrolling student {} in class {}: {}", student.getId(), classId, e.getMessage());
-                errors.add(String.format("Failed to enroll student %s in class: %s", student.getId(), e.getMessage()));
-            }
+        // Step 7: Enroll all saved students in the class in a single batch operation
+        try {
+            studentApi.enrollStudentsInBatch(classId, savedStudents);
+            log.info("Successfully enrolled {} students in class {}", savedStudents.size(), classId);
+        } catch (Exception e) {
+            log.error("Error enrolling students in class {}: {}", classId, e.getMessage());
+            errors.add("Failed to enroll students in class: " + e.getMessage());
         }
-        log.info("Successfully enrolled {} students in class {}", enrolledCount, classId);
 
         // Return success with any non-fatal warnings
         if (savedStudents.isEmpty() && !errors.isEmpty()) {

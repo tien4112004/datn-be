@@ -2,6 +2,7 @@ package com.datn.datnbe.student.api;
 
 import com.datn.datnbe.student.dto.request.StudentCreateRequest;
 import com.datn.datnbe.student.dto.request.StudentUpdateRequest;
+import com.datn.datnbe.student.entity.Student;
 import com.datn.datnbe.sharedkernel.dto.students.ClassEnrollmentDto;
 import com.datn.datnbe.student.dto.response.StudentResponseDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
@@ -123,4 +124,13 @@ public interface StudentApi {
     boolean isUserEnrolledInClass(String classId, String userId);
 
     StudentResponseDto getStudentByUserId(String userId);
+
+    /**
+     * Enrolls multiple students in a class in a single batch operation.
+     * Skips students already enrolled. Does not enrich DTOs (import use-case).
+     *
+     * @param classId  the class ID
+     * @param students the list of saved Student entities to enroll
+     */
+    void enrollStudentsInBatch(String classId, List<Student> students);
 }

@@ -34,4 +34,6 @@ public class SubmissionResponseDto {
     private Date submittedAt;
     private Date createdAt;
     private Date updatedAt;
+    private String assignmentTitle;
+    private String className;
 }
