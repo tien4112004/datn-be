@@ -2,6 +2,7 @@ package com.datn.datnbe.cms.scheduler;
 
 import com.datn.datnbe.cms.entity.Post;
 import com.datn.datnbe.cms.repository.PostRepository;
+import com.datn.datnbe.sharedkernel.notification.constants.NotificationMessages;
 import com.datn.datnbe.sharedkernel.notification.dto.SendNotificationToUsersRequest;
 import com.datn.datnbe.sharedkernel.notification.enums.NotificationType;
 import com.datn.datnbe.sharedkernel.notification.service.NotificationService;
@@ -101,14 +102,14 @@ public class AssignmentDeadlineReminderScheduler {
             }
 
             // Create reminder notification
-            String assignmentTitle = "Nhắc nhở Hạn chót Bài tập";
+            NotificationMessages.NotificationTemplate template = NotificationMessages.TEMPLATES
+                    .get(NotificationType.ASSIGNMENT_DEADLINE);
             SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm dd/MM/yyyy");
-            String message = "Bạn chưa nộp bài tập. Hạn chót là " + dateFormat.format(post.getDueDate())
-                    + ". Vui lòng nộp bài trước hạn chót.";
+            String message = String.format(template.bodyTemplate(), dateFormat.format(post.getDueDate()));
 
             SendNotificationToUsersRequest notificationRequest = SendNotificationToUsersRequest.builder()
                     .userIds(studentIds)
-                    .title(assignmentTitle)
+                    .title(template.title())
                     .body(message)
                     .type(NotificationType.ASSIGNMENT_DEADLINE)
                     .referenceId(post.getId())

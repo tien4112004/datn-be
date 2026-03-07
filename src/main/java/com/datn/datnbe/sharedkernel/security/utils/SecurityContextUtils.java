@@ -1,6 +1,5 @@
 package com.datn.datnbe.sharedkernel.security.utils;
 
-import com.datn.datnbe.auth.api.UserProfileApi;
 import com.datn.datnbe.auth.repository.UserProfileRepo;
 
 import org.springframework.security.core.Authentication;
@@ -49,10 +48,10 @@ public class SecurityContextUtils {
 
     public String getCurrentUserProfileId() {
         String keycloakUserId = getCurrentUserId();
-        String userProfileId = userProfileApi.findByKeycloakUserId(keycloakUserId).orElseThrow(
-                () -> new AppException(ErrorCode.UNAUTHORIZED,
-                        "User profile not found for Keycloak user ID: " + keycloakUserId)
-        ).getId();
+        String userProfileId = userProfileApi.findByKeycloakUserId(keycloakUserId)
+                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED,
+                        "User profile not found for Keycloak user ID: " + keycloakUserId))
+                .getId();
 
         return userProfileId;
     }
@@ -98,10 +97,9 @@ public class SecurityContextUtils {
 
     public boolean hasRole(String role) {
         String keycloakUserId = getCurrentUserId();
-        var userProfile = userProfileApi.findByKeycloakUserId(keycloakUserId).orElseThrow(
-                () -> new AppException(ErrorCode.UNAUTHORIZED,
-                        "User profile not found for Keycloak user ID: " + keycloakUserId)
-        );
+        var userProfile = userProfileApi.findByKeycloakUserId(keycloakUserId)
+                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED,
+                        "User profile not found for Keycloak user ID: " + keycloakUserId));
 
         return userProfile.getRole().equalsIgnoreCase(role);
     }

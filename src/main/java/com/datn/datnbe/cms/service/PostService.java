@@ -24,6 +24,7 @@ import com.datn.datnbe.document.entity.Assignment;
 import com.datn.datnbe.document.mapper.AssignmentMapper;
 import com.datn.datnbe.document.repository.AssignmentRepository;
 import com.datn.datnbe.document.dto.response.AssignmentResponse;
+import com.datn.datnbe.sharedkernel.notification.constants.NotificationMessages;
 import com.datn.datnbe.sharedkernel.notification.dto.SendNotificationToUsersRequest;
 import com.datn.datnbe.sharedkernel.notification.enums.NotificationType;
 import com.datn.datnbe.sharedkernel.notification.service.NotificationService;
@@ -33,7 +34,6 @@ import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import com.datn.datnbe.student.api.StudentApi;
-import com.nimbusds.openid.connect.sdk.assurance.evidences.attachment.Attachment;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -83,18 +83,17 @@ public class PostService implements PostApi {
         post.setClassId(classId);
         post.setAuthorId(securityContextUtils.getCurrentUserId());
         post.setAllowComments(Boolean.TRUE.equals(request.getAllowComments()));
-        List<AttachmentDto> attachments = request.getAttachments() == null ? null :
-                request.getAttachments().stream()
-                        .map(a -> {
-                            if (a.getName() == null || a.getName().isEmpty()) {
-                                String fallback = a.getUrl() != null
-                                        ? a.getUrl().substring(a.getUrl().lastIndexOf('/') + 1)
-                                        : null;
-                                a.setName(fallback);
-                            }
-                            return a;
-                        })
-                        .toList();
+        List<AttachmentDto> attachments = request.getAttachments() == null
+                ? null
+                : request.getAttachments().stream().map(a -> {
+                    if (a.getName() == null || a.getName().isEmpty()) {
+                        String fallback = a.getUrl() != null
+                                ? a.getUrl().substring(a.getUrl().lastIndexOf('/') + 1)
+                                : null;
+                        a.setName(fallback);
+                    }
+                    return a;
+                }).toList();
         post.setAttachments(attachments);
 
         // If assignmentId is provided in request, clone the assignment for this post
@@ -189,7 +188,11 @@ public class PostService implements PostApi {
         populateAuthorInfo(dto, saved.getAuthorId());
 
         // Send notification to all students in the class
-        notifyStudents(classId, saved, "New Post in Class");
+        boolean isAssignment = saved.getAssignmentId() != null && !saved.getAssignmentId().isEmpty();
+        notifyStudents(classId,
+                saved,
+                isAssignment ? NotificationMessages.ASSIGNMENT_CREATED_TITLE : NotificationMessages.POST_CREATED_TITLE,
+                isAssignment ? NotificationType.ASSIGNMENT : NotificationType.POST);
 
         return dto;
     }
@@ -277,9 +280,9 @@ public class PostService implements PostApi {
         String classId = exist.getClassId();
 
         postMapper.updateEntity(request, exist);
-        List<AttachmentDto> attachments = request.getAttachments() == null ? null :
-        request.getAttachments().stream()
-                .map(a -> {
+        List<AttachmentDto> attachments = request.getAttachments() == null
+                ? null
+                : request.getAttachments().stream().map(a -> {
                     if (a.getName() == null || a.getName().isEmpty()) {
                         String fallback = a.getUrl() != null
                                 ? a.getUrl().substring(a.getUrl().lastIndexOf('/') + 1)
@@ -287,8 +290,7 @@ public class PostService implements PostApi {
                         a.setName(fallback);
                     }
                     return a;
-                })
-                .toList();
+                }).toList();
         exist.setAttachments(attachments);
         Post saved = postRepository.save(exist);
 
@@ -318,7 +320,7 @@ public class PostService implements PostApi {
 
         PostResponseDto dto = postMapper.toResponseDto(saved);
         populateAuthorInfo(dto, saved.getAuthorId());
-        notifyStudents(saved.getClassId(), saved, "A post has been updated");
+        notifyStudents(saved.getClassId(), saved, NotificationMessages.POST_UPDATED_TITLE, NotificationType.POST);
         return dto;
     }
 
@@ -357,7 +359,8 @@ public class PostService implements PostApi {
         populateAuthorInfo(dto, saved.getAuthorId());
         notifyStudents(saved.getClassId(),
                 saved,
-                exist.getIsPinned() ? "A post has been pinned" : "A post has been unpinned");
+                exist.getIsPinned() ? NotificationMessages.POST_PINNED_TITLE : NotificationMessages.POST_UNPINNED_TITLE,
+                NotificationType.POST);
         return dto;
     }
 
@@ -368,7 +371,7 @@ public class PostService implements PostApi {
         }
     }
 
-    private void notifyStudents(String classId, Post post, String title) {
+    private void notifyStudents(String classId, Post post, String title, NotificationType type) {
         try {
             log.info("Notifying students in class: {}", classId);
             List<String> userIds = studentApi.getEnrolledStudentKeycloakUserIds(classId);
@@ -387,9 +390,9 @@ public class PostService implements PostApi {
                     .userIds(userIds)
                     .title(title)
                     .body(body)
-                    .type(NotificationType.POST)
-                    .referenceId(classId)
-                    .data(Map.of("type", "POST", "referenceId", classId))
+                    .type(type)
+                    .referenceId(post.getId())
+                    .data(Map.of("type", type.name(), "referenceId", post.getId(), "classId", classId))
                     .build();
 
             notificationService.sendNotificationToUsers(notiRequest);
@@ -485,14 +488,14 @@ public class PostService implements PostApi {
         }
 
         // Send notification to students who haven't submitted
-        String assignmentTitle = "Nhắc nhở Hạn chót Bài tập";
-        String message = "Bạn chưa nộp bài tập. Hạn chót là "
-                + new java.text.SimpleDateFormat("HH:mm dd/MM/yyyy").format(post.getDueDate())
-                + ". Vui lòng nộp bài trước hạn chót.";
+        NotificationMessages.NotificationTemplate template = NotificationMessages.TEMPLATES
+                .get(NotificationType.ASSIGNMENT_DEADLINE);
+        String message = String.format(template.bodyTemplate(),
+                new java.text.SimpleDateFormat("HH:mm dd/MM/yyyy").format(post.getDueDate()));
 
         SendNotificationToUsersRequest notificationRequest = SendNotificationToUsersRequest.builder()
                 .userIds(keycloakUserIds)
-                .title(assignmentTitle)
+                .title(template.title())
                 .body(message)
                 .type(NotificationType.ASSIGNMENT_DEADLINE)
                 .referenceId(postId)

@@ -38,6 +38,9 @@ public class AppNotification {
     @Column(name = "reference_id", length = 36)
     private String referenceId;
 
+    @Column(name = "data", columnDefinition = "TEXT")
+    private String data;
+
     @Column(name = "is_read", nullable = false)
     @Builder.Default
     private Boolean isRead = false;
