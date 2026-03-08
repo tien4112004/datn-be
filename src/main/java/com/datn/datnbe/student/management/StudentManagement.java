@@ -82,8 +82,9 @@ public class StudentManagement implements StudentApi {
         String lastName = names.length > 1 ? names[1] : firstName;
 
         SignupRequest signupRequest = SignupRequest.builder()
-                .username(username)
-                .password(password)
+                // .username(username)
+                .username("nlhdung.troy@gmail.com")
+                .password("12345678")
                 .firstName(firstName)
                 .lastName(lastName)
                 .role("student")
