@@ -23,8 +23,8 @@ public interface ExamQuestionRepository extends JpaRepository<QuestionBankItem, 
     @Query("SELECT q FROM QuestionBankItem q WHERE q.subject = :subject "
             + "AND (:questionType IS NULL OR q.type = :questionType) "
             + "AND (:chapter IS NULL OR LOWER(q.chapter) LIKE LOWER(CONCAT('%', :chapter, '%'))) "
-            + "AND (:chapterId IS NULL OR q.chapterId = :chapterId) "
-            + "AND (:grade IS NULL OR q.grade = :grade) " + "AND (:difficulty IS NULL OR q.difficulty = :difficulty)")
+            + "AND (:chapterId IS NULL OR q.chapterId = :chapterId) " + "AND (:grade IS NULL OR q.grade = :grade) "
+            + "AND (:difficulty IS NULL OR q.difficulty = :difficulty)")
     Page<QuestionBankItem> findBySubjectWithFilters(@Param("subject") String subject,
             @Param("questionType") QuestionType questionType,
             @Param("chapter") String chapter,

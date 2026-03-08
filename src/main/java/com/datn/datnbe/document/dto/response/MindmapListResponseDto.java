@@ -15,6 +15,10 @@ public class MindmapListResponseDto {
     private String title;
     private String description;
     private String thumbnail;
+    private String grade;
+    private String subject;
+    private String chapter;
+    private String chapterId;
     //    private String ownerId;
     private Date createdAt;
     private Date updatedAt;

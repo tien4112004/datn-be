@@ -49,6 +49,10 @@ public interface MindmapEntityMapper {
     @Mapping(source = "title", target = "title")
     @Mapping(source = "description", target = "description")
     @Mapping(source = "thumbnail", target = "thumbnail")
+    @Mapping(source = "grade", target = "grade")
+    @Mapping(source = "subject", target = "subject")
+    @Mapping(source = "chapter", target = "chapter")
+    @Mapping(source = "chapterId", target = "chapterId")
     @Mapping(source = "createdAt", target = "createdAt")
     @Mapping(source = "updatedAt", target = "updatedAt")
     MindmapListResponseDto entityToListResponse(Mindmap mindmap);

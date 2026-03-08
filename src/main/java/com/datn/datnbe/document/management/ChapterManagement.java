@@ -23,7 +23,7 @@ public class ChapterManagement {
                 .collect(Collectors.toList());
     }
 
-    public String getChapterId( String chapter) {
+    public String getChapterId(String chapter) {
         return chapterRepository.getIdByChapterName(chapter);
     }
 

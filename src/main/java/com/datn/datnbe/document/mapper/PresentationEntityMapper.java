@@ -55,9 +55,13 @@ public interface PresentationEntityMapper {
 
     @Mapping(target = "id", expression = "java(entity.getId() != null ? entity.getId().toString() : null)")
     @Mapping(target = "title", source = "title")
+    @Mapping(target = "thumbnail", source = "thumbnail")
+    @Mapping(target = "grade", source = "grade")
+    @Mapping(target = "subject", source = "subject")
+    @Mapping(target = "chapter", source = "chapter")
+    @Mapping(target = "chapterId", source = "chapterId")
     @Mapping(target = "createdAt", source = "createdAt")
     @Mapping(target = "updatedAt", source = "updatedAt")
-    @Mapping(target = "thumbnail", source = "thumbnail")
     PresentationListResponseDto toListResponseDto(Presentation entity);
 
     @Mapping(target = "id", expression = "java(entity.getId() != null ? entity.getId().toString() : null)")
