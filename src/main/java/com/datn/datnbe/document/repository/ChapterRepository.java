@@ -17,19 +17,19 @@ public interface ChapterRepository extends JpaRepository<Chapter, String> {
             + "(:subject IS NULL OR c.subject = :subject) " + "ORDER BY c.sortOrder ASC")
     List<Chapter> findAllByGradeAndSubject(@Param("grade") String grade, @Param("subject") String subject);
 
-    @Query("""
+    @Query( value =  """
         SELECT c.id
         FROM Chapter c 
         WHERE  c.name = :chapter
         LIMIT 1
-        """)
+        """, nativeQuery = true)
     String getIdByChapterName(String chapter);
 
-    @Query("""
+    @Query(value =  """
         SELECT c.name
         FROM Chapter c 
         WHERE  c.id = :id
         LIMIT 1
-        """)
+        """, nativeQuery = true)
     String getNameById(String id);
 }
