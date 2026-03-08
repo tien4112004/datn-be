@@ -32,6 +32,8 @@ public class QuestionCreateRequest {
 
     String chapter;
 
+    String chapterId;
+
     String contextId;
 
     @NotBlank(message = "Subject is required")

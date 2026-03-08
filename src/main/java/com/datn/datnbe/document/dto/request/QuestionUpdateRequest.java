@@ -25,6 +25,8 @@ public class QuestionUpdateRequest {
 
     String chapter;
 
+    String chapterId;
+
     String contextId;
 
     @Valid

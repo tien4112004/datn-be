@@ -56,10 +56,11 @@ public interface DocumentRepository extends JpaRepository<DocumentVisit, Integer
                         'type', 'presentation',
                         'grade', p.grade,
                         'subject', p.subject,
-                        'chapter', p.chapter
+                        'chapter', p.chapter,
+                        'chapterId', p.chapter_id
                     ) AS data
                 FROM presentations p
-                WHERE p.title LIKE CONCAT('%', :keyword, '%') AND (:chapter IS NULL OR p.chapter = :chapter) AND (:subject IS NULL OR p.subject = :subject) AND (:grade IS NULL OR p.grade = :grade) AND p.id IN (:presentationIds)
+                WHERE p.title LIKE CONCAT('%', :keyword, '%') AND (:chapter IS NULL OR p.chapter = :chapter) AND (:chapterId IS NULL OR p.chapter_id = :chapterId) AND (:subject IS NULL OR p.subject = :subject) AND (:grade IS NULL OR p.grade = :grade) AND p.id IN (:presentationIds)
                 AND p.deleted_at IS NULL
                 UNION ALL
 
@@ -75,10 +76,11 @@ public interface DocumentRepository extends JpaRepository<DocumentVisit, Integer
                         'type', 'mindmap',
                         'grade', m.grade,
                         'subject', m.subject,
-                        'chapter', m.chapter
+                        'chapter', m.chapter,
+                        'chapterId', m.chapter_id
                     ) AS data
                 FROM mindmaps m
-                WHERE m.title LIKE CONCAT('%', :keyword, '%') AND (:chapter IS NULL OR m.chapter = :chapter) AND (:subject IS NULL OR m.subject = :subject) AND (:grade IS NULL OR m.grade = :grade) AND m.id IN (:mindmapIds)
+                WHERE m.title LIKE CONCAT('%', :keyword, '%') AND (:chapter IS NULL OR m.chapter = :chapter) AND (:chapterId IS NULL OR m.chapter_id = :chapterId) AND (:subject IS NULL OR m.subject = :subject) AND (:grade IS NULL OR m.grade = :grade) AND m.id IN (:mindmapIds)
 
 
                 UNION ALL
@@ -95,9 +97,10 @@ public interface DocumentRepository extends JpaRepository<DocumentVisit, Integer
                         'grade', a.grade,
                         'subject', a.subject,
                         'chapter', a.chapter,
+                        'chapterId', a.chapter_id
                     ) AS data
                 FROM assignments a
-                WHERE a.title LIKE CONCAT('%', :keyword, '%') AND (:chapter IS NULL OR a.chapter = :chapter) AND (:subject IS NULL OR a.subject = :subject) AND (:grade IS NULL OR a.grade = :grade) AND a.id IN (:assignmentIds)
+                WHERE a.title LIKE CONCAT('%', :keyword, '%') AND (:chapter IS NULL OR a.chapter = :chapter) AND (:chapterId IS NULL OR a.chapter_id = :chapterId) AND (:subject IS NULL OR a.subject = :subject) AND (:grade IS NULL OR a.grade = :grade) AND a.id IN (:assignmentIds)
             ) t
             """, countQuery = """
             SELECT
@@ -106,6 +109,7 @@ public interface DocumentRepository extends JpaRepository<DocumentVisit, Integer
                     FROM presentations p
                     WHERE p.title LIKE CONCAT('%', :keyword, '%')
                     AND (:chapter IS NULL OR p.chapter = :chapter)
+                    AND (:chapterId IS NULL OR p.chapter_id = :chapterId)
                     AND (:subject IS NULL OR p.subject = :subject)
                     AND (:grade IS NULL OR p.grade = :grade)
                     AND p.id IN (:presentationIds)
@@ -117,6 +121,7 @@ public interface DocumentRepository extends JpaRepository<DocumentVisit, Integer
                     FROM mindmaps m
                     WHERE m.title LIKE CONCAT('%', :keyword, '%')
                     AND (:chapter IS NULL OR m.chapter = :chapter)
+                    AND (:chapterId IS NULL OR m.chapter_id = :chapterId)
                     AND (:subject IS NULL OR m.subject = :subject)
                     AND (:grade IS NULL OR m.grade = :grade)
                     AND m.id IN (:mindmapIds)
@@ -127,6 +132,7 @@ public interface DocumentRepository extends JpaRepository<DocumentVisit, Integer
                     FROM assignments a
                     WHERE a.title LIKE CONCAT('%', :keyword, '%')
                     AND (:chapter IS NULL OR a.chapter = :chapter)
+                    AND (:chapterId IS NULL OR a.chapter_id = :chapterId)
                     AND (:subject IS NULL OR a.subject = :subject)
                     AND (:grade IS NULL OR a.grade = :grade)
                     AND a.id IN (:assignmentIds)
@@ -136,6 +142,7 @@ public interface DocumentRepository extends JpaRepository<DocumentVisit, Integer
     Page<String> getAllDocuments(Pageable pageable,
             @Param("keyword") String keyword,
             @Param("chapter") String chapter,
+            @Param("chapterId") String chapterId,
             @Param("subject") String subject,
             @Param("grade") String grade,
             @Param("presentationIds") List<String> presentationIds,

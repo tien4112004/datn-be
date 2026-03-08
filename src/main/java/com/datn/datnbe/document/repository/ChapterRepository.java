@@ -16,4 +16,20 @@ public interface ChapterRepository extends JpaRepository<Chapter, String> {
     @Query("SELECT c FROM Chapter c WHERE " + "(:grade IS NULL OR c.grade = :grade) AND "
             + "(:subject IS NULL OR c.subject = :subject) " + "ORDER BY c.sortOrder ASC")
     List<Chapter> findAllByGradeAndSubject(@Param("grade") String grade, @Param("subject") String subject);
+
+    @Query("""
+        SELECT c.id
+        FROM Chapter c 
+        WHERE  c.name = :chapter
+        LIMIT 1
+        """)
+    String getIdByChapterName(String chapter);
+
+    @Query("""
+        SELECT c.name
+        FROM Chapter c 
+        WHERE  c.id = :id
+        LIMIT 1
+        """)
+    String getNameById(String id);
 }

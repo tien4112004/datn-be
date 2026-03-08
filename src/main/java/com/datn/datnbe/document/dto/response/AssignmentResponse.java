@@ -29,6 +29,7 @@ public class AssignmentResponse {
     String subject;
     String grade;
     String chapter;
+    String chapterId;
     List<AssignmentContext> contexts;
     List<Question> questions;
     AssignmentMatrix matrix;

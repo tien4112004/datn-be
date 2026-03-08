@@ -23,10 +23,12 @@ public interface ExamQuestionRepository extends JpaRepository<QuestionBankItem, 
     @Query("SELECT q FROM QuestionBankItem q WHERE q.subject = :subject "
             + "AND (:questionType IS NULL OR q.type = :questionType) "
             + "AND (:chapter IS NULL OR LOWER(q.chapter) LIKE LOWER(CONCAT('%', :chapter, '%'))) "
+            + "AND (:chapterId IS NULL OR q.chapterId = :chapterId) "
             + "AND (:grade IS NULL OR q.grade = :grade) " + "AND (:difficulty IS NULL OR q.difficulty = :difficulty)")
     Page<QuestionBankItem> findBySubjectWithFilters(@Param("subject") String subject,
             @Param("questionType") QuestionType questionType,
             @Param("chapter") String chapter,
+            @Param("chapterId") String chapterId,
             @Param("grade") String grade,
             @Param("difficulty") Difficulty difficulty,
             Pageable pageable);
@@ -43,11 +45,13 @@ public interface ExamQuestionRepository extends JpaRepository<QuestionBankItem, 
     @Query("SELECT q FROM QuestionBankItem q WHERE "
             + "(:ownerId IS NULL OR q.ownerId = :ownerId OR q.ownerId IS NULL) " + "AND q.subject = :subject "
             + "AND (:chapter IS NULL OR LOWER(q.chapter) LIKE LOWER(CONCAT('%', :chapter, '%'))) "
+            + "AND (:chapterId IS NULL OR q.chapterId = :chapterId) "
             + "AND (:difficulty IS NULL OR q.difficulty = :difficulty) "
             + "AND (:questionType IS NULL OR q.type = :questionType) " + "ORDER BY FUNCTION('RANDOM')")
     List<QuestionBankItem> findMatchingQuestionsForMatrix(@Param("ownerId") String ownerId,
             @Param("subject") String subject,
             @Param("chapter") String chapter,
+            @Param("chapterId") String chapterId,
             @Param("difficulty") Difficulty difficulty,
             @Param("questionType") QuestionType questionType,
             Pageable pageable);
@@ -58,11 +62,13 @@ public interface ExamQuestionRepository extends JpaRepository<QuestionBankItem, 
     @Query("SELECT COUNT(q) FROM QuestionBankItem q WHERE "
             + "(:ownerId IS NULL OR q.ownerId = :ownerId OR q.ownerId IS NULL) " + "AND q.subject = :subject "
             + "AND (:chapter IS NULL OR LOWER(q.chapter) LIKE LOWER(CONCAT('%', :chapter, '%'))) "
+            + "AND (:chapterId IS NULL OR q.chapterId = :chapterId) "
             + "AND (:difficulty IS NULL OR q.difficulty = :difficulty) "
             + "AND (:questionType IS NULL OR q.type = :questionType)")
     Long countMatchingQuestions(@Param("ownerId") String ownerId,
             @Param("subject") String subject,
             @Param("chapter") String chapter,
+            @Param("chapterId") String chapterId,
             @Param("difficulty") Difficulty difficulty,
             @Param("questionType") QuestionType questionType);
 }

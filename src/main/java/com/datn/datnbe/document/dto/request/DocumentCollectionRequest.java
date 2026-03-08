@@ -18,6 +18,7 @@ public class DocumentCollectionRequest extends BaseCollectionRequest {
     @JsonAlias({"search", "q", "searchQuery"})
     private String filter;
     private String chapter;
+    private String chapterId;
     private String subject;
     private String grade;
 

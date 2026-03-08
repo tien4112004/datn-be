@@ -33,6 +33,7 @@ public class PresentationDto {
     private String grade;
     private String subject;
     private String chapter;
+    private String chapterId;
 
     @JsonAnySetter
     public void setMetadata(String key, Object value) {

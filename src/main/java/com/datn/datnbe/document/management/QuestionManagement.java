@@ -47,6 +47,7 @@ public class QuestionManagement implements QuestionApi {
     private final QuestionEntityMapper questionMapper;
     private final ContextMapper contextMapper;
     private final SmartValidator validator;
+    private final ChapterManagement chapterManagement;
 
     @Override
     @Transactional(readOnly = true)
@@ -178,6 +179,11 @@ public class QuestionManagement implements QuestionApi {
                 predicates.add(cb.or(chapterPredicates.toArray(new jakarta.persistence.criteria.Predicate[0])));
             }
 
+            // Filter by chapterId (exact match)
+            if (request.getChapterId() != null && !request.getChapterId().isEmpty()) {
+                predicates.add(root.get("chapterId").in(request.getChapterId()));
+            }
+
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
@@ -208,6 +214,12 @@ public class QuestionManagement implements QuestionApi {
                 request.getTitle(),
                 ownerId);
 
+        if (request.getChapter() == null && request.getChapterId() != null) {
+            request.setChapter(chapterManagement.getChapterName(request.getChapterId()));
+        } else if (request.getChapter() != null && request.getChapterId() == null) {
+            request.setChapterId(chapterManagement.getChapterId(request.getChapter()));
+        }
+
         QuestionBankItem question = questionMapper.toEntity(request);
         question.setOwnerId(ownerId);
 
@@ -224,6 +236,11 @@ public class QuestionManagement implements QuestionApi {
         log.info("Creating batch of {} questions - ownerId: {}", requests.size(), ownerId);
 
         List<QuestionBankItem> questions = requests.stream().map(request -> {
+            if (request.getChapter() == null && request.getChapterId() != null) {
+                request.setChapter(chapterManagement.getChapterName(request.getChapterId()));
+            } else if (request.getChapter() != null && request.getChapterId() == null) {
+                request.setChapterId(chapterManagement.getChapterId(request.getChapter()));
+            }
             QuestionBankItem question = questionMapper.toEntity(request);
             question.setOwnerId(ownerId);
             return question;
@@ -270,6 +287,11 @@ public class QuestionManagement implements QuestionApi {
                 }
 
                 // Create and save the question
+                if (request.getChapter() == null && request.getChapterId() != null) {
+                    request.setChapter(chapterManagement.getChapterName(request.getChapterId()));
+                } else if (request.getChapter() != null && request.getChapterId() == null) {
+                    request.setChapterId(chapterManagement.getChapterId(request.getChapter()));
+                }
                 QuestionBankItem question = questionMapper.toEntity(request);
                 question.setOwnerId(ownerId);
                 QuestionBankItem savedQuestion = questionRepository.save(question);
@@ -339,6 +361,12 @@ public class QuestionManagement implements QuestionApi {
         });
 
         verifyOwnership(question, userId, id);
+
+        if (request.getChapter() == null && request.getChapterId() != null) {
+            request.setChapter(chapterManagement.getChapterName(request.getChapterId()));
+        } else if (request.getChapter() != null && request.getChapterId() == null) {
+            request.setChapterId(chapterManagement.getChapterId(request.getChapter()));
+        }
 
         questionMapper.updateEntity(request, question);
 
@@ -422,6 +450,11 @@ public class QuestionManagement implements QuestionApi {
                             "%" + bareTitle.replace("%", "\\%").replace("_", "\\_") + "%"));
                 }
                 predicates.add(cb.or(chapterPredicates.toArray(new jakarta.persistence.criteria.Predicate[0])));
+            }
+
+            // Filter by chapterId (exact match)
+            if (request.getChapterId() != null && !request.getChapterId().isEmpty()) {
+                predicates.add(root.get("chapterId").in(request.getChapterId()));
             }
 
             if (predicates.isEmpty()) {

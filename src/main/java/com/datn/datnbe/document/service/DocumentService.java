@@ -7,6 +7,7 @@ import com.datn.datnbe.document.dto.request.RecentDocumentCollectionRequest;
 import com.datn.datnbe.document.dto.request.UpdateDocumentRequest;
 import com.datn.datnbe.document.dto.response.DocumentMinimalResponseDto;
 import com.datn.datnbe.document.entity.DocumentVisit;
+import com.datn.datnbe.document.management.ChapterManagement;
 import com.datn.datnbe.document.repository.DocumentRepository;
 import com.datn.datnbe.sharedkernel.dto.BaseCollectionRequest;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
@@ -37,6 +38,7 @@ public class DocumentService {
     private final SecurityContextUtils securityContextUtils;
     private final ResourcePermissionApi resourcePermissionApi;
     private final ObjectMapper objectMapper;
+    private final ChapterManagement chapterManagement;
 
     /**
      * Track document visit asynchronously (background job)
@@ -121,9 +123,16 @@ public class DocumentService {
         List<String> mindmapIds = resourcePermissionApi.getAllResourceByTypeOfOwner(ownerId, "mindmap");
         List<String> assignmentIds = resourcePermissionApi.getAllResourceByTypeOfOwner(ownerId, "assignment");
 
+        if (request.getChapter() == null && request.getChapterId() != null) {
+            request.setChapter(chapterManagement.getChapterName(request.getChapterId()));
+        } else if (request.getChapter() != null && request.getChapterId() == null) {
+            request.setChapterId(chapterManagement.getChapterId(request.getChapter()));
+        }
+
         Page<String> paginatedDocuments = documentRepository.getAllDocuments(pageable,
                 request.getFilter(),
                 request.getChapter(),
+                request.getChapterId(),
                 request.getSubject(),
                 request.getGrade(),
                 presentationIds,

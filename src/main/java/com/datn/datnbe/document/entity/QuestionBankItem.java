@@ -56,6 +56,9 @@ public class QuestionBankItem {
     @Column(name = "chapter")
     String chapter;
 
+    @Column(name = "chapter_id", length = 36)
+    String chapterId;
+
     @Column(name = "subject", nullable = false)
     String subject;
 

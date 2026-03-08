@@ -59,6 +59,9 @@ public class Mindmap {
     @Column(name = "chapter", length = 255)
     String chapter;
 
+    @Column(name = "chapter_id", length = 36)
+    String chapterId;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "extra_fields", columnDefinition = "jsonb")
     @Builder.Default

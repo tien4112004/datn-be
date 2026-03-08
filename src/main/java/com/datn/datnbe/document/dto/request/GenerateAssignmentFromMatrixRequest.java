@@ -73,6 +73,10 @@ public class GenerateAssignmentFromMatrixRequest {
     @JsonAlias("chapter")
     private String chapter;
 
+    @JsonProperty("chapterId")
+    @JsonAlias("chapter_id")
+    private String chapterId;
+
     /**
      * Strategy for handling missing questions.
      * - REPORT_GAPS: Return draft with gaps indicated

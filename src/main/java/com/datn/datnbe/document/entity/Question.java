@@ -40,6 +40,7 @@ public class Question {
     String explanation;
     String grade;
     String chapter;
+    String chapterId;
     String subject;
 
     @JsonProperty("contextId")

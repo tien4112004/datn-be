@@ -65,6 +65,9 @@ class GetAllPresentationsTest {
     @Mock
     private PresentationValidation validation;
 
+    @Mock
+    private ChapterManagement chapterManagement;
+
     private PresentationManagement presentationService;
 
     private Presentation presentation1;
@@ -76,7 +79,7 @@ class GetAllPresentationsTest {
     void setUp() {
         mapper = Mappers.getMapper(PresentationEntityMapper.class);
         presentationService = new PresentationManagement(presentationRepository, mapper, validation,
-                resourcePermissionApi, rustfsStorageService, documentVisitService, securityContextUtils);
+                resourcePermissionApi, rustfsStorageService, documentVisitService, securityContextUtils, chapterManagement);
 
         // Setup security context mock
         securityContextHolderMock = mockStatic(SecurityContextHolder.class);

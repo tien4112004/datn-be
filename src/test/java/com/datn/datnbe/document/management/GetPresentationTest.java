@@ -61,6 +61,9 @@ class GetPresentationTest {
     @MockitoBean
     private com.datn.datnbe.document.service.DocumentService documentVisitService;
 
+    @MockitoBean
+    private ChapterManagement chapterManagement;
+
     @Autowired
     private PresentationManagement presentationService;
 

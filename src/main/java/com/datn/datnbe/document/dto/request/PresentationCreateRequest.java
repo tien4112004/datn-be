@@ -40,6 +40,8 @@ public class PresentationCreateRequest {
     @Size(max = 255)
     private String chapter;
 
+    private String chapterId;
+
     @Builder.Default
     private Map<String, Object> metadata = new HashMap<>();
 

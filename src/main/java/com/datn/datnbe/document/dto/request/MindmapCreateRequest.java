@@ -40,6 +40,8 @@ public class MindmapCreateRequest {
     @Size(max = 255)
     String chapter;
 
+    String chapterId;
+
     @Builder.Default
     Map<String, Object> extraFields = new HashMap<>();
 

@@ -11,6 +11,7 @@ public class AssignmentUpdateRequest {
     private String subject;
     private String grade;
     private String chapter;
+    private String chapterId;
     private List<QuestionItemRequest> questions;
     private List<com.datn.datnbe.document.entity.AssignmentContext> contexts;
     private AssignmentMatrix matrix;
