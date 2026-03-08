@@ -16,6 +16,18 @@ import java.util.List;
 public interface AssignmentRepository extends JpaRepository<Assignment, String>, JpaSpecificationExecutor<Assignment> {
     Page<Assignment> findByIdIn(List<String> ids, Pageable pageable);
 
+    @Query("SELECT a FROM Assignment a WHERE a.id IN :ids "
+            + "AND ('' = :filter OR LOWER(a.title) LIKE LOWER(CONCAT('%', :filter, '%'))) "
+            + "AND ('' = :grade OR a.grade = :grade) " + "AND ('' = :subject OR a.subject = :subject) "
+            + "AND ('' = :chapter OR a.chapter = :chapter) " + "AND ('' = :chapterId OR a.chapterId = :chapterId)")
+    Page<Assignment> findByIdInWithFilters(@Param("ids") List<String> ids,
+            @Param("filter") String filter,
+            @Param("grade") String grade,
+            @Param("subject") String subject,
+            @Param("chapter") String chapter,
+            @Param("chapterId") String chapterId,
+            Pageable pageable);
+
     @Query("SELECT COUNT(a) FROM Assignment a WHERE a.id IN :ids")
     long countByIdIn(@Param("ids") Collection<String> ids);
 

@@ -155,10 +155,19 @@ public class PresentationManagement implements PresentationApi {
         String ownerId = ((Jwt) principal).getSubject();
         List<String> resourceIds = resourcePermissionApi.getAllResourceByTypeOfOwner(ownerId, "presentation");
 
+        String grade = StringUtils.hasText(request.getGrade()) ? request.getGrade() : "";
+        String subject = StringUtils.hasText(request.getSubject()) ? request.getSubject() : "";
+        String chapter = StringUtils.hasText(request.getChapter()) ? request.getChapter() : "";
+        String chapterId = StringUtils.hasText(request.getChapterId()) ? request.getChapterId() : "";
+
         // Fetch data based on filter
         Page<Presentation> presentationPage;
         presentationPage = presentationRepository.findByIdInWithOptionalTitle(resourceIds,
                 StringUtils.hasText(request.getFilter()) ? request.getFilter() : "",
+                grade,
+                subject,
+                chapter,
+                chapterId,
                 pageable);
 
         // Map to DTOs

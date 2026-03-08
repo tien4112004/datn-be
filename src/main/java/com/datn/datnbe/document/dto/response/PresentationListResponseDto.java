@@ -16,6 +16,10 @@ public class PresentationListResponseDto {
     private String id;
     private String title;
     private String thumbnail;
+    private String grade;
+    private String subject;
+    private String chapter;
+    private String chapterId;
     private Date createdAt;
     private Date updatedAt;
 }

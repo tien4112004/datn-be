@@ -25,6 +25,18 @@ public interface MindmapRepository extends JpaRepository<Mindmap, String> {
     @Query("SELECT m FROM Mindmap m WHERE m.id IN :ids")
     Page<Mindmap> findByIdIn(Iterable<String> ids, Pageable pageable);
 
+    @Query("SELECT m FROM Mindmap m WHERE m.id IN :ids "
+            + "AND ('' = :filter OR LOWER(m.title) LIKE LOWER(CONCAT('%', :filter, '%'))) "
+            + "AND ('' = :grade OR m.grade = :grade) " + "AND ('' = :subject OR m.subject = :subject) "
+            + "AND ('' = :chapter OR m.chapter = :chapter) " + "AND ('' = :chapterId OR m.chapterId = :chapterId)")
+    Page<Mindmap> findByIdInWithFilters(@Param("ids") Iterable<String> ids,
+            @Param("filter") String filter,
+            @Param("grade") String grade,
+            @Param("subject") String subject,
+            @Param("chapter") String chapter,
+            @Param("chapterId") String chapterId,
+            Pageable pageable);
+
     @Query("SELECT COUNT(m) FROM Mindmap m WHERE m.id IN :ids")
     long countByIdIn(@Param("ids") java.util.Collection<String> ids);
 

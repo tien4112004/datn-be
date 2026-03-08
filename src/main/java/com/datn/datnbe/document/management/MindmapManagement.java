@@ -125,8 +125,14 @@ public class MindmapManagement implements MindmapApi {
             List<String> resourceIds = resourcePermissionApi.getAllResourceByTypeOfOwner(ownerId, "mindmap");
             log.info("Found {} mindmap resources for ownerId: '{}'", resourceIds.size(), ownerId);
 
-            // Page<Mindmap> mindmapPage = mindmapRepository.findAll(pageable);
-            Page<Mindmap> mindmapPage = mindmapRepository.findByIdIn(resourceIds, pageable);
+            String filter = StringUtils.hasText(request.getFilter()) ? request.getFilter() : "";
+            String grade = StringUtils.hasText(request.getGrade()) ? request.getGrade() : "";
+            String subject = StringUtils.hasText(request.getSubject()) ? request.getSubject() : "";
+            String chapter = StringUtils.hasText(request.getChapter()) ? request.getChapter() : "";
+            String chapterId = StringUtils.hasText(request.getChapterId()) ? request.getChapterId() : "";
+
+            Page<Mindmap> mindmapPage = mindmapRepository
+                    .findByIdInWithFilters(resourceIds, filter, grade, subject, chapter, chapterId, pageable);
 
             List<MindmapListResponseDto> content = mindmapPage.getContent()
                     .stream()
