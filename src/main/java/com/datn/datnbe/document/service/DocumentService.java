@@ -4,6 +4,7 @@ import com.datn.datnbe.auth.api.ResourcePermissionApi;
 import com.datn.datnbe.document.dto.DocumentMetadataDto;
 import com.datn.datnbe.document.dto.request.DocumentCollectionRequest;
 import com.datn.datnbe.document.dto.request.RecentDocumentCollectionRequest;
+import com.datn.datnbe.document.dto.request.UpdateDocumentRequest;
 import com.datn.datnbe.document.dto.response.DocumentMinimalResponseDto;
 import com.datn.datnbe.document.entity.DocumentVisit;
 import com.datn.datnbe.document.repository.DocumentRepository;
@@ -142,5 +143,34 @@ public class DocumentService {
                 paginatedDocuments.getTotalElements(), paginatedDocuments.getTotalPages());
 
         return new PaginatedResponseDto<>(documents, pagination);
+    }
+
+    public void updateDocumentChapter(String documentType, String documentId, UpdateDocumentRequest request) {
+        log.info("Updating chapter for document - id: {}, type: {}, new chapter: {}",
+                documentId,
+                documentType,
+                request.getChapter());
+
+        if ("presentation".equalsIgnoreCase(documentType)) {
+            documentRepository.updatePresentationChapter(documentId,
+                    request.getChapterId(),
+                    request.getChapter(),
+                    request.getSubject(),
+                    request.getGrade());
+        } else if ("mindmap".equalsIgnoreCase(documentType)) {
+            documentRepository.updateMindmapChapter(documentId,
+                    request.getChapterId(),
+                    request.getChapter(),
+                    request.getSubject(),
+                    request.getGrade());
+        } else if ("assignment".equalsIgnoreCase(documentType)) {
+            documentRepository.updateAssignmentChapter(documentId,
+                    request.getChapterId(),
+                    request.getChapter(),
+                    request.getSubject(),
+                    request.getGrade());
+        } else {
+            throw new IllegalArgumentException("Unsupported document type: " + documentType);
+        }
     }
 }

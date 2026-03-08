@@ -32,7 +32,7 @@ public class MindmapDto {
 
     private Date createdAt;
     private Date updatedAt;
-    
+
     private String grade;
     private String subject;
     private String chapter;
