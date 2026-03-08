@@ -29,7 +29,7 @@ public class PresentationDto {
     private Date createdAt;
     private Date updatedAt;
     private boolean isParsed;
-    
+
     private String grade;
     private String subject;
     private String chapter;

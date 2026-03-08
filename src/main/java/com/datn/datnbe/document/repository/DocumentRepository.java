@@ -141,4 +141,25 @@ public interface DocumentRepository extends JpaRepository<DocumentVisit, Integer
             @Param("presentationIds") List<String> presentationIds,
             @Param("mindmapIds") List<String> mindmapIds,
             @Param("assignmentIds") List<String> assignmentIds);
+
+    @Query(value = """
+                UPDATE presentations
+                SET chapter_id = :chapterId, chapter = :chapter, subject = :subject, grade = :grade, updated_at = NOW()
+                WHERE id = :documentId
+            """, nativeQuery = true)
+    void updatePresentationChapter(String documentId, String chapterId, String chapter, String subject, String grade);
+
+    @Query(value = """
+                UPDATE mindmaps
+                SET chapter_id = :chapterId, chapter = :chapter, subject = :subject, grade = :grade, updated_at = NOW()
+                WHERE id = :documentId
+            """, nativeQuery = true)
+    void updateMindmapChapter(String documentId, String chapterId, String chapter, String subject, String grade);
+
+    @Query(value = """
+                UPDATE assignments
+                SET chapter_id = :chapterId, chapter = :chapter, subject = :subject, grade = :grade, updated_at = NOW()
+                WHERE id = :documentId
+            """, nativeQuery = true)
+    void updateAssignmentChapter(String documentId, String chapterId, String chapter, String subject, String grade);
 }

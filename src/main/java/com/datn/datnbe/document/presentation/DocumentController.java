@@ -5,6 +5,7 @@ import com.datn.datnbe.document.api.MindmapApi;
 import com.datn.datnbe.document.api.PresentationApi;
 import com.datn.datnbe.document.dto.request.DocumentCollectionRequest;
 import com.datn.datnbe.document.dto.request.RecentDocumentCollectionRequest;
+import com.datn.datnbe.document.dto.request.UpdateDocumentRequest;
 import com.datn.datnbe.document.dto.response.DocumentMinimalResponseDto;
 import com.datn.datnbe.document.dto.response.RecentDocumentDto;
 import com.datn.datnbe.document.entity.DocumentVisit;
@@ -89,5 +90,15 @@ public class DocumentController {
 
         return ResponseEntity.ok(
                 AppResponseDto.successWithPagination(paginatedDocuments.getData(), paginatedDocuments.getPagination()));
+    }
+
+    @PatchMapping("/documents/{documentType}/{documentId}/update-chapter")
+    public ResponseEntity<AppResponseDto<Void>> updateDocumentChapter(@PathVariable String documentType,
+            @PathVariable String documentId,
+            @RequestBody UpdateDocumentRequest request) {
+
+        documentVisitService.updateDocumentChapter(documentType, documentId, request);
+
+        return ResponseEntity.ok(AppResponseDto.success());
     }
 }
