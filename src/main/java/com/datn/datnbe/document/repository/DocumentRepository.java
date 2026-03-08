@@ -6,7 +6,9 @@ import com.datn.datnbe.document.entity.DocumentVisit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -149,6 +151,8 @@ public interface DocumentRepository extends JpaRepository<DocumentVisit, Integer
             @Param("mindmapIds") List<String> mindmapIds,
             @Param("assignmentIds") List<String> assignmentIds);
 
+    @Modifying
+    @Transactional
     @Query(value = """
                 UPDATE presentations
                 SET chapter_id = :chapterId, chapter = :chapter, subject = :subject, grade = :grade, updated_at = NOW()
@@ -156,6 +160,8 @@ public interface DocumentRepository extends JpaRepository<DocumentVisit, Integer
             """, nativeQuery = true)
     void updatePresentationChapter(String documentId, String chapterId, String chapter, String subject, String grade);
 
+    @Modifying
+    @Transactional
     @Query(value = """
                 UPDATE mindmaps
                 SET chapter_id = :chapterId, chapter = :chapter, subject = :subject, grade = :grade, updated_at = NOW()
@@ -163,6 +169,8 @@ public interface DocumentRepository extends JpaRepository<DocumentVisit, Integer
             """, nativeQuery = true)
     void updateMindmapChapter(String documentId, String chapterId, String chapter, String subject, String grade);
 
+    @Modifying
+    @Transactional
     @Query(value = """
                 UPDATE assignments
                 SET chapter_id = :chapterId, chapter = :chapter, subject = :subject, grade = :grade, updated_at = NOW()
