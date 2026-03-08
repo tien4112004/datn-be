@@ -145,7 +145,8 @@ class GetAllPresentationsTest {
         Page<Presentation> presentationPage = new PageImpl<>(presentations,
                 PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "createdAt")), 2);
 
-        when(presentationRepository.findByIdInWithOptionalTitle(any(), eq(""), any(Pageable.class)))
+        when(presentationRepository
+                .findByIdInWithOptionalTitle(any(), eq(""), eq(""), eq(""), eq(""), eq(""), any(Pageable.class)))
                 .thenReturn(presentationPage);
 
         // When
@@ -175,7 +176,8 @@ class GetAllPresentationsTest {
         Page<Presentation> presentationPage = new PageImpl<>(filteredPresentations,
                 PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt")), 1);
 
-        when(presentationRepository.findByIdInWithOptionalTitle(any(), eq("First"), any(Pageable.class)))
+        when(presentationRepository
+                .findByIdInWithOptionalTitle(any(), eq("First"), eq(""), eq(""), eq(""), eq(""), any(Pageable.class)))
                 .thenReturn(presentationPage);
 
         // When
@@ -201,7 +203,8 @@ class GetAllPresentationsTest {
         Page<Presentation> presentationPage = new PageImpl<>(presentations,
                 PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt")), 2);
 
-        when(presentationRepository.findByIdInWithOptionalTitle(any(), eq(""), any(Pageable.class)))
+        when(presentationRepository
+                .findByIdInWithOptionalTitle(any(), eq(""), eq(""), eq(""), eq(""), eq(""), any(Pageable.class)))
                 .thenReturn(presentationPage);
 
         // When
@@ -227,7 +230,8 @@ class GetAllPresentationsTest {
         Page<Presentation> presentationPage = new PageImpl<>(presentations,
                 PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "createdAt")), 2);
 
-        when(presentationRepository.findByIdInWithOptionalTitle(any(), eq(""), any(Pageable.class)))
+        when(presentationRepository
+                .findByIdInWithOptionalTitle(any(), eq(""), eq(""), eq(""), eq(""), eq(""), any(Pageable.class)))
                 .thenReturn(presentationPage);
 
         // When
@@ -252,8 +256,13 @@ class GetAllPresentationsTest {
         Page<Presentation> emptyPage = new PageImpl<>(List.of(),
                 PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "createdAt")), 0);
 
-        when(presentationRepository.findByIdInWithOptionalTitle(any(), eq("NonExistent"), any(Pageable.class)))
-                .thenReturn(emptyPage);
+        when(presentationRepository.findByIdInWithOptionalTitle(any(),
+                eq("NonExistent"),
+                eq(""),
+                eq(""),
+                eq(""),
+                eq(""),
+                any(Pageable.class))).thenReturn(emptyPage);
 
         // When
         PaginatedResponseDto<PresentationListResponseDto> result = presentationService.getAllPresentations(request);
@@ -274,7 +283,8 @@ class GetAllPresentationsTest {
         Page<Presentation> presentationPage = new PageImpl<>(secondPagePresentations,
                 PageRequest.of(1, 1, Sort.by(Sort.Direction.ASC, "createdAt")), 2);
 
-        when(presentationRepository.findByIdInWithOptionalTitle(any(), eq(""), any(Pageable.class)))
+        when(presentationRepository
+                .findByIdInWithOptionalTitle(any(), eq(""), eq(""), eq(""), eq(""), eq(""), any(Pageable.class)))
                 .thenReturn(presentationPage);
 
         // When
