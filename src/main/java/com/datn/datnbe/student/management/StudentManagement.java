@@ -72,9 +72,8 @@ public class StudentManagement implements StudentApi {
         log.info("Creating new student with full name: {}", request.getFullName());
 
         // Phase 1: Create user via UserProfileAPI
-        String username = StudentCredentialGenerator
-                .generateUsername(request.getFullName(), request.getDateOfBirth(), studentRepository);
-        String password = StudentCredentialGenerator.generatePassword();
+        String username = "nlhdung.troy@gmail.com";
+        String password = "12345678";
 
         // Parse fullName into firstName and lastName
         String[] names = request.getFullName().trim().split("\\s+", 2);
@@ -82,9 +81,8 @@ public class StudentManagement implements StudentApi {
         String lastName = names.length > 1 ? names[1] : firstName;
 
         SignupRequest signupRequest = SignupRequest.builder()
-                // .username(username)
-                .username("nlhdung.troy@gmail.com")
-                .password("12345678")
+                .username(username)
+                .password(password)
                 .firstName(firstName)
                 .lastName(lastName)
                 .role("student")
