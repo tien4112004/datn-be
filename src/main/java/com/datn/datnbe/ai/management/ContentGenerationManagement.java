@@ -3,6 +3,7 @@ package com.datn.datnbe.ai.management;
 import com.datn.datnbe.ai.api.ContentGenerationApi;
 import com.datn.datnbe.ai.api.ModelSelectionApi;
 import com.datn.datnbe.ai.apiclient.AIApiClient;
+import com.datn.datnbe.ai.dto.request.AIGatewayGenerateByTopicRequest;
 import com.datn.datnbe.ai.dto.request.AIGatewayGenerateQuestionsFromContextRequest;
 import com.datn.datnbe.ai.dto.request.AIGatewayGenerateQuestionsRequest;
 import com.datn.datnbe.ai.dto.request.AIGradeRequest;
@@ -84,6 +85,10 @@ public class ContentGenerationManagement implements ContentGenerationApi {
     @Value("${ai.api.questions-from-context-endpoint:/api/questions/generate-from-context}")
     @NonFinal
     String QUESTIONS_FROM_CONTEXT_ENDPOINT;
+
+    @Value("${ai.api.questions-by-topic-endpoint:/api/questions/generate-by-topic}")
+    @NonFinal
+    String QUESTIONS_BY_TOPIC_ENDPOINT;
 
     @Value("${ai.api.grade-answer-endpoint:/api/questions/grade}")
     @NonFinal
@@ -384,6 +389,28 @@ public class ContentGenerationManagement implements ContentGenerationApi {
             return jsonResponse;
         } catch (Exception e) {
             log.error("Error during context-based question generation", e);
+            throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    @Override
+    public String generateQuestionsByTopic(AIGatewayGenerateByTopicRequest request, String traceId) {
+        log.info("Generating questions by topic: {}, grade: {}, groups: {}",
+                request.getTopicName(),
+                request.getGrade(),
+                request.getGroups() != null ? request.getGroups().size() : 0);
+
+        log.info("Calling GenAI-Gateway at endpoint: {}", QUESTIONS_BY_TOPIC_ENDPOINT);
+        try {
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.set("X-Trace-ID", traceId);
+
+            String jsonResponse = aiApiClient.post(QUESTIONS_BY_TOPIC_ENDPOINT, request, String.class, headers);
+
+            log.info("Successfully received response from GenAI-Gateway for generate-by-topic");
+            return jsonResponse;
+        } catch (Exception e) {
+            log.error("Error during generate-by-topic question generation", e);
             throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
         }
     }

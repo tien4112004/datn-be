@@ -80,7 +80,8 @@ public class SecurityConfig {
                                 "/api/slide-templates",
                                 "/api/slide-templates/**",
                                 "/api/students/import",
-                                "/api/question-bank/generate-from-context")
+                                "/api/question-bank/generate-from-context",
+                                "/api/question-bank/generate-by-topic")
                         .permitAll()
                         .requestMatchers(HttpMethod.PUT,
                                 "/api/slide-themes",
