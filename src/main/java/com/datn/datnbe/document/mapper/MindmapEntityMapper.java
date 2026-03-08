@@ -32,6 +32,7 @@ public interface MindmapEntityMapper {
     @Mapping(target = "grade", source = "grade")
     @Mapping(target = "subject", source = "subject")
     @Mapping(target = "chapter", source = "chapter")
+    @Mapping(target = "chapterId", source = "chapterId")
     @Mapping(target = "extraFields", source = "extraFields")
     Mindmap createRequestToEntity(MindmapCreateRequest request);
 
@@ -40,6 +41,7 @@ public interface MindmapEntityMapper {
     @Mapping(source = "grade", target = "grade")
     @Mapping(source = "subject", target = "subject")
     @Mapping(source = "chapter", target = "chapter")
+    @Mapping(source = "chapterId", target = "chapterId")
     @Mapping(source = "extraFields", target = "extraFields")
     MindmapDto entityToDto(Mindmap mindmap);
 
@@ -58,6 +60,7 @@ public interface MindmapEntityMapper {
     @Mapping(target = "grade", source = "grade")
     @Mapping(target = "subject", source = "subject")
     @Mapping(target = "chapter", source = "chapter")
+    @Mapping(target = "chapterId", source = "chapterId")
     @Mapping(target = "extraFields", source = "extraFields")
     void updateEntityFromRequest(MindmapUpdateRequest request, @MappingTarget Mindmap mindmap);
 

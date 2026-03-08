@@ -30,6 +30,8 @@ public class QuestionResponseDto {
 
     String chapter;
 
+    String chapterId;
+
     String subject;
 
     Object data;

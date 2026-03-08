@@ -49,6 +49,9 @@ public class AssignmentPost {
     @Column(name = "chapter", length = 255)
     String chapter;
 
+    @Column(name = "chapter_id", length = 36)
+    String chapterId;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     Date createdAt;

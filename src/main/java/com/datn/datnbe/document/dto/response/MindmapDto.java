@@ -36,6 +36,7 @@ public class MindmapDto {
     private String grade;
     private String subject;
     private String chapter;
+    private String chapterId;
 
     @Builder.Default
     Map<String, Object> extraFields = new HashMap<>();

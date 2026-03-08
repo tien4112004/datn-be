@@ -23,6 +23,7 @@ public class QuestionItemRequest {
     String explanation;
     String grade;
     String chapter;
+    String chapterId;
     String subject;
     String contextId;
     String topicId;

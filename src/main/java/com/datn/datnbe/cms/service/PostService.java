@@ -102,6 +102,8 @@ public class PostService implements PostApi {
                             .ownerId(securityContextUtils.getCurrentUserId())
                             .subject(originalAssignment.getSubject())
                             .grade(originalAssignment.getGrade())
+                            .chapter(originalAssignment.getChapter())
+                            .chapterId(originalAssignment.getChapterId())
                             .questions(originalAssignment.getQuestions())
                             .contexts(originalAssignment.getContexts())
                             // Settings from request (configured when creating homework post)

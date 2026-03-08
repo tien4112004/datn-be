@@ -62,6 +62,7 @@ public class MindmapManagement implements MindmapApi {
     RustfsStorageService rustfsStorageService;
     DocumentService documentVisitService;
     SecurityContextUtils securityContextUtils;
+    ChapterManagement chapterManagement;
 
     @NonFinal
     @Value("${rustfs.public-url}")
@@ -177,6 +178,12 @@ public class MindmapManagement implements MindmapApi {
 
                 request.setThumbnail(cdnUrl);
                 // No deletion needed - putObject overwrites existing file automatically
+            }
+
+            if (request.getChapter() == null && request.getChapterId() != null) {
+                request.setChapter(chapterManagement.getChapterName(request.getChapterId()));
+            } else if (request.getChapter() != null && request.getChapterId() == null) {
+                request.setChapterId(chapterManagement.getChapterId(request.getChapter()));
             }
 
             mapper.updateEntityFromRequest(request, existingMindmap);
@@ -302,6 +309,12 @@ public class MindmapManagement implements MindmapApi {
     }
 
     private Mindmap buildMindmapFromRequest(MindmapCreateRequest request) {
+        if (request.getChapter() == null && request.getChapterId() != null) {
+            request.setChapter(chapterManagement.getChapterName(request.getChapterId()));
+        } else if (request.getChapter() != null && request.getChapterId() == null) {
+            request.setChapterId(chapterManagement.getChapterId(request.getChapter()));
+        }
+
         Mindmap mindmap = mapper.createRequestToEntity(request);
 
         if (mindmap.getNodes() != null) {

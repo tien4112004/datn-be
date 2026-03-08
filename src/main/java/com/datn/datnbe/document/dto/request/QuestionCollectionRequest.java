@@ -31,6 +31,8 @@ public class QuestionCollectionRequest {
 
     List<String> chapter;
 
+    List<String> chapterId;
+
     List<String> difficulty;
 
     List<String> subject;

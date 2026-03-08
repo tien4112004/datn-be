@@ -22,4 +22,12 @@ public class ChapterManagement {
                 .map(ChapterResponse::fromChapter)
                 .collect(Collectors.toList());
     }
+
+    public String getChapterId( String chapter) {
+        return chapterRepository.getIdByChapterName(chapter);
+    }
+
+    public String getChapterName(String id) {
+        return chapterRepository.getNameById(id);
+    }
 }

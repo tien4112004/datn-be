@@ -78,11 +78,17 @@ public class AssignmentManagement implements AssignmentApi {
     private final PhoenixQueryService phoenixQueryService;
     private final CoinPricingApi coinPricingApi;
     private final ContextRepository contextRepository;
+    private final ChapterManagement chapterManagement;
 
     @Override
     @Transactional
     public AssignmentResponse createAssignment(AssignmentCreateRequest request) {
         String userId = securityContextUtils.getCurrentUserId();
+        if (request.getChapter() == null && request.getChapterId() != null) {
+            request.setChapter(chapterManagement.getChapterName(request.getChapterId()));
+        } else if (request.getChapter() != null && request.getChapterId() == null) {
+            request.setChapterId(chapterManagement.getChapterId(request.getChapter()));
+        }
         Assignment assignment = assignmentMapper.toEntity(request);
         assignment.setOwnerId(userId);
 
@@ -149,6 +155,12 @@ public class AssignmentManagement implements AssignmentApi {
         Assignment assignment = assignmentRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Assignment not found"));
 
+        if (request.getChapter() == null && request.getChapterId() != null) {
+            request.setChapter(chapterManagement.getChapterName(request.getChapterId()));
+        } else if (request.getChapter() != null && request.getChapterId() == null) {
+            request.setChapterId(chapterManagement.getChapterId(request.getChapter()));
+        }
+
         assignmentMapper.updateEntity(assignment, request);
 
         if (request.getQuestions() != null) {
@@ -204,6 +216,7 @@ public class AssignmentManagement implements AssignmentApi {
                         .explanation(item.getExplanation())
                         .grade(item.getGrade())
                         .chapter(item.getChapter())
+                        .chapterId(item.getChapterId())
                         .subject(item.getSubject())
                         .contextId(item.getContextId())
                         .topicId(item.getTopicId())

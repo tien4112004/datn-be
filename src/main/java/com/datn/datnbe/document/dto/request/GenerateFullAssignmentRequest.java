@@ -65,6 +65,8 @@ public class GenerateFullAssignmentRequest {
     @Size(max = 255)
     private String chapter;
 
+    private String chapterId;
+
     /**
      * AI provider to use for question generation.
      * Defaults to "google" if not specified.

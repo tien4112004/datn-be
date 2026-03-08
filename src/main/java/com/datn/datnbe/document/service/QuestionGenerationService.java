@@ -16,6 +16,7 @@ import com.datn.datnbe.document.entity.QuestionBankItem;
 import com.datn.datnbe.document.dto.request.GenerateQuestionsFromTopicRequest;
 import com.datn.datnbe.document.dto.response.GeneratedQuestionsResponse;
 import com.datn.datnbe.document.repository.ContextRepository;
+import com.datn.datnbe.document.management.ChapterManagement;
 import com.datn.datnbe.document.entity.questiondata.QuestionType;
 import com.datn.datnbe.document.mapper.QuestionEntityMapper;
 import com.datn.datnbe.document.repository.QuestionRepository;
@@ -49,6 +50,7 @@ public class QuestionGenerationService {
     TokenUsageApi tokenUsageApi;
     CoinPricingApi coinPricingApi;
     ContextRepository contextRepository;
+    ChapterManagement chapterManagement;
 
     @Transactional
     public GeneratedQuestionsResponse generateAndSaveQuestions(GenerateQuestionsFromTopicRequest request,
@@ -292,11 +294,13 @@ public class QuestionGenerationService {
         // topic
         String topicName = aiQuestion.getChapter();
 
+        String chapterId = null;
         if (topicName != null && !topicName.isEmpty()) {
             log.debug("Setting topic name (chapter): '{}', subject: '{}', grade: '{}'",
                     topicName,
                     aiQuestion.getSubject(),
                     aiQuestion.getGrade());
+            chapterId = chapterManagement.getChapterId(topicName);
         }
 
         // Convert and parse the data based on question type
@@ -312,6 +316,7 @@ public class QuestionGenerationService {
                 .explanation(aiQuestion.getExplanation())
                 .grade(aiQuestion.getGrade())
                 .chapter(topicName) // Store topic name directly as String
+                .chapterId(chapterId)
                 .subject(aiQuestion.getSubject())
                 .data(convertedData)
                 .ownerId(ownerId)

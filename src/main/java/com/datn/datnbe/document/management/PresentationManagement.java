@@ -57,6 +57,7 @@ public class PresentationManagement implements PresentationApi {
     RustfsStorageService rustfsStorageService;
     DocumentService documentVisitService;
     SecurityContextUtils securityContextUtils;
+    ChapterManagement chapterManagement;
 
     @NonFinal
     @Value("${rustfs.public-url}")
@@ -95,6 +96,12 @@ public class PresentationManagement implements PresentationApi {
         String uniqueTitle = generateUniqueTitle(request.getTitle());
         if (!uniqueTitle.equals(request.getTitle())) {
             log.info("Title '{}' already exists, using '{}' instead", request.getTitle(), uniqueTitle);
+        }
+
+        if (request.getChapter() == null && request.getChapterId() != null) {
+            request.setChapter(chapterManagement.getChapterName(request.getChapterId()));
+        } else if (request.getChapter() != null && request.getChapterId() == null) {
+            request.setChapterId(chapterManagement.getChapterId(request.getChapter()));
         }
 
         Presentation presentation = mapper.createRequestToEntity(request);
@@ -202,6 +209,12 @@ public class PresentationManagement implements PresentationApi {
 
             request.setThumbnail(cdnUrl);
             // No deletion needed - putObject overwrites existing file automatically
+        }
+
+        if (request.getChapter() == null && request.getChapterId() != null) {
+            request.setChapter(chapterManagement.getChapterName(request.getChapterId()));
+        } else if (request.getChapter() != null && request.getChapterId() == null) {
+            request.setChapterId(chapterManagement.getChapterId(request.getChapter()));
         }
 
         mapper.updateEntity(request, existingPresentation);
