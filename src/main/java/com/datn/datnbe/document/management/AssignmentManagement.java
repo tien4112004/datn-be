@@ -116,7 +116,17 @@ public class AssignmentManagement implements AssignmentApi {
 
         Pageable pageable = PageRequest
                 .of(Math.max(0, request.getPage() - 1), request.getPageSize(), Sort.by("createdAt").descending());
-        Page<Assignment> assignmentPage = assignmentRepository.findByIdIn(allowedIds, pageable);
+
+        String filter = (request.getFilter() != null && !request.getFilter().isBlank()) ? request.getFilter() : "";
+        String grade = (request.getGrade() != null && !request.getGrade().isBlank()) ? request.getGrade() : "";
+        String subject = (request.getSubject() != null && !request.getSubject().isBlank()) ? request.getSubject() : "";
+        String chapter = (request.getChapter() != null && !request.getChapter().isBlank()) ? request.getChapter() : "";
+        String chapterId = (request.getChapterId() != null && !request.getChapterId().isBlank())
+                ? request.getChapterId()
+                : "";
+
+        Page<Assignment> assignmentPage = assignmentRepository
+                .findByIdInWithFilters(allowedIds, filter, grade, subject, chapter, chapterId, pageable);
 
         return PaginatedResponseDto.<AssignmentResponse>builder()
                 .data(assignmentPage.getContent().stream().map(assignmentMapper::toDto).collect(Collectors.toList()))

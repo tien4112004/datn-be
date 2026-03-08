@@ -28,9 +28,16 @@ public interface PresentationRepository extends JpaRepository<Presentation, Stri
     @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Presentation p WHERE p.title = :title AND p.deletedAt IS NULL")
     boolean existsByTitle(@Param("title") String title);
 
-    @Query("SELECT p FROM Presentation p WHERE p.id IN :ids AND LOWER(p.title) LIKE LOWER(CONCAT('%', :title, '%')) AND p.deletedAt IS NULL")
+    @Query("SELECT p FROM Presentation p WHERE p.id IN :ids "
+            + "AND LOWER(p.title) LIKE LOWER(CONCAT('%', :title, '%')) " + "AND ('' = :grade OR p.grade = :grade) "
+            + "AND ('' = :subject OR p.subject = :subject) " + "AND ('' = :chapter OR p.chapter = :chapter) "
+            + "AND ('' = :chapterId OR p.chapterId = :chapterId) " + "AND p.deletedAt IS NULL")
     Page<Presentation> findByIdInWithOptionalTitle(@Param("ids") Iterable<String> ids,
             @Param("title") String title,
+            @Param("grade") String grade,
+            @Param("subject") String subject,
+            @Param("chapter") String chapter,
+            @Param("chapterId") String chapterId,
             Pageable pageable);
 
     @Query("SELECT COUNT(p) FROM Presentation p WHERE p.id IN :ids AND p.deletedAt IS NULL")
