@@ -1,10 +1,12 @@
 package com.datn.datnbe.document.presentation;
 
 import com.datn.datnbe.document.api.QuestionApi;
+import com.datn.datnbe.document.dto.request.GenerateQuestionsByTopicRequest;
 import com.datn.datnbe.document.dto.request.GenerateQuestionsFromContextRequest;
 import com.datn.datnbe.document.dto.request.QuestionCreateRequest;
 import com.datn.datnbe.document.dto.request.QuestionUpdateRequest;
 import com.datn.datnbe.document.dto.request.QuestionCollectionRequest;
+import com.datn.datnbe.document.dto.response.GenerateQuestionsByTopicResponse;
 import com.datn.datnbe.document.dto.response.QuestionResponseDto;
 import com.datn.datnbe.document.dto.response.BatchCreateQuestionResponseDto;
 import com.datn.datnbe.document.dto.request.GenerateQuestionsFromTopicRequest;
@@ -109,6 +111,30 @@ public class QuestionController {
                 request.getContextId());
 
         GeneratedQuestionsResponse response = questionGenerationService.generateAndSaveQuestionsFromContext(request,
+                currentUserId);
+
+        return ResponseEntity.ok(AppResponseDto.success(response));
+    }
+
+    @PostMapping("/generate-by-topic")
+    @Operation(summary = "Generate Questions by Topic", description = "Generate questions for a single topic from the assignment matrix. "
+            + "If hasContext=true, a reading passage is selected and up to 7 questions use it. "
+            + "Questions are returned directly and NOT saved to the question bank.")
+    public ResponseEntity<AppResponseDto<GenerateQuestionsByTopicResponse>> generateQuestionsByTopic(
+            @Valid @RequestBody GenerateQuestionsByTopicRequest request) {
+
+        String currentUserId;
+        try {
+            currentUserId = securityContextUtils.getCurrentUserProfileId();
+            if ("anonymousUser".equals(currentUserId)) {
+                currentUserId = "00000000-0000-0000-0000-000000000001";
+            }
+        } catch (Exception e) {
+            currentUserId = "00000000-0000-0000-0000-000000000001";
+        }
+        log.info("Generating questions by topic for user: {}, topic: {}", currentUserId, request.getTopicName());
+
+        GenerateQuestionsByTopicResponse response = questionGenerationService.generateQuestionsByTopic(request,
                 currentUserId);
 
         return ResponseEntity.ok(AppResponseDto.success(response));
