@@ -1,6 +1,5 @@
 package com.datn.datnbe.cms.dto.request;
 
-import com.datn.datnbe.cms.dto.AttachmentDto;
 import com.datn.datnbe.cms.dto.LinkedResourceDto;
 import jakarta.validation.Valid;
 import lombok.Data;
@@ -12,7 +11,7 @@ import java.util.List;
 public class PostUpdateRequest {
     private String content;
     private String type; // Post, Assignment
-    private List<AttachmentDto> attachments;
+    private List<String> attachments;
     @Valid
     private List<LinkedResourceDto> linkedResources;
     private String linkedLessonId;

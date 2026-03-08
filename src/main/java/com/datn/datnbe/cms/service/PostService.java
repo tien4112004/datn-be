@@ -23,6 +23,7 @@ import com.datn.datnbe.cms.repository.PostRepository;
 import com.datn.datnbe.document.entity.Assignment;
 import com.datn.datnbe.document.mapper.AssignmentMapper;
 import com.datn.datnbe.document.repository.AssignmentRepository;
+import com.datn.datnbe.document.repository.MediaRepository;
 import com.datn.datnbe.document.dto.response.AssignmentResponse;
 import com.datn.datnbe.sharedkernel.notification.constants.NotificationMessages;
 import com.datn.datnbe.sharedkernel.notification.dto.SendNotificationToUsersRequest;
@@ -34,7 +35,6 @@ import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
 import com.datn.datnbe.student.api.StudentApi;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -68,6 +68,7 @@ public class PostService implements PostApi {
     private final AssignmentRepository assignmentRepository;
     private final AssignmentMapper assignmentMapper;
     private final ResourcePermissionApi resourcePermissionApi;
+    private final MediaRepository mediaRepository;
 
     @Override
     @Transactional
@@ -83,18 +84,7 @@ public class PostService implements PostApi {
         post.setClassId(classId);
         post.setAuthorId(securityContextUtils.getCurrentUserId());
         post.setAllowComments(Boolean.TRUE.equals(request.getAllowComments()));
-        List<AttachmentDto> attachments = request.getAttachments() == null
-                ? null
-                : request.getAttachments().stream().map(a -> {
-                    if (a.getName() == null || a.getName().isEmpty()) {
-                        String fallback = a.getUrl() != null
-                                ? a.getUrl().substring(a.getUrl().lastIndexOf('/') + 1)
-                                : null;
-                        a.setName(fallback);
-                    }
-                    return a;
-                }).toList();
-        post.setAttachments(attachments);
+        post.setAttachments(resolveAttachments(request.getAttachments()));
 
         // If assignmentId is provided in request, clone the assignment for this post
         if (request.getAssignmentId() != null && !request.getAssignmentId().isEmpty()) {
@@ -280,18 +270,7 @@ public class PostService implements PostApi {
         String classId = exist.getClassId();
 
         postMapper.updateEntity(request, exist);
-        List<AttachmentDto> attachments = request.getAttachments() == null
-                ? null
-                : request.getAttachments().stream().map(a -> {
-                    if (a.getName() == null || a.getName().isEmpty()) {
-                        String fallback = a.getUrl() != null
-                                ? a.getUrl().substring(a.getUrl().lastIndexOf('/') + 1)
-                                : null;
-                        a.setName(fallback);
-                    }
-                    return a;
-                }).toList();
-        exist.setAttachments(attachments);
+        exist.setAttachments(resolveAttachments(request.getAttachments()));
         Post saved = postRepository.save(exist);
 
         // Update linked resources in join table
@@ -369,6 +348,17 @@ public class PostService implements PostApi {
         if (author != null) {
             dto.setAuthor(author);
         }
+    }
+
+    private List<AttachmentDto> resolveAttachments(List<String> urls) {
+        if (urls == null || urls.isEmpty())
+            return null;
+        return urls.stream().map(url -> {
+            String name = mediaRepository.findByCdnUrl(url)
+                    .map(m -> m.getOriginalFilename())
+                    .orElseGet(() -> url.substring(url.lastIndexOf('/') + 1));
+            return AttachmentDto.builder().name(name).url(url).build();
+        }).toList();
     }
 
     private void notifyStudents(String classId, Post post, String title, NotificationType type) {

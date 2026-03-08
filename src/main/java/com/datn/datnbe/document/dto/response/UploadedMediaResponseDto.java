@@ -12,4 +12,5 @@ public class UploadedMediaResponseDto {
     private String mediaType;
     private String extension;
     private Long id;
+    private String originalFilename;
 }
