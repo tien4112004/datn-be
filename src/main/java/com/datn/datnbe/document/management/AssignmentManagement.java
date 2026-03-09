@@ -28,7 +28,11 @@ import com.datn.datnbe.document.dto.response.AssignmentResponse;
 import com.datn.datnbe.document.dto.response.AssignmentDraftDto;
 import com.datn.datnbe.document.entity.AssignmentMatrixEntity;
 import com.datn.datnbe.document.repository.AssignmentMatrixTemplateRepository;
+import com.datn.datnbe.document.dto.pdf.AssignmentPdfViewModel;
+import com.datn.datnbe.document.dto.pdf.PdfExportRequest;
+import com.datn.datnbe.document.service.AssignmentPdfViewModelMapper;
 import com.datn.datnbe.document.service.DocumentService;
+import com.datn.datnbe.document.service.PdfGenerationService;
 import com.datn.datnbe.document.service.QuestionSelectionService;
 
 import com.datn.datnbe.document.entity.Assignment;
@@ -78,6 +82,8 @@ public class AssignmentManagement implements AssignmentApi {
     private final PhoenixQueryService phoenixQueryService;
     private final CoinPricingApi coinPricingApi;
     private final ContextRepository contextRepository;
+    private final PdfGenerationService pdfGenerationService;
+    private final AssignmentPdfViewModelMapper assignmentPdfViewModelMapper;
     private final ChapterManagement chapterManagement;
 
     @Override
@@ -586,7 +592,8 @@ public class AssignmentManagement implements AssignmentApi {
                     }
                 }
 
-                // Parse to Question entity from the enriched questionObj (not original questionNode)
+                // Parse to Question entity from the enriched questionObj (not original
+                // questionNode)
                 Question question = objectMapper.treeToValue(questionObj, Question.class);
 
                 // Generate ID for the question
@@ -672,5 +679,19 @@ public class AssignmentManagement implements AssignmentApi {
         } catch (Exception e) {
             log.warn("Failed to save token usage from Phoenix for generate-questions-from-topic", e);
         }
+    }
+
+    @Override
+    public byte[] exportAssignmentPdf(String id, PdfExportRequest request) {
+        AssignmentResponse assignment = getAssignmentById(id);
+
+        AssignmentPdfViewModel viewModel = assignmentPdfViewModelMapper.toViewModel(assignment);
+
+        org.thymeleaf.context.Context context = new org.thymeleaf.context.Context();
+        context.setVariable("assignment", viewModel);
+        context.setVariable("exportRequest", request);
+        context.setVariable("theme", request.getTheme());
+
+        return pdfGenerationService.renderTemplate("assignment-template", context, request.getTheme());
     }
 }

@@ -1,0 +1,126 @@
+{
+  "id": "37e65844-f175-4fdc-b868-4a4a98f400c0",
+  "title": "Bài tập về My house",
+  "description": "",
+  "ownerId": "d412f85f-8811-42ec-81dd-be8099732275",
+  "subject": "TA",
+  "grade": "3",
+  "contexts": [
+    {
+      "id": "mmc693oc-me19l2bjx",
+      "title": "Linda's Introduction",
+      "content": "Hi. My name is Linda. I'm nine years old. This is my school. It's new and big. I'm in Class 3A. My classroom is large. My teacher is Miss Hien. She's very nice.",
+      "author": null
+    },
+    {
+      "id": "ctx_1772813848299_9gnu18",
+      "title": "Linda and Friend",
+      "content": "My name is Linda. I am eight years old. I am from Vietnam. I have got a friend. He is from Japan. I am a pupil and my friend is a pupil, too. He likes dancing and drawing. I like cooking. I usually cook with my mom at the weekends.",
+      "author": null
+    }
+  ],
+  "questions": [
+    {
+      "id": "mmc5xo62-t3zdbsmrc",
+      "type": "MULTIPLE_CHOICE",
+      "difficulty": "KNOWLEDGE",
+      "title": "Which room is typically for sleeping and relaxing?",
+      "explanation": "The bedroom is the room in a house where people sleep.",
+      "contextId": null,
+      "topicId": null,
+      "point": 10.0,
+      "data": {
+        "options": [
+          { "id": "opt-1", "text": "Kitchen",     "imageUrl": null, "isCorrect": false },
+          { "id": "opt-2", "text": "Living room", "imageUrl": null, "isCorrect": false },
+          { "id": "opt-3", "text": "Bathroom",    "imageUrl": null, "isCorrect": false },
+          { "id": "opt-4", "text": "Bedroom",     "imageUrl": null, "isCorrect": true  }
+        ],
+        "shuffleOptions": true
+      }
+    },
+    {
+      "id": "mmc5zlfs-ptghgb1sb",
+      "type": "FILL_IN_BLANK",
+      "difficulty": "KNOWLEDGE",
+      "title": "Điền từ còn thiếu vào chỗ trống để hoàn thành câu:",
+      "explanation": "Câu này hỏi về một phòng nơi chúng ta ngủ.",
+      "contextId": null,
+      "topicId": null,
+      "point": 10.0,
+      "data": {
+        "segments": [
+          { "id": "seg-1", "type": "TEXT",  "content": "This is a ",  "acceptableAnswers": null },
+          { "id": "seg-2", "type": "BLANK", "content": "bedroom",     "acceptableAnswers": [] },
+          { "id": "seg-3", "type": "TEXT",  "content": ".",            "acceptableAnswers": null }
+        ],
+        "caseSensitive": false
+      }
+    },
+    {
+      "id": "mmc6b3uc-4x1e17j02",
+      "type": "MULTIPLE_CHOICE",
+      "difficulty": "KNOWLEDGE",
+      "title": "What is Linda's teacher's name?",
+      "explanation": "According to the text, Linda says, 'My teacher is Miss Hien.'",
+      "contextId": "mmc693oc-me19l2bjx",
+      "topicId": null,
+      "point": 10.0,
+      "data": {
+        "options": [
+          { "id": "opt-a", "text": "Miss Lan",  "imageUrl": null, "isCorrect": false },
+          { "id": "opt-b", "text": "Miss Hien", "imageUrl": null, "isCorrect": true  },
+          { "id": "opt-c", "text": "Miss Hoa",  "imageUrl": null, "isCorrect": false },
+          { "id": "opt-d", "text": "Miss Mai",  "imageUrl": null, "isCorrect": false }
+        ],
+        "shuffleOptions": true
+      }
+    },
+    {
+      "id": "mmc6b3ud-y3zx2jl0t",
+      "type": "OPEN_ENDED",
+      "difficulty": "APPLICATION",
+      "title": "Based on the text, describe Linda's school and classroom.",
+      "explanation": "Linda states, 'This is my school. It's new and big.' She also says, 'My classroom is large.'",
+      "contextId": "mmc693oc-me19l2bjx",
+      "topicId": null,
+      "point": 10.0,
+      "data": {
+        "expectedAnswer": "Linda's school is new and big. Her classroom is large.",
+        "maxLength": 100
+      }
+    },
+    {
+      "id": "mmc6b3ud-avxx5jh3c",
+      "type": "OPEN_ENDED",
+      "difficulty": "APPLICATION",
+      "title": "What two pieces of information does Linda share about her teacher?",
+      "explanation": "Linda mentions her teacher's name is Miss Hien and describes her as 'very nice'.",
+      "contextId": "mmc693oc-me19l2bjx",
+      "topicId": null,
+      "point": 10.0,
+      "data": {
+        "expectedAnswer": "Linda's teacher's name is Miss Hien. She is very nice.",
+        "maxLength": 100
+      }
+    },
+    {
+      "id": "matching-001",
+      "type": "MATCHING",
+      "difficulty": "KNOWLEDGE",
+      "title": "Match the room with what you do there.",
+      "explanation": "Each room has a typical activity.",
+      "contextId": null,
+      "topicId": null,
+      "point": 10.0,
+      "data": {
+        "pairs": [
+          { "id": "pair-1", "left": "Bedroom", "right": "Sleep" },
+          { "id": "pair-2", "left": "Kitchen", "right": "Cook" },
+          { "id": "pair-3", "left": "Bathroom","right": "Wash" }
+        ],
+        "shufflePairs": false
+      }
+    }
+  ]
+}
