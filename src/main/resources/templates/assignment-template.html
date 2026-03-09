@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Assignment PDF</title>
+    <style>
+        /* Fonts are registered programmatically by PdfGenerationService */
+        body {
+            font-family: 'NotoSans', sans-serif;
+            font-size: 14px;
+            color: #111;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Smoke-test section — remove once Phase 3 template is built */
+        .smoke-test {
+            padding: 40px;
+        }
+        .smoke-test h1 {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .smoke-test p {
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="smoke-test">
+        <h1>Phase 1 Smoke Test</h1>
+        <p>Latin: Hello, World!</p>
+        <p>Vietnamese: Bài tập về nhà — Phòng ngủ của tôi — Kính chào quý thầy cô</p>
+        <p>Diacritics: ắ ộ ễ ư ơ ề ổ ặ ẫ ụ ẹ ỉ ọ ừ ứ</p>
+        <p th:if="${testMessage}" th:text="${testMessage}">Dynamic message placeholder</p>
+    </div>
+</body>
+</html>
