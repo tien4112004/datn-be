@@ -2,7 +2,13 @@ package com.datn.datnbe.document.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
+import com.datn.datnbe.document.dto.pdf.AssignmentPdfViewModel;
+import com.datn.datnbe.document.dto.pdf.PdfExportRequest;
+import com.datn.datnbe.document.dto.pdf.PdfHeaderConfig;
+import com.datn.datnbe.document.dto.pdf.PdfStyleTheme;
+import com.datn.datnbe.document.dto.response.AssignmentResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,18 +18,16 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
-/**
- * Smoke test: verifies the Thymeleaf + OpenHTMLToPDF pipeline produces
- * a valid PDF containing Vietnamese diacritics without requiring a Spring context.
- *
- * Run with: ./gradlew test --tests "*.PdfGenerationSmokeTest"
- */
 class PdfGenerationSmokeTest {
 
     private PdfGenerationService pdfGenerationService;
+    private AssignmentPdfViewModelMapper viewModelMapper;
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
+        objectMapper = new ObjectMapper();
+
         ClassLoaderTemplateResolver resolver = new ClassLoaderTemplateResolver();
         resolver.setPrefix("templates/");
         resolver.setSuffix(".html");
@@ -34,22 +38,68 @@ class PdfGenerationSmokeTest {
         engine.setTemplateResolver(resolver);
 
         pdfGenerationService = new PdfGenerationService(engine);
+        viewModelMapper = new AssignmentPdfViewModelMapper(objectMapper);
     }
 
     @Test
-    void smokeTest_assignmentTemplateShouldProduceNonEmptyPdf() throws IOException {
-        Context context = new Context();
-        context.setVariable("testMessage", "Kiểm tra tiếng Việt: ắ ộ ễ ư ơ ề ổ ặ ẫ ụ ẹ ỉ ọ ừ ứ");
+    void classic_theme_withAnswerKeyAndExplanations() throws Exception {
+        AssignmentPdfViewModel viewModel = loadSampleViewModel();
 
-        byte[] pdf = pdfGenerationService.renderTemplate("assignment-template", context);
+        PdfHeaderConfig headerConfig = new PdfHeaderConfig();
+        headerConfig.setSchoolName("Trường Tiểu học Nguyễn Du");
+        headerConfig.setShowChapter(true);
+        headerConfig.setShowDescription(true);
+
+        PdfExportRequest request = new PdfExportRequest();
+        request.setTheme(PdfStyleTheme.CLASSIC);
+        request.setHeaderConfig(headerConfig);
+        request.setShowQuestionPoints(true);
+        request.setShowAnswerKey(true);
+        request.setShowExplanations(true);
+
+        byte[] pdf = renderPdf(viewModel, request);
 
         assertThat(pdf).isNotEmpty();
-        // PDF files always start with the %PDF- header
         assertThat(new String(pdf, 0, 5)).isEqualTo("%PDF-");
 
-        // Write to /tmp for manual visual inspection of Vietnamese characters
-        Path outputPath = Path.of("/tmp/smoke-test-output.pdf");
-        Files.write(outputPath, pdf);
-        System.out.println("PDF written to: " + outputPath.toAbsolutePath());
+        Path out = Path.of("/tmp/assignment-classic-answerkey.pdf");
+        Files.write(out, pdf);
+        System.out.println("CLASSIC + answer key: " + out);
+    }
+
+    @Test
+    void friendly_theme_noPoints_noAnswerKey() throws Exception {
+        AssignmentPdfViewModel viewModel = loadSampleViewModel();
+
+        PdfExportRequest request = new PdfExportRequest();
+        request.setTheme(PdfStyleTheme.FRIENDLY);
+        request.setShowQuestionPoints(false);
+        request.setShowAnswerKey(false);
+
+        byte[] pdf = renderPdf(viewModel, request);
+
+        assertThat(pdf).isNotEmpty();
+        assertThat(new String(pdf, 0, 5)).isEqualTo("%PDF-");
+
+        Path out = Path.of("/tmp/assignment-friendly-nopoints.pdf");
+        Files.write(out, pdf);
+        System.out.println("FRIENDLY (no points): " + out);
+    }
+
+    // --- helpers ---
+
+    private AssignmentPdfViewModel loadSampleViewModel() throws Exception {
+        try (InputStream is = getClass().getResourceAsStream("/fixtures/sample-assignment.json")) {
+            AssignmentResponse assignment = objectMapper.readValue(is, AssignmentResponse.class);
+            return viewModelMapper.toViewModel(assignment);
+        }
+    }
+
+    private byte[] renderPdf(AssignmentPdfViewModel viewModel, PdfExportRequest request) {
+        Context context = new Context();
+        context.setVariable("assignment", viewModel);
+        context.setVariable("exportRequest", request);
+        context.setVariable("theme", request.getTheme());
+        return pdfGenerationService.renderTemplate("assignment-template", context, request.getTheme());
     }
 }
