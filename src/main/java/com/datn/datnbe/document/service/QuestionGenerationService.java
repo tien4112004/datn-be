@@ -533,6 +533,8 @@ public class QuestionGenerationService {
             contextDto = GenerateQuestionsByTopicResponse.SelectedContextDto.builder()
                     .id(selectedContext.getId())
                     .title(selectedContext.getTitle())
+                    .author(selectedContext.getAuthor())
+                    .content(selectedContext.getContent())
                     .build();
         }
 
