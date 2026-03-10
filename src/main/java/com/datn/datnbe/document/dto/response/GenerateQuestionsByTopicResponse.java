@@ -39,5 +39,7 @@ public class GenerateQuestionsByTopicResponse {
     public static class SelectedContextDto {
         private String id;
         private String title;
+        private String author;
+        private String content;
     }
 }
