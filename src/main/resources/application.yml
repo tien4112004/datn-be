@@ -212,6 +212,7 @@ ai:
     questions-endpoint: ${AI_API_QUESTIONS_ENDPOINT:/api/questions/generate}
     questions-from-matrix-endpoint: ${AI_API_QUESTIONS_FROM_MATRIX_ENDPOINT:/api/exams/generate-questions-from-matrix}
     questions-from-context-endpoint: ${AI_API_QUESTIONS_FROM_CONTEXT_ENDPOINT:/api/questions/generate-from-context}
+    questions-by-topic-endpoint: ${AI_API_QUESTIONS_BY_TOPIC_ENDPOINT:/api/questions/generate-by-topic}
 
 rustfs:
   endpoint: ${S3_ENDPOINT:http://localhost:9000}

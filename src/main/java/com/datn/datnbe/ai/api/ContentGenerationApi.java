@@ -1,5 +1,6 @@
 package com.datn.datnbe.ai.api;
 
+import com.datn.datnbe.ai.dto.request.AIGatewayGenerateByTopicRequest;
 import com.datn.datnbe.ai.dto.request.AIGatewayGenerateQuestionsFromContextRequest;
 import com.datn.datnbe.ai.dto.request.AIGradeRequest;
 import com.datn.datnbe.ai.dto.request.GenerateQuestionsFromMatrixRequest;
@@ -59,4 +60,14 @@ public interface ContentGenerationApi {
     String generateQuestionsFromContext(AIGatewayGenerateQuestionsFromContextRequest request, String traceId);
 
     AIGradeResponse gradeAnswer(AIGradeRequest request, String traceId);
+
+    /**
+     * Generate questions for a single topic from the assignment matrix.
+     * Supports context-based and normal groups in one request.
+     *
+     * @param request Request containing topic info and question groups
+     * @param traceId Trace ID for observability
+     * @return Raw JSON string containing list of generated questions with group index
+     */
+    String generateQuestionsByTopic(AIGatewayGenerateByTopicRequest request, String traceId);
 }

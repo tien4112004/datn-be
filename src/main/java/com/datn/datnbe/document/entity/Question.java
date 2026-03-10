@@ -60,4 +60,11 @@ public class Question {
 
     // Additional fields for assignment specific data
     Double point;
+
+    /**
+     * Group index from generate-by-topic responses (0-based).
+     * Used to determine whether the question belongs to the CONTEXT group (0)
+     * or the NORMAL group (1). Null for all other generation endpoints.
+     */
+    Integer group;
 }

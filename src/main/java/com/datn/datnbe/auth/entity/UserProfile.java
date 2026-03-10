@@ -31,7 +31,7 @@ public class UserProfile {
     @Column(name = "first_name", nullable = false)
     String firstName;
 
-    @Column(name = "last_name", nullable = false)
+    @Column(name = "last_name", nullable = true)
     String lastName;
 
     @Column(name = "email", nullable = false)
