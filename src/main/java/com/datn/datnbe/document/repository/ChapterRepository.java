@@ -19,7 +19,7 @@ public interface ChapterRepository extends JpaRepository<Chapter, String> {
 
     @Query(value = """
             SELECT c.id
-            FROM Chapter c
+            FROM chapters c
             WHERE  c.name = :chapter
             LIMIT 1
             """, nativeQuery = true)
@@ -27,7 +27,7 @@ public interface ChapterRepository extends JpaRepository<Chapter, String> {
 
     @Query(value = """
             SELECT c.name
-            FROM Chapter c
+            FROM chapters c
             WHERE  c.id = :id
             LIMIT 1
             """, nativeQuery = true)
