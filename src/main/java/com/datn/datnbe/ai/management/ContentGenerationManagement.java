@@ -31,6 +31,7 @@ import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import reactor.core.publisher.Flux;
 
 import java.nio.charset.StandardCharsets;
@@ -155,6 +156,10 @@ public class ContentGenerationManagement implements ContentGenerationApi {
 
             log.info("Batch outline generation completed successfully");
             return response.getData();
+        } catch (HttpClientErrorException e) {
+            log.error("Client error during batch outline generation: {}", e.getStatusCode(), e);
+            String detail = AIApiClient.parseGenaiErrorDetail(e.getResponseBodyAsString());
+            throw new AppException(ErrorCode.AI_WORKER_UNPROCESSABLE_ENTITY, detail);
         } catch (Exception e) {
             log.error("Error during batch outline generation", e);
             throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());
@@ -187,6 +192,10 @@ public class ContentGenerationManagement implements ContentGenerationApi {
 
             log.info("Batch presentation generation completed successfully");
             return response.getData();
+        } catch (HttpClientErrorException e) {
+            log.error("Client error during batch presentation generation: {}", e.getStatusCode(), e);
+            String detail = AIApiClient.parseGenaiErrorDetail(e.getResponseBodyAsString());
+            throw new AppException(ErrorCode.AI_WORKER_UNPROCESSABLE_ENTITY, detail);
         } catch (Exception e) {
             log.error("Error during batch presentation generation", e);
             throw new AppException(ErrorCode.AI_WORKER_SERVER_ERROR, e.getMessage());

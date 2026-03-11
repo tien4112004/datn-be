@@ -124,9 +124,15 @@ public class DocumentService {
         List<String> assignmentIds = resourcePermissionApi.getAllResourceByTypeOfOwner(ownerId, "assignment");
 
         if (request.getChapter() == null && request.getChapterId() != null) {
-            request.setChapter(chapterManagement.getChapterName(request.getChapterId()));
+            // Has ID only — resolve name but keep only the ID for filtering
+            request.setChapter(null);
         } else if (request.getChapter() != null && request.getChapterId() == null) {
+            // Has name only — resolve to ID, then clear name so only ID is used in the query
             request.setChapterId(chapterManagement.getChapterId(request.getChapter()));
+            request.setChapter(null);
+        } else if (request.getChapter() != null && request.getChapterId() != null) {
+            // Both provided — prefer ID, clear name to avoid double AND
+            request.setChapter(null);
         }
 
         Page<String> paginatedDocuments = documentRepository.getAllDocuments(pageable,
