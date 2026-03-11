@@ -102,7 +102,7 @@ public interface DocumentRepository extends JpaRepository<DocumentVisit, Integer
                         'chapterId', a.chapter_id
                     ) AS data
                 FROM assignments a
-                WHERE a.title LIKE CONCAT('%', :keyword, '%') AND (:chapter IS NULL OR a.chapter = :chapter) AND (:chapterId IS NULL OR a.chapter_id = :chapterId) AND (:subject IS NULL OR a.subject = :subject) AND (:grade IS NULL OR a.grade = :grade) AND a.id IN (:assignmentIds)
+                WHERE a.title LIKE CONCAT('%', :keyword, '%') AND ((:chapter IS NULL AND :chapterId IS NULL) OR a.chapter = :chapter OR a.chapter_id = :chapterId) AND (:subject IS NULL OR a.subject = :subject) AND (:grade IS NULL OR a.grade = :grade) AND a.id IN (:assignmentIds)
             ) t
             """, countQuery = """
             SELECT
@@ -122,8 +122,7 @@ public interface DocumentRepository extends JpaRepository<DocumentVisit, Integer
                     SELECT COUNT(*)
                     FROM mindmaps m
                     WHERE m.title LIKE CONCAT('%', :keyword, '%')
-                    AND (:chapter IS NULL OR m.chapter = :chapter)
-                    AND (:chapterId IS NULL OR m.chapter_id = :chapterId)
+                    AND ((:chapter IS NULL AND :chapterId IS NULL) OR a.chapter = :chapter OR a.chapter_id = :chapterId)
                     AND (:subject IS NULL OR m.subject = :subject)
                     AND (:grade IS NULL OR m.grade = :grade)
                     AND m.id IN (:mindmapIds)
@@ -133,8 +132,7 @@ public interface DocumentRepository extends JpaRepository<DocumentVisit, Integer
                     SELECT COUNT(*)
                     FROM assignments a
                     WHERE a.title LIKE CONCAT('%', :keyword, '%')
-                    AND (:chapter IS NULL OR a.chapter = :chapter)
-                    AND (:chapterId IS NULL OR a.chapter_id = :chapterId)
+                    AND ((:chapter IS NULL AND :chapterId IS NULL) OR a.chapter = :chapter OR a.chapter_id = :chapterId)
                     AND (:subject IS NULL OR a.subject = :subject)
                     AND (:grade IS NULL OR a.grade = :grade)
                     AND a.id IN (:assignmentIds)
