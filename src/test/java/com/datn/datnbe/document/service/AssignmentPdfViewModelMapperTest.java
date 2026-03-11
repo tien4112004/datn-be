@@ -3,8 +3,8 @@ package com.datn.datnbe.document.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.datn.datnbe.document.dto.pdf.AssignmentPdfViewModel;
-import com.datn.datnbe.document.dto.pdf.PdfContextBlock;
 import com.datn.datnbe.document.dto.pdf.PdfQuestionViewModel;
+import com.datn.datnbe.document.dto.pdf.PdfSection;
 import com.datn.datnbe.document.dto.response.AssignmentResponse;
 import com.datn.datnbe.document.entity.questiondata.FillInBlankData;
 import com.datn.datnbe.document.entity.questiondata.MatchingData;
@@ -13,6 +13,7 @@ import com.datn.datnbe.document.entity.questiondata.OpenEndedData;
 import com.datn.datnbe.document.entity.questiondata.QuestionType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,33 +51,57 @@ class AssignmentPdfViewModelMapperTest {
     }
 
     @Test
-    void contextBlock_groupsLinkedQuestionsUnderCorrectContext() {
+    void sections_preserveFirstOccurrenceOrder() {
+        // Sample data order: MC(standalone), FIB(standalone), MC(ctx), OE(ctx), OE(ctx), Matching(standalone)
+        // Expected sections: standalone, standalone, context(3 questions), standalone
         AssignmentPdfViewModel vm = mapper.toViewModel(sampleAssignment);
 
-        assertThat(vm.getContextBlocks()).hasSize(1);
+        assertThat(vm.getSections()).hasSize(4);
+        assertThat(vm.getSections().get(0).getType()).isEqualTo("standalone");
+        assertThat(vm.getSections().get(1).getType()).isEqualTo("standalone");
+        assertThat(vm.getSections().get(2).getType()).isEqualTo("context");
+        assertThat(vm.getSections().get(3).getType()).isEqualTo("standalone");
+    }
 
-        PdfContextBlock block = vm.getContextBlocks().get(0);
-        assertThat(block.getId()).isEqualTo("mmc693oc-me19l2bjx");
-        assertThat(block.getTitle()).isEqualTo("Linda's Introduction");
-        assertThat(block.getContent()).contains("My name is Linda");
+    @Test
+    void contextSection_groupsLinkedQuestionsUnderCorrectContext() {
+        AssignmentPdfViewModel vm = mapper.toViewModel(sampleAssignment);
+
+        PdfSection contextSection = vm.getSections()
+                .stream()
+                .filter(s -> "context".equals(s.getType()))
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(contextSection.getContextBlock()).isNotNull();
+        assertThat(contextSection.getContextBlock().getId()).isEqualTo("mmc693oc-me19l2bjx");
+        assertThat(contextSection.getContextBlock().getTitle()).isEqualTo("Linda's Introduction");
+        assertThat(contextSection.getContextBlock().getContent()).contains("My name is Linda");
 
         // 3 questions reference this contextId
-        assertThat(block.getQuestions()).hasSize(3);
+        assertThat(contextSection.getQuestions()).hasSize(3);
     }
 
     @Test
-    void standaloneQuestions_containsQuestionsWithNoContextId() {
+    void standaloneSections_containQuestionsWithNoContextId() {
         AssignmentPdfViewModel vm = mapper.toViewModel(sampleAssignment);
 
-        // MULTIPLE_CHOICE (no ctx) + FILL_IN_BLANK (no ctx) + MATCHING (no ctx) = 3
-        assertThat(vm.getStandaloneQuestions()).hasSize(3);
+        List<PdfSection> standaloneSections = vm.getSections()
+                .stream()
+                .filter(s -> "standalone".equals(s.getType()))
+                .toList();
+
+        // MC (no ctx) + FIB (no ctx) + Matching (no ctx) = 3 standalone sections
+        assertThat(standaloneSections).hasSize(3);
+        // Each standalone section has exactly 1 question
+        standaloneSections.forEach(s -> assertThat(s.getQuestions()).hasSize(1));
     }
 
     @Test
-    void questionNumbering_isSequentialAndGapless() {
+    void questionNumbering_isSequentialAndMatchesSectionOrder() {
         AssignmentPdfViewModel vm = mapper.toViewModel(sampleAssignment);
 
-        List<PdfQuestionViewModel> allQuestions = collectAllQuestionsInDocumentOrder(vm);
+        List<PdfQuestionViewModel> allQuestions = collectAllQuestionsInSectionOrder(vm);
 
         assertThat(allQuestions).hasSize(6);
         for (int i = 0; i < allQuestions.size(); i++) {
@@ -88,8 +113,7 @@ class AssignmentPdfViewModelMapperTest {
     void multipleChoiceData_isCastCorrectly() {
         AssignmentPdfViewModel vm = mapper.toViewModel(sampleAssignment);
 
-        PdfQuestionViewModel mc = vm.getStandaloneQuestions()
-                .stream()
+        PdfQuestionViewModel mc = collectAllQuestionsInSectionOrder(vm).stream()
                 .filter(q -> q.getType() == QuestionType.MULTIPLE_CHOICE)
                 .findFirst()
                 .orElseThrow();
@@ -105,8 +129,7 @@ class AssignmentPdfViewModelMapperTest {
     void fillInBlankData_isCastCorrectly() {
         AssignmentPdfViewModel vm = mapper.toViewModel(sampleAssignment);
 
-        PdfQuestionViewModel fib = vm.getStandaloneQuestions()
-                .stream()
+        PdfQuestionViewModel fib = collectAllQuestionsInSectionOrder(vm).stream()
                 .filter(q -> q.getType() == QuestionType.FILL_IN_BLANK)
                 .findFirst()
                 .orElseThrow();
@@ -120,10 +143,7 @@ class AssignmentPdfViewModelMapperTest {
     void openEndedData_isCastCorrectly() {
         AssignmentPdfViewModel vm = mapper.toViewModel(sampleAssignment);
 
-        PdfQuestionViewModel oe = vm.getContextBlocks()
-                .get(0)
-                .getQuestions()
-                .stream()
+        PdfQuestionViewModel oe = collectAllQuestionsInSectionOrder(vm).stream()
                 .filter(q -> q.getType() == QuestionType.OPEN_ENDED)
                 .findFirst()
                 .orElseThrow();
@@ -137,8 +157,7 @@ class AssignmentPdfViewModelMapperTest {
     void matchingData_isCastCorrectly() {
         AssignmentPdfViewModel vm = mapper.toViewModel(sampleAssignment);
 
-        PdfQuestionViewModel matching = vm.getStandaloneQuestions()
-                .stream()
+        PdfQuestionViewModel matching = collectAllQuestionsInSectionOrder(vm).stream()
                 .filter(q -> q.getType() == QuestionType.MATCHING)
                 .findFirst()
                 .orElseThrow();
@@ -148,28 +167,15 @@ class AssignmentPdfViewModelMapperTest {
         assertThat(matching.getMatchingData().getPairs()).hasSize(3);
     }
 
-    @Test
-    void contextBlocksAppearInOrderOfFirstLinkedQuestion() {
-        AssignmentPdfViewModel vm = mapper.toViewModel(sampleAssignment);
-
-        // Only one context block in sample — verify it's the one with Linda's Introduction
-        assertThat(vm.getContextBlocks().get(0).getId()).isEqualTo("mmc693oc-me19l2bjx");
-    }
-
     // --- helpers ---
 
     /**
-     * Collects questions in the order they appear in the document:
-     * standalone questions first (in original list order), then context-block questions.
-     * This mirrors how the mapper assigns sequential numbers.
+     * Collects questions in section order — the same order rendered in the PDF
+     * and matching the frontend Question List tab.
      */
-    private List<PdfQuestionViewModel> collectAllQuestionsInDocumentOrder(AssignmentPdfViewModel vm) {
-        // The mapper numbers questions in original input list order, regardless of
-        // standalone vs context grouping, so we need to merge and sort by number.
-        List<PdfQuestionViewModel> all = new java.util.ArrayList<>();
-        all.addAll(vm.getStandaloneQuestions());
-        vm.getContextBlocks().forEach(b -> all.addAll(b.getQuestions()));
-        all.sort(java.util.Comparator.comparingInt(PdfQuestionViewModel::getNumber));
+    private List<PdfQuestionViewModel> collectAllQuestionsInSectionOrder(AssignmentPdfViewModel vm) {
+        List<PdfQuestionViewModel> all = new ArrayList<>();
+        vm.getSections().forEach(s -> all.addAll(s.getQuestions()));
         return all;
     }
 }

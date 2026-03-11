@@ -3,6 +3,7 @@ package com.datn.datnbe.document.service;
 import com.datn.datnbe.document.dto.pdf.AssignmentPdfViewModel;
 import com.datn.datnbe.document.dto.pdf.PdfContextBlock;
 import com.datn.datnbe.document.dto.pdf.PdfQuestionViewModel;
+import com.datn.datnbe.document.dto.pdf.PdfSection;
 import com.datn.datnbe.document.dto.response.AssignmentResponse;
 import com.datn.datnbe.document.entity.AssignmentContext;
 import com.datn.datnbe.document.entity.Question;
@@ -30,24 +31,40 @@ public class AssignmentPdfViewModelMapper {
     public AssignmentPdfViewModel toViewModel(AssignmentResponse assignment) {
         Map<String, AssignmentContext> contextById = buildContextMap(assignment.getContexts());
 
-        // Preserve insertion order — context blocks appear in order of their
-        // first linked question in the questions list.
-        Map<String, PdfContextBlock> contextBlocks = new LinkedHashMap<>();
-        List<PdfQuestionViewModel> standaloneQuestions = new ArrayList<>();
+        // Build sections in first-occurrence order, matching the frontend
+        // groupQuestionsByContext logic: context groups and standalone questions
+        // are interleaved based on when they first appear in the original list.
+        List<PdfSection> sections = new ArrayList<>();
+        Map<String, PdfSection> contextSections = new LinkedHashMap<>();
 
         List<Question> questions = assignment.getQuestions() != null ? assignment.getQuestions() : List.of();
 
-        int number = 1;
         for (Question question : questions) {
-            PdfQuestionViewModel qvm = toQuestionViewModel(question, number++);
+            PdfQuestionViewModel qvm = toQuestionViewModel(question, 0);
             String contextId = question.getContextId();
 
             if (contextId != null && contextById.containsKey(contextId)) {
-                contextBlocks.computeIfAbsent(contextId, id -> buildContextBlock(contextById.get(id)))
-                        .getQuestions()
-                        .add(qvm);
+                PdfSection section = contextSections.get(contextId);
+                if (section == null) {
+                    section = PdfSection.builder()
+                            .type("context")
+                            .contextBlock(buildContextBlock(contextById.get(contextId)))
+                            .questions(new ArrayList<>())
+                            .build();
+                    contextSections.put(contextId, section);
+                    sections.add(section);
+                }
+                section.getQuestions().add(qvm);
             } else {
-                standaloneQuestions.add(qvm);
+                sections.add(PdfSection.builder().type("standalone").questions(new ArrayList<>(List.of(qvm))).build());
+            }
+        }
+
+        // Number questions sequentially in section order
+        int number = 1;
+        for (PdfSection section : sections) {
+            for (PdfQuestionViewModel qvm : section.getQuestions()) {
+                qvm.setNumber(number++);
             }
         }
 
@@ -60,8 +77,7 @@ public class AssignmentPdfViewModelMapper {
                 .chapter(assignment.getChapter())
                 .description(assignment.getDescription())
                 .totalPoints(totalPoints)
-                .contextBlocks(new ArrayList<>(contextBlocks.values()))
-                .standaloneQuestions(standaloneQuestions)
+                .sections(sections)
                 .build();
     }
 
@@ -77,7 +93,6 @@ public class AssignmentPdfViewModelMapper {
                 .title(context.getTitle())
                 .content(context.getContent())
                 .author(context.getAuthor())
-                .questions(new ArrayList<>())
                 .build();
     }
 

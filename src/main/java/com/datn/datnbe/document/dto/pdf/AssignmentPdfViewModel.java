@@ -23,14 +23,9 @@ public class AssignmentPdfViewModel {
     double totalPoints;
 
     /**
-     * Context passages with their linked questions, ordered by first appearance
-     * of the contextId in the original questions list.
+     * Ordered sections matching the frontend Question List tab order.
+     * Each section is either a context block (with its linked questions)
+     * or a standalone question group, in first-occurrence order.
      */
-    List<PdfContextBlock> contextBlocks;
-
-    /**
-     * Questions whose contextId is null or references an unknown context,
-     * in their original list order.
-     */
-    List<PdfQuestionViewModel> standaloneQuestions;
+    List<PdfSection> sections;
 }

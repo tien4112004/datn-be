@@ -1,14 +1,13 @@
 package com.datn.datnbe.document.dto.pdf;
 
-import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
 /**
- * A reading-passage block with its linked questions.
- * Rendered as a boxed passage followed immediately by the questions that reference it.
+ * A reading-passage block rendered as a boxed passage header.
+ * Questions linked to this context are stored in the parent PdfSection.
  */
 @Data
 @Builder
@@ -19,6 +18,4 @@ public class PdfContextBlock {
     String title;
     String content;
     String author;
-
-    List<PdfQuestionViewModel> questions;
 }
