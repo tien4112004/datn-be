@@ -72,27 +72,27 @@
       .dept-name {
         font-weight: bold;
         text-transform: uppercase;
-        font-size: 12px;
+        font-size: 13px;
         margin: 0;
       }
       .inst-name {
         font-weight: bold;
-        font-size: 12px;
+        font-size: 13px;
         margin: 2px 0 0 0;
         text-decoration: underline;
       }
       .exam-period {
         font-weight: bold;
         text-transform: uppercase;
-        font-size: 12px;
+        font-size: 14px;
         margin: 0;
       }
       .exam-subject {
-        font-size: 12px;
+        font-size: 14px;
         margin: 2px 0 0 0;
       }
       .exam-duration {
-        font-size: 12px;
+        font-size: 13px;
         font-style: italic;
         margin: 2px 0 0 0;
       }
@@ -218,16 +218,6 @@
         margin-left: 4px;
       }
 
-      /* ── Explanation ── */
-      .explanation {
-        font-size: 11px;
-        color: #555;
-        font-style: italic;
-        border-left: 3px solid #ddd;
-        padding: 4px 8px;
-        margin-top: 6px;
-      }
-
       /* ── MULTIPLE_CHOICE ── */
       .options-table {
         width: 100%;
@@ -295,42 +285,6 @@
         margin-right: 4px;
       }
 
-      /* ── Answer key ── */
-      .answer-key-section {
-        margin-top: 30px;
-        border-top: 2px dashed #999;
-        padding-top: 14px;
-        page-break-before: always;
-      }
-      .answer-key-title {
-        font-size: 15px;
-        font-weight: bold;
-        margin: 0 0 12px 0;
-      }
-      .answer-key-item {
-        margin-bottom: 10px;
-        font-size: 12px;
-        page-break-inside: avoid;
-      }
-      .answer-key-num {
-        font-weight: bold;
-        color: #4a7fcb;
-      }
-      .answer-key-correct {
-        color: #2a7a2a;
-        font-weight: bold;
-      }
-      .answer-key-fib {
-        font-style: italic;
-      }
-      .ak-pair-table {
-        border-collapse: collapse;
-      }
-      .ak-pair-table td {
-        padding: 2px 8px 2px 0;
-        font-size: 12px;
-      }
-
       /* ── Footer ── */
       .footer-bar {
         border-top: 1px solid #ccc;
@@ -346,51 +300,89 @@
     <!-- ══════════════════ HEADER ══════════════════ -->
     <div class="header">
       <!-- Exam-style header: department/institution (left) + exam info (right) -->
-      <th:block th:if="${exportRequest.headerConfig != null and exportRequest.headerConfig.useExamHeader}">
+      <th:block
+        th:if="${exportRequest.headerConfig != null and exportRequest.headerConfig.useExamHeader}"
+      >
         <table class="header-top">
           <tr>
             <td class="header-top-left">
-              <p class="dept-name"
-                 th:if="${exportRequest.headerConfig.departmentName != null}"
-                 th:text="${exportRequest.headerConfig.departmentName}">SỞ GD&amp;ĐT</p>
-              <p class="inst-name"
-                 th:if="${exportRequest.headerConfig.institutionName != null}"
-                 th:text="${exportRequest.headerConfig.institutionName}">TRƯỜNG</p>
+              <p
+                class="dept-name"
+                th:if="${exportRequest.headerConfig.departmentName != null}"
+                th:text="${exportRequest.headerConfig.departmentName}"
+              >
+                SỞ GD&amp;ĐT
+              </p>
+              <p
+                class="inst-name"
+                th:if="${exportRequest.headerConfig.institutionName != null}"
+                th:text="${exportRequest.headerConfig.institutionName}"
+              >
+                TRƯỜNG
+              </p>
             </td>
             <td class="header-top-right">
-              <p class="exam-period"
-                 th:if="${exportRequest.headerConfig.examPeriod != null}"
-                 th:text="${exportRequest.headerConfig.examPeriod}">KỲ THI</p>
-              <p class="exam-subject"
-                 th:if="${assignment.subject != null}"
-                 th:text="'Môn: ' + ${assignment.subject}">Môn:</p>
-              <p class="exam-duration"
-                 th:if="${exportRequest.headerConfig.examDuration != null}"
-                 th:text="'Thời gian: ' + ${exportRequest.headerConfig.examDuration}">Thời gian:</p>
+              <p
+                class="exam-period"
+                th:if="${exportRequest.headerConfig.examPeriod != null}"
+                th:text="${exportRequest.headerConfig.examPeriod}"
+              >
+                KỲ THI
+              </p>
+              <p
+                class="exam-subject"
+                th:if="${assignment.subject != null}"
+                th:text="'Môn: ' + ${assignment.subject}"
+              >
+                Môn:
+              </p>
+              <p
+                class="exam-duration"
+                th:if="${exportRequest.headerConfig.examDuration != null}"
+                th:text="'Thời gian: ' + ${exportRequest.headerConfig.examDuration}"
+              >
+                Thời gian:
+              </p>
             </td>
           </tr>
         </table>
       </th:block>
 
       <!-- Default header: centered title + badges -->
-      <th:block th:unless="${exportRequest.headerConfig != null and exportRequest.headerConfig.useExamHeader}">
+      <th:block
+        th:unless="${exportRequest.headerConfig != null and exportRequest.headerConfig.useExamHeader}"
+      >
         <div class="header-title-area">
           <p class="assignment-title" th:text="${assignment.title}">Title</p>
           <p class="meta-row">
-            <span class="badge" th:text="'Môn: ' + ${assignment.subject}">Subject</span>
-            <span class="badge" th:if="${assignment.grade != null}" th:text="'Lớp ' + ${assignment.grade}">Grade</span>
-            <span class="badge"
-                  th:if="${exportRequest.headerConfig != null
+            <span class="badge" th:text="'Môn: ' + ${assignment.subject}"
+              >Subject</span
+            >
+            <span
+              class="badge"
+              th:if="${assignment.grade != null}"
+              th:text="'Lớp ' + ${assignment.grade}"
+              >Grade</span
+            >
+            <span
+              class="badge"
+              th:if="${exportRequest.headerConfig != null
                            and exportRequest.headerConfig.showChapter
                            and assignment.chapter != null}"
-                  th:text="'Chương ' + ${assignment.chapter}">Chapter</span>
+              th:text="'Chương ' + ${assignment.chapter}"
+              >Chapter</span
+            >
           </p>
-          <p class="assignment-description"
-             th:if="${exportRequest.headerConfig != null
+          <p
+            class="assignment-description"
+            th:if="${exportRequest.headerConfig != null
                       and exportRequest.headerConfig.showDescription
                       and assignment.description != null
                       and !#strings.isEmpty(assignment.description)}"
-             th:text="${assignment.description}">Description</p>
+            th:text="${assignment.description}"
+          >
+            Description
+          </p>
         </div>
       </th:block>
 
@@ -523,14 +515,6 @@
             </tr>
           </table>
         </div>
-        <!-- Explanation -->
-        <div class="explanation" th:if="${exportRequest.showExplanations}">
-          <span
-            th:if="${question.type.name() == 'OPEN_ENDED' and question.openEndedData != null and question.openEndedData.expectedAnswer != null}"
-            th:text="'Gợi ý: ' + ${question.openEndedData.expectedAnswer}"
-            >Hint</span
-          >
-        </div>
       </div>
     </div>
 
@@ -542,70 +526,5 @@
       Tổng điểm: <strong th:text="${assignment.totalPoints}">0</strong> điểm
     </div>
 
-    <!-- ══════════════════ ANSWER KEY ══════════════════ -->
-    <div class="answer-key-section" th:if="${exportRequest.showAnswerKey}">
-      <p class="answer-key-title">Đáp án / Answer Key</p>
-
-      <th:block th:each="section : ${assignment.sections}">
-        <div th:each="q : ${section.questions}" class="answer-key-item">
-          <span class="answer-key-num" th:text="${q.number} + '. '">1. </span>
-          <!-- MC -->
-          <th:block
-            th:if="${q.type.name() == 'MULTIPLE_CHOICE' and q.multipleChoiceData != null}"
-          >
-            <th:block th:each="opt, s : ${q.multipleChoiceData.options}">
-              <span
-                class="answer-key-correct"
-                th:if="${opt.isCorrect}"
-                th:text="${'ABCDEFGHIJ'.substring(s.index, s.index + 1)} + '. ' + ${opt.text}"
-                >A. Answer</span
-              >
-            </th:block>
-          </th:block>
-          <!-- FIB -->
-          <span
-            th:if="${q.type.name() == 'FILL_IN_BLANK' and q.fillInBlankData != null}"
-            class="answer-key-fib"
-          >
-            <th:block th:each="seg : ${q.fillInBlankData.segments}">
-              <span
-                th:if="${seg.type.name() == 'TEXT'}"
-                th:text="${seg.content}"
-              ></span>
-              <span
-                th:if="${seg.type.name() == 'BLANK'}"
-                class="answer-key-correct"
-                th:text="'[' + ${seg.content} + ']'"
-              ></span>
-            </th:block>
-          </span>
-          <!-- Open-ended -->
-          <span
-            class="answer-key-correct"
-            th:if="${q.type.name() == 'OPEN_ENDED' and q.openEndedData != null and q.openEndedData.expectedAnswer != null}"
-            th:text="${q.openEndedData.expectedAnswer}"
-            >Answer</span
-          >
-          <!-- Matching -->
-          <th:block
-            th:if="${q.type.name() == 'MATCHING' and q.matchingData != null}"
-          >
-            <table class="ak-pair-table">
-              <tr th:each="pair, ps : ${q.matchingData.pairs}">
-                <td
-                  class="answer-key-correct"
-                  th:text="${ps.count} + ' - ' + ${'ABCDEFGHIJ'.substring(ps.index, ps.index + 1)}"
-                >
-                  1 - A
-                </td>
-                <td
-                  th:text="${'(' + pair.left + ' = ' + pair.right + ')'}"
-                ></td>
-              </tr>
-            </table>
-          </th:block>
-        </div>
-      </th:block>
-    </div>
   </body>
 </html>

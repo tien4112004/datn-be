@@ -104,6 +104,9 @@ class PdfGenerationSmokeTest {
         context.setVariable("assignment", viewModel);
         context.setVariable("exportRequest", request);
         context.setVariable("theme", request.getTheme());
-        return pdfGenerationService.renderTemplate("assignment-template", context, request.getTheme());
+        String templateName = Boolean.TRUE.equals(request.getShowAnswerKey())
+                ? "answer-template"
+                : "assignment-template";
+        return pdfGenerationService.renderTemplate(templateName, context, request.getTheme());
     }
 }
