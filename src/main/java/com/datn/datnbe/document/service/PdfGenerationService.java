@@ -31,9 +31,12 @@ public class PdfGenerationService {
 
     public byte[] renderHtml(String html, PdfStyleTheme theme) {
         try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+            // openhtmltopdf requires well-formed XML; strip the HTML5 doctype
+            // that Thymeleaf's HTML mode emits (<!doctype html> is not valid XML).
+            String xhtml = html.replaceFirst("(?i)<!doctype[^>]*>", "");
             PdfRendererBuilder builder = new PdfRendererBuilder();
             builder.useFastMode();
-            builder.withHtmlContent(html, null);
+            builder.withHtmlContent(xhtml, null);
             registerFonts(builder, theme);
             builder.toStream(os);
             builder.run();

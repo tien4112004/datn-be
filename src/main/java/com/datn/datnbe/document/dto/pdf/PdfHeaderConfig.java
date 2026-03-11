@@ -8,6 +8,9 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PdfHeaderConfig {
 
+    /** Use exam-style header (dept/institution + exam info) instead of centered title with badges. */
+    Boolean useExamHeader = false;
+
     /** Tên sở/trường — top-left line 1 (e.g. "SỞ GD&ĐT TP. HỒ CHÍ MINH") */
     String departmentName;
 

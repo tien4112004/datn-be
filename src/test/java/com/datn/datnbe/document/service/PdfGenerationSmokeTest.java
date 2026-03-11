@@ -46,6 +46,7 @@ class PdfGenerationSmokeTest {
         AssignmentPdfViewModel viewModel = loadSampleViewModel();
 
         PdfHeaderConfig headerConfig = new PdfHeaderConfig();
+        headerConfig.setUseExamHeader(true);
         headerConfig.setDepartmentName("SỞ GD&ĐT TP. HỒ CHÍ MINH");
         headerConfig.setInstitutionName("TRƯỜNG TIỂU HỌC NGUYỄN DU");
         headerConfig.setExamPeriod("KIỂM TRA GIỮA KỲ I - NĂM HỌC 2025-2026");
