@@ -67,7 +67,13 @@ public class QuestionGenerationService {
         // Call AI service to generate questions (returns JSON string)
         String traceId = java.util.UUID.randomUUID().toString();
         String jsonResult = contentGenerationApi.generateQuestions(request, traceId);
-        extractAndSaveTokenUsage(traceId, request, "question", teacherId);
+        String requestString = "";
+        try{
+            requestString = objectMapper.writeValueAsString(request);
+        } catch (Exception e) {
+            log.error("Failed to serialize request for token usage logging: {}", e.getMessage());
+        }
+        extractAndSaveTokenUsage(traceId, requestString, request.getProvider(), request.getModel(), "question", teacherId);
         log.info("AI response received, length: {} chars", jsonResult != null ? jsonResult.length() : 0);
 
         // Parse JSON string to list of Question POJOs
@@ -244,6 +250,13 @@ public class QuestionGenerationService {
         // 4. Call AI service
         String traceId = java.util.UUID.randomUUID().toString();
         String jsonResult = contentGenerationApi.generateQuestionsFromContext(aiRequest, traceId);
+        String requestString = "";
+        try{
+            requestString = objectMapper.writeValueAsString(request);
+        } catch (Exception e) {
+            log.error("Failed to serialize request for token usage logging: {}", e.getMessage());
+        }
+        extractAndSaveTokenUsage(traceId, requestString, request.getProvider(), request.getModel(), "question", teacherId);
         log.info("AI response received, length: {} chars", jsonResult != null ? jsonResult.length() : 0);
 
         // 5. Parse JSON response
@@ -472,6 +485,13 @@ public class QuestionGenerationService {
 
         String traceId = java.util.UUID.randomUUID().toString();
         String jsonResult = contentGenerationApi.generateQuestionsByTopic(gatewayRequest, traceId);
+        String requestString = "";
+        try{
+            requestString = objectMapper.writeValueAsString(request);
+        } catch (Exception e) {
+            log.error("Failed to serialize request for token usage logging: {}", e.getMessage());
+        }
+        extractAndSaveTokenUsage(traceId, requestString, request.getProvider(), request.getModel(), "question", userId);
         log.info("[BY_TOPIC] AI response received, length: {} chars", jsonResult != null ? jsonResult.length() : 0);
 
         // 4. Parse response
@@ -548,7 +568,9 @@ public class QuestionGenerationService {
 
     @Async
     protected void extractAndSaveTokenUsage(String traceId,
-            GenerateQuestionsFromTopicRequest request,
+            String request,
+            String provider,
+            String model,
             String requestType,
             String userId) {
         try {
@@ -557,14 +579,13 @@ public class QuestionGenerationService {
 
             if (tokenUsageInfo != null && tokenUsageInfo.getTotalTokens() != null
                     && tokenUsageInfo.getTotalTokens() > 0) {
-                tokenUsageInfo.setModel(request.getModel());
-                tokenUsageInfo.setProvider(request.getProvider());
+                tokenUsageInfo.setModel(model);
+                tokenUsageInfo.setProvider(provider);
                 Long totalTokens = tokenUsageInfo.getTotalTokens();
 
                 Long PriceInCoinOfRequest = coinPricingApi.getTokenPriceInCoins(tokenUsageInfo.getModel(),
                         tokenUsageInfo.getProvider(),
                         requestType.toUpperCase());
-                String requestBody = objectMapper.writeValueAsString(request);
                 TokenUsage tokenUsage = TokenUsage.builder()
                         .userId(userId)
                         .request(requestType)
@@ -573,7 +594,7 @@ public class QuestionGenerationService {
                         .tokenCount(totalTokens)
                         .model(tokenUsageInfo.getModel())
                         .documentId(traceId)
-                        .requestBody(requestBody)
+                        .requestBody(request)
                         .provider(tokenUsageInfo.getProvider())
                         .actualPrice(tokenUsageInfo.getTotalPrice())
                         .calculatedPrice(PriceInCoinOfRequest)
