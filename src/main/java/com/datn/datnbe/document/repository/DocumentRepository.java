@@ -62,7 +62,7 @@ public interface DocumentRepository extends JpaRepository<DocumentVisit, Integer
                         'chapterId', p.chapter_id
                     ) AS data
                 FROM presentations p
-                WHERE p.title LIKE CONCAT('%', :keyword, '%') AND (:chapter IS NULL OR p.chapter = :chapter) AND (:chapterId IS NULL OR p.chapter_id = :chapterId) AND (:subject IS NULL OR p.subject = :subject) AND (:grade IS NULL OR p.grade = :grade) AND p.id IN (:presentationIds)
+                WHERE p.title LIKE CONCAT('%', :keyword, '%') AND ((:chapter IS NULL AND :chapterId IS NULL) OR p.chapter = :chapter  OR p.chapter_id = :chapterId) AND (:subject IS NULL OR p.subject = :subject) AND (:grade IS NULL OR p.grade = :grade) AND p.id IN (:presentationIds)
                 AND p.deleted_at IS NULL
                 UNION ALL
 
@@ -82,7 +82,7 @@ public interface DocumentRepository extends JpaRepository<DocumentVisit, Integer
                         'chapterId', m.chapter_id
                     ) AS data
                 FROM mindmaps m
-                WHERE m.title LIKE CONCAT('%', :keyword, '%') AND (:chapter IS NULL OR m.chapter = :chapter) AND (:chapterId IS NULL OR m.chapter_id = :chapterId) AND (:subject IS NULL OR m.subject = :subject) AND (:grade IS NULL OR m.grade = :grade) AND m.id IN (:mindmapIds)
+                WHERE m.title LIKE CONCAT('%', :keyword, '%') AND ((:chapter IS NULL AND :chapterId IS NULL) OR m.chapter = :chapter OR m.chapter_id = :chapterId) AND (:subject IS NULL OR m.subject = :subject) AND (:grade IS NULL OR m.grade = :grade) AND m.id IN (:mindmapIds)
 
 
                 UNION ALL
@@ -110,8 +110,7 @@ public interface DocumentRepository extends JpaRepository<DocumentVisit, Integer
                     SELECT COUNT(*)
                     FROM presentations p
                     WHERE p.title LIKE CONCAT('%', :keyword, '%')
-                    AND (:chapter IS NULL OR p.chapter = :chapter)
-                    AND (:chapterId IS NULL OR p.chapter_id = :chapterId)
+                    AND ((:chapter IS NULL AND :chapterId IS NULL) OR p.chapter = :chapter OR p.chapter_id = :chapterId)
                     AND (:subject IS NULL OR p.subject = :subject)
                     AND (:grade IS NULL OR p.grade = :grade)
                     AND p.id IN (:presentationIds)
@@ -122,7 +121,7 @@ public interface DocumentRepository extends JpaRepository<DocumentVisit, Integer
                     SELECT COUNT(*)
                     FROM mindmaps m
                     WHERE m.title LIKE CONCAT('%', :keyword, '%')
-                    AND ((:chapter IS NULL AND :chapterId IS NULL) OR a.chapter = :chapter OR a.chapter_id = :chapterId)
+                    AND ((:chapter IS NULL AND :chapterId IS NULL) OR m.chapter = :chapter OR m.chapter_id = :chapterId)
                     AND (:subject IS NULL OR m.subject = :subject)
                     AND (:grade IS NULL OR m.grade = :grade)
                     AND m.id IN (:mindmapIds)
