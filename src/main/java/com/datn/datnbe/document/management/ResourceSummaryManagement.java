@@ -34,6 +34,9 @@ public class ResourceSummaryManagement implements ResourceSummaryApi {
                                 .id(s.getId())
                                 .title(s.getTitle())
                                 .thumbnail(s.getThumbnail())
+                                .grade(s.getGrade())
+                                .subject(s.getSubject())
+                                .chapter(s.getChapter())
                                 .build()));
 
         log.debug("Fetched {} presentation summaries for {} IDs", result.size(), ids.size());
@@ -53,6 +56,9 @@ public class ResourceSummaryManagement implements ResourceSummaryApi {
                                 .id(s.getId())
                                 .title(s.getTitle())
                                 .thumbnail(s.getThumbnail())
+                                .grade(s.getGrade())
+                                .subject(s.getSubject())
+                                .chapter(s.getChapter())
                                 .build()));
 
         log.debug("Fetched {} mindmap summaries for {} IDs", result.size(), ids.size());
@@ -72,6 +78,9 @@ public class ResourceSummaryManagement implements ResourceSummaryApi {
                                 .id(s.getId())
                                 .title(s.getTitle())
                                 .thumbnail(null) // Assignments don't have thumbnails
+                                .grade(s.getGrade())
+                                .subject(s.getSubject())
+                                .chapter(s.getChapter())
                                 .build()));
 
         log.debug("Fetched {} assignment summaries for {} IDs", result.size(), ids.size());

@@ -6,6 +6,7 @@ import com.datn.datnbe.cms.api.ClassApi;
 import com.datn.datnbe.cms.dto.LinkedResourceDto;
 import com.datn.datnbe.cms.dto.request.ClassCollectionRequest;
 import com.datn.datnbe.cms.dto.request.ClassCreateRequest;
+import com.datn.datnbe.cms.dto.request.ClassResourcesRequest;
 import com.datn.datnbe.cms.dto.request.ClassUpdateRequest;
 import com.datn.datnbe.cms.dto.response.ClassListResponseDto;
 import com.datn.datnbe.cms.dto.response.ClassResponseDto;
@@ -142,10 +143,18 @@ public class ClassService implements ClassApi {
 
     @Override
     @Transactional(readOnly = true)
-    public List<LinkedResourceDto> getClassResources(String classId) {
-        log.info("Fetching resources for class with id: {}", classId);
+    public List<LinkedResourceDto> getClassResources(String classId, ClassResourcesRequest request) {
+        log.info("Fetching resources for class with id: {}, request: {}", classId, request);
 
         List<ClassResourcePermission> permissions = classResourcePermissionRepository.findByClassId(classId);
+
+        // Apply type filter if provided
+        String typeFilter = request != null ? request.getType() : null;
+        if (typeFilter != null && !typeFilter.isBlank()) {
+            permissions = permissions.stream()
+                    .filter(p -> typeFilter.equalsIgnoreCase(p.getResourceType()))
+                    .toList();
+        }
 
         List<LinkedResourceDto> resources = permissions.stream()
                 .map(p -> LinkedResourceDto.builder()
@@ -156,6 +165,15 @@ public class ClassService implements ClassApi {
                 .toList();
 
         linkedResourceEnricher.enrichLinkedResources(resources);
+
+        // Apply search filter after enrichment (title-based)
+        String search = request != null ? request.getSearch() : null;
+        if (search != null && !search.isBlank()) {
+            String searchLower = search.toLowerCase();
+            resources = resources.stream()
+                    .filter(r -> r.getTitle() != null && r.getTitle().toLowerCase().contains(searchLower))
+                    .toList();
+        }
 
         return resources;
     }

@@ -25,4 +25,7 @@ public class LinkedResourceDto {
     // Enriched fields - populated by LinkedResourceEnricher
     private String title;      // Resource title (nullable for backward compatibility)
     private String thumbnail;  // Resource thumbnail URL (nullable, always null for assignments)
+    private String grade;      // Grade level (nullable)
+    private String subject;    // Subject (nullable)
+    private String chapter;    // Chapter (nullable)
 }

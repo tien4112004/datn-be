@@ -35,6 +35,6 @@ public interface AssignmentRepository extends JpaRepository<Assignment, String>,
      * Fetch only id and title for given IDs.
      * Assignments don't have thumbnails.
      */
-    @Query("SELECT a.id AS id, a.title AS title FROM Assignment a WHERE a.id IN :ids")
+    @Query("SELECT a.id AS id, a.title AS title, a.grade AS grade, a.subject AS subject, a.chapter AS chapter FROM Assignment a WHERE a.id IN :ids")
     List<AssignmentSummaryProjection> findSummariesByIds(@Param("ids") Collection<String> ids);
 }
