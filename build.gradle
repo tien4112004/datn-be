@@ -60,6 +60,11 @@ dependencies {
     implementation 'com.google.firebase:firebase-admin:9.2.0'
     implementation 'vn.payos:payos-java:2.0.1'
     
+    // PDF export
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'com.openhtmltopdf:openhtmltopdf-core:1.0.10'
+    implementation 'com.openhtmltopdf:openhtmltopdf-pdfbox:1.0.10'
+
     // Monitoring and Observability
     implementation 'io.micrometer:micrometer-registry-prometheus'
     implementation 'com.github.loki4j:loki-logback-appender:1.4.1'

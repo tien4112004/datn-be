@@ -4,6 +4,7 @@ import com.datn.datnbe.cms.entity.AssignmentPost;
 import com.datn.datnbe.cms.repository.AssignmentPostRepository;
 import com.datn.datnbe.document.api.AssignmentApi;
 import com.datn.datnbe.document.dto.AssignmentMatrixDto;
+import com.datn.datnbe.document.dto.pdf.PdfExportRequest;
 import com.datn.datnbe.document.dto.request.AssignmentCreateRequest;
 import com.datn.datnbe.document.dto.request.AssignmentSettingsUpdateRequest;
 import com.datn.datnbe.document.dto.request.AssignmentUpdateRequest;
@@ -33,6 +34,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -115,6 +118,39 @@ public class AssignmentController {
 
         AssignmentResponse response = assignmentMapper.toDto(assignmentPost);
         return ResponseEntity.ok(AppResponseDto.success(response));
+    }
+
+    /**
+     * Export an assignment as a downloadable PDF.
+     */
+    @Operation(summary = "Export Assignment as PDF", description = """
+            Export an assignment as a paper-style PDF for printing.
+
+            **Themes:**
+            - `CLASSIC` (default) — Liberation Serif (Times New Roman look), 13px
+            - `FRIENDLY` — NotoSans, 14px, larger spacing for younger students
+            - `COMPACT` — NotoSans, 11px, more content per page
+
+            **Header config:**
+            - `schoolName` — optional school name shown above the title
+            - `showChapter` — include chapter in header badges
+            - `showDescription` — show assignment description below title
+
+            **Content toggles:**
+            - `showQuestionPoints` — show point value per question (default: true)
+            - `showAnswerKey` — append answer key on a new page (default: false)
+            - `showExplanations` — show explanation hints below each question (default: false)
+            """)
+    @ApiResponse(responseCode = "200", description = "PDF file", content = @Content(mediaType = "application/pdf"))
+    @PostMapping("/{id}/export-pdf")
+    @RequireDocumentPermission(scopes = {"read"})
+    public ResponseEntity<byte[]> exportAssignmentPdf(@PathVariable String id, @RequestBody PdfExportRequest request) {
+        byte[] pdf = assignmentApi.exportAssignmentPdf(id, request);
+        String filename = "assignment-" + id + ".pdf";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
     }
 
     /**

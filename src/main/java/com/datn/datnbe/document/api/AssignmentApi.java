@@ -9,6 +9,7 @@ import com.datn.datnbe.document.dto.request.GenerateAssignmentFromMatrixRequest;
 import com.datn.datnbe.document.dto.request.GenerateFullAssignmentRequest;
 import com.datn.datnbe.document.dto.request.GenerateMatrixRequest;
 import com.datn.datnbe.document.dto.response.AssignmentResponse;
+import com.datn.datnbe.document.dto.pdf.PdfExportRequest;
 import com.datn.datnbe.document.dto.response.AssignmentDraftDto;
 import com.datn.datnbe.sharedkernel.dto.PaginatedResponseDto;
 
@@ -60,4 +61,13 @@ public interface AssignmentApi {
      * @return AssignmentDraftDto containing the generated questions
      */
     AssignmentDraftDto generateFullAssignment(GenerateFullAssignmentRequest request, String teacherId);
+
+    /**
+     * Export an assignment as a PDF byte array.
+     *
+     * @param id      The assignment ID
+     * @param request Export options (theme, header config, toggles)
+     * @return PDF bytes
+     */
+    byte[] exportAssignmentPdf(String id, PdfExportRequest request);
 }
