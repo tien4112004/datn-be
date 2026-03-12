@@ -5,6 +5,7 @@ import com.datn.datnbe.cms.api.SeatingLayoutApi;
 import com.datn.datnbe.cms.dto.LinkedResourceDto;
 import com.datn.datnbe.cms.dto.request.ClassCollectionRequest;
 import com.datn.datnbe.cms.dto.request.ClassCreateRequest;
+import com.datn.datnbe.cms.dto.request.ClassResourcesRequest;
 import com.datn.datnbe.cms.dto.request.ClassUpdateRequest;
 import com.datn.datnbe.cms.dto.request.SeatingLayoutRequest;
 import com.datn.datnbe.cms.dto.response.ClassListResponseDto;
@@ -93,10 +94,12 @@ public class ClassController {
     }
 
     @GetMapping("/{classId}/resources")
-    public ResponseEntity<AppResponseDto<List<LinkedResourceDto>>> getClassResources(@PathVariable String classId) {
-        log.debug("GET /api/classes/{}/resources", classId);
+    public ResponseEntity<AppResponseDto<List<LinkedResourceDto>>> getClassResources(
+            @PathVariable String classId,
+            @Valid @ModelAttribute ClassResourcesRequest request) {
+        log.debug("GET /api/classes/{}/resources with params: {}", classId, request);
 
-        return ResponseEntity.ok(AppResponseDto.success(classApi.getClassResources(classId)));
+        return ResponseEntity.ok(AppResponseDto.success(classApi.getClassResources(classId, request)));
     }
 
     // ============== Seating Chart Endpoints ==============

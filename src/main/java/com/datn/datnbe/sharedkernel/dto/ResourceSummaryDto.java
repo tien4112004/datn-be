@@ -17,4 +17,7 @@ public class ResourceSummaryDto {
     private String id;
     private String title;
     private String thumbnail;
+    private String grade;
+    private String subject;
+    private String chapter;
 }

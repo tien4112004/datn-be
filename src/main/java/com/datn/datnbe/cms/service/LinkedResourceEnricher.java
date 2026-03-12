@@ -72,6 +72,9 @@ public class LinkedResourceEnricher {
             if (summary != null) {
                 resource.setTitle(summary.getTitle());
                 resource.setThumbnail(summary.getThumbnail());
+                resource.setGrade(summary.getGrade());
+                resource.setSubject(summary.getSubject());
+                resource.setChapter(summary.getChapter());
             }
         }
     }

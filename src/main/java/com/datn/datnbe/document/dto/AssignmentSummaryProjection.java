@@ -7,4 +7,7 @@ package com.datn.datnbe.document.dto;
 public interface AssignmentSummaryProjection {
     String getId();
     String getTitle();
+    String getGrade();
+    String getSubject();
+    String getChapter();
 }

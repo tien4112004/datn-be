@@ -122,7 +122,7 @@ public interface DocumentRepository extends JpaRepository<DocumentVisit, Integer
                     SELECT COUNT(*)
                     FROM mindmaps m
                     WHERE m.title LIKE CONCAT('%', :keyword, '%')
-                    AND ((:chapter IS NULL AND :chapterId IS NULL) OR a.chapter = :chapter OR a.chapter_id = :chapterId)
+                    AND ((:chapter IS NULL AND :chapterId IS NULL) OR m.chapter = :chapter OR m.chapter_id = :chapterId)
                     AND (:subject IS NULL OR m.subject = :subject)
                     AND (:grade IS NULL OR m.grade = :grade)
                     AND m.id IN (:mindmapIds)

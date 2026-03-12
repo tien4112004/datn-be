@@ -8,4 +8,7 @@ public interface ResourceSummaryProjection {
     String getId();
     String getTitle();
     String getThumbnail();
+    String getGrade();
+    String getSubject();
+    String getChapter();
 }

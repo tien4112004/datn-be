@@ -44,6 +44,6 @@ public interface MindmapRepository extends JpaRepository<Mindmap, String> {
      * Fetch only id, title, and thumbnail for given IDs.
      * Avoids loading heavy JSON columns like nodes and edges.
      */
-    @Query("SELECT m.id AS id, m.title AS title, m.thumbnail AS thumbnail FROM Mindmap m WHERE m.id IN :ids")
+    @Query("SELECT m.id AS id, m.title AS title, m.thumbnail AS thumbnail, m.grade AS grade, m.subject AS subject, m.chapter AS chapter FROM Mindmap m WHERE m.id IN :ids")
     List<ResourceSummaryProjection> findSummariesByIds(@Param("ids") Collection<String> ids);
 }

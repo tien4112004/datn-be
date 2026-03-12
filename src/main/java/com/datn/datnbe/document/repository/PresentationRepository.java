@@ -47,6 +47,6 @@ public interface PresentationRepository extends JpaRepository<Presentation, Stri
      * Fetch only id, title, and thumbnail for given IDs.
      * Avoids loading heavy JSON columns like slides.
      */
-    @Query("SELECT p.id AS id, p.title AS title, p.thumbnail AS thumbnail FROM Presentation p WHERE p.id IN :ids AND p.deletedAt IS NULL")
+    @Query("SELECT p.id AS id, p.title AS title, p.thumbnail AS thumbnail, p.grade AS grade, p.subject AS subject, p.chapter AS chapter FROM Presentation p WHERE p.id IN :ids AND p.deletedAt IS NULL")
     List<ResourceSummaryProjection> findSummariesByIds(@Param("ids") Collection<String> ids);
 }

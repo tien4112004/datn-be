@@ -3,6 +3,7 @@ package com.datn.datnbe.cms.api;
 import com.datn.datnbe.cms.dto.LinkedResourceDto;
 import com.datn.datnbe.cms.dto.request.ClassCollectionRequest;
 import com.datn.datnbe.cms.dto.request.ClassCreateRequest;
+import com.datn.datnbe.cms.dto.request.ClassResourcesRequest;
 import com.datn.datnbe.cms.dto.request.ClassUpdateRequest;
 import com.datn.datnbe.cms.dto.response.ClassListResponseDto;
 import com.datn.datnbe.cms.dto.response.ClassResponseDto;
@@ -22,5 +23,5 @@ public interface ClassApi {
 
     void deleteClass(String id);
 
-    List<LinkedResourceDto> getClassResources(String classId);
+    List<LinkedResourceDto> getClassResources(String classId, ClassResourcesRequest request);
 }
