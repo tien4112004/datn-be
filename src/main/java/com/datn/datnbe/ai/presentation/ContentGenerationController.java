@@ -72,6 +72,12 @@ public class ContentGenerationController {
                     result.append(chunk);
                 })
                 .doOnError(err -> log.error("Error generating outline", err))
+                .onErrorResume(err -> {
+                    String errorMessage = err instanceof AppException appEx
+                            ? appEx.getErrorMessage()
+                            : "Failed to generate outline: " + err.getMessage();
+                    return Flux.just("[GENERATION_ERROR]" + errorMessage);
+                })
                 .doFinally(signalType -> {
                     log.info("Outline generation completed with signal: {}", signalType);
                     if (result.length() > 0) {
@@ -187,8 +193,12 @@ public class ContentGenerationController {
                 .delayElements(Duration.ofMillis(SLIDE_DELAY))
                 .doOnNext(result::append)
                 .doOnError(err -> log.error("Error generating slides for ID: {}", presentationId, err))
-                .onErrorResume(err -> Flux.error(
-                        new AppException(ErrorCode.GENERATION_ERROR, "Failed to generate slides: " + err.getMessage())))
+                .onErrorResume(err -> {
+                    String errorMessage = err instanceof AppException appEx
+                            ? appEx.getErrorMessage()
+                            : "Failed to generate slides: " + err.getMessage();
+                    return Flux.just("[GENERATION_ERROR]" + errorMessage + "\n\n");
+                })
                 .doOnSubscribe(s -> log.info("Client subscribed to slide generation stream for ID: {}", presentationId))
                 .map(slide -> removeTokenUsageFromChunk(slide))
                 .publish()

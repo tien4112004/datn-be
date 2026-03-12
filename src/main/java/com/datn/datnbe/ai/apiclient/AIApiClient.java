@@ -5,6 +5,8 @@ import java.util.Map;
 import com.datn.datnbe.sharedkernel.exceptions.AppException;
 import com.datn.datnbe.sharedkernel.exceptions.ErrorCode;
 import com.datn.datnbe.sharedkernel.security.utils.SecurityContextUtils;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
@@ -100,7 +102,8 @@ public class AIApiClient {
                 .onStatus(HttpStatusCode::is4xxClientError,
                         resp -> resp.bodyToMono(String.class)
                                 .defaultIfEmpty("")
-                                .map(body -> new AppException(ErrorCode.AI_WORKER_UNPROCESSABLE_ENTITY, body)))
+                                .map(body -> new AppException(ErrorCode.AI_WORKER_UNPROCESSABLE_ENTITY,
+                                        parseGenaiErrorDetail(body))))
                 .onStatus(HttpStatusCode::is5xxServerError,
                         resp -> resp.bodyToMono(String.class)
                                 .defaultIfEmpty("")
@@ -117,6 +120,28 @@ public class AIApiClient {
                 .map(String::trim)
                 .doOnComplete(() -> log.info("SSE stream completed"))
                 .doOnError(err -> log.error("SSE stream error", err));
+    }
+
+    /**
+     * Parse error response from GenAI (FastAPI) and extract the "detail" field.
+     * FastAPI returns errors as {"detail": "error message"}.
+     * Falls back to the raw body if parsing fails.
+     */
+    public static String parseGenaiErrorDetail(String body) {
+        if (body == null || body.isBlank()) {
+            return "AI Worker rejected the request";
+        }
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode node = mapper.readTree(body);
+            JsonNode detail = node.get("detail");
+            if (detail != null && !detail.isNull()) {
+                return detail.asText();
+            }
+        } catch (Exception ignored) {
+            // Not valid JSON or no "detail" field
+        }
+        return body;
     }
 
     /**

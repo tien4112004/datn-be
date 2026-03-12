@@ -68,12 +68,17 @@ public class QuestionGenerationService {
         String traceId = java.util.UUID.randomUUID().toString();
         String jsonResult = contentGenerationApi.generateQuestions(request, traceId);
         String requestString = "";
-        try{
+        try {
             requestString = objectMapper.writeValueAsString(request);
         } catch (Exception e) {
             log.error("Failed to serialize request for token usage logging: {}", e.getMessage());
         }
-        extractAndSaveTokenUsage(traceId, requestString, request.getProvider(), request.getModel(), "question", teacherId);
+        extractAndSaveTokenUsage(traceId,
+                requestString,
+                request.getProvider(),
+                request.getModel(),
+                "question",
+                teacherId);
         log.info("AI response received, length: {} chars", jsonResult != null ? jsonResult.length() : 0);
 
         // Parse JSON string to list of Question POJOs
@@ -251,12 +256,17 @@ public class QuestionGenerationService {
         String traceId = java.util.UUID.randomUUID().toString();
         String jsonResult = contentGenerationApi.generateQuestionsFromContext(aiRequest, traceId);
         String requestString = "";
-        try{
+        try {
             requestString = objectMapper.writeValueAsString(request);
         } catch (Exception e) {
             log.error("Failed to serialize request for token usage logging: {}", e.getMessage());
         }
-        extractAndSaveTokenUsage(traceId, requestString, request.getProvider(), request.getModel(), "question", teacherId);
+        extractAndSaveTokenUsage(traceId,
+                requestString,
+                request.getProvider(),
+                request.getModel(),
+                "question",
+                teacherId);
         log.info("AI response received, length: {} chars", jsonResult != null ? jsonResult.length() : 0);
 
         // 5. Parse JSON response
@@ -486,7 +496,7 @@ public class QuestionGenerationService {
         String traceId = java.util.UUID.randomUUID().toString();
         String jsonResult = contentGenerationApi.generateQuestionsByTopic(gatewayRequest, traceId);
         String requestString = "";
-        try{
+        try {
             requestString = objectMapper.writeValueAsString(request);
         } catch (Exception e) {
             log.error("Failed to serialize request for token usage logging: {}", e.getMessage());
