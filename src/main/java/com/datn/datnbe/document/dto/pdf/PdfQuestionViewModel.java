@@ -23,6 +23,7 @@ public class PdfQuestionViewModel {
     int number;
 
     String title;
+    String titleImageUrl;
     QuestionType type;
     Double point;
 

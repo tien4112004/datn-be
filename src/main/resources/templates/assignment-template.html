@@ -6,7 +6,7 @@
     <!-- Theme: body font injected per-theme to avoid CSS inline quoting issues -->
     <style th:if="${theme.name() == 'CLASSIC'}">
       body {
-        font-family: "LiberationSerif", serif;
+        font-family: "Times New Roman", Times, serif;
         font-size: 13px;
         line-height: 1.5;
         color: #111;
@@ -207,6 +207,26 @@
         margin-left: 4px;
       }
 
+      /* ── Images ── */
+      .question-image {
+        max-width: 80%;
+        max-height: 200px;
+        margin: 4px 0 8px 0;
+        display: block;
+      }
+      .option-image {
+        max-width: 120px;
+        max-height: 80px;
+        margin: 2px 0;
+        display: block;
+      }
+      .pair-image {
+        max-width: 100px;
+        max-height: 60px;
+        margin: 2px 0;
+        display: block;
+      }
+
       /* ── MULTIPLE_CHOICE ── */
       .options-table {
         width: 100%;
@@ -395,7 +415,12 @@
         class="context-block"
         th:if="${section.type == 'context' and section.contextBlock != null}"
       >
-        <p class="context-label">Đọc đoạn văn sau</p>
+        <p
+          class="context-label"
+          th:text="'Đọc đoạn văn sau và trả lời các câu hỏi từ ' + ${section.questions[0].number} + ' đến ' + ${section.questions[section.questions.size() - 1].number}"
+        >
+          Đọc đoạn văn sau
+        </p>
         <p class="context-title" th:text="${section.contextBlock.title}">
           Title
         </p>
@@ -421,6 +446,11 @@
             th:text="'(' + ${question.point} + ' đ)'"
           ></span>
         </p>
+        <img
+          th:if="${question.titleImageUrl != null}"
+          th:src="${question.titleImageUrl}"
+          class="question-image"
+        />
         <!-- MULTIPLE_CHOICE -->
         <div
           th:if="${question.type.name() == 'MULTIPLE_CHOICE' and question.multipleChoiceData != null}"
@@ -436,6 +466,11 @@
                   th:text="${'ABCDEFGHIJ'.substring(s.index, s.index + 1)} + '.'"
                   >A.</span
                 ><span th:text="${opt.text}">Option</span>
+                <img
+                  th:if="${opt.imageUrl != null}"
+                  th:src="${opt.imageUrl}"
+                  class="option-image"
+                />
               </td>
               <td
                 th:if="${s.index + 1 < question.multipleChoiceData.options.size()}"
@@ -448,6 +483,11 @@
                   th:text="${question.multipleChoiceData.options[s.index + 1].text}"
                   >Option</span
                 >
+                <img
+                  th:if="${question.multipleChoiceData.options[s.index + 1].imageUrl != null}"
+                  th:src="${question.multipleChoiceData.options[s.index + 1].imageUrl}"
+                  class="option-image"
+                />
               </td>
               <td
                 th:unless="${s.index + 1 < question.multipleChoiceData.options.size()}"
@@ -486,6 +526,11 @@
               <td class="match-left">
                 <span class="match-id" th:text="${ps.count} + '.'">1.</span
                 ><span th:text="${pair.left}">Left</span>
+                <img
+                  th:if="${pair.leftImageUrl != null}"
+                  th:src="${pair.leftImageUrl}"
+                  class="pair-image"
+                />
               </td>
               <td class="match-arrow">&#8594;</td>
               <td class="match-right">
@@ -494,6 +539,11 @@
                   th:text="${'ABCDEFGHIJ'.substring(ps.index, ps.index + 1)} + '.'"
                   >A.</span
                 ><span th:text="${pair.right}">Right</span>
+                <img
+                  th:if="${pair.rightImageUrl != null}"
+                  th:src="${pair.rightImageUrl}"
+                  class="pair-image"
+                />
               </td>
             </tr>
           </table>
@@ -508,6 +558,5 @@
     <div class="footer-bar">
       Tổng điểm: <strong th:text="${assignment.totalPoints}">0</strong> điểm
     </div>
-
   </body>
 </html>

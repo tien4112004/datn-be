@@ -38,7 +38,7 @@ class AssignmentPdfViewModelMapperTest {
         AssignmentPdfViewModel vm = mapper.toViewModel(sampleAssignment);
 
         assertThat(vm.getTitle()).isEqualTo("Bài tập về My house");
-        assertThat(vm.getSubject()).isEqualTo("TA");
+        assertThat(vm.getSubject()).isEqualTo("Tiếng Anh");
         assertThat(vm.getGrade()).isEqualTo("3");
     }
 

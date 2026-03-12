@@ -72,7 +72,7 @@ public class AssignmentPdfViewModelMapper {
 
         return AssignmentPdfViewModel.builder()
                 .title(assignment.getTitle())
-                .subject(assignment.getSubject())
+                .subject(toVietnameseSubjectName(assignment.getSubject()))
                 .grade(assignment.getGrade())
                 .chapter(assignment.getChapter())
                 .description(assignment.getDescription())
@@ -100,6 +100,7 @@ public class AssignmentPdfViewModelMapper {
         PdfQuestionViewModel.PdfQuestionViewModelBuilder builder = PdfQuestionViewModel.builder()
                 .number(number)
                 .title(question.getTitle())
+                .titleImageUrl(question.getTitleImageUrl())
                 .type(question.getType())
                 .point(question.getPoint());
 
@@ -115,6 +116,14 @@ public class AssignmentPdfViewModelMapper {
         }
 
         return builder.build();
+    }
+
+    private static final Map<String, String> SUBJECT_NAMES = Map.of("T", "Toán", "TV", "Tiếng Việt", "TA", "Tiếng Anh");
+
+    private String toVietnameseSubjectName(String code) {
+        if (code == null)
+            return null;
+        return SUBJECT_NAMES.getOrDefault(code.toUpperCase(), code);
     }
 
     /**
