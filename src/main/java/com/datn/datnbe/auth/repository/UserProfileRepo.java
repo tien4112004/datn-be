@@ -50,6 +50,13 @@ public interface UserProfileRepo
             WHERE (LOWER(u.firstName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR
                    LOWER(u.lastName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR
                    LOWER(u.email) LIKE LOWER(CONCAT('%', :searchTerm, '%')))
+                AND (:role IS NULL OR u.role = :role)
             """)
-    Page<UserProfile> findBySearchTerm(@Param("searchTerm") String searchTerm, Pageable pageable);
+    Page<UserProfile> findBySearchTerm(@Param("searchTerm") String searchTerm, @Param("role") String role, Pageable pageable);
+
+    @Query("""
+        SELECT u FROM UserProfile u
+        WHERE (:role IS NULL OR u.role = :role)
+        """)
+    Page<UserProfile> findByRole(@Param("role") String role, Pageable pageable);
 }
