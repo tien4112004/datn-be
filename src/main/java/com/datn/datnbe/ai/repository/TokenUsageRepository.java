@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 
 @Repository
@@ -35,6 +36,15 @@ public interface TokenUsageRepository extends JpaRepository<TokenUsage, Integer>
     @Query("SELECT new com.datn.datnbe.ai.dto.response.TokenUsageStatsDto(SUM(t.tokenCount), COUNT(t), SUM(t.calculatedPrice), SUM(t.actualPrice), t.request) "
             + "FROM token_usage t WHERE t.userId = :userId GROUP BY t.request")
     List<TokenUsageStatsDto> getTokenUsageByRequestType(@Param("userId") String userId);
+
+    @Query(value = """
+            SELECT TO_CHAR(created_at, 'YYYY-MM') AS month, SUM(token_count) AS tokens
+            FROM token_usage
+            WHERE created_at >= :since
+            GROUP BY TO_CHAR(created_at, 'YYYY-MM')
+            ORDER BY month
+            """, nativeQuery = true)
+    List<Object[]> sumTokensByMonth(@Param("since") Date since);
 
     List<TokenUsage> findByDocumentId(String documentId);
 

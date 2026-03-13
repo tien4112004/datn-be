@@ -94,8 +94,7 @@ public class ClassController {
     }
 
     @GetMapping("/{classId}/resources")
-    public ResponseEntity<AppResponseDto<List<LinkedResourceDto>>> getClassResources(
-            @PathVariable String classId,
+    public ResponseEntity<AppResponseDto<List<LinkedResourceDto>>> getClassResources(@PathVariable String classId,
             @Valid @ModelAttribute ClassResourcesRequest request) {
         log.debug("GET /api/classes/{}/resources with params: {}", classId, request);
 
