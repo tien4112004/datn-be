@@ -30,6 +30,9 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
 
     List<PaymentTransaction> findByStatus(TransactionStatus status);
 
+    @Query("SELECT p FROM PaymentTransaction p WHERE (:status IS NULL OR p.status = :status) ORDER BY p.createdAt DESC")
+    Page<PaymentTransaction> findAllWithFilter(@Param("status") TransactionStatus status, Pageable pageable);
+
     @Query(value = "SELECT COALESCE(SUM(amount), 0) FROM payment_transactions WHERE status = 'COMPLETED'", nativeQuery = true)
     BigDecimal getTotalRevenue();
 

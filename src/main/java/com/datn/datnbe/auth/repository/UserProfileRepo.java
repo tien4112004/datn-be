@@ -53,7 +53,9 @@ public interface UserProfileRepo
                    LOWER(u.email) LIKE LOWER(CONCAT('%', :searchTerm, '%')))
                 AND (:role IS NULL OR u.role = :role)
             """)
-    Page<UserProfile> findBySearchTerm(@Param("searchTerm") String searchTerm, @Param("role") String role, Pageable pageable);
+    Page<UserProfile> findBySearchTerm(@Param("searchTerm") String searchTerm,
+            @Param("role") String role,
+            Pageable pageable);
 
     @Query(value = """
             SELECT TO_CHAR(created_at, 'YYYY-MM') AS month, COUNT(*) AS count
@@ -65,8 +67,8 @@ public interface UserProfileRepo
     List<Object[]> countRegistrationsByMonth(@Param("since") Date since);
 
     @Query("""
-        SELECT u FROM UserProfile u
-        WHERE (:role IS NULL OR u.role = :role)
-        """)
+            SELECT u FROM UserProfile u
+            WHERE (:role IS NULL OR u.role = :role)
+            """)
     Page<UserProfile> findByRole(@Param("role") String role, Pageable pageable);
 }
