@@ -39,6 +39,19 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
     @Query(value = "SELECT COUNT(*) FROM payment_transactions WHERE status = 'COMPLETED'", nativeQuery = true)
     Long getTotalCompletedTransactions();
 
+        @Query(value = """
+            SELECT DATE(completed_at) AS transaction_date, COALESCE(SUM(amount), 0) AS total_amount
+            FROM payment_transactions
+            WHERE status = 'COMPLETED'
+              AND completed_at >= :fromDate
+              AND completed_at < :toDateExclusive
+            GROUP BY DATE(completed_at)
+            ORDER BY transaction_date
+            """, nativeQuery = true)
+        List<Object[]> sumCompletedAmountByDateRange(
+            @Param("fromDate") Date fromDate,
+            @Param("toDateExclusive") Date toDateExclusive);
+
     @Query(value = """
             SELECT TO_CHAR(completed_at, 'YYYY-MM') AS month, COALESCE(SUM(amount), 0) AS revenue
             FROM payment_transactions
@@ -47,4 +60,16 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
             ORDER BY month
             """, nativeQuery = true)
     List<Object[]> sumRevenueByMonth(@Param("since") Date since);
+
+    @Query(value = """
+            SELECT DATE(created_at) AS transaction_date, COALESCE(SUM(actual_price), 0) AS total_amount
+            FROM token_usage
+            WHERE created_at >= :fromDate
+              AND created_at < :toDateExclusive
+              AND actual_price IS NOT NULL
+            GROUP BY DATE(created_at)
+            ORDER BY transaction_date
+            """, nativeQuery = true)
+    List<Object[]> sumCostByDateRange(@Param("fromDate") Date fromDate, 
+    @Param("toDateExclusive") Date toDateExclusive);
 }
