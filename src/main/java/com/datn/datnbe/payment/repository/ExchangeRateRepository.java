@@ -11,7 +11,7 @@ import com.datn.datnbe.payment.entity.ExchangeRate;
 
 @Repository
 public interface ExchangeRateRepository extends JpaRepository<ExchangeRate, String> {
-    
+
     @Query("SELECT e FROM ExchangeRate e WHERE e.date = :date")
     ExchangeRate findByDate(@Param("date") LocalDate date);
 

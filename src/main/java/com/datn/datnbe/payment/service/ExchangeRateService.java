@@ -21,11 +21,37 @@ import lombok.extern.slf4j.Slf4j;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class ExchangeRateService {
 
-    static final String API_URL_TEMPLATE =
-            "https://v6.exchangerate-api.com/v6/bd0c249777d45b67ea84fe24/history/USD/%d/%d/%d";
+    static final String API_URL_TEMPLATE = "https://v6.exchangerate-api.com/v6/bd0c249777d45b67ea84fe24/history/USD/%d/%d/%d";
 
     ExchangeRateRepository exchangeRateRepository;
     RestTemplate restTemplate;
+
+    private void fetchAndSave(LocalDate date) {
+        if (exchangeRateRepository.findByDate(date) != null)
+            return;
+
+        String url = String.format(API_URL_TEMPLATE, date.getYear(), date.getMonthValue(), date.getDayOfMonth());
+        try {
+            ExchangeRateApiResponse response = restTemplate.getForObject(url, ExchangeRateApiResponse.class);
+            if (response == null || !"success".equals(response.getResult())) {
+                log.warn("Exchange rate API unsuccessful for {}: {}", date, response);
+                return;
+            }
+            Double vndRate = response.getConversionAmounts() != null
+                    ? response.getConversionAmounts().get("VND")
+                    : null;
+            if (vndRate == null) {
+                log.warn("VND rate not found for {}", date);
+                return;
+            }
+
+            exchangeRateRepository.save(
+                    ExchangeRate.builder().fromCurrency("USD").toCurrency("VND").rate(vndRate).date(date).build());
+            log.info("Saved exchange rate for {}: 1 USD = {} VND", date, vndRate);
+        } catch (Exception e) {
+            log.error("Failed to fetch exchange rate for {}: {}", date, e.getMessage());
+        }
+    }
 
     /**
      * Runs at midnight on the last day of every month.
@@ -42,45 +68,6 @@ public class ExchangeRateService {
         }
 
         log.info("Last day of month ({}), fetching USD/VND exchange rate...", today);
-
-        // Guard: skip if already saved for today
-        if (exchangeRateRepository.findByDate(today) != null) {
-            log.info("Exchange rate for {} already saved, skipping", today);
-            return;
-        }
-
-        String url = String.format(API_URL_TEMPLATE, today.getYear(), today.getMonthValue(), today.getDayOfMonth());
-
-        try {
-            ExchangeRateApiResponse response = restTemplate.getForObject(url, ExchangeRateApiResponse.class);
-
-            if (response == null || !"success".equals(response.getResult())) {
-                log.error("Exchange rate API returned unsuccessful result: {}", response);
-                return;
-            }
-
-            Double vndRate = response.getConversionAmounts() != null
-                    ? response.getConversionAmounts().get("VND")
-                    : null;
-
-            if (vndRate == null) {
-                log.error("VND rate not found in exchange rate API response");
-                return;
-            }
-
-            ExchangeRate exchangeRate = ExchangeRate.builder()
-                    .fromCurrency("USD")
-                    .toCurrency("VND")
-                    .rate(vndRate)
-                    .date(today)
-                    .build();
-
-            exchangeRateRepository.save(exchangeRate);
-            log.info("Saved exchange rate for {}: 1 USD = {} VND", today, vndRate);
-
-        } catch (Exception e) {
-            log.error("Failed to fetch or save exchange rate: {}", e.getMessage(), e);
-        }
+        fetchAndSave(today);
     }
 }
-

@@ -39,7 +39,7 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
     @Query(value = "SELECT COUNT(*) FROM payment_transactions WHERE status = 'COMPLETED'", nativeQuery = true)
     Long getTotalCompletedTransactions();
 
-        @Query(value = """
+    @Query(value = """
             SELECT DATE(completed_at) AS transaction_date, COALESCE(SUM(amount), 0) AS total_amount
             FROM payment_transactions
             WHERE status = 'COMPLETED'
@@ -48,8 +48,7 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
             GROUP BY DATE(completed_at)
             ORDER BY transaction_date
             """, nativeQuery = true)
-        List<Object[]> sumCompletedAmountByDateRange(
-            @Param("fromDate") Date fromDate,
+    List<Object[]> sumCompletedAmountByDateRange(@Param("fromDate") Date fromDate,
             @Param("toDateExclusive") Date toDateExclusive);
 
     @Query(value = """
@@ -70,6 +69,5 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
             GROUP BY DATE(created_at)
             ORDER BY transaction_date
             """, nativeQuery = true)
-    List<Object[]> sumCostByDateRange(@Param("fromDate") Date fromDate, 
-    @Param("toDateExclusive") Date toDateExclusive);
+    List<Object[]> sumCostByDateRange(@Param("fromDate") Date fromDate, @Param("toDateExclusive") Date toDateExclusive);
 }

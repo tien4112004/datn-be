@@ -86,7 +86,7 @@ public class AdminPaymentService {
         return paymentTransactionRepository.sumCompletedAmountByDateRange(normalizedStartDate, toDateExclusive)
                 .stream()
                 .map(row -> AdminDailyTotalAmountDto.builder()
-                .date(resolveLocalDate(row[0]))
+                        .date(resolveLocalDate(row[0]))
                         .totalAmount(resolveBigDecimal(row[1]))
                         .build())
                 .toList();
@@ -128,8 +128,7 @@ public class AdminPaymentService {
                 .toList();
     }
 
-    private BigDecimal resolveApplicableRate(
-            YearMonth month,
+    private BigDecimal resolveApplicableRate(YearMonth month,
             LocalDate endLocalDate,
             boolean isCurrentOpenMonth,
             BigDecimal latestRate) {
@@ -145,9 +144,7 @@ public class AdminPaymentService {
         }
 
         if (exchangeRate == null || exchangeRate.getRate() == null) {
-            throw new AppException(
-                    ErrorCode.INVALID_REQUEST,
-                    "Missing exchange rate for month " + month);
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Missing exchange rate for month " + month);
         }
 
         return BigDecimal.valueOf(exchangeRate.getRate());

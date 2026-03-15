@@ -18,6 +18,6 @@ public class ExchangeRateApiResponse {
     @JsonProperty("base_code")
     private String baseCode;
 
-    @JsonProperty("conversion_amounts")
+    @JsonProperty("conversion_rates")
     private Map<String, Double> conversionAmounts;
 }
