@@ -151,9 +151,7 @@ public class ClassService implements ClassApi {
         // Apply type filter if provided
         String typeFilter = request != null ? request.getType() : null;
         if (typeFilter != null && !typeFilter.isBlank()) {
-            permissions = permissions.stream()
-                    .filter(p -> typeFilter.equalsIgnoreCase(p.getResourceType()))
-                    .toList();
+            permissions = permissions.stream().filter(p -> typeFilter.equalsIgnoreCase(p.getResourceType())).toList();
         }
 
         List<LinkedResourceDto> resources = permissions.stream()
