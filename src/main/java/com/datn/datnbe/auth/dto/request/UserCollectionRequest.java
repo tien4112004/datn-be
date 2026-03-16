@@ -14,6 +14,7 @@ public class UserCollectionRequest extends BaseCollectionRequest {
 
     @Size(max = 100, message = "Search query cannot exceed 100 characters")
     private String search;
+    private String role;
 
     @Builder
     public UserCollectionRequest(int page, int pageSize, String sort, String search) {

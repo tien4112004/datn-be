@@ -9,6 +9,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,6 +51,24 @@ public interface UserProfileRepo
             WHERE (LOWER(u.firstName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR
                    LOWER(u.lastName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR
                    LOWER(u.email) LIKE LOWER(CONCAT('%', :searchTerm, '%')))
+                AND (:role IS NULL OR u.role = :role)
             """)
-    Page<UserProfile> findBySearchTerm(@Param("searchTerm") String searchTerm, Pageable pageable);
+    Page<UserProfile> findBySearchTerm(@Param("searchTerm") String searchTerm,
+            @Param("role") String role,
+            Pageable pageable);
+
+    @Query(value = """
+            SELECT TO_CHAR(created_at, 'YYYY-MM') AS month, COUNT(*) AS count
+            FROM user_profile
+            WHERE created_at >= :since
+            GROUP BY TO_CHAR(created_at, 'YYYY-MM')
+            ORDER BY month
+            """, nativeQuery = true)
+    List<Object[]> countRegistrationsByMonth(@Param("since") Date since);
+
+    @Query("""
+            SELECT u FROM UserProfile u
+            WHERE (:role IS NULL OR u.role = :role)
+            """)
+    Page<UserProfile> findByRole(@Param("role") String role, Pageable pageable);
 }

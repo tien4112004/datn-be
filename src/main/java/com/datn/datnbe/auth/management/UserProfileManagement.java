@@ -71,9 +71,10 @@ public class UserProfileManagement implements UserProfileApi {
         Page<UserProfile> userProfilesPage;
 
         if (request.getSearch() != null && !request.getSearch().trim().isEmpty()) {
-            userProfilesPage = userProfileRepo.findBySearchTerm(request.getSearch().trim(), pageable);
+            userProfilesPage = userProfileRepo
+                    .findBySearchTerm(request.getSearch().trim(), request.getRole(), pageable);
         } else {
-            userProfilesPage = userProfileRepo.findAll(pageable);
+            userProfilesPage = userProfileRepo.findByRole(request.getRole(), pageable);
         }
 
         var userProfiles = userProfilesPage.getContent().stream().map(userProfile -> {
