@@ -74,19 +74,22 @@ public class SepayWebhookService {
 
                     if (orderAmount != null) {
                         Long amountVnd = orderAmount.longValue();
-                        coins = amountVnd / 1000L;
 
-                        // Query CoinPackage to get bonus coins based on price
+                        // Query CoinPackage to get coin amount and bonus based on price
                         var coinPackageOpt = coinPackageRepository.findByPrice(amountVnd);
                         if (coinPackageOpt.isPresent()) {
                             CoinPackage pkg = coinPackageOpt.get();
+                            coins = pkg.getCoin() != null ? pkg.getCoin() : amountVnd / 1000L;
                             bonusCoins = pkg.getBonus() != null ? pkg.getBonus() : 0L;
-                            log.info("Found coin package: {} for price: {}, bonus: {}",
+                            log.info("Found coin package: {} for price: {}, coins: {}, bonus: {}",
                                     pkg.getName(),
                                     amountVnd,
+                                    coins,
                                     bonusCoins);
                         } else {
-                            // Package not found: apply 7.5% bonus if amount >= 100k
+                            // No package found: fallback to 1000 VND = 1 coin
+                            coins = amountVnd / 1000L;
+                            // Apply 7.5% bonus if amount >= 100k
                             if (amountVnd >= 100000L) {
                                 bonusCoins = Math.round(coins * 0.075);
                                 log.info("No coin package found for price: {}, applying 7.5% bonus: {}",
