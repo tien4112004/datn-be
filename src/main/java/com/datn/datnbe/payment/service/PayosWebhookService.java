@@ -108,6 +108,7 @@ public class PayosWebhookService {
                         if (coinPackageOpt.isPresent()) {
                             CoinPackage pkg = coinPackageOpt.get();
                             bonusCoins = pkg.getBonus() != null ? pkg.getBonus() : 0L;
+                            coins = pkg.getCoin() != null ? pkg.getCoin() : coins; // Override coins if package defines it
                             log.info("Found coin package: {} for price: {}, bonus: {}",
                                     pkg.getName(),
                                     amountVnd,
