@@ -14,8 +14,14 @@ public interface CoinPackageRepository extends JpaRepository<CoinPackage, String
     /**
      * Get all active coin packages
      */
-    @Query("SELECT cp FROM CoinPackage cp WHERE cp.isActive = true ORDER BY cp.price ASC")
+    @Query("SELECT cp FROM CoinPackage cp WHERE cp.isActive = true ORDER BY cp.coin ASC")
     List<CoinPackage> findAllActive();
+
+    /**
+     * Get all coin packages sorted by coin amount
+     */
+    @Query("SELECT cp FROM CoinPackage cp ORDER BY cp.coin ASC")
+    List<CoinPackage> findAllOrderByCoinAsc();
 
     /**
      * Get a coin package by name

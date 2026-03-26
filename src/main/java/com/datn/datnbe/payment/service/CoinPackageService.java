@@ -42,7 +42,7 @@ public class CoinPackageService {
      */
     @Transactional(readOnly = true)
     public List<CoinPackageDto> getAllPackages() {
-        List<CoinPackage> packages = coinPackageRepository.findAll();
+        List<CoinPackage> packages = coinPackageRepository.findAllOrderByCoinAsc();
         return packages.stream().map(mapper::toCoinPackageDTO).collect(Collectors.toList());
     }
 
